@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22522" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CDSession" representedClassName="CDSession" syncable="YES" codeGenerationType="class">
+        <attribute name="authMethodRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="autoReconnect" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="encoding" attributeType="String" defaultValueString="UTF-8"/>
+        <attribute name="host" attributeType="String" defaultValueString="" spotlightIndexingEnabled="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isSoftDeleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="keepAliveInterval" attributeType="Integer 32" defaultValueString="60" usesScalarValueType="YES"/>
+        <attribute name="keychainRef" optional="YES" attributeType="String"/>
+        <attribute name="lastConnectedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString="" spotlightIndexingEnabled="YES"/>
+        <attribute name="port" attributeType="Integer 32" defaultValueString="22" usesScalarValueType="YES"/>
+        <attribute name="privateKeyPath" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tagsJSON" optional="YES" attributeType="String"/>
+        <attribute name="username" attributeType="String" defaultValueString=""/>
+        <relationship name="group" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSessionGroup" inverseName="sessions" inverseEntity="CDSessionGroup"/>
+        <relationship name="quickCommands" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDQuickCommand" inverseName="session" inverseEntity="CDQuickCommand"/>
+        <relationship name="terminalProfile" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDTerminalProfile" inverseName="sessions" inverseEntity="CDTerminalProfile"/>
+        <relationship name="tunnels" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDTunnel" inverseName="session" inverseEntity="CDTunnel"/>
+        <fetchIndex name="byIdIndex">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byHostIndex">
+            <fetchIndexElement property="host" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byNameIndex">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDSessionGroup" representedClassName="CDSessionGroup" syncable="YES" codeGenerationType="class">
+        <attribute name="colorHex" attributeType="String" defaultValueString="#4A90D9"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isExpanded" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="children" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDSessionGroup" inverseName="parent" inverseEntity="CDSessionGroup"/>
+        <relationship name="parent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSessionGroup" inverseName="children" inverseEntity="CDSessionGroup"/>
+        <relationship name="sessions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDSession" inverseName="group" inverseEntity="CDSession"/>
+        <fetchIndex name="byIdIndex">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDTunnel" representedClassName="CDTunnel" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="localHost" attributeType="String" defaultValueString="127.0.0.1"/>
+        <attribute name="localPort" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="remoteHost" attributeType="String" defaultValueString=""/>
+        <attribute name="remotePort" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="typeRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="session" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSession" inverseName="tunnels" inverseEntity="CDSession"/>
+    </entity>
+    <entity name="CDQuickCommand" representedClassName="CDQuickCommand" syncable="YES" codeGenerationType="class">
+        <attribute name="commandText" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="shortcut" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="session" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSession" inverseName="quickCommands" inverseEntity="CDSession"/>
+    </entity>
+    <entity name="CDSnippet" representedClassName="CDSnippet" syncable="YES" codeGenerationType="class">
+        <attribute name="commandText" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tagsJSON" optional="YES" attributeType="String"/>
+        <relationship name="folder" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSnippetFolder" inverseName="snippets" inverseEntity="CDSnippetFolder"/>
+    </entity>
+    <entity name="CDSnippetFolder" representedClassName="CDSnippetFolder" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="children" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDSnippetFolder" inverseName="parent" inverseEntity="CDSnippetFolder"/>
+        <relationship name="parent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSnippetFolder" inverseName="children" inverseEntity="CDSnippetFolder"/>
+        <relationship name="snippets" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDSnippet" inverseName="folder" inverseEntity="CDSnippet"/>
+    </entity>
+    <entity name="CDTerminalProfile" representedClassName="CDTerminalProfile" syncable="YES" codeGenerationType="class">
+        <attribute name="backgroundColorHex" attributeType="String" defaultValueString="#0C0C0E"/>
+        <attribute name="cursorColorHex" attributeType="String" defaultValueString="#FFFFFF"/>
+        <attribute name="fontName" attributeType="String" defaultValueString="SF Mono"/>
+        <attribute name="fontSize" attributeType="Double" defaultValueString="13" usesScalarValueType="YES"/>
+        <attribute name="foregroundColorHex" attributeType="String" defaultValueString="#EEEDF5"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="selectionColorHex" attributeType="String" defaultValueString="#4A90D9"/>
+        <relationship name="sessions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDSession" inverseName="terminalProfile" inverseEntity="CDSession"/>
+    </entity>
+    <entity name="CDSyncMeta" representedClassName="CDSyncMeta" syncable="YES" codeGenerationType="class">
+        <attribute name="deviceId" attributeType="String" defaultValueString=""/>
+        <attribute name="entityType" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastSyncAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="recordChangeTag" optional="YES" attributeType="String"/>
+        <attribute name="recordName" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="CDAppSettings" representedClassName="CDAppSettings" syncable="YES" codeGenerationType="class">
+        <attribute name="appearanceMode" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="defaultEncodingRaw" attributeType="String" defaultValueString="UTF-8"/>
+        <attribute name="defaultTerminalProfileId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="globalKeepAliveInterval" attributeType="Integer 32" defaultValueString="60" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="requireAuthOnLaunch" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sidebarWidth" attributeType="Double" defaultValueString="220" usesScalarValueType="YES"/>
+    </entity>
+</model>

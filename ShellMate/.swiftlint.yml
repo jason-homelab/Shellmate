@@ -1,0 +1,112 @@
+# ShellMate SwiftLint 配置
+# 基于项目规范的代码风格检查
+
+# 包含的路径
+included:
+  - ShellMate
+
+# 排除的路径
+excluded:
+  - Pods
+  - DerivedData
+  - build
+  - .build
+  - Packages
+
+# 禁用的规则
+disabled_rules:
+  - trailing_whitespace      # 尾随空格（IDE 自动处理）
+  - line_length              # 行长度（单独配置）
+  - type_body_length         # 类型体长度（复杂视图可能较长）
+  - file_length              # 文件长度（Repository 等可能较长）
+  - function_body_length     # 函数体长度
+  - cyclomatic_complexity    # 圈复杂度
+
+# 启用的额外规则
+opt_in_rules:
+  - empty_count              # 使用 isEmpty 代替 count == 0
+  - empty_string             # 使用 isEmpty 代替 == ""
+  - closure_spacing          # 闭包空格
+  - collection_alignment     # 集合对齐
+  - contains_over_first_not_nil  # 使用 contains 代替 first != nil
+  - discouraged_object_literal   # 不推荐使用对象字面量
+  - explicit_init            # 显式 init
+  - fallthrough              # fallthrough
+  - fatal_error_message      # fatalError 需要消息
+  - first_where              # 使用 first(where:)
+  - force_unwrapping         # 强制解包警告
+  - implicitly_unwrapped_optional  # 隐式解包可选类型
+  - joined_default_parameter # joined() 默认参数
+  - last_where               # 使用 last(where:)
+  - legacy_random            # 使用新的随机 API
+  - modifier_order           # 修饰符顺序
+  - multiline_parameters     # 多行参数
+  - operator_usage_whitespace    # 操作符空格
+  - overridden_super_call    # 覆盖方法调用 super
+  - private_action           # 私有 action
+  - private_outlet           # 私有 outlet
+  - prohibited_super_call    # 禁止 super 调用
+  - redundant_nil_coalescing # 冗余 nil 合并
+  - sorted_first_last        # 使用 first/last 而非 sorted().first
+  - toggle_bool              # 使用 toggle()
+  - unneeded_parentheses_in_closure_argument  # 闭包参数不需要括号
+  - vertical_parameter_alignment_on_call  # 调用时垂直对齐
+  - yoda_condition           # 尤达条件
+
+# 自定义规则配置
+
+# 标识符名称
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - i
+    - j
+    - x
+    - y
+    - z
+    - to
+    - db
+    - ip
+    - UI
+
+# 类型名称
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+
+# 大型元组
+large_tuple:
+  warning: 3
+  error: 4
+
+# 嵌套类型
+nesting:
+  type_level:
+    warning: 2
+    error: 3
+  function_level:
+    warning: 3
+    error: 4
+
+# 垂直空白
+vertical_whitespace:
+  max_empty_lines: 2
+
+# 尾随逗号
+trailing_comma:
+  mandatory_comma: false
+
+# 冒号
+colon:
+  apply_to_dictionaries: true
+
+# 报告格式
+reporter: "xcode"
