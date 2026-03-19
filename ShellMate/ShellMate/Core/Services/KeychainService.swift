@@ -257,6 +257,30 @@ final class KeychainService {
         try getPassword(for: sessionId, type: .privateKey)
     }
 
+    /// 获取私钥数据
+    /// - Parameter sessionId: 会话 ID
+    /// - Returns: 私钥数据
+    /// - Throws: KeychainError
+    func getPrivateKeyData(for sessionId: UUID) throws -> Data {
+        let keyString = try getPrivateKey(for: sessionId)
+        guard let data = keyString.data(using: .utf8) else {
+            throw KeychainError.decodingFailed
+        }
+        return data
+    }
+
+    /// 保存私钥数据
+    /// - Parameters:
+    ///   - data: 私钥数据
+    ///   - sessionId: 会话 ID
+    /// - Throws: KeychainError
+    func savePrivateKey(_ data: Data, for sessionId: UUID) throws {
+        guard let keyString = String(data: data, encoding: .utf8) else {
+            throw KeychainError.encodingFailed
+        }
+        try savePrivateKey(keyString, for: sessionId)
+    }
+
     /// 保存私钥密码短语
     /// - Parameters:
     ///   - passphrase: 密码短语

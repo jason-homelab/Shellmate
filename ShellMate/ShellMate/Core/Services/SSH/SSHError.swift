@@ -64,7 +64,7 @@ enum SSHError: LocalizedError {
     case hostKeyVerificationFailed(fingerprint: String)
 
     /// 主机密钥已变更（可能的中间人攻击）
-    case hostKeyChanged(oldFingerprint: String, newFingerprint: String)
+    case hostKeyChanged(oldFingerprint: String, newFingerprint: HostKeyFingerprint)
 
     /// 主机密钥类型不支持
     case unsupportedHostKeyType(type: String)
@@ -85,6 +85,15 @@ enum SSHError: LocalizedError {
 
     /// Shell 启动失败
     case shellStartFailed(reason: String)
+
+    /// 通道未打开
+    case channelNotOpen
+
+    /// 读取超时
+    case readTimeout
+
+    /// 写入失败
+    case writeFailed(reason: String)
 
     // MARK: - 通用错误
 
@@ -153,7 +162,7 @@ enum SSHError: LocalizedError {
             return "主机密钥验证失败: \(fingerprint)"
 
         case .hostKeyChanged(_, let newFingerprint):
-            return "警告：主机密钥已变更！新指纹: \(newFingerprint)"
+            return "警告：主机密钥已变更！新指纹: \(newFingerprint.sha256Display)"
 
         case .unsupportedHostKeyType(let type):
             return "不支持的主机密钥类型: \(type)"
@@ -172,6 +181,15 @@ enum SSHError: LocalizedError {
 
         case .shellStartFailed(let reason):
             return "Shell 启动失败: \(reason)"
+
+        case .channelNotOpen:
+            return "通道未打开"
+
+        case .readTimeout:
+            return "读取超时"
+
+        case .writeFailed(let reason):
+            return "写入失败: \(reason)"
 
         case .libssh2Error(let code, let message):
             return "libssh2 错误 (\(code)): \(message)"

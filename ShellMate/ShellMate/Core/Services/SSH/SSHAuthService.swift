@@ -226,7 +226,7 @@ final class SSHAuthService {
             // 从文件读取
             let keyURL = URL(fileURLWithPath: keyPath)
             privateKeyData = try Data(contentsOf: keyURL)
-        } else if let keyData = try? keychainService.getPrivateKey(for: session.id) {
+        } else if let keyData = try? keychainService.getPrivateKeyData(for: session.id) {
             // 从 Keychain 读取
             privateKeyData = keyData
         } else {
