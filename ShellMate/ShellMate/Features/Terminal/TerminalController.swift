@@ -77,11 +77,17 @@ final class TerminalController: ObservableObject {
     /// 会话配置
     private let session: Session
 
-    /// SSH 连接
+    /// SSH 连接（使用进程桥接实现真实连接）
+    private var processConnection: SSHProcessConnection?
+
+    /// 旧的 SSH 连接（保留用于 libssh2 实现）
     private var connection: SSHConnection?
 
     /// 通道管理器
     private var channelManager: SSHChannelManager?
+
+    /// 是否使用进程桥接（临时方案，后续会替换为 libssh2）
+    private let useProcessBridge: Bool = true
 
     /// 终端视图引用
     weak var terminalView: ShellMateTerminalView?
@@ -153,28 +159,37 @@ final class TerminalController: ObservableObject {
             // 创建 SSH 配置
             let config = createSSHConfig()
 
-            // 创建连接
-            let sshConnection = SSHConnection(config: config)
-            self.connection = sshConnection
+            if useProcessBridge {
+                // 使用进程桥接（调用系统 ssh 命令）实现真实连接
+                let procConnection = SSHProcessConnection(config: config)
+                self.processConnection = procConnection
 
-            // 建立连接
-            try await sshConnection.connect()
+                // 建立连接
+                try await procConnection.connect()
 
-            // 打开 Shell
-            try await sshConnection.openShell()
+                state = .connected
+                delegate?.terminalController(self, didChangeState: state)
 
-            // 获取桥接
-            // 注意：实际实现中需要从 connection 获取 bridge
-            // let bridge = await sshConnection.getBridge()
-            // channelManager = SSHChannelManager(bridge: bridge)
+                // 启动数据读取
+                startDataReadingFromProcess()
 
-            state = .connected
-            delegate?.terminalController(self, didChangeState: state)
+                print("[TerminalController] 使用进程桥接连接成功")
 
-            // 启动数据读取
-            startDataReading()
+            } else {
+                // 使用 libssh2 实现（目前是模拟）
+                let sshConnection = SSHConnection(config: config)
+                self.connection = sshConnection
 
-            print("[TerminalController] 连接成功")
+                try await sshConnection.connect()
+                try await sshConnection.openShell()
+
+                state = .connected
+                delegate?.terminalController(self, didChangeState: state)
+
+                startDataReading()
+
+                print("[TerminalController] 使用 libssh2 连接成功")
+            }
 
         } catch let error as SSHError {
             state = .failed(error.localizedDescription)
@@ -187,6 +202,12 @@ final class TerminalController: ObservableObject {
             }
 
             throw error
+        } catch {
+            let sshError = SSHError.connectionFailed(host: session.host, port: session.port, underlying: error)
+            state = .failed(error.localizedDescription)
+            delegate?.terminalController(self, didChangeState: state)
+            delegate?.terminalController(self, didFailWithError: sshError)
+            throw sshError
         }
     }
 
@@ -205,6 +226,10 @@ final class TerminalController: ObservableObject {
         // 关闭通道
         await channelManager?.close()
         channelManager = nil
+
+        // 断开进程连接
+        await processConnection?.disconnect()
+        processConnection = nil
 
         // 断开 SSH 连接
         await connection?.disconnect()
@@ -231,7 +256,11 @@ final class TerminalController: ObservableObject {
             throw SSHError.sessionClosed
         }
 
-        try await connection?.write(data)
+        if useProcessBridge {
+            try await processConnection?.write(data)
+        } else {
+            try await connection?.write(data)
+        }
     }
 
     /// 发送字符串到服务器
@@ -264,7 +293,12 @@ final class TerminalController: ObservableObject {
     func resizePTY(columns: Int, rows: Int) async throws {
         guard state == .connected else { return }
 
-        try await connection?.resizePTY(columns: columns, rows: rows)
+        if useProcessBridge {
+            await processConnection?.resizePTY(columns: columns, rows: rows)
+        } else {
+            try await connection?.resizePTY(columns: columns, rows: rows)
+        }
+
         terminalSize = TerminalSize(columns: columns, rows: rows)
 
         print("[TerminalController] PTY 尺寸已调整: \(columns)x\(rows)")
@@ -348,7 +382,39 @@ final class TerminalController: ObservableObject {
 
     // MARK: - 数据读取
 
-    /// 启动数据读取
+    /// 启动数据读取（进程桥接模式）
+    private func startDataReadingFromProcess() {
+        dataReadTask = Task { [weak self] in
+            guard let self = self else { return }
+
+            // 使用 SSHProcessConnection 的数据流
+            guard let stream = await self.processConnection?.getDataStream() else {
+                print("[TerminalController] 无法获取数据流")
+                return
+            }
+
+            for await data in stream {
+                guard !Task.isCancelled else { break }
+
+                await MainActor.run {
+                    // 传递给终端视图
+                    self.terminalView?.feed(data)
+
+                    // 通知委托
+                    self.delegate?.terminalController(self, didReceiveData: data)
+                }
+            }
+
+            // 流结束，可能是连接断开
+            if !Task.isCancelled && !self.userDisconnected {
+                await MainActor.run {
+                    self.handleConnectionLost()
+                }
+            }
+        }
+    }
+
+    /// 启动数据读取（libssh2 模式）
     private func startDataReading() {
         dataReadTask = Task { [weak self] in
             guard let self = self else { return }

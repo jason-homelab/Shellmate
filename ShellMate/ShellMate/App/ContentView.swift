@@ -28,14 +28,15 @@ struct ContentView: View {
             )
         } detail: {
             // 主区域（终端）
-            TerminalPlaceholderView(
-                session: sessionStore.selectedSession,
-                onConnect: {
-                    if let session = sessionStore.selectedSession {
-                        connectToSession(session)
-                    }
-                }
-            )
+            if let session = sessionStore.selectedSession {
+                TerminalView(session: session)
+            } else {
+                // 无选中会话时显示空状态
+                TerminalPlaceholderView(
+                    session: nil,
+                    onConnect: nil
+                )
+            }
         }
         .navigationTitle("")
         .toolbar {
@@ -134,28 +135,18 @@ struct ContentView: View {
     // MARK: - 连接方法
 
     private func connectToSession(_ session: Session) {
-        // TODO: W4-W5 实现实际的 SSH 连接
+        // 选中会话，TerminalView 会处理实际的连接
         sessionStore.selectedSessionId = session.id
 
-        // 模拟连接状态变化
-        sessionStore.updateConnectionState(for: session.id, state: .connecting)
-
-        // 模拟连接成功（实际实现会在 SSH 连接建立后更新）
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            sessionStore.updateConnectionState(for: session.id, state: .connected)
-            Task {
-                await sessionStore.updateLastConnectedAt(for: session.id)
-            }
+        // 更新最后连接时间
+        Task {
+            await sessionStore.updateLastConnectedAt(for: session.id)
         }
     }
 
     private func disconnectSession(_ session: Session) {
-        // TODO: W4-W5 实现实际的 SSH 断开
-        sessionStore.updateConnectionState(for: session.id, state: .disconnecting)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            sessionStore.updateConnectionState(for: session.id, state: .offline)
-        }
+        // 断开连接状态由 TerminalController 管理
+        sessionStore.updateConnectionState(for: session.id, state: .offline)
     }
 }
 
