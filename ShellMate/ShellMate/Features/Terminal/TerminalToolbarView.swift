@@ -1,4 +1,6 @@
 import SwiftUI
+import AppKit
+import SwiftTerm
 
 /// 终端工具栏
 /// 提供字号调整、清屏、搜索等快捷操作
@@ -166,18 +168,18 @@ struct TerminalToolbarView: View {
     /// 增大字号
     private func increaseFontSize() {
         fontSize = min(maxFontSize, fontSize + fontSizeStep)
-        controller.terminalView?.setFontSize(fontSize)
+        controller.terminalView?.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
     }
 
     /// 减小字号
     private func decreaseFontSize() {
         fontSize = max(minFontSize, fontSize - fontSizeStep)
-        controller.terminalView?.setFontSize(fontSize)
+        controller.terminalView?.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
     }
 
     /// 清屏
     private func clearScreen() {
-        controller.terminalView?.clear()
+        controller.clearTerminal()
     }
 
     /// 切换搜索
@@ -399,169 +401,6 @@ struct TerminalSearchBar: View {
         .onAppear {
             isFocused = true
         }
-    }
-}
-
-// MARK: - 终端容器视图
-
-/// 终端容器视图
-/// 整合终端视图、工具栏和搜索栏
-struct TerminalContainerView: View {
-
-    // MARK: - 属性
-
-    /// 终端控制器
-    @ObservedObject var controller: TerminalController
-
-    /// 终端视图引用
-    @State private var terminalView: ShellMateTerminalView?
-
-    /// 是否显示搜索栏
-    @State private var showSearch: Bool = false
-
-    /// 搜索文本
-    @State private var searchText: String = ""
-
-    /// 当前匹配索引
-    @State private var currentMatch: Int = 0
-
-    /// 总匹配数
-    @State private var totalMatches: Int = 0
-
-    /// 大小写敏感
-    @State private var caseSensitive: Bool = false
-
-    /// 状态文本
-    @State private var statusText: String = ""
-
-    // MARK: - 视图
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 工具栏
-            TerminalToolbarView(
-                controller: controller,
-                showSearch: $showSearch,
-                statusText: $statusText
-            )
-
-            // 搜索栏（条件显示）
-            if showSearch {
-                TerminalSearchBar(
-                    searchText: $searchText,
-                    currentMatch: $currentMatch,
-                    totalMatches: totalMatches,
-                    caseSensitive: $caseSensitive,
-                    onClose: {
-                        withAnimation {
-                            showSearch = false
-                            searchText = ""
-                        }
-                    },
-                    onNext: {
-                        findNext()
-                    },
-                    onPrevious: {
-                        findPrevious()
-                    }
-                )
-                .padding(DesignTokens.Spacing.sm)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-
-            // 终端视图
-            ZStack {
-                ShellMateTerminalViewRepresentable(
-                    terminalView: $terminalView,
-                    theme: .darkDefault,
-                    delegate: controller
-                )
-
-                // 连接中覆层
-                if controller.state == .connecting {
-                    connectingOverlay
-                }
-
-                // 重连中覆层
-                if case .reconnecting(let attempt) = controller.state {
-                    reconnectingOverlay(attempt: attempt)
-                }
-            }
-        }
-        .onAppear {
-            controller.terminalView = terminalView
-        }
-        .onChange(of: terminalView) { _, newValue in
-            controller.terminalView = newValue
-        }
-        .onChange(of: searchText) { _, newValue in
-            performSearch(newValue)
-        }
-    }
-
-    // MARK: - 覆层
-
-    /// 连接中覆层
-    private var connectingOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView()
-                .controlSize(.large)
-
-            Text("正在连接...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.8))
-    }
-
-    /// 重连中覆层
-    private func reconnectingOverlay(attempt: Int) -> some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView()
-                .controlSize(.large)
-
-            Text("正在重连 (\(attempt)/\(controller.reconnectConfig.maxAttempts))...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            Button("取消") {
-                controller.cancelReconnect()
-            }
-            .buttonStyle(.bordered)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.8))
-    }
-
-    // MARK: - 搜索
-
-    /// 执行搜索
-    private func performSearch(_ text: String) {
-        guard !text.isEmpty else {
-            totalMatches = 0
-            currentMatch = 0
-            return
-        }
-
-        // 实际实现中需要搜索终端缓冲区
-        // 这里是简化的模拟实现
-        totalMatches = 5 // 模拟找到 5 个匹配
-        currentMatch = totalMatches > 0 ? 1 : 0
-    }
-
-    /// 查找下一个
-    private func findNext() {
-        guard totalMatches > 0 else { return }
-        currentMatch = currentMatch < totalMatches ? currentMatch + 1 : 1
-        // 实际实现中需要滚动到匹配位置
-    }
-
-    /// 查找上一个
-    private func findPrevious() {
-        guard totalMatches > 0 else { return }
-        currentMatch = currentMatch > 1 ? currentMatch - 1 : totalMatches
-        // 实际实现中需要滚动到匹配位置
     }
 }
 

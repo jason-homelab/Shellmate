@@ -38,13 +38,26 @@
 		000100010001001D /* SessionAuthTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001E /* SessionAuthTab.swift */; };
 		000100010001001E /* SessionAdvancedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001F /* SessionAdvancedTab.swift */; };
 		000100010001001F /* SessionAppearanceTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020020 /* SessionAppearanceTab.swift */; };
-		0001000100010020 /* TerminalPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020021 /* TerminalPlaceholderView.swift */; };
+		/* TerminalPlaceholderView.swift 已替换为 TerminalView.swift */
 		0001000100010021 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020025 /* KeychainService.swift */; };
 		0001000100010022 /* TerminalTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020026 /* TerminalTab.swift */; };
 		0001000100010023 /* TabBarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020027 /* TabBarStore.swift */; };
 		0001000100010024 /* TerminalTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020028 /* TerminalTabView.swift */; };
 		0001000100010025 /* TerminalTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020029 /* TerminalTabBarView.swift */; };
 		0001000100010026 /* TerminalStatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002A /* TerminalStatusBarView.swift */; };
+		0001000100010027 /* SSHError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002B /* SSHError.swift */; };
+		0001000100010028 /* LibSSH2Bridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002C /* LibSSH2Bridge.swift */; };
+		0001000100010029 /* LibSSH2BridgeReal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002D /* LibSSH2BridgeReal.swift */; };
+		000100010001002A /* SSH2Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002E /* SSH2Connection.swift */; };
+		000100010001002B /* libssh2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000200020002002F /* libssh2.xcframework */; };
+		000100010001002C /* libssh2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 000200020002002F /* libssh2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BB010003 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = BB010002 /* SwiftTerm */; };
+		BB020002 /* TerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020001 /* TerminalController.swift */; };
+		BB020004 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020003 /* TerminalView.swift */; };
+		BB020006 /* TerminalToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020005 /* TerminalToolbarView.swift */; };
+		CC010001 /* FormComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020001 /* FormComponents.swift */; };
+		CC010002 /* HostKeyConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020002 /* HostKeyConfirmationView.swift */; };
+		CC010003 /* HostKeyChangedWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020003 /* HostKeyChangedWarningView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -80,7 +93,7 @@
 		000200020002001E /* SessionAuthTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAuthTab.swift; sourceTree = "<group>"; };
 		000200020002001F /* SessionAdvancedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAdvancedTab.swift; sourceTree = "<group>"; };
 		0002000200020020 /* SessionAppearanceTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAppearanceTab.swift; sourceTree = "<group>"; };
-		0002000200020021 /* TerminalPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPlaceholderView.swift; sourceTree = "<group>"; };
+		/* TerminalPlaceholderView.swift fileRef 已移除 */
 		0002000200020022 /* ShellMate.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShellMate.entitlements; sourceTree = "<group>"; };
 		0002000200020023 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0002000200020024 /* ShellMate.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ShellMate.xcdatamodel; sourceTree = "<group>"; };
@@ -90,13 +103,41 @@
 		0002000200020028 /* TerminalTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTabView.swift; sourceTree = "<group>"; };
 		0002000200020029 /* TerminalTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTabBarView.swift; sourceTree = "<group>"; };
 		000200020002002A /* TerminalStatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalStatusBarView.swift; sourceTree = "<group>"; };
+		000200020002002B /* SSHError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHError.swift; sourceTree = "<group>"; };
+		000200020002002C /* LibSSH2Bridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibSSH2Bridge.swift; sourceTree = "<group>"; };
+		000200020002002D /* LibSSH2BridgeReal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibSSH2BridgeReal.swift; sourceTree = "<group>"; };
+		000200020002002E /* SSH2Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSH2Connection.swift; sourceTree = "<group>"; };
+		000200020002002F /* libssh2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libssh2.xcframework; path = ../Frameworks/libssh2.xcframework; sourceTree = "<group>"; };
+		0002000200020030 /* ShellMate-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ShellMate-Bridging-Header.h"; sourceTree = "<group>"; };
+		BB020001 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
+		BB020003 /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
+		BB020005 /* TerminalToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalToolbarView.swift; sourceTree = "<group>"; };
+		CC020001 /* FormComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormComponents.swift; sourceTree = "<group>"; };
+		CC020002 /* HostKeyConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyConfirmationView.swift; sourceTree = "<group>"; };
+		CC020003 /* HostKeyChangedWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyChangedWarningView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0003000300030002 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				000100010001002C /* libssh2.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0003000300030001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				000100010001002B /* libssh2.xcframework in Frameworks */,
+				BB010003 /* SwiftTerm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				0004000400040002 /* ShellMate */,
+				0004000400040018 /* Frameworks */,
 				0004000400040003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -161,6 +203,7 @@
 			children = (
 				000400040004000C /* Sidebar */,
 				000400040004000D /* SessionForm */,
+				CC030001 /* HostKey */,
 				0004000400040016 /* StatusBar */,
 				0004000400040015 /* TabBar */,
 				000400040004000E /* Terminal */,
@@ -244,7 +287,9 @@
 		000400040004000E /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
-				0002000200020021 /* TerminalPlaceholderView.swift */,
+				BB020001 /* TerminalController.swift */,
+				BB020003 /* TerminalView.swift */,
+				BB020005 /* TerminalToolbarView.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -255,6 +300,7 @@
 				0002000200020013 /* StatusDotView.swift */,
 				0002000200020014 /* TagBadgeView.swift */,
 				0002000200020015 /* EmptyStateView.swift */,
+				CC020001 /* FormComponents.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -297,8 +343,29 @@
 			isa = PBXGroup;
 			children = (
 				0002000200020025 /* KeychainService.swift */,
+				0004000400040017 /* SSH */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		0004000400040017 /* SSH */ = {
+			isa = PBXGroup;
+			children = (
+				000200020002002B /* SSHError.swift */,
+				000200020002002C /* LibSSH2Bridge.swift */,
+				000200020002002D /* LibSSH2BridgeReal.swift */,
+				000200020002002E /* SSH2Connection.swift */,
+				0002000200020030 /* ShellMate-Bridging-Header.h */,
+			);
+			path = SSH;
+			sourceTree = "<group>";
+		};
+		0004000400040018 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				000200020002002F /* libssh2.xcframework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		0004000400040015 /* TabBar */ = {
@@ -318,6 +385,15 @@
 			path = StatusBar;
 			sourceTree = "<group>";
 		};
+		CC030001 /* HostKey */ = {
+			isa = PBXGroup;
+			children = (
+				CC020002 /* HostKeyConfirmationView.swift */,
+				CC020003 /* HostKeyChangedWarningView.swift */,
+			);
+			path = HostKey;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -328,12 +404,16 @@
 				0005000500050002 /* Sources */,
 				0003000300030001 /* Frameworks */,
 				0005000500050003 /* Resources */,
+				0003000300030002 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = ShellMate;
+			packageProductDependencies = (
+				BB010002 /* SwiftTerm */,
+			);
 			productName = ShellMate;
 			productReference = 0002000200020001 /* ShellMate.app */;
 			productType = "com.apple.product-type.application";
@@ -364,6 +444,9 @@
 			);
 			mainGroup = 0004000400040001;
 			productRefGroup = 0004000400040003 /* Products */;
+			packageReferences = (
+				BB010001 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -418,13 +501,22 @@
 				000100010001001D /* SessionAuthTab.swift in Sources */,
 				000100010001001E /* SessionAdvancedTab.swift in Sources */,
 				000100010001001F /* SessionAppearanceTab.swift in Sources */,
-				0001000100010020 /* TerminalPlaceholderView.swift in Sources */,
+				BB020002 /* TerminalController.swift in Sources */,
+				BB020004 /* TerminalView.swift in Sources */,
+				BB020006 /* TerminalToolbarView.swift in Sources */,
 				0001000100010021 /* KeychainService.swift in Sources */,
 				0001000100010022 /* TerminalTab.swift in Sources */,
 				0001000100010023 /* TabBarStore.swift in Sources */,
 				0001000100010024 /* TerminalTabView.swift in Sources */,
 				0001000100010025 /* TerminalTabBarView.swift in Sources */,
 				0001000100010026 /* TerminalStatusBarView.swift in Sources */,
+				0001000100010027 /* SSHError.swift in Sources */,
+				0001000100010028 /* LibSSH2Bridge.swift in Sources */,
+				0001000100010029 /* LibSSH2BridgeReal.swift in Sources */,
+				000100010001002A /* SSH2Connection.swift in Sources */,
+				CC010001 /* FormComponents.swift in Sources */,
+				CC010002 /* HostKeyConfirmationView.swift in Sources */,
+				CC010003 /* HostKeyChangedWarningView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,7 +650,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"ShellMate/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64/libssh2.framework/Headers",
+				);
 				INFOPLIST_FILE = ShellMate/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShellMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -568,9 +668,14 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lz",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.shellmate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ShellMate/Core/Services/SSH/ShellMate-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -586,7 +691,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"ShellMate/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64/libssh2.framework/Headers",
+				);
 				INFOPLIST_FILE = ShellMate/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShellMate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -596,9 +709,14 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lz",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.shellmate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ShellMate/Core/Services/SSH/ShellMate-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -639,6 +757,25 @@
 			versionGroupType = wrapper.xcdatamodel;
 		};
 /* End XCVersionGroup section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BB010001 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BB010002 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB010001 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0006000600060001 /* Project object */;
 }

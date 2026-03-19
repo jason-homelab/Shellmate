@@ -8,6 +8,7 @@ struct ContentView: View {
 
     @StateObject private var sessionStore = SessionStore()
     @StateObject private var groupStore = GroupStore()
+    @StateObject private var tabBarStore = TabBarStore()
 
     // MARK: - 视图
 
@@ -27,16 +28,20 @@ struct ContentView: View {
                 max: DesignTokens.Sizes.sidebarMaxWidth
             )
         } detail: {
-            // 主区域（终端）
-            if let session = sessionStore.selectedSession {
-                TerminalView(session: session)
-            } else {
-                // 无选中会话时显示空状态
-                TerminalPlaceholderView(
-                    session: nil,
-                    onConnect: nil
-                )
+            // 主区域：标签栏 + 终端内容
+            VStack(spacing: 0) {
+                // 标签栏（有标签时显示）
+                if !tabBarStore.tabs.isEmpty {
+                    TerminalTabBarView(store: tabBarStore, onNewTab: {
+                        // 新建标签页：打开新建会话表单
+                        sessionStore.showNewSessionForm()
+                    })
+                }
+
+                // 终端内容区域
+                terminalContentArea
             }
+            .background(DesignTokens.Colors.surfaceWindow)
         }
         .navigationTitle("")
         .toolbar {
@@ -48,6 +53,10 @@ struct ContentView: View {
         .sheet(isPresented: $groupStore.isShowingGroupForm) {
             groupFormSheet
         }
+        .sheet(isPresented: $tabBarStore.isShowingCloseConfirmation) {
+            TabCloseConfirmationView(store: tabBarStore)
+                .frame(width: 320)
+        }
         .alert("错误", isPresented: .constant(sessionStore.errorMessage != nil)) {
             Button("确定") {
                 sessionStore.errorMessage = nil
@@ -56,6 +65,34 @@ struct ContentView: View {
             if let error = sessionStore.errorMessage {
                 Text(error)
             }
+        }
+    }
+
+    // MARK: - 终端内容区域
+
+    @ViewBuilder
+    private var terminalContentArea: some View {
+        if let selectedTab = tabBarStore.selectedTab,
+           let session = sessionStore.sessions.first(where: { $0.id == selectedTab.sessionId }) {
+            // 显示当前选中标签页的终端视图
+            // 使用 .id(selectedTab.id) 确保切换标签时视图正确刷新
+            TerminalView(session: session)
+                .id(selectedTab.id)
+        } else {
+            // 空状态：无标签页时引导用户连接
+            VStack(spacing: DesignTokens.Spacing.lg) {
+                Image(systemName: "terminal")
+                    .font(.system(size: 64, weight: .ultraLight))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Text("请从左侧选择一个会话")
+                    .font(DesignTokens.Typography.bodyLarge)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                Text("双击会话或点击「连接」按钮以打开终端")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(DesignTokens.Colors.surfaceWindow)
         }
     }
 
@@ -70,29 +107,20 @@ struct ContentView: View {
             }) {
                 Label("新建会话", systemImage: "plus")
             }
-            .help("新建会话")
+            .help("新建会话 (⌘N)")
             .keyboardShortcut("n", modifiers: .command)
         }
 
-        // 连接/断开
+        // 快速连接（无标签页时显示）
         ToolbarItem(placement: .primaryAction) {
-            if let session = sessionStore.selectedSession {
-                if session.connectionState == .connected {
-                    Button(action: {
-                        disconnectSession(session)
-                    }) {
-                        Label("断开", systemImage: "bolt.slash.fill")
-                    }
-                    .help("断开连接")
-                } else if session.connectionState == .offline {
-                    Button(action: {
-                        connectToSession(session)
-                    }) {
-                        Label("连接", systemImage: "bolt.fill")
-                    }
-                    .help("连接")
-                    .keyboardShortcut(.return, modifiers: .command)
+            if tabBarStore.tabs.isEmpty, let session = sessionStore.selectedSession {
+                Button(action: {
+                    connectToSession(session)
+                }) {
+                    Label("连接", systemImage: "bolt.fill")
                 }
+                .help("连接选中会话 (⌘↩)")
+                .keyboardShortcut(.return, modifiers: .command)
             }
         }
     }
@@ -135,18 +163,20 @@ struct ContentView: View {
     // MARK: - 连接方法
 
     private func connectToSession(_ session: Session) {
-        // 选中会话，TerminalView 会处理实际的连接
         sessionStore.selectedSessionId = session.id
+
+        // 如果该会话已有标签页，直接切换到它
+        if let existingTab = tabBarStore.tab(for: session.id) {
+            tabBarStore.selectTab(existingTab)
+        } else {
+            // 否则新建标签页
+            tabBarStore.addTab(for: session)
+        }
 
         // 更新最后连接时间
         Task {
             await sessionStore.updateLastConnectedAt(for: session.id)
         }
-    }
-
-    private func disconnectSession(_ session: Session) {
-        // 断开连接状态由 TerminalController 管理
-        sessionStore.updateConnectionState(for: session.id, state: .offline)
     }
 }
 
