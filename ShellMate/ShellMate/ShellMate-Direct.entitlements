@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Direct 版不启用沙箱，拥有完整系统访问权限 -->
+    <!-- 仍需 notarytool 公证以通过 Gatekeeper -->
+
+    <!-- 网络：SSH 客户端 + 本地端口监听 -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+
+    <!-- Keychain 访问 -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)app.shellmate</string>
+    </array>
+
+    <!-- iCloud / CloudKit（与 App Store 版共享同一容器）-->
+    <key>com.apple.developer.icloud-services</key>
+    <array>
+        <string>CloudKit</string>
+    </array>
+    <key>com.apple.developer.icloud-container-identifiers</key>
+    <array>
+        <string>iCloud.app.shellmate</string>
+    </array>
+
+    <!-- SSH Agent：访问 SSH_AUTH_SOCK Unix domain socket（沙箱禁止，Direct 版专属）-->
+    <key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+    <array>
+        <string>/private/tmp/</string>
+    </array>
+</dict>
+</plist>
