@@ -9,6 +9,9 @@ struct SidebarSearchView: View {
     /// 搜索文本绑定
     @Binding var searchText: String
 
+    /// 外部焦点触发器：父视图将此值切换为 true 时，搜索框自动获得焦点
+    @Binding var focusTrigger: Bool
+
     /// 是否显示搜索框
     @State private var isSearching: Bool = false
 
@@ -44,6 +47,7 @@ struct SidebarSearchView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("清除搜索")
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
@@ -57,6 +61,14 @@ struct SidebarSearchView: View {
                     lineWidth: 1
                 )
         )
+        .accessibilityLabel("搜索会话")
+        .accessibilityHint("输入名称、主机地址或标签进行过滤")
+        .onChange(of: focusTrigger) { triggered in
+            if triggered {
+                isFocused = true
+                focusTrigger = false
+            }
+        }
     }
 }
 
@@ -64,8 +76,8 @@ struct SidebarSearchView: View {
 
 #Preview("搜索框") {
     VStack(spacing: 16) {
-        SidebarSearchView(searchText: .constant(""))
-        SidebarSearchView(searchText: .constant("服务器"))
+        SidebarSearchView(searchText: .constant(""), focusTrigger: .constant(false))
+        SidebarSearchView(searchText: .constant("服务器"), focusTrigger: .constant(false))
     }
     .padding()
     .background(DesignTokens.Colors.surfaceWindow)

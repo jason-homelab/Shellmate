@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import Combine
+import Network
 import SwiftTerm
 
 // MARK: - 终端尺寸
@@ -106,6 +107,8 @@ final class TerminalController: ObservableObject {
     weak var terminalView: SwiftTerm.TerminalView?
 
     @Published private(set) var state: State = .disconnected
+    /// 连接成功时间（用于状态栏显示已连接时长）
+    @Published private(set) var connectedAt: Date? = nil
     var reconnectConfig = ReconnectConfig()
     @Published var terminalSize: TerminalSize = .default
     @Published var terminalTitle: String = ""
@@ -142,12 +145,17 @@ final class TerminalController: ObservableObject {
     private var userDisconnected = false
     private var cancellables = Set<AnyCancellable>()
 
+    /// TC-005：网络路径监控（网络恢复时自动触发重连）
+    private var networkMonitor: NWPathMonitor?
+    private var lastNetworkStatus: NWPath.Status = .requiresConnection
+
     // MARK: - 初始化
 
     init(session: Session) {
         self.session = session
         self.sessionId = session.id
         setupObservers()
+        startNetworkMonitoring()
         // W12.6：注册到同步输入管理器
         SyncInputStore.shared.register(self, for: session.id)
     }
@@ -318,6 +326,7 @@ final class TerminalController: ObservableObject {
             }.value
 
             state = .connected
+            connectedAt = Date()
             delegate?.terminalController(self, didChangeState: state)
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
             tunnelManager.handleSSHConnected(config: sessionConfig, sessionID: session.id)
@@ -368,6 +377,7 @@ final class TerminalController: ObservableObject {
         // 断开时停止所有隧道
         tunnelManager.handleSSHDisconnected()
         state = .disconnected
+        connectedAt = nil
         delegate?.terminalController(self, didChangeState: state)
     }
 
@@ -512,6 +522,7 @@ final class TerminalController: ObservableObject {
         }
 
         state = .connected
+        connectedAt = Date()
         delegate?.terminalController(self, didChangeState: state)
     }
 
@@ -575,10 +586,15 @@ final class TerminalController: ObservableObject {
     func sendQuickCommand(_ command: QuickCommand) {
         let lines = command.content.components(separatedBy: "\n")
         if command.sendLineByLine && lines.count > 1 {
-            for (index, line) in lines.enumerated() {
-                let content = command.appendNewline ? line + "\r" : line
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(command.lineDelay * index)) {
-                    Task { try? await self.send(content) }
+            Task { [weak self] in
+                guard let self else { return }
+                for (index, line) in lines.enumerated() {
+                    if index > 0 {
+                        let delayNs = UInt64(command.lineDelay) * 1_000_000
+                        try? await Task.sleep(nanoseconds: delayNs)
+                    }
+                    let content = command.appendNewline ? line + "\r" : line
+                    try? await self.send(content)
                 }
             }
         } else {
@@ -683,6 +699,27 @@ final class TerminalController: ObservableObject {
         state = .failed("连接已断开")
         delegate?.terminalController(self, didChangeState: state)
         if reconnectConfig.enabled && !userDisconnected { scheduleReconnect() }
+    }
+
+    /// TC-005：启动网络路径监控，网络恢复时自动触发重连
+    private func startNetworkMonitoring() {
+        let monitor = NWPathMonitor()
+        networkMonitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let newStatus = path.status
+                defer { self.lastNetworkStatus = newStatus }
+                guard newStatus == .satisfied,
+                      self.lastNetworkStatus != .satisfied,
+                      self.reconnectConfig.enabled,
+                      !self.userDisconnected,
+                      self.reconnectTask == nil else { return }
+                if case .failed = self.state { self.scheduleReconnect() }
+                else if case .disconnected = self.state { self.scheduleReconnect() }
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "com.shellmate.networkmonitor", qos: .utility))
     }
 }
 

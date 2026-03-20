@@ -12,12 +12,15 @@ struct SessionSidebarView: View {
     /// 连接会话回调
     var onConnect: ((Session) -> Void)?
 
+    /// 搜索框焦点触发器（⌘F 快捷键驱动）
+    @State private var searchFocusTrigger: Bool = false
+
     // MARK: - 视图
 
     var body: some View {
         VStack(spacing: 0) {
             // 搜索框
-            SidebarSearchView(searchText: $sessionStore.searchQuery)
+            SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $searchFocusTrigger)
                 .padding(.horizontal, DesignTokens.Spacing.sm)
                 .padding(.top, DesignTokens.Spacing.sm)
                 .padding(.bottom, DesignTokens.Spacing.xs)
@@ -52,6 +55,12 @@ struct SessionSidebarView: View {
         .task {
             await loadData()
         }
+        // PRD 8.1：⌘F 聚焦搜索框
+        .background(
+            Button("") { searchFocusTrigger = true }
+                .keyboardShortcut("f", modifiers: .command)
+                .hidden()
+        )
     }
 
     // MARK: - 加载中视图
