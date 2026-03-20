@@ -5,7 +5,7 @@ import AppKit
 // 注意：实际项目中需要 import SwiftTerm 并使用真实的类型
 
 /// 终端视图委托协议
-protocol TerminalViewDelegate: AnyObject {
+protocol ShellMateTerminalViewDelegate: AnyObject {
     /// 终端请求发送数据
     func terminalView(_ view: ShellMateTerminalView, send data: Data)
 
@@ -26,14 +26,6 @@ protocol TerminalViewDelegate: AnyObject {
 }
 
 /// 终端尺寸
-struct TerminalSize: Equatable {
-    let columns: Int
-    let rows: Int
-
-    /// 默认尺寸
-    static let `default` = TerminalSize(columns: 80, rows: 24)
-}
-
 /// 终端主题
 struct TerminalTheme: Equatable {
     /// 背景颜色
@@ -76,7 +68,7 @@ final class ShellMateTerminalView: NSView {
     // MARK: - 属性
 
     /// 委托
-    weak var delegate: TerminalViewDelegate?
+    weak var delegate: ShellMateTerminalViewDelegate?
 
     /// 当前主题
     private(set) var theme: TerminalTheme = .darkDefault {
@@ -111,8 +103,8 @@ final class ShellMateTerminalView: NSView {
     /// 滚动位置
     private var scrollPosition: Int = 0
 
-    /// 回滚缓冲区行数
-    var scrollbackLines: Int = 10000
+    /// 回滚缓冲区行数（W15.3 内存控制：2000 行 ≈ 160KB/标签，峰值内存 < 150MB）
+    var scrollbackLines: Int = 2000
 
     /// 终端标题
     private(set) var terminalTitle: String = ""
@@ -819,7 +811,7 @@ struct ShellMateTerminalViewRepresentable: NSViewRepresentable {
     var theme: TerminalTheme
 
     /// 委托
-    var delegate: TerminalViewDelegate?
+    var delegate: ShellMateTerminalViewDelegate?
 
     // MARK: - NSViewRepresentable
 

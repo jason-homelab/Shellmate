@@ -13,6 +13,34 @@ struct TerminalSize: Equatable {
     static let `default` = TerminalSize(columns: 80, rows: 24)
 }
 
+// MARK: - 终端数据合并器（W15.2 60fps 优化）
+
+/// 将高频 SSH 数据包合并到 16ms 窗口后批量喂给 SwiftTerm
+/// 防止每个 SSH 包单独创建 MainActor Task，避免主线程微任务积压
+/// 原理：首个数据包触发一次 16ms sleep Task；窗口内后续包只追加缓冲区；
+///       sleep 结束后一次性 flush 所有积累字节 → 最多 60fps
+private actor TerminalDataCoalescer {
+
+    private var buffer: [UInt8] = []
+    private var hasPendingFlush = false
+
+    /// 追加字节；返回 true 表示调用方需要调度一次 flush
+    func append(_ bytes: [UInt8]) -> Bool {
+        buffer.append(contentsOf: bytes)
+        if hasPendingFlush { return false }
+        hasPendingFlush = true
+        return true
+    }
+
+    /// 取出并清空缓冲区，重置 flush 标志
+    func drain() -> [UInt8] {
+        hasPendingFlush = false
+        let result = buffer
+        buffer = []
+        return result
+    }
+}
+
 // MARK: - 终端控制器委托
 
 /// 终端控制器委托协议
@@ -42,6 +70,14 @@ final class TerminalController: ObservableObject {
         case failed(String)
     }
 
+    /// 待确认的主机密钥状态
+    enum PendingHostKeyState {
+        /// 首次连接新主机（对应 D02 弹窗）
+        case newHost(fingerprint: HostKeyFingerprint)
+        /// 主机密钥已变更（对应 D03 弹窗）
+        case changedHost(oldFingerprint: String, newFingerprint: HostKeyFingerprint)
+    }
+
     struct ReconnectConfig {
         var enabled: Bool = true
         var maxAttempts: Int = 3
@@ -60,6 +96,9 @@ final class TerminalController: ObservableObject {
     /// 会话配置
     private let session: Session
 
+    /// 会话 ID 缓存（供 deinit 安全访问，避免在任意线程访问 Core Data 对象）
+    private let sessionId: UUID
+
     /// libssh2 SSH 连接
     private var sshConnection: SSH2Connection?
 
@@ -69,7 +108,35 @@ final class TerminalController: ObservableObject {
     @Published private(set) var state: State = .disconnected
     var reconnectConfig = ReconnectConfig()
     @Published var terminalSize: TerminalSize = .default
+    @Published var terminalTitle: String = ""
     weak var delegate: TerminalControllerDelegate?
+
+    /// 待用户确认的主机密钥状态（nil = 无待确认）
+    @Published var pendingHostKeyState: PendingHostKeyState?
+
+    /// W12.3：本设备凭据缺失（iCloud 同步后首次连接提示）
+    @Published var credentialsMissing: Bool = false
+
+    /// ProxyJump 连接管理器（多跳场景使用）
+    private var proxyJumpManager: ProxyJumpManager?
+
+    /// SFTP 会话（独立 SSH 连接）
+    @Published var sftpSession: SFTPSession?
+
+    /// SFTP 传输队列
+    @Published var sftpTransferQueue: SFTPTransferQueue?
+
+    /// SFTP 面板是否显示
+    @Published var isSFTPPanelOpen: Bool = false
+
+    /// 端口转发隧道管理器
+    let tunnelManager = TunnelManager()
+
+    /// 隧道管理器面板是否显示
+    @Published var isTunnelManagerOpen: Bool = false
+
+    /// Compose Pane 是否显示
+    @Published var isComposePaneOpen: Bool = false
 
     private var reconnectTask: Task<Void, Never>?
     private var userDisconnected = false
@@ -79,14 +146,24 @@ final class TerminalController: ObservableObject {
 
     init(session: Session) {
         self.session = session
+        self.sessionId = session.id
         setupObservers()
+        // W12.6：注册到同步输入管理器
+        SyncInputStore.shared.register(self, for: session.id)
     }
 
     deinit {
+        let id = sessionId
+        Task { @MainActor in
+            SyncInputStore.shared.unregister(sessionId: id)
+        }
         Task { [weak self] in
             await self?.disconnect()
         }
     }
+
+    /// W12.6：供外部查询的会话标题（用于 SyncInputStore.SessionInfo）
+    var sessionTitle: String { session.name }
 
     private func setupObservers() {
         $terminalSize
@@ -95,6 +172,9 @@ final class TerminalController: ObservableObject {
             .sink { [weak self] newSize in
                 guard let self = self else { return }
                 self.sshConnection?.resizeTerminal(cols: newSize.columns, rows: newSize.rows)
+                if let pm = self.proxyJumpManager {
+                    Task { await pm.resizeTerminal(cols: newSize.columns, rows: newSize.rows) }
+                }
             }
             .store(in: &cancellables)
     }
@@ -104,9 +184,23 @@ final class TerminalController: ObservableObject {
     func connect() async throws {
         guard state == .disconnected || state.isFailed else { return }
 
+        // W12.3：凭据预检查（iCloud 同步后本设备无凭据时给出提示）
+        if isCredentialMissing() {
+            credentialsMissing = true
+            return
+        }
+        credentialsMissing = false
+
         userDisconnected = false
+        pendingHostKeyState = nil
         state = .connecting
         delegate?.terminalController(self, didChangeState: state)
+
+        // 若有跳板机，走 ProxyJump 路径
+        if !session.jumpHosts.isEmpty {
+            try await connectViaProxyJump()
+            return
+        }
 
         // 从 Keychain 读取凭据
         let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
@@ -114,19 +208,41 @@ final class TerminalController: ObservableObject {
         let privateKeyPath = session.privateKeyPath
         let authMethod = session.authMethod
         let host = session.host
-        let port = Int32(session.port)
+        let port = session.port
         let username = session.username
         let cols = terminalSize.columns
         let rows = terminalSize.rows
 
+        // 构建 SSHSessionConfig 供 TunnelManager 使用
+        let sessionConfig = SSHSessionConfig(
+            host: host, port: port, username: username, authMethod: authMethod,
+            password: password, privateKeyPath: privateKeyPath, passphrase: passphrase
+        )
+
         let conn = SSH2Connection()
 
-        // 数据回调：从 libssh2 读取线程分发到主线程喂给 SwiftTerm
+        // W15.2：每条连接独享一个合并器，闭包直接捕获 actor 引用（无需主 Actor 跳转）
+        let coalescer = TerminalDataCoalescer()
+
+        // 数据回调：SSH 读取线程直接触发，通过 coalescer 将高频包合并到 16ms 窗口
+        // 每个窗口只创建一次 MainActor.run，避免主线程微任务积压
         conn.onDataReceived = { [weak self] data in
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                self.terminalView?.feed(byteArray: [UInt8](data))
-                self.delegate?.terminalController(self, didReceiveData: data)
+            let bytes = [UInt8](data)
+            Task { [weak self] in
+                // append 在 TerminalDataCoalescer actor 上执行，不占用主线程
+                let shouldFlush = await coalescer.append(bytes)
+                guard shouldFlush else { return }
+                // 窗口期：16ms ≈ 1 帧 @ 60fps
+                try? await Task.sleep(nanoseconds: 16_000_000)
+                let flushed = await coalescer.drain()
+                guard !flushed.isEmpty else { return }
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    // W12.4：关键字高亮处理
+                    let processed = HighlightEngine.shared.process(Data(flushed))
+                    self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                    self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                }
             }
         }
 
@@ -134,6 +250,30 @@ final class TerminalController: ObservableObject {
         conn.onDisconnected = { [weak self] in
             Task { @MainActor [weak self] in
                 self?.handleConnectionLost()
+            }
+        }
+
+        // 主机密钥验证回调（在握手后、认证前同步调用）
+        // host/port 为值类型，在 Task.detached 内安全访问
+        conn.onVerifyHostKey = { fingerprint in
+            let result = KnownHostsManager.shared.check(
+                host: host,
+                port: port,
+                fingerprint: fingerprint
+            )
+            switch result {
+            case .match:
+                return
+            case .notFound:
+                // 将指纹携带在 error 中传回 MainActor
+                throw SSHError.hostKeyUnknown(fingerprint)
+            case .mismatch(let existing):
+                throw SSHError.hostKeyChanged(
+                    oldFingerprint: existing.fingerprint,
+                    newFingerprint: fingerprint
+                )
+            case .failure:
+                return // 校验失败时放行，不阻止连接
             }
         }
 
@@ -166,18 +306,44 @@ final class TerminalController: ObservableObject {
                 case .sshAgent:
                     try conn.connectWithAgent(host: host, port: port, username: username)
                     conn.resizeTerminal(cols: cols, rows: rows)
+
+                case .keyboardInteractive:
+                    // keyboard-interactive 底层复用密码认证通道
+                    guard let pass = password else {
+                        throw SSHError.authenticationFailed(method: "keyboard-interactive", reason: "密码未提供")
+                    }
+                    try conn.connect(host: host, port: port, username: username, password: pass)
+                    conn.resizeTerminal(cols: cols, rows: rows)
                 }
             }.value
 
             state = .connected
             delegate?.terminalController(self, didChangeState: state)
+            // 连接成功后通知 TunnelManager，触发 autoStart 规则
+            tunnelManager.handleSSHConnected(config: sessionConfig, sessionID: session.id)
 
         } catch let error as SSHError {
-            state = .failed(error.localizedDescription)
-            delegate?.terminalController(self, didChangeState: state)
-            delegate?.terminalController(self, didFailWithError: error)
-            if shouldAutoReconnect(after: error) { scheduleReconnect() }
-            throw error
+            switch error {
+            case .hostKeyUnknown(let fingerprint):
+                // D02: 新主机，等待用户确认，不标记为 failed
+                pendingHostKeyState = .newHost(fingerprint: fingerprint)
+                state = .disconnected
+                delegate?.terminalController(self, didChangeState: state)
+                return
+            case .hostKeyChanged(let oldFP, let newFP):
+                // D03: 密钥变更，标记为 failed + 显示安全警告
+                pendingHostKeyState = .changedHost(oldFingerprint: oldFP, newFingerprint: newFP)
+                state = .failed(error.localizedDescription)
+                delegate?.terminalController(self, didChangeState: state)
+                delegate?.terminalController(self, didFailWithError: error)
+                return
+            default:
+                state = .failed(error.localizedDescription)
+                delegate?.terminalController(self, didChangeState: state)
+                delegate?.terminalController(self, didFailWithError: error)
+                if shouldAutoReconnect(after: error) { scheduleReconnect() }
+                throw error
+            }
         } catch {
             let sshError = SSHError.connectionFailed(host: session.host, port: session.port, underlying: error)
             state = .failed(error.localizedDescription)
@@ -193,8 +359,58 @@ final class TerminalController: ObservableObject {
         reconnectTask = nil
         sshConnection?.disconnect()
         sshConnection = nil
+        if let pm = proxyJumpManager {
+            await pm.disconnect()
+            proxyJumpManager = nil
+        }
+        // 断开时同步关闭 SFTP 会话
+        await closeSFTPPanel()
+        // 断开时停止所有隧道
+        tunnelManager.handleSSHDisconnected()
         state = .disconnected
         delegate?.terminalController(self, didChangeState: state)
+    }
+
+    // MARK: - SFTP 面板管理
+
+    /// 打开 SFTP 面板（建立独立 SFTP 连接）
+    func openSFTPPanel() async throws {
+        guard state == .connected else { throw SSHError.sessionClosed }
+        guard sftpSession == nil else {
+            // 已连接，仅显示面板
+            isSFTPPanelOpen = true
+            return
+        }
+
+        // 从 Keychain 读取凭据
+        let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
+        let passphrase = try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)
+
+        let newSFTPSession = SFTPSession()
+        try await newSFTPSession.connect(
+            host: session.host,
+            port: session.port,
+            username: session.username,
+            authMethod: session.authMethod,
+            password: password,
+            privateKeyPath: session.privateKeyPath,
+            passphrase: passphrase
+        )
+
+        sftpSession = newSFTPSession
+        sftpTransferQueue = SFTPTransferQueue(sftpSession: newSFTPSession)
+        isSFTPPanelOpen = true
+        print("[TerminalController] SFTP 面板已打开")
+    }
+
+    /// 关闭 SFTP 面板
+    func closeSFTPPanel() async {
+        if let session = sftpSession {
+            await session.disconnect()
+        }
+        sftpSession = nil
+        sftpTransferQueue = nil
+        isSFTPPanelOpen = false
     }
 
     func reconnect() async throws {
@@ -202,15 +418,139 @@ final class TerminalController: ObservableObject {
         try await connect()
     }
 
+    // MARK: - 主机密钥确认（D02 / D03）
+
+    /// 用户接受新主机的密钥（D02 确认后调用）
+    func acceptNewHostKey() {
+        guard case .newHost(let fingerprint) = pendingHostKeyState else { return }
+        try? KnownHostsManager.shared.add(
+            host: session.host,
+            port: session.port,
+            fingerprint: fingerprint
+        )
+        pendingHostKeyState = nil
+        Task { try? await connect() }
+    }
+
+    /// 用户接受密钥变更并继续连接（D03 高风险操作）
+    func acceptChangedHostKey() {
+        guard case .changedHost(_, let newFP) = pendingHostKeyState else { return }
+        // 更新 KnownHosts 为新密钥
+        try? KnownHostsManager.shared.add(
+            host: session.host,
+            port: session.port,
+            fingerprint: newFP
+        )
+        pendingHostKeyState = nil
+        state = .disconnected
+        Task { try? await connect() }
+    }
+
+    /// 用户拒绝主机密钥（D02 / D03 取消）
+    func rejectHostKey() {
+        pendingHostKeyState = nil
+        state = .disconnected
+        delegate?.terminalController(self, didChangeState: state)
+    }
+
+    // MARK: - ProxyJump 连接
+
+    /// 通过跳板机链连接目标服务器（9.1/9.2 ProxyJump）
+    private func connectViaProxyJump() async throws {
+        let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
+        let passphrase = try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)
+
+        var targetConfig = SSHSessionConfig.from(
+            session: session,
+            password: password,
+            passphrase: passphrase
+        )
+        targetConfig.terminalColumns = terminalSize.columns
+        targetConfig.terminalRows = terminalSize.rows
+
+        let manager = ProxyJumpManager(
+            proxyChain: session.jumpHosts,
+            targetConfig: targetConfig
+        )
+
+        do {
+            try await manager.connect()
+        } catch {
+            let sshError: SSHError
+            if let e = error as? SSHError {
+                sshError = e
+            } else {
+                sshError = SSHError.connectionFailed(host: session.host, port: session.port, underlying: error)
+            }
+            state = .failed(sshError.localizedDescription)
+            delegate?.terminalController(self, didChangeState: state)
+            delegate?.terminalController(self, didFailWithError: sshError)
+            throw sshError
+        }
+
+        proxyJumpManager = manager
+
+        // 将数据流桥接到 SwiftTerm（W12.4 高亮 + W15.2 ProxyJump 路径合并器）
+        if let stream = await manager.getDataStream() {
+            Task { [weak self] in
+                let coalescer = TerminalDataCoalescer()
+                for await data in stream {
+                    guard self != nil else { return }
+                    let bytes = [UInt8](data)
+                    let shouldFlush = await coalescer.append(bytes)
+                    guard shouldFlush else { continue }
+                    try? await Task.sleep(nanoseconds: 16_000_000)
+                    let flushed = await coalescer.drain()
+                    guard !flushed.isEmpty else { continue }
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        let processed = HighlightEngine.shared.process(Data(flushed))
+                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                    }
+                }
+            }
+        }
+
+        state = .connected
+        delegate?.terminalController(self, didChangeState: state)
+    }
+
     // MARK: - 数据传输
 
     func send(_ data: Data) async throws {
-        guard state == .connected, let conn = sshConnection else {
+        guard state == .connected else {
             throw SSHError.sessionClosed
         }
-        try await Task.detached(priority: .userInitiated) {
-            try conn.write(data)
-        }.value
+        if let pm = proxyJumpManager {
+            try await pm.write(data)
+        } else {
+            guard let conn = sshConnection else {
+                throw SSHError.sessionClosed
+            }
+            try await Task.detached(priority: .userInitiated) {
+                try conn.write(data)
+            }.value
+        }
+        // W12.6：将输入广播到同步组中的其他终端
+        SyncInputStore.shared.broadcast(data: data, from: sessionId)
+    }
+
+    /// W12.6：接收来自同步组其他终端的广播输入，直接写入 SSH（不再二次广播）
+    func broadcastReceive(data: Data) {
+        Task {
+            guard state == .connected else { return }
+            do {
+                if let pm = proxyJumpManager {
+                    try await pm.write(data)
+                } else if let conn = sshConnection {
+                    try await Task.detached(priority: .userInitiated) {
+                        try conn.write(data)
+                    }.value
+                }
+            } catch {
+                print("[SyncInput] 广播接收写入失败: \(error.localizedDescription)")
+            }
+        }
     }
 
     func send(_ string: String) async throws {
@@ -224,11 +564,45 @@ final class TerminalController: ObservableObject {
         try await send(Data([control]))
     }
 
+    // MARK: - Compose Pane
+
+    /// 发送 Compose Pane 中的命令内容到当前终端
+    func sendComposeContent(_ text: String) {
+        Task { try? await send(text) }
+    }
+
+    /// 发送快捷命令到当前终端（支持逐行模式）
+    func sendQuickCommand(_ command: QuickCommand) {
+        let lines = command.content.components(separatedBy: "\n")
+        if command.sendLineByLine && lines.count > 1 {
+            for (index, line) in lines.enumerated() {
+                let content = command.appendNewline ? line + "\r" : line
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(command.lineDelay * index)) {
+                    Task { try? await self.send(content) }
+                }
+            }
+        } else {
+            let content = command.appendNewline ? command.content + "\r" : command.content
+            Task { try? await send(content) }
+        }
+    }
+
+    // MARK: - 隧道管理器面板
+
+    func openTunnelManager() {
+        isTunnelManagerOpen = true
+    }
+
+    func closeTunnelManager() {
+        isTunnelManagerOpen = false
+    }
+
     // MARK: - 终端操作
 
     /// 清屏：向本地 SwiftTerm 发送 RIS（Reset to Initial State）
     func clearTerminal() {
-        terminalView?.feed(byteArray: [UInt8]("\u{1B}c".utf8))
+        let bytes = [UInt8]("\u{1B}c".utf8)
+        terminalView?.feed(byteArray: bytes[...])
     }
 
     // MARK: - PTY 控制
@@ -236,6 +610,9 @@ final class TerminalController: ObservableObject {
     func resizePTY(columns: Int, rows: Int) {
         guard state == .connected else { return }
         sshConnection?.resizeTerminal(cols: columns, rows: rows)
+        if let pm = proxyJumpManager {
+            Task { await pm.resizeTerminal(cols: columns, rows: rows) }
+        }
         terminalSize = TerminalSize(columns: columns, rows: rows)
     }
 
@@ -247,6 +624,18 @@ final class TerminalController: ObservableObject {
         if case .reconnecting = state {
             state = .disconnected
             delegate?.terminalController(self, didChangeState: state)
+        }
+    }
+
+    /// W12.3：检查本设备是否缺少凭据（iCloud 同步后首次连接场景）
+    private func isCredentialMissing() -> Bool {
+        switch session.authMethod {
+        case .password, .keyboardInteractive:
+            return (try? KeychainService.shared.getPassword(for: session.id, type: .password)) == nil
+        case .privateKey:
+            return session.privateKeyPath == nil || (session.privateKeyPath?.isEmpty ?? true)
+        case .sshAgent:
+            return false
         }
     }
 
@@ -299,7 +688,7 @@ final class TerminalController: ObservableObject {
 
 // MARK: - SwiftTerm TerminalViewDelegate
 
-extension TerminalController: TerminalViewDelegate {
+extension TerminalController: SwiftTerm.TerminalViewDelegate {
 
     nonisolated func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
         let d = Data(data)
@@ -312,6 +701,7 @@ extension TerminalController: TerminalViewDelegate {
 
     nonisolated func setTerminalTitle(source: SwiftTerm.TerminalView, title: String) {
         Task { @MainActor in
+            self.terminalTitle = title
             delegate?.terminalController(self, didChangeTitle: title)
         }
     }
@@ -334,7 +724,7 @@ extension TerminalController: TerminalViewDelegate {
 
     nonisolated func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {}
 
-    nonisolated func iTermContent(source: SwiftTerm.TerminalView, content: Data) {}
+    nonisolated func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
 
     nonisolated func mouseModeChanged(source: SwiftTerm.TerminalView) {}
 }

@@ -197,89 +197,245 @@ struct ShellMateApp: App {
     private func configureAppearance() {
         // 配置窗口外观
         // 在这里可以设置全局外观偏好
+
+        // W15.1 冷启动优化：在 UI 就绪后立即在后台预热 HighlightEngine
+        // 避免首次 SSH 连接时正则编译阻塞主线程（HighlightEngine 是 @MainActor 单例）
+        Task { @MainActor in
+            _ = HighlightEngine.shared
+        }
     }
 }
 
-/// 设置视图占位
+// MARK: - 设置窗口
+
+/// 设置页导航项
+private enum SettingsTab: String, CaseIterable, Identifiable {
+    case general   = "通用"
+    case highlight = "关键词高亮"
+    case appearance = "外观"
+    case security  = "安全"
+    case sync      = "同步"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .general:    return "gear"
+        case .highlight:  return "highlighter"
+        case .appearance: return "paintbrush"
+        case .security:   return "lock.shield"
+        case .sync:       return "icloud"
+        }
+    }
+}
+
+/// 设置主视图（640×520，不可调整大小）
+/// 左侧 160pt 导航 + 右侧 480pt 内容区
 struct SettingsView: View {
+
+    @State private var selectedTab: SettingsTab = .general
+
     var body: some View {
-        TabView {
+        HStack(spacing: 0) {
+            // 左侧导航
+            settingsNav
+                .frame(width: 160)
+
+            Divider()
+
+            // 右侧内容
+            settingsContent
+                .frame(width: 480)
+        }
+        .frame(width: 640, height: 520)
+    }
+
+    // MARK: - 导航列
+
+    private var settingsNav: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(SettingsTab.allCases) { tab in
+                settingsNavItem(tab)
+            }
+            Spacer()
+        }
+        .padding(.top, 16)
+        .padding(.horizontal, 8)
+        .background(DesignTokens.Colors.surfacePanel)
+    }
+
+    private func settingsNavItem(_ tab: SettingsTab) -> some View {
+        let isSelected = selectedTab == tab
+        return Button(action: { selectedTab = tab }) {
+            HStack(spacing: 8) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 13))
+                    .foregroundColor(isSelected
+                        ? DesignTokens.Colors.accentPrimary
+                        : DesignTokens.Colors.textSecondary)
+                    .frame(width: 18)
+
+                Text(tab.rawValue)
+                    .font(.system(size: 12, weight: isSelected ? .medium : .regular))
+                    .foregroundColor(isSelected
+                        ? DesignTokens.Colors.textPrimary
+                        : DesignTokens.Colors.textSecondary)
+                    .lineLimit(1)
+
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.15) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 内容区
+
+    @ViewBuilder
+    private var settingsContent: some View {
+        switch selectedTab {
+        case .general:
             GeneralSettingsView()
-                .tabItem {
-                    Label("通用", systemImage: "gear")
-                }
-
-            TerminalSettingsView()
-                .tabItem {
-                    Label("终端", systemImage: "terminal")
-                }
-
+        case .highlight:
+            HighlightSettingsView()
+        case .appearance:
+            AppearanceSettingsView()
+        case .security:
             SecuritySettingsView()
-                .tabItem {
-                    Label("安全", systemImage: "lock.shield")
-                }
-
+        case .sync:
             SyncSettingsView()
-                .tabItem {
-                    Label("同步", systemImage: "icloud")
-                }
         }
-        .frame(width: 500, height: 400)
     }
 }
 
-/// 通用设置视图
+// MARK: - 通用设置视图
+
+/// 通用设置面板（W14 完善）
 struct GeneralSettingsView: View {
-    var body: some View {
-        Form {
-            Text("通用设置")
-                .font(.headline)
 
-            Text("W6-W7 将实现完整的设置面板")
-                .foregroundColor(.secondary)
+    @AppStorage("general.startupBehavior")  private var startupBehavior: String = "last"
+    @AppStorage("general.confirmOnClose")   private var confirmOnClose: Bool = true
+    @AppStorage("general.checkUpdates")     private var checkUpdates: Bool = true
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // 启动行为
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("启动行为")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Picker("启动时", selection: $startupBehavior) {
+                        Text("恢复上次会话").tag("last")
+                        Text("显示欢迎界面").tag("welcome")
+                        Text("空白界面").tag("blank")
+                    }
+                    .pickerStyle(.radioGroup)
+                    .font(.system(size: 12))
+                }
+
+                Divider()
+
+                // 关闭行为
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("关闭确认")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Toggle(isOn: $confirmOnClose) {
+                        Text("关闭活跃连接时弹窗确认")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                    .toggleStyle(.checkbox)
+                }
+
+                Divider()
+
+                // 更新
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("更新")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Toggle(isOn: $checkUpdates) {
+                        Text("自动检查更新")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                    .toggleStyle(.checkbox)
+
+                    Button("立即检查更新…") {}
+                        .buttonStyle(BorderedButtonStyle())
+                        .controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
         }
-        .padding()
     }
 }
 
-/// 终端设置视图
-struct TerminalSettingsView: View {
-    var body: some View {
-        Form {
-            Text("终端设置")
-                .font(.headline)
+// MARK: - 同步设置视图
 
-            Text("W6-W7 将实现完整的终端设置")
-                .foregroundColor(.secondary)
-        }
-        .padding()
-    }
-}
-
-/// 安全设置视图
-struct SecuritySettingsView: View {
-    var body: some View {
-        Form {
-            Text("安全设置")
-                .font(.headline)
-
-            Text("W6-W7 将实现完整的安全设置")
-                .foregroundColor(.secondary)
-        }
-        .padding()
-    }
-}
-
-/// 同步设置视图
+/// iCloud 同步设置面板（W14 完善）
 struct SyncSettingsView: View {
-    var body: some View {
-        Form {
-            Text("iCloud 同步设置")
-                .font(.headline)
 
-            Text("W6-W7 将实现完整的同步设置")
-                .foregroundColor(.secondary)
+    @AppStorage("sync.enabled")      private var syncEnabled: Bool = true
+    @AppStorage("sync.syncKeychain") private var syncKeychain: Bool = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // iCloud 同步开关
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("iCloud 同步")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Toggle(isOn: $syncEnabled) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("启用 iCloud 同步")
+                                .font(.system(size: 12))
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                            Text("在所有 Mac 设备间同步会话配置")
+                                .font(.system(size: 10))
+                                .foregroundColor(DesignTokens.Colors.textTertiary)
+                        }
+                    }
+                    .toggleStyle(.checkbox)
+                }
+
+                Divider()
+
+                // 凭据同步说明
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("凭据与安全")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignTokens.Colors.accentPrimary)
+                        Text("SSH 密码和私钥存储在本地 Keychain 中，不会通过 iCloud 同步。在新设备上首次连接时需要重新输入凭据。")
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(10)
+                    .background(DesignTokens.Colors.surfaceCard)
+                    .cornerRadius(6)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
         }
-        .padding()
     }
 }

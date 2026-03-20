@@ -298,8 +298,8 @@ final class SSHProcessBridge {
         slaveFD = slave
 
         // 设置非阻塞模式
-        var flags = fcntl(masterFD, F_GETFL, 0)
-        fcntl(masterFD, F_SETFL, flags | O_NONBLOCK)
+        let flags = fcntl(masterFD, F_GETFL, 0)
+        _ = fcntl(masterFD, F_SETFL, flags | O_NONBLOCK)
 
         print("[SSHProcessBridge] PTY 已创建 master=\(masterFD) slave=\(slaveFD)")
     }
@@ -336,7 +336,8 @@ final class SSHProcessBridge {
 
     /// 读取循环
     private func readLoop() {
-        let bufferSize = 4096
+        // W15.5：32KB 缓冲区与 SSH2Connection 对齐，减少 read() 系统调用频率
+        let bufferSize = 32768
         var buffer = [UInt8](repeating: 0, count: bufferSize)
 
         while isConnected && masterFD >= 0 {
@@ -462,6 +463,9 @@ actor SSHProcessConnection {
                     rows: config.terminalRows
                 )
             )
+
+        case .keyboardInteractive:
+            throw SSHError.authMethodNotSupported(method: "keyboard-interactive")
         }
 
         self.bridge = processBridge
