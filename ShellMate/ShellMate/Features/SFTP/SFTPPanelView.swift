@@ -90,101 +90,120 @@ struct SFTPPanelView: View {
     // MARK: - 子视图
 
     private var toolbarView: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-            // 返回上级
-            Button(action: navigateUp) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 11, weight: .medium))
-            }
-            .buttonStyle(.plain)
-            .disabled(currentPath == "/" || isLoading)
-            .help("返回上级目录")
-            .foregroundColor(currentPath == "/" ? DesignTokens.Colors.textDisabled : DesignTokens.Colors.textSecondary)
-
-            // 刷新
-            Button(action: { loadDirectory(path: currentPath) }) {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 11, weight: .medium))
-            }
-            .buttonStyle(.plain)
-            .disabled(isLoading)
-            .foregroundColor(DesignTokens.Colors.textSecondary)
-            .help("刷新")
-
-            Divider().frame(height: 16)
-
-            // 上传文件
-            Button(action: uploadFile) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.up.circle")
-                        .font(.system(size: 11))
-                    Text("上传")
-                        .font(DesignTokens.Typography.labelSmall)
-                }
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(DesignTokens.Colors.textSecondary)
-            .disabled(isLoading)
-            .help("上传文件到当前目录")
-
-            // 下载选中文件
-            Button(action: downloadSelected) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 11))
-                    Text("下载")
-                        .font(DesignTokens.Typography.labelSmall)
-                }
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(selectedItemId != nil ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
-            .disabled(selectedItemId == nil || isLoading)
-            .help("下载选中文件")
-
-            Divider().frame(height: 16)
-
-            // 新建文件夹
-            Button(action: { showNewFolderDialog = true }) {
-                Image(systemName: "folder.badge.plus")
+        VStack(spacing: 0) {
+            // SFTPHeader（Figma 规范：高 28pt，含标题 + 收起按钮）
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: "folder.fill.badge.wifi")
                     .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+
+                Text("SFTP")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+
+                Spacer()
+
+                // 收起面板（替代 ×，使用 sidebar 收起图标）
+                Button(action: onClose) {
+                    Image(systemName: "sidebar.right")
+                        .font(.system(size: 12))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .help("隐藏 SFTP 面板")
             }
-            .buttonStyle(.plain)
-            .foregroundColor(DesignTokens.Colors.textSecondary)
-            .help("新建文件夹")
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .frame(height: 28)
+            .background(DesignTokens.Colors.surfacePanel)
 
-            Spacer()
+            Divider()
 
-            // 传输进度切换
-            Button(action: { withAnimation { showTransferPanel.toggle() } }) {
-                HStack(spacing: 4) {
-                    Image(systemName: transferQueue.hasActiveTransfers ? "arrow.up.arrow.down.circle.fill" : "arrow.up.arrow.down.circle")
-                        .font(.system(size: 11))
-                    if transferQueue.hasActiveTransfers {
-                        Text("\(transferQueue.activeCount)")
-                            .font(DesignTokens.Typography.codeSmall)
+            // 操作工具栏
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                // 返回上级
+                Button(action: navigateUp) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .disabled(currentPath == "/" || isLoading)
+                .help("返回上级目录")
+                .foregroundColor(currentPath == "/" ? DesignTokens.Colors.textDisabled : DesignTokens.Colors.textSecondary)
+
+                // 刷新
+                Button(action: { loadDirectory(path: currentPath) }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .help("刷新")
+
+                Divider().frame(height: 16)
+
+                // 上传文件
+                Button(action: uploadFile) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.circle")
+                            .font(.system(size: 11))
+                        Text("上传")
+                            .font(DesignTokens.Typography.labelSmall)
                     }
                 }
-            }
-            .buttonStyle(.plain)
-            .foregroundColor(transferQueue.hasActiveTransfers
-                ? DesignTokens.Colors.statusConnecting
-                : DesignTokens.Colors.textSecondary)
-            .help("传输队列")
+                .buttonStyle(.plain)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .disabled(isLoading)
+                .help("上传文件到当前目录")
 
-            Divider().frame(height: 16)
+                // 下载选中文件
+                Button(action: downloadSelected) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.system(size: 11))
+                        Text("下载")
+                            .font(DesignTokens.Typography.labelSmall)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(selectedItemId != nil ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
+                .disabled(selectedItemId == nil || isLoading)
+                .help("下载选中文件")
 
-            // 关闭面板
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .medium))
+                Divider().frame(height: 16)
+
+                // 新建文件夹
+                Button(action: { showNewFolderDialog = true }) {
+                    Image(systemName: "folder.badge.plus")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .help("新建文件夹")
+
+                Spacer()
+
+                // 传输进度切换
+                Button(action: { withAnimation { showTransferPanel.toggle() } }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: transferQueue.hasActiveTransfers ? "arrow.up.arrow.down.circle.fill" : "arrow.up.arrow.down.circle")
+                            .font(.system(size: 11))
+                        if transferQueue.hasActiveTransfers {
+                            Text("\(transferQueue.activeCount)")
+                                .font(DesignTokens.Typography.codeSmall)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(transferQueue.hasActiveTransfers
+                    ? DesignTokens.Colors.statusConnecting
+                    : DesignTokens.Colors.textSecondary)
+                .help("传输队列")
             }
-            .buttonStyle(.plain)
-            .foregroundColor(DesignTokens.Colors.textTertiary)
-            .help("关闭 SFTP 面板")
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(DesignTokens.Colors.surfacePanel)
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.surfacePanel)
     }
 
     private var pathBarView: some View {

@@ -71,6 +71,9 @@ struct TerminalView: View {
     private let minFontSize: Double = 9
     private let maxFontSize: Double = 24
 
+    /// SFTP 面板宽度（Figma 规范默认 290pt，可拖拽调整）
+    @State private var sftpPanelWidth: CGFloat = 290
+
     // MARK: - 初始化
 
     init(session: Session) {
@@ -91,24 +94,30 @@ struct TerminalView: View {
 
             // 终端主区域（含 Compose Pane 纵向布局）
             let terminalAndCompose = VStack(spacing: 0) {
-                // 终端 + SFTP 面板水平分割
-                if controller.isSFTPPanelOpen,
-                   let sftpSess = controller.sftpSession,
-                   let transferQueue = controller.sftpTransferQueue {
-                    HSplitView {
-                        terminalContentView
-                            .frame(minWidth: 300)
+                // 终端内容区 + SFTP 右侧边栏（Figma 规范：右侧固定面板 290pt）
+                HStack(spacing: 0) {
+                    // 终端主内容（flex-1）
+                    terminalContentView
+
+                    // SFTP 右侧 Sidebar Tab（始终可见，20pt）
+                    sftpSidebarTabView
+
+                    // SFTP 面板（右侧展开，默认 290pt）
+                    if controller.isSFTPPanelOpen,
+                       let sftpSess = controller.sftpSession,
+                       let transferQueue = controller.sftpTransferQueue {
                         SFTPPanelView(
                             sftpSession: sftpSess,
                             transferQueue: transferQueue,
                             onClose: {
-                                Task { await controller.closeSFTPPanel() }
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    Task { await controller.closeSFTPPanel() }
+                                }
                             }
                         )
-                        .frame(minWidth: 280, maxWidth: 600)
+                        .frame(width: sftpPanelWidth)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
-                } else {
-                    terminalContentView
                 }
 
                 // Compose Pane（O02）停靠于终端下方
@@ -505,6 +514,68 @@ struct TerminalView: View {
         .padding(DesignTokens.Spacing.sm)
     }
 
+    // MARK: - SFTP 右侧 Sidebar
+
+    /// SFTP 右侧边栏 Tab 条（始终可见，20pt 宽）
+    /// 参考 Figma Screen 03：SFTPPanel 在 TerminalArea 右侧；左边框作为面板分隔线
+    private var sftpSidebarTabView: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    toggleSFTPPanel()
+                }
+            } label: {
+                VStack(spacing: 5) {
+                    // 箭头方向指示（展开 ← / 收起 →）
+                    Image(systemName: controller.isSFTPPanelOpen ? "chevron.right" : "chevron.left")
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+
+                    // SFTP 图标（Figma: folder.fill）
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(
+                            controller.isSFTPPanelOpen
+                                ? DesignTokens.Colors.accentPrimary
+                                : DesignTokens.Colors.textTertiary
+                        )
+
+                    // "SFTP" 纵向标签（面板收起时显示）
+                    if !controller.isSFTPPanelOpen {
+                        Text("SFTP")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(DesignTokens.Colors.textTertiary)
+                            .rotationEffect(.degrees(-90))
+                            .fixedSize()
+                    }
+                }
+                .frame(width: 20)
+                .padding(.vertical, 10)
+            }
+            .buttonStyle(.plain)
+            .disabled(controller.state != .connected && !controller.isSFTPPanelOpen)
+            .help(controller.isSFTPPanelOpen ? "隐藏 SFTP 面板" : "SFTP 文件管理器")
+
+            Spacer()
+        }
+        .frame(width: 20)
+        .background(DesignTokens.Colors.surfacePanel)
+        .overlay(
+            Rectangle()
+                .frame(width: 1)
+                .foregroundColor(DesignTokens.Colors.borderFaint),
+            alignment: .leading
+        )
+        .overlay(
+            Rectangle()
+                .frame(width: 1)
+                .foregroundColor(DesignTokens.Colors.borderFaint),
+            alignment: .trailing
+        )
+    }
+
     private var terminalContentView: some View {
         ZStack {
             SwiftTermViewRepresentable(
@@ -640,11 +711,14 @@ struct TerminalView: View {
 
     private func toggleSFTPPanel() {
         if controller.isSFTPPanelOpen {
-            Task { await controller.closeSFTPPanel() }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                Task { await controller.closeSFTPPanel() }
+            }
         } else {
             Task {
                 do {
                     try await controller.openSFTPPanel()
+                    withAnimation(.easeInOut(duration: 0.2)) {}
                 } catch {
                     sftpErrorMessage = error.localizedDescription
                     showSFTPError = true
