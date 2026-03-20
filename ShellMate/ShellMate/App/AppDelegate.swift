@@ -112,4 +112,10 @@ extension Notification.Name {
     static let toggleSidebarRequested = Notification.Name("toggleSidebarRequested")
     static let toggleToolbarRequested = Notification.Name("toggleToolbarRequested")
     static let focusSidebarSearchRequested = Notification.Name("focusSidebarSearchRequested")
+
+    // 功能面板操作
+    static let sftpPanelRequested = Notification.Name("sftpPanelRequested")
+    static let tunnelManagerRequested = Notification.Name("tunnelManagerRequested")
+    static let quickCommandsRequested = Notification.Name("quickCommandsRequested")
+    static let composePaneRequested = Notification.Name("composePaneRequested")
 }

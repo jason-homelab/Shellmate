@@ -158,6 +158,28 @@ struct ShellMateApp: App {
                 NotificationCenter.default.post(name: .resetFontRequested, object: nil)
             }
             .keyboardShortcut("0", modifiers: .command)
+
+            Divider()
+
+            Button("SFTP 文件管理器") {
+                NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
+            }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+
+            Button("隧道管理器") {
+                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
+            }
+            .keyboardShortcut("u", modifiers: [.command, .shift])
+
+            Button("快捷命令") {
+                NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
+            }
+            .keyboardShortcut("k", modifiers: [.command, .shift])
+
+            Button("命令编辑区") {
+                NotificationCenter.default.post(name: .composePaneRequested, object: nil)
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
         }
 
         // 帮助菜单扩展
@@ -210,11 +232,12 @@ struct ShellMateApp: App {
 
 /// 设置页导航项
 private enum SettingsTab: String, CaseIterable, Identifiable {
-    case general   = "通用"
-    case highlight = "关键词高亮"
+    case general    = "通用"
+    case highlight  = "关键词高亮"
     case appearance = "外观"
-    case security  = "安全"
-    case sync      = "同步"
+    case terminal   = "终端"
+    case security   = "安全"
+    case sync       = "同步"
 
     var id: String { rawValue }
 
@@ -223,6 +246,7 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .general:    return "gear"
         case .highlight:  return "highlighter"
         case .appearance: return "paintbrush"
+        case .terminal:   return "terminal"
         case .security:   return "lock.shield"
         case .sync:       return "icloud"
         }
@@ -305,6 +329,8 @@ struct SettingsView: View {
             HighlightSettingsView()
         case .appearance:
             AppearanceSettingsView()
+        case .terminal:
+            TerminalSettingsView()
         case .security:
             SecuritySettingsView()
         case .sync:
@@ -374,6 +400,97 @@ struct GeneralSettingsView: View {
                     Button("立即检查更新…") {}
                         .buttonStyle(BorderedButtonStyle())
                         .controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+        }
+    }
+}
+
+// MARK: - 终端设置视图
+
+/// S05 — 终端行为设置面板
+struct TerminalSettingsView: View {
+
+    @AppStorage("terminal.scrollbackLines")  private var scrollbackLines: Int = 10000
+    @AppStorage("terminal.bellEnabled")      private var bellEnabled: Bool = true
+    @AppStorage("terminal.closeOnExit")      private var closeOnExit: Bool = false
+    @AppStorage("terminal.copyOnSelect")     private var copyOnSelect: Bool = true
+
+    /// 候选滚动缓冲行数（方便 Picker 使用）
+    private let scrollbackOptions: [(label: String, value: Int)] = [
+        ("1,000 行",   1_000),
+        ("5,000 行",   5_000),
+        ("10,000 行",  10_000),
+        ("50,000 行",  50_000),
+        ("100,000 行", 100_000),
+        ("无限制",     0)
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+
+                // 回滚缓冲区
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("回滚缓冲区")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    HStack(spacing: 12) {
+                        Text("最大行数")
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                            .frame(width: 100, alignment: .leading)
+
+                        Picker("", selection: $scrollbackLines) {
+                            ForEach(scrollbackOptions, id: \.value) { opt in
+                                Text(opt.label).tag(opt.value)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Text("PRD §3.3.3：默认 10,000 行，0 表示无限制（谨慎使用，内存消耗较大）")
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+
+                Divider()
+
+                // 行为设置
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("行为")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Toggle(isOn: $bellEnabled) {
+                        Text("启用响铃（Terminal Bell）")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                    .toggleStyle(.checkbox)
+
+                    Toggle(isOn: $copyOnSelect) {
+                        Text("选中时自动复制到剪贴板")
+                            .font(.system(size: 12))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                    .toggleStyle(.checkbox)
+
+                    Toggle(isOn: $closeOnExit) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("进程退出后自动关闭标签页")
+                                .font(.system(size: 12))
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                            Text("远端 shell 退出后自动关闭对应标签页")
+                                .font(.system(size: 10))
+                                .foregroundColor(DesignTokens.Colors.textTertiary)
+                        }
+                    }
+                    .toggleStyle(.checkbox)
                 }
             }
             .padding(.horizontal, 18)
