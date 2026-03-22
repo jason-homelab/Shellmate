@@ -1,6 +1,4 @@
 import SwiftUI
-import AppKit
-import SwiftTerm
 
 /// 终端工具栏
 /// 提供字号调整、清屏、搜索等快捷操作
@@ -54,11 +52,16 @@ struct TerminalToolbarView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.surfacePanel)
-        .overlay(
-            Divider(),
-            alignment: .bottom
-        )
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Rectangle().fill(DesignTokens.Colors.glassUltraLight))
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(DesignTokens.Colors.glassBorderSide)
+                        .frame(height: 0.5)
+                }
+        }
     }
 
     // MARK: - 子视图
@@ -168,13 +171,11 @@ struct TerminalToolbarView: View {
     /// 增大字号
     private func increaseFontSize() {
         fontSize = min(maxFontSize, fontSize + fontSizeStep)
-        controller.terminalView?.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
     }
 
     /// 减小字号
     private func decreaseFontSize() {
         fontSize = max(minFontSize, fontSize - fontSizeStep)
-        controller.terminalView?.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
     }
 
     /// 清屏
@@ -255,6 +256,8 @@ struct ToolbarButton: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .accessibilityLabel(tooltip)
+        .accessibilityAddTraits(isActive ? [.isButton, .isSelected] : .isButton)
     }
 
     // MARK: - 计算属性
@@ -298,11 +301,14 @@ struct TerminalSearchBar: View {
     /// 当前匹配索引
     @Binding var currentMatch: Int
 
-    /// 总匹配数
+    /// 总匹配数（0 = 未找到）
     let totalMatches: Int
 
     /// 是否区分大小写
     @Binding var caseSensitive: Bool
+
+    /// 是否使用正则表达式（O01 新增）
+    @Binding var useRegex: Bool
 
     /// 关闭回调
     var onClose: (() -> Void)?
@@ -335,12 +341,14 @@ struct TerminalSearchBar: View {
                     onNext?()
                 }
 
-            // 匹配计数
+            // 搜索状态提示
             if !searchText.isEmpty {
-                Text("\(currentMatch)/\(totalMatches)")
+                Text(totalMatches > 0 ? "已找到" : "未找到")
                     .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                    .frame(width: 50)
+                    .foregroundColor(totalMatches > 0
+                        ? DesignTokens.Colors.statusConnected
+                        : DesignTokens.Colors.statusError)
+                    .frame(width: 46)
             }
 
             // 大小写敏感切换
@@ -354,6 +362,18 @@ struct TerminalSearchBar: View {
             }
             .buttonStyle(.plain)
             .help("区分大小写")
+
+            // 正则表达式切换（O01 新增）
+            Button(action: { useRegex.toggle() }) {
+                Text(".*")
+                    .font(.system(size: 11, weight: useRegex ? .bold : .regular, design: .monospaced))
+                    .foregroundColor(useRegex ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
+                    .frame(width: 24, height: 24)
+                    .background(useRegex ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
+                    .cornerRadius(4)
+            }
+            .buttonStyle(.plain)
+            .help("正则表达式")
 
             Divider()
                 .frame(height: 16)
@@ -392,11 +412,11 @@ struct TerminalSearchBar: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.surfaceCard)
+        .glassPanel(radius: DesignTokens.Sizes.cornerRadiusSmall)
         .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
+                .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
         .onAppear {
             isFocused = true
@@ -427,11 +447,12 @@ struct TerminalSearchBar: View {
 #Preview("终端搜索栏") {
     TerminalSearchBar(
         searchText: .constant("error"),
-        currentMatch: .constant(3),
-        totalMatches: 12,
-        caseSensitive: .constant(false)
+        currentMatch: .constant(1),
+        totalMatches: 1,
+        caseSensitive: .constant(false),
+        useRegex: .constant(false)
     )
     .padding()
-    .frame(width: 400)
+    .frame(width: 450)
     .background(DesignTokens.Colors.surfaceWindow)
 }

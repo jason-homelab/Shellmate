@@ -1,23 +1,17 @@
 import SwiftUI
 
-// MARK: - 表单字段组件
+// MARK: - 表单字段容器
 
-/// 表单字段容器
-/// 包含标签和内容的表单字段包装器
 struct FormField<Content: View>: View {
-
-    // MARK: - 属性
-
-    /// 字段标签
     let label: String
-
-    /// 是否必填
     var isRequired: Bool = false
+    let content: () -> Content
 
-    /// 字段内容
-    @ViewBuilder let content: () -> Content
-
-    // MARK: - 视图
+    init(label: String, isRequired: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+        self.label = label
+        self.isRequired = isRequired
+        self.content = content
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -25,24 +19,20 @@ struct FormField<Content: View>: View {
                 Text(label)
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
-
                 if isRequired {
                     Text("*")
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.statusError)
                 }
             }
-
             content()
         }
     }
 }
 
-// MARK: - 按钮样式
+// MARK: - 主按钮样式（玻璃渐变 + 光晕）
 
-/// 主按钮样式
 struct PrimaryButtonStyle: ButtonStyle {
-
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -51,19 +41,46 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundColor(isEnabled ? .white : DesignTokens.Colors.textTertiary)
             .padding(.horizontal, DesignTokens.Spacing.lg)
             .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                    .fill(isEnabled ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.surfaceCard)
+            .background {
+                if isEnabled {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .fill(DesignTokens.Gradients.accentButton)
+                        .overlay {
+                            // 顶部高光层（拟物玻璃按钮感）
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.22), Color.clear],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    )
+                                )
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
+                        }
+                } else {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .fill(DesignTokens.Colors.surfaceCard)
+                }
+            }
+            .shadow(
+                color: isEnabled
+                    ? DesignTokens.Colors.accentGlow
+                    : .clear,
+                radius: configuration.isPressed ? 6 : 12,
+                x: 0, y: 0
             )
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(DesignTokens.Animation.fast, value: configuration.isPressed)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.82 : 1.0) : 0.40)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1.0)
+            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
     }
 }
 
-/// 次要按钮样式
-struct SecondaryButtonStyle: ButtonStyle {
+// MARK: - 次要按钮样式（玻璃面板 + 渐变边框）
 
+struct SecondaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -72,22 +89,27 @@ struct SecondaryButtonStyle: ButtonStyle {
             .foregroundColor(isEnabled ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textTertiary)
             .padding(.horizontal, DesignTokens.Spacing.lg)
             .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                    .stroke(
-                        isEnabled ? DesignTokens.Colors.borderPrimary : DesignTokens.Colors.borderSecondary,
-                        lineWidth: 1
+            .background {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(
+                        configuration.isPressed
+                            ? DesignTokens.Colors.glassPress
+                            : DesignTokens.Colors.glassLight
                     )
-            )
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(DesignTokens.Animation.fast, value: configuration.isPressed)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                            .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)
+                    }
+            }
+            .opacity(isEnabled ? 1.0 : 0.40)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1.0)
+            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
     }
 }
 
-/// 危险按钮样式
-struct DestructiveButtonStyle: ButtonStyle {
+// MARK: - 危险按钮样式
 
+struct DestructiveButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -96,19 +118,49 @@ struct DestructiveButtonStyle: ButtonStyle {
             .foregroundColor(isEnabled ? .white : DesignTokens.Colors.textTertiary)
             .padding(.horizontal, DesignTokens.Spacing.lg)
             .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                    .fill(isEnabled ? DesignTokens.Colors.statusError : DesignTokens.Colors.surfaceCard)
+            .background {
+                if isEnabled {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "#F87070"), Color(hex: "#D43060")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.18), Color.clear],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    )
+                                )
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+                        }
+                } else {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .fill(DesignTokens.Colors.surfaceCard)
+                }
+            }
+            .shadow(
+                color: isEnabled ? DesignTokens.Colors.statusError.opacity(0.30) : .clear,
+                radius: configuration.isPressed ? 4 : 10,
+                x: 0, y: 0
             )
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(DesignTokens.Animation.fast, value: configuration.isPressed)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.82 : 1.0) : 0.40)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1.0)
+            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
     }
 }
 
-/// 文本按钮样式
-struct TextButtonStyle: ButtonStyle {
+// MARK: - 文本按钮样式
 
+struct TextButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -117,108 +169,149 @@ struct TextButtonStyle: ButtonStyle {
             .foregroundColor(isEnabled ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
             .padding(.horizontal, DesignTokens.Spacing.sm)
             .padding(.vertical, DesignTokens.Spacing.xs)
-            .opacity(configuration.isPressed ? 0.6 : 1.0)
+            .opacity(configuration.isPressed ? 0.55 : 1.0)
+            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
     }
 }
 
-// MARK: - 输入框组件
+// MARK: - 工具栏图标按钮样式
 
-/// 自定义文本输入框
-/// 支持四种状态：默认、聚焦、错误、禁用
+struct ToolbarIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    var isActive: Bool = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(
+                isActive
+                    ? DesignTokens.Colors.accentPrimary
+                    : (isEnabled ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
+            )
+            .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
+            .background {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(
+                        configuration.isPressed
+                            ? DesignTokens.Colors.glassPress
+                            : (isActive
+                                ? DesignTokens.Colors.accentGlow
+                                : (configuration.isPressed ? DesignTokens.Colors.glassHoverColor : Color.clear))
+                    )
+            }
+            .opacity(isEnabled ? 1.0 : 0.40)
+            .scaleEffect(configuration.isPressed ? 0.90 : 1.0)
+            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
+    }
+}
+
+// MARK: - 玻璃输入框
+
 struct CustomTextField: View {
-
-    // MARK: - 属性
-
-    /// 占位符文本
     let placeholder: String
-
-    /// 文本绑定
     @Binding var text: String
-
-    /// 是否为错误状态
     var isError: Bool = false
-
-    /// 错误信息
     var errorMessage: String?
-
-    /// 是否为密码输入
     var isSecure: Bool = false
-
-    // MARK: - 状态
 
     @FocusState private var isFocused: Bool
 
-    // MARK: - 视图
-
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-            HStack {
-                if isSecure {
-                    SecureField(placeholder, text: $text)
-                        .focused($isFocused)
-                } else {
-                    TextField(placeholder, text: $text)
-                        .focused($isFocused)
+            ZStack {
+                // 玻璃背景
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(DesignTokens.Colors.surfaceInput)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                            .fill(DesignTokens.Colors.glassUltraLight)
+                    }
+
+                // 边框（状态感知）
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(borderGradient, lineWidth: isFocused ? 1.0 : 0.75)
+
+                // 聚焦光晕
+                if isFocused && !isError {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.25), lineWidth: 3)
+                        .blur(radius: 2)
                 }
+
+                // 输入内容
+                HStack {
+                    Group {
+                        if isSecure {
+                            SecureField(placeholder, text: $text)
+                                .focused($isFocused)
+                        } else {
+                            TextField(placeholder, text: $text)
+                                .focused($isFocused)
+                        }
+                    }
+                    .font(DesignTokens.Typography.bodyMedium)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    if isError {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 13))
+                            .foregroundColor(DesignTokens.Colors.statusError)
+                    }
+                }
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .padding(.vertical, DesignTokens.Spacing.sm)
             }
-            .font(DesignTokens.Typography.bodyMedium)
-            .foregroundColor(DesignTokens.Colors.textPrimary)
-            .padding(.horizontal, DesignTokens.Spacing.sm)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                    .stroke(borderColor, lineWidth: 1)
-            )
+            .frame(height: 30)
+            .animation(DesignTokens.Animation.fast, value: isFocused)
+            .animation(DesignTokens.Animation.fast, value: isError)
 
             if let error = errorMessage, isError {
-                Text(error)
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.statusError)
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                    Text(error)
+                        .font(DesignTokens.Typography.labelSmall)
+                }
+                .foregroundColor(DesignTokens.Colors.statusError)
+                .padding(.horizontal, 2)
             }
         }
     }
 
-    // MARK: - 计算属性
-
-    private var borderColor: Color {
+    private var borderGradient: LinearGradient {
         if isError {
-            return DesignTokens.Colors.statusError
+            return LinearGradient(
+                colors: [DesignTokens.Colors.statusError.opacity(0.70),
+                         DesignTokens.Colors.statusError.opacity(0.40)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         } else if isFocused {
-            return DesignTokens.Colors.borderFocus
+            return LinearGradient(
+                colors: [DesignTokens.Colors.accentPrimary.opacity(0.75),
+                         DesignTokens.Colors.accentSecondary.opacity(0.45)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         } else {
-            return DesignTokens.Colors.borderPrimary
+            return DesignTokens.Gradients.glassBorder()
         }
     }
 }
 
-// MARK: - 切换开关组件
+// MARK: - 玻璃切换开关
 
-/// 自定义切换开关
 struct CustomToggle: View {
-
-    // MARK: - 属性
-
-    /// 标签文本
     let label: String
-
-    /// 是否开启
     @Binding var isOn: Bool
-
-    /// 说明文本
     var subtitle: String?
-
-    // MARK: - 视图
 
     var body: some View {
         Toggle(isOn: $isOn) {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(label)
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
-
-                if let subtitle = subtitle {
+                if let subtitle {
                     Text(subtitle)
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -230,57 +323,69 @@ struct CustomToggle: View {
     }
 }
 
-// MARK: - 分段选择器组件
+// MARK: - 玻璃分段选择器
 
-/// 自定义分段选择器
 struct CustomSegmentedPicker<T: Hashable>: View {
-
-    // MARK: - 属性
-
-    /// 选项列表
     let options: [T]
-
-    /// 当前选中项
     @Binding var selection: T
-
-    /// 选项标签生成器
     let labelProvider: (T) -> String
 
-    // MARK: - 视图
-
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             ForEach(options, id: \.self) { option in
-                Button(action: {
-                    withAnimation(DesignTokens.Animation.fast) {
+                let isSelected = selection == option
+                Button {
+                    withAnimation(DesignTokens.Animation.glass) {
                         selection = option
                     }
-                }) {
+                } label: {
                     Text(labelProvider(option))
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(
-                            selection == option
-                                ? DesignTokens.Colors.textPrimary
+                            isSelected
+                                ? .white
                                 : DesignTokens.Colors.textSecondary
                         )
                         .padding(.horizontal, DesignTokens.Spacing.md)
-                        .padding(.vertical, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.sm - 1)
                         .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
-                                .fill(
-                                    selection == option
-                                        ? DesignTokens.Colors.surfaceCard
-                                        : Color.clear
-                                )
-                        )
+                        .background {
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                                    .fill(DesignTokens.Gradients.accentButton)
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [Color.white.opacity(0.18), Color.clear],
+                                                    startPoint: .top,
+                                                    endPoint: .center
+                                                )
+                                            )
+                                    }
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                                            .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
+                                    }
+                                    .shadow(
+                                        color: DesignTokens.Colors.accentGlow,
+                                        radius: 8, x: 0, y: 0
+                                    )
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(DesignTokens.Spacing.xxs)
-        .background(DesignTokens.Colors.surfacePanel)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .padding(3)
+        .background {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(DesignTokens.Colors.surfaceInput)
+                .overlay {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)
+                }
+        }
     }
 }
 
@@ -290,16 +395,12 @@ struct CustomSegmentedPicker<T: Hashable>: View {
     VStack(spacing: 16) {
         Button("主要按钮") {}
             .buttonStyle(PrimaryButtonStyle())
-
         Button("次要按钮") {}
             .buttonStyle(SecondaryButtonStyle())
-
         Button("危险按钮") {}
             .buttonStyle(DestructiveButtonStyle())
-
         Button("文本按钮") {}
             .buttonStyle(TextButtonStyle())
-
         Button("禁用按钮") {}
             .buttonStyle(PrimaryButtonStyle())
             .disabled(true)
@@ -310,36 +411,15 @@ struct CustomSegmentedPicker<T: Hashable>: View {
 
 #Preview("输入框状态") {
     VStack(spacing: 16) {
-        CustomTextField(placeholder: "默认状态", text: .constant(""))
-
-        CustomTextField(placeholder: "有内容", text: .constant("hello@example.com"))
-
+        CustomTextField(placeholder: "主机地址", text: .constant(""))
+        CustomTextField(placeholder: "主机地址", text: .constant("192.168.1.1"))
         CustomTextField(
-            placeholder: "错误状态",
+            placeholder: "端口",
             text: .constant("invalid"),
             isError: true,
-            errorMessage: "请输入有效的邮箱地址"
+            errorMessage: "端口号必须在 1–65535 范围内"
         )
-
-        CustomTextField(
-            placeholder: "密码输入",
-            text: .constant("password"),
-            isSecure: true
-        )
-    }
-    .padding()
-    .background(DesignTokens.Colors.surfaceWindow)
-}
-
-#Preview("切换开关") {
-    VStack(spacing: 16) {
-        CustomToggle(label: "自动重连", isOn: .constant(true))
-
-        CustomToggle(
-            label: "启用 iCloud 同步",
-            isOn: .constant(false),
-            subtitle: "在多台 Mac 之间同步会话配置"
-        )
+        CustomTextField(placeholder: "密码", text: .constant("secret"), isSecure: true)
     }
     .padding()
     .background(DesignTokens.Colors.surfaceWindow)
