@@ -328,10 +328,6 @@ private struct ContentViewLifecycleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .task {
-                await sessionStore.loadSessions()
-                await groupStore.loadGroups()
-            }
             // 会话 / 分组操作
             .onReceive(NotificationCenter.default.publisher(for: .newSessionRequested)) { _ in
                 sessionStore.showNewSessionForm()

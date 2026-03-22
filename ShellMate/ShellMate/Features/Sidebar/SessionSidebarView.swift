@@ -61,6 +61,10 @@ struct SessionSidebarView: View {
                 .keyboardShortcut("f", modifiers: .command)
                 .hidden()
         )
+        // 菜单栏 ⌘L 聚焦侧边栏搜索框
+        .onReceive(NotificationCenter.default.publisher(for: .focusSidebarSearchRequested)) { _ in
+            searchFocusTrigger = true
+        }
     }
 
     // MARK: - 加载中视图
