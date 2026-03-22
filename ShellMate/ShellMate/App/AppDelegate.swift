@@ -113,6 +113,9 @@ extension Notification.Name {
     static let toggleToolbarRequested = Notification.Name("toggleToolbarRequested")
     static let focusSidebarSearchRequested = Notification.Name("focusSidebarSearchRequested")
 
+    // 断开连接操作（通知当前激活的 TerminalView）
+    static let disconnectActiveTerminalRequested = Notification.Name("disconnectActiveTerminalRequested")
+
     // 功能面板操作
     static let sftpPanelRequested = Notification.Name("sftpPanelRequested")
     static let tunnelManagerRequested = Notification.Name("tunnelManagerRequested")

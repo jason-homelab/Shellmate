@@ -13,19 +13,48 @@ struct SwiftTermViewRepresentable: NSViewRepresentable {
     var controller: TerminalController
     /// 当前字号
     var fontSize: CGFloat
+    /// 当前字体族名称（PostScript 名，空字符串时回退到系统等宽字体）
+    var fontFamily: String
+    /// 当前主题 ID（从 AppStorage 传入，变化时触发 updateNSView）
+    var themeId: String
 
     func makeNSView(context: Context) -> SwiftTerm.TerminalView {
         let view = SwiftTerm.TerminalView(frame: .zero)
         view.terminalDelegate = controller
-        view.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        view.font = resolvedFont()
+        applyTheme(themeId, to: view)
         // 延迟赋值避免 SwiftUI 状态更新循环
         DispatchQueue.main.async { viewRef = view }
         return view
     }
 
     func updateNSView(_ nsView: SwiftTerm.TerminalView, context: Context) {
-        if nsView.font.pointSize != fontSize {
-            nsView.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        let resolved = resolvedFont()
+        if nsView.font.fontName != resolved.fontName || nsView.font.pointSize != resolved.pointSize {
+            nsView.font = resolved
+        }
+        applyTheme(themeId, to: nsView)
+    }
+
+    private func resolvedFont() -> NSFont {
+        if !fontFamily.isEmpty, let custom = NSFont(name: fontFamily, size: fontSize) {
+            return custom
+        }
+        return NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+    }
+
+    // MARK: - 主题应用
+
+    private func applyTheme(_ id: String, to view: SwiftTerm.TerminalView) {
+        guard let theme = AppTheme.builtins.first(where: { $0.id == id })
+                       ?? AppTheme.builtins.first else { return }
+        let bg = NSColor(theme.background)
+        let fg = NSColor(theme.outputColor)
+        if view.nativeBackgroundColor != bg {
+            view.nativeBackgroundColor = bg
+        }
+        if view.nativeForegroundColor != fg {
+            view.nativeForegroundColor = fg
         }
     }
 }
@@ -46,6 +75,10 @@ struct TerminalView: View {
 
     /// 字号（绑定到外观设置，通过 updateNSView 同步到 SwiftTerm）
     @AppStorage("appearance.fontSize") private var fontSize: Double = 13
+    /// 字体族（绑定到外观设置，通过 updateNSView 同步到 SwiftTerm）
+    @AppStorage("appearance.fontFamily") private var fontFamily: String = ""
+    /// 主题 ID（绑定到外观设置，变化时通过 updateNSView 实时应用到 SwiftTerm）
+    @AppStorage("appearance.themeId") private var themeId: String = "shellmate-dark"
 
     @State private var showSearch: Bool = false
     @State private var searchText: String = ""
@@ -93,44 +126,7 @@ struct TerminalView: View {
             }
 
             // 终端主区域（含 Compose Pane 纵向布局）
-            let terminalAndCompose = VStack(spacing: 0) {
-                // 终端内容区 + SFTP 右侧边栏（Figma 规范：右侧固定面板 290pt）
-                HStack(spacing: 0) {
-                    // 终端主内容（flex-1）
-                    terminalContentView
-
-                    // SFTP 右侧 Sidebar Tab（始终可见，20pt）
-                    sftpSidebarTabView
-
-                    // SFTP 面板（右侧展开，默认 290pt）
-                    if controller.isSFTPPanelOpen,
-                       let sftpSess = controller.sftpSession,
-                       let transferQueue = controller.sftpTransferQueue {
-                        SFTPPanelView(
-                            sftpSession: sftpSess,
-                            transferQueue: transferQueue,
-                            onClose: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    Task { await controller.closeSFTPPanel() }
-                                }
-                            }
-                        )
-                        .frame(width: sftpPanelWidth)
-                        .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
-                }
-
-                // Compose Pane（O02）停靠于终端下方
-                if controller.isComposePaneOpen {
-                    ComposePaneView(
-                        onSend: { text in controller.sendComposeContent(text) },
-                        onClose: { controller.isComposePaneOpen = false }
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-
-            terminalAndCompose
+            terminalAndComposeView
 
             // 底部状态栏（连接状态 + 已连接时长 + 终端尺寸 + 编码）
             TerminalStatusBarView(
@@ -215,36 +211,16 @@ struct TerminalView: View {
         } message: {
             Text(tunnelErrorMessage)
         }
-        // 菜单栏通知监听：SFTP / 隧道 / 快捷命令 / Compose Pane
-        .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
-            toggleSFTPPanel()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .tunnelManagerRequested)) { _ in
-            if controller.isTunnelManagerOpen { controller.closeTunnelManager() }
-            else { controller.openTunnelManager() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .quickCommandsRequested)) { _ in
-            withAnimation { isQuickCommandOpen.toggle() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
-            withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
-        }
-        // 菜单栏通知监听：清屏 / 搜索 / 字体
-        .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in
-            controller.clearTerminal()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .searchTerminalRequested)) { _ in
-            withAnimation { showSearch.toggle() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .increaseFontRequested)) { _ in
-            fontSize = min(maxFontSize, fontSize + 1)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .decreaseFontRequested)) { _ in
-            fontSize = max(minFontSize, fontSize - 1)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .resetFontRequested)) { _ in
-            fontSize = 13
-        }
+        .modifier(TerminalViewNotificationModifier(
+            sessionId: session.id,
+            controller: controller,
+            showSearch: $showSearch,
+            fontSize: $fontSize,
+            isQuickCommandOpen: $isQuickCommandOpen,
+            minFontSize: minFontSize,
+            maxFontSize: maxFontSize,
+            onToggleSFTP: toggleSFTPPanel
+        ))
         // W12.3：监听凭据缺失状态
         .onChange(of: controller.credentialsMissing) { missing in
             if missing { showCredentialsMissing = true }
@@ -327,6 +303,42 @@ struct TerminalView: View {
     }
 
     // MARK: - 子视图
+
+    /// 终端主区域 + Compose Pane 纵向布局（提取为独立属性以规避类型检查超时）
+    private var terminalAndComposeView: some View {
+        VStack(spacing: 0) {
+            // 终端内容区 + SFTP 右侧边栏
+            HStack(spacing: 0) {
+                terminalContentView
+
+                sftpSidebarTabView
+
+                if controller.isSFTPPanelOpen,
+                   let sftpSess = controller.sftpSession,
+                   let transferQueue = controller.sftpTransferQueue {
+                    SFTPPanelView(
+                        sftpSession: sftpSess,
+                        transferQueue: transferQueue,
+                        onClose: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                _ = Task { await controller.closeSFTPPanel() }
+                            }
+                        }
+                    )
+                    .frame(width: sftpPanelWidth)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+
+            if controller.isComposePaneOpen {
+                ComposePaneView(
+                    onSend: { text in controller.sendComposeContent(text) },
+                    onClose: { controller.isComposePaneOpen = false }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+    }
 
     private var toolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
@@ -581,7 +593,9 @@ struct TerminalView: View {
             SwiftTermViewRepresentable(
                 viewRef: $terminalViewRef,
                 controller: controller,
-                fontSize: CGFloat(fontSize)
+                fontSize: CGFloat(fontSize),
+                fontFamily: fontFamily,
+                themeId: themeId
             )
 
             stateOverlay
@@ -743,6 +757,62 @@ struct TerminalView: View {
         let found = terminalViewRef?.findPrevious(searchText, options: opts) ?? false
         totalMatches = found ? 1 : 0
         currentMatch = found ? 1 : 0
+    }
+}
+
+// MARK: - 通知处理 ViewModifier
+
+/// 将 TerminalView 的菜单栏通知处理提取为独立 ViewModifier，
+/// 避免 TerminalView.body 链式修饰符过多导致 Swift 类型检查超时
+private struct TerminalViewNotificationModifier: ViewModifier {
+
+    let sessionId: UUID
+    let controller: TerminalController
+    @Binding var showSearch: Bool
+    @Binding var fontSize: Double
+    @Binding var isQuickCommandOpen: Bool
+    let minFontSize: Double
+    let maxFontSize: Double
+    let onToggleSFTP: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            // 断开连接（通过 sessionId 精确路由）
+            .onReceive(NotificationCenter.default.publisher(for: .disconnectActiveTerminalRequested)) { notification in
+                guard let targetId = notification.userInfo?["sessionId"] as? UUID,
+                      targetId == sessionId else { return }
+                Task { await controller.disconnect() }
+            }
+            // 面板控制
+            .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
+                onToggleSFTP()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .tunnelManagerRequested)) { _ in
+                if controller.isTunnelManagerOpen { controller.closeTunnelManager() }
+                else { controller.openTunnelManager() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .quickCommandsRequested)) { _ in
+                withAnimation { isQuickCommandOpen.toggle() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
+                withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
+            }
+            // 终端控制
+            .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in
+                controller.clearTerminal()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .searchTerminalRequested)) { _ in
+                withAnimation { showSearch.toggle() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .increaseFontRequested)) { _ in
+                fontSize = min(maxFontSize, fontSize + 1)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .decreaseFontRequested)) { _ in
+                fontSize = max(minFontSize, fontSize - 1)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .resetFontRequested)) { _ in
+                fontSize = 13
+            }
     }
 }
 
