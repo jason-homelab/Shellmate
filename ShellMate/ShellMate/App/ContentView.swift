@@ -191,21 +191,6 @@ struct ContentView: View {
             .keyboardShortcut("n", modifiers: .command)
         }
 
-        // 新建标签页（⌘T）：有选中会话时直接打开，否则显示新建会话表单
-        ToolbarItem(placement: .primaryAction) {
-            Button(action: {
-                if let session = sessionStore.selectedSession {
-                    connectToSession(session)
-                } else {
-                    sessionStore.showNewSessionForm()
-                }
-            }) {
-                Label("新建标签页", systemImage: "plus.rectangle.on.rectangle")
-            }
-            .help("新建标签页 (⌘T)")
-            .keyboardShortcut("t", modifiers: .command)
-        }
-
         // 快速连接（无标签页时显示）
         ToolbarItem(placement: .primaryAction) {
             if tabBarStore.tabs.isEmpty, let session = sessionStore.selectedSession {

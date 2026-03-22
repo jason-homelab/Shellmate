@@ -7,7 +7,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 应用生命周期
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 应用启动完成
+        // 禁用 macOS 原生窗口标签合并（NSWindowTabbingMode）
+        // 原因：WindowGroup 会自动开启此功能，导致工具栏下方出现一条与
+        // TerminalTabBarView 重复的灰色系统标签条，造成三层 Tab 管理冗余。
+        // ShellMate 使用自定义 TerminalTabBarView 管理 SSH 会话标签，无需系统级 Window Tabbing。
+        NSWindow.allowsAutomaticWindowTabbing = false
         print("ShellMate 启动完成")
     }
 
