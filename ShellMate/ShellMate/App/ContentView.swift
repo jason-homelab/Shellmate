@@ -304,22 +304,27 @@ struct ContentView: View {
 
 // MARK: - 窗口标签禁用器
 
-/// 通过 NSViewRepresentable 在视图挂载时直接访问 NSWindow 实例，
-/// 强制设置 tabbingMode = .disallowed，彻底消除原生 Window Tab Bar。
+/// 原生 Window Tab Bar 禁用器
 ///
-/// 背景：NSWindow.allowsAutomaticWindowTabbing = false 是类级别开关，
-/// 但 SwiftUI WindowGroup 创建的 NSWindow 实例在某些 macOS 版本下仍会
-/// 渲染系统 Tab Bar（尤其是 NavigationSplitView + .unifiedCompact 组合）。
-/// 逐实例设置是唯一可靠的解法。
-private struct WindowTabbingDisabler: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            view.window?.tabbingMode = .disallowed
-        }
-        return view
+/// 使用 NSView 子类覆写 viewDidMoveToWindow()，该方法在 view 被加入窗口层级时
+/// 由 AppKit 回调，此时 window 属性保证非 nil——比 DispatchQueue.main.async 更可靠。
+///
+/// 三重防御层级（配合 AppDelegate 的 ① ② ③ 共同生效）：
+/// - AppDelegate.applicationWillFinishLaunching：类级别，拦截窗口创建前
+/// - AppDelegate.applicationDidFinishLaunching：实例级别，覆盖已有窗口
+/// - 此处：视图级别，兜底处理 NavigationSplitView 内部列窗口
+private final class _WindowTabbingDisablerView: NSView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.tabbingMode = .disallowed
     }
-    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+private struct WindowTabbingDisabler: NSViewRepresentable {
+    func makeNSView(context: Context) -> _WindowTabbingDisablerView {
+        _WindowTabbingDisablerView()
+    }
+    func updateNSView(_ nsView: _WindowTabbingDisablerView, context: Context) {}
 }
 
 // MARK: - 生命周期与通知处理 ViewModifier
