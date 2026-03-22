@@ -18,8 +18,13 @@ struct TerminalStatusBarView: View {
     /// 编码
     var encoding: String = "UTF-8"
 
+    /// 连接开始时间（用于显示已连接时长）
+    var connectedAt: Date? = nil
+
     /// 是否显示详细信息
     @State private var showingDetails: Bool = false
+    /// W12.6：观察同步输入状态
+    @ObservedObject private var syncStore = SyncInputStore.shared
 
     // MARK: - 视图
 
@@ -28,10 +33,25 @@ struct TerminalStatusBarView: View {
             // 左侧：连接状态
             connectionStatusView
 
+            // W12.6：同步输入状态
+            syncStatusView
+
             Spacer()
 
             // 右侧：终端信息
             HStack(spacing: DesignTokens.Spacing.lg) {
+                // 已连接时长（仅连接时显示）
+                if let connectedAt = connectedAt, connectionState == .connected {
+                    TimelineView(.periodic(from: connectedAt, by: 1)) { _ in
+                        Text(connectionDuration(from: connectedAt))
+                            .font(DesignTokens.Typography.codeSmall)
+                            .foregroundColor(DesignTokens.Colors.textTertiary)
+                            .help("连接已持续 \(connectionDuration(from: connectedAt))")
+                    }
+
+                    statusDivider
+                }
+
                 // 编码
                 encodingView
 
@@ -44,9 +64,44 @@ struct TerminalStatusBarView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 24)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay { Rectangle().fill(DesignTokens.Colors.glassUltraLight) }
+        }
         .overlay(alignment: .top) {
-            Divider()
+            Rectangle()
+                .fill(DesignTokens.Colors.glassBorderSide)
+                .frame(height: 0.5)
+        }
+    }
+
+    // MARK: - 时长计算
+
+    private func connectionDuration(from date: Date) -> String {
+        let elapsed = Int(Date().timeIntervalSince(date))
+        let hours = elapsed / 3600
+        let minutes = (elapsed % 3600) / 60
+        let seconds = elapsed % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
+    }
+
+    /// W12.6：同步输入状态段（syncCount > 0 时显示）
+    @ViewBuilder
+    private var syncStatusView: some View {
+        if syncStore.isActive {
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 9))
+                    .foregroundColor(.orange)
+                Text("同步 (\(syncStore.syncCount))")
+                    .font(DesignTokens.Typography.labelSmall)
+                    .foregroundColor(.orange)
+            }
         }
     }
 
@@ -55,10 +110,8 @@ struct TerminalStatusBarView: View {
     /// 连接状态视图
     private var connectionStatusView: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
-            // 状态点
-            Circle()
-                .fill(connectionState.dotColor)
-                .frame(width: 6, height: 6)
+            // 状态点（发光效果）
+            GlowingStatusDot(color: connectionState.dotColor, size: 5)
 
             // 状态文字
             Text(connectionState.displayName)

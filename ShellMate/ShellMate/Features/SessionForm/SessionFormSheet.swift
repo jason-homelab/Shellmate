@@ -32,15 +32,31 @@ struct SessionFormSheet: View {
     // 认证信息
     @State private var authMethod: AuthMethod = .password
     @State private var privateKeyPath: String = ""
+    @State private var password: String = ""
+    @State private var passphrase: String = ""
+
+    // 认证设置（新增）
+    @State private var saveToKeychain: Bool = true
 
     // 高级设置
     @State private var keepAliveInterval: Int32 = 60
     @State private var autoReconnect: Bool = true
     @State private var encoding: String = "UTF-8"
+    @State private var proxyJump: String = ""
+    @State private var connectTimeout: Int32 = 30
+    @State private var maxReconnectRetries: Int32 = 3
+    @State private var reconnectInterval: Int32 = 5
+    @State private var envVarEntries: [EnvVarEntry] = []
 
     // 外观设置
     @State private var colorHex: String = "#4A90D9"
     @State private var tags: [String] = []
+    @State private var overrideTheme: Bool = false
+    @State private var overrideThemeId: String = ""
+    @State private var overrideFontSize: Bool = false
+    @State private var overrideFontSizeValue: Int32 = 13
+    @State private var startupCommand: String = ""
+    @State private var envLabel: String = ""
 
     // 验证状态
     @State private var validationErrors: [String] = []
@@ -104,7 +120,18 @@ struct SessionFormSheet: View {
         }
         .frame(width: DesignTokens.Sizes.sheetWidth)
         .frame(minHeight: DesignTokens.Sizes.sheetMinHeight)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                        .fill(DesignTokens.Colors.surfacePanel.opacity(0.82))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                        .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)
+                }
+        }
         .onAppear {
             loadSessionData()
         }
@@ -122,11 +149,10 @@ struct SessionFormSheet: View {
 
             Button(action: { onCancel?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(DesignTokens.Colors.surfaceCard)
-                    .cornerRadius(12)
+                    .glassPanel(radius: 12)
             }
             .buttonStyle(.plain)
         }
@@ -162,8 +188,18 @@ struct SessionFormSheet: View {
             .foregroundColor(selectedTab == tab ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textSecondary)
             .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(selectedTab == tab ? DesignTokens.Colors.accentPrimary.opacity(0.1) : Color.clear)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background {
+                if selectedTab == tab {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                        .fill(DesignTokens.Colors.glassSelected)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                                .strokeBorder(DesignTokens.Gradients.glassAccentBorder, lineWidth: 0.75)
+                        }
+                } else {
+                    Color.clear
+                }
+            }
         }
         .buttonStyle(.plain)
     }
@@ -186,20 +222,31 @@ struct SessionFormSheet: View {
         case .auth:
             SessionAuthTab(
                 authMethod: $authMethod,
-                privateKeyPath: $privateKeyPath
+                privateKeyPath: $privateKeyPath,
+                password: $password,
+                passphrase: $passphrase,
+                saveToKeychain: $saveToKeychain
             )
 
         case .advanced:
             SessionAdvancedTab(
-                keepAliveInterval: $keepAliveInterval,
+                proxyJump: $proxyJump,
                 autoReconnect: $autoReconnect,
-                encoding: $encoding
+                maxReconnectRetries: $maxReconnectRetries,
+                reconnectInterval: $reconnectInterval,
+                keepAliveInterval: $keepAliveInterval,
+                connectTimeout: $connectTimeout,
+                envVarEntries: $envVarEntries
             )
 
         case .appearance:
             SessionAppearanceTab(
-                colorHex: $colorHex,
-                tags: $tags
+                overrideTheme: $overrideTheme,
+                overrideThemeId: $overrideThemeId,
+                overrideFontSize: $overrideFontSize,
+                overrideFontSizeValue: $overrideFontSizeValue,
+                startupCommand: $startupCommand,
+                envLabel: $envLabel
             )
         }
     }
@@ -257,6 +304,21 @@ struct SessionFormSheet: View {
         encoding = session.encoding
         colorHex = session.colorHex ?? "#4A90D9"
         tags = session.tags
+        proxyJump = session.proxyJumpString ?? ""
+        connectTimeout = session.connectTimeout
+        maxReconnectRetries = session.maxReconnectRetries
+        reconnectInterval = session.reconnectInterval
+        envVarEntries = session.envVars.map { EnvVarEntry(key: $0.key, value: $0.value) }
+        startupCommand = session.startupCommand ?? ""
+        envLabel = session.envLabel ?? ""
+        overrideThemeId = session.overrideThemeId ?? ""
+        overrideTheme = !overrideThemeId.isEmpty
+        overrideFontSizeValue = session.overrideFontSize > 0 ? session.overrideFontSize : 13
+        overrideFontSize = session.overrideFontSize > 0
+
+        // 从 Keychain 预读密码（编辑时显示占位符，实际密码不回显但可覆写）
+        password = (try? KeychainService.shared.getPassword(for: session.id, type: .password)) ?? ""
+        passphrase = (try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)) ?? ""
     }
 
     // MARK: - 保存会话
@@ -283,6 +345,14 @@ struct SessionFormSheet: View {
 
         // 创建或更新会话
         let session: Session
+        // 将 envVarEntries 转换为 [String: String] 字典（过滤空 key）
+        let envVars = Dictionary(
+            envVarEntries
+                .filter { !$0.key.trimmingCharacters(in: .whitespaces).isEmpty }
+                .map { ($0.key.trimmingCharacters(in: .whitespaces), $0.value) },
+            uniquingKeysWith: { _, last in last }
+        )
+
         if let existing = editingSession {
             session = Session(
                 id: existing.id,
@@ -303,7 +373,16 @@ struct SessionFormSheet: View {
                 createdAt: existing.createdAt,
                 modifiedAt: Date(),
                 isSoftDeleted: false,
-                groupId: selectedGroupId
+                groupId: selectedGroupId,
+                proxyJumpString: proxyJump.isEmpty ? nil : proxyJump,
+                connectTimeout: connectTimeout,
+                maxReconnectRetries: maxReconnectRetries,
+                reconnectInterval: reconnectInterval,
+                envVars: envVars,
+                startupCommand: startupCommand.isEmpty ? nil : startupCommand,
+                envLabel: envLabel.isEmpty ? nil : envLabel,
+                overrideThemeId: overrideTheme ? overrideThemeId : nil,
+                overrideFontSize: overrideFontSize ? overrideFontSizeValue : 0
             )
         } else {
             session = Session(
@@ -318,11 +397,32 @@ struct SessionFormSheet: View {
                 encoding: encoding,
                 tags: tags,
                 colorHex: colorHex,
-                groupId: selectedGroupId
+                groupId: selectedGroupId,
+                proxyJumpString: proxyJump.isEmpty ? nil : proxyJump,
+                connectTimeout: connectTimeout,
+                maxReconnectRetries: maxReconnectRetries,
+                reconnectInterval: reconnectInterval,
+                envVars: envVars,
+                startupCommand: startupCommand.isEmpty ? nil : startupCommand,
+                envLabel: envLabel.isEmpty ? nil : envLabel,
+                overrideThemeId: overrideTheme ? overrideThemeId : nil,
+                overrideFontSize: overrideFontSize ? overrideFontSizeValue : 0
             )
         }
 
+        // 将密码/Passphrase 写入 Keychain
+        saveCredentials(for: session)
+
         onSave?(session)
+    }
+
+    private func saveCredentials(for session: Session) {
+        if !password.isEmpty {
+            try? KeychainService.shared.savePassword(password, for: session.id, type: .password)
+        }
+        if !passphrase.isEmpty {
+            try? KeychainService.shared.savePassword(passphrase, for: session.id, type: .passphrase)
+        }
     }
 }
 

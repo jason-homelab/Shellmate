@@ -28,9 +28,15 @@ struct TerminalTabBarView: View {
             Spacer()
         }
         .frame(height: DesignTokens.Sizes.tabBarHeight)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay { Rectangle().fill(DesignTokens.Colors.glassUltraLight) }
+        }
         .overlay(alignment: .bottom) {
-            Divider()
+            Rectangle()
+                .fill(DesignTokens.Colors.glassBorderSide)
+                .frame(height: 0.5)
         }
     }
 
@@ -157,8 +163,18 @@ struct TabCloseConfirmationView: View {
         }
         .padding(DesignTokens.Spacing.xxl)
         .frame(width: 320)
-        .background(DesignTokens.Colors.surfacePanel)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusLarge)
+        .background {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
+                        .fill(DesignTokens.Colors.surfacePanel.opacity(0.85))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
+                        .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)
+                }
+        }
     }
 }
 

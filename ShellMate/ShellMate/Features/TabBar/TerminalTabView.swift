@@ -21,6 +21,8 @@ struct TerminalTabView: View {
     // MARK: - 私有状态
 
     @State private var isHovering: Bool = false
+    /// W12.6：观察同步输入状态
+    @ObservedObject private var syncStore = SyncInputStore.shared
 
     // MARK: - 视图
 
@@ -30,11 +32,19 @@ struct TerminalTabView: View {
             statusIndicator
 
             // 标题
-            Text(tab.title)
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(isSelected ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            HStack(spacing: 3) {
+                Text(tab.title)
+                    .font(DesignTokens.Typography.labelMedium)
+                    .foregroundColor(isSelected ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                // W12.6：同步输入激活时显示 ⚡ 图标
+                if syncStore.isSynced(tab.sessionId) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.orange)
+                }
+            }
 
             Spacer(minLength: 0)
 
@@ -71,9 +81,7 @@ struct TerminalTabView: View {
                 .scaleEffect(0.5)
                 .frame(width: 12, height: 12)
         } else {
-            Circle()
-                .fill(tab.connectionState.dotColor)
-                .frame(width: 8, height: 8)
+            GlowingStatusDot(color: tab.connectionState.dotColor, size: 5)
         }
     }
 
@@ -86,7 +94,7 @@ struct TerminalTabView: View {
                 .frame(width: DesignTokens.Sizes.tabCloseButtonSize, height: DesignTokens.Sizes.tabCloseButtonSize)
                 .background(
                     Circle()
-                        .fill(DesignTokens.Colors.backgroundHover)
+                        .fill(DesignTokens.Colors.glassHoverColor)
                         .opacity(isHovering ? 1 : 0)
                 )
         }
@@ -95,23 +103,30 @@ struct TerminalTabView: View {
     }
 
     /// 标签背景
+    @ViewBuilder
     private var tabBackground: some View {
-        Group {
-            if isSelected {
-                DesignTokens.Colors.surfacePanel
-            } else if isHovering {
-                DesignTokens.Colors.backgroundHover
-            } else {
-                Color.clear
-            }
+        if isSelected {
+            Rectangle()
+                .fill(DesignTokens.Colors.glassSelected)
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(DesignTokens.Colors.glassBorderAccent)
+                        .frame(height: 0.5)
+                }
+        } else if isHovering {
+            Rectangle()
+                .fill(DesignTokens.Colors.glassHoverColor)
+        } else {
+            Color.clear
         }
     }
 
-    /// 标签边框
+    /// 标签底部强调线（选中时）
+    @ViewBuilder
     private var tabBorder: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            if isSelected {
+        if isSelected {
+            VStack(spacing: 0) {
+                Spacer()
                 Rectangle()
                     .fill(DesignTokens.Colors.accentPrimary)
                     .frame(height: 2)
