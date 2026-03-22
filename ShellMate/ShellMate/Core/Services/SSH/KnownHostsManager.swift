@@ -69,7 +69,7 @@ struct KnownHostEntry: Identifiable, Codable, Equatable {
 }
 
 /// Known Hosts 检查结果
-enum KnownHostCheckResult {
+enum KnownHostCheckResult: Equatable {
     /// 主机密钥匹配
     case match
     /// 主机密钥不匹配（可能的中间人攻击）
@@ -78,6 +78,16 @@ enum KnownHostCheckResult {
     case notFound
     /// 检查失败
     case failure(Error)
+
+    static func == (lhs: KnownHostCheckResult, rhs: KnownHostCheckResult) -> Bool {
+        switch (lhs, rhs) {
+        case (.match, .match):       return true
+        case (.notFound, .notFound): return true
+        case (.mismatch(let a), .mismatch(let b)): return a == b
+        case (.failure, .failure):   return true  // 测试中仅比较 case，不比较 Error 内容
+        default: return false
+        }
+    }
 }
 
 /// Known Hosts 管理器
@@ -113,6 +123,13 @@ final class KnownHostsManager {
         try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
 
         self.storagePath = appFolder.appendingPathComponent("known_hosts.json")
+    }
+
+    /// 测试专用初始化：使用自定义存储目录，避免污染生产数据
+    init(storageDirectory: String) {
+        let dir = URL(fileURLWithPath: storageDirectory, isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        self.storagePath = dir.appendingPathComponent("known_hosts.json")
     }
 
     // MARK: - 公共方法
