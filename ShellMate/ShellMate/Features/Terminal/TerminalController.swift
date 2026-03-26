@@ -151,6 +151,56 @@ final class TerminalController: ObservableObject {
     /// 服务器指标监控器
     private var metricsMonitor: ServerMetricsMonitor?
 
+    // MARK: - AI 错误侦探
+
+    /// 最近检测到的错误摘要文本（非 nil 时显示错误徽章）
+    @Published private(set) var detectedErrorText: String? = nil
+
+    /// 用于错误检测的输出滚动缓冲区（最近 1024 字节）
+    private var errorOutputBuffer: String = ""
+
+    private static let errorPatterns: [String] = [
+        "command not found", "No such file or directory", "Permission denied",
+        "Connection refused", "No route to host",
+        ": error:", "Error:", "ERROR:", "FATAL:", "fatal error:",
+        "Traceback (most recent call last)", "npm ERR!", "yarn error",
+        "SyntaxError:", "NameError:", "TypeError:", "ValueError:",
+        "ModuleNotFoundError:", "ImportError:", "FileNotFoundError:",
+        "Exception in thread main",
+    ]
+
+    /// 清除已检测的错误（用户手动关闭徽章后调用）
+    func clearDetectedError() {
+        detectedErrorText = nil
+        errorOutputBuffer = ""
+    }
+
+    private func detectErrors(in text: String) {
+        errorOutputBuffer += text
+        if errorOutputBuffer.count > 1024 {
+            errorOutputBuffer = String(errorOutputBuffer.suffix(1024))
+        }
+        let stripped = stripANSI(errorOutputBuffer)
+        let lines = stripped.components(separatedBy: "\n")
+        for line in lines.reversed() {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            if Self.errorPatterns.contains(where: { trimmed.contains($0) }) {
+                if trimmed != detectedErrorText {
+                    detectedErrorText = String(trimmed.prefix(120))
+                }
+                return
+            }
+        }
+    }
+
+    private func stripANSI(_ str: String) -> String {
+        let pattern = "\u{1B}\\[[0-9;]*[A-Za-z]|\u{1B}\\][^\u{0007}]*\u{0007}"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return str }
+        let range = NSRange(str.startIndex..., in: str)
+        return regex.stringByReplacingMatches(in: str, options: [], range: range, withTemplate: "")
+    }
+
     private var reconnectTask: Task<Void, Never>?
     private var userDisconnected = false
     private var cancellables = Set<AnyCancellable>()
@@ -276,6 +326,11 @@ final class TerminalController: ObservableObject {
                     let processed = HighlightEngine.shared.process(Data(flushed))
                     self.terminalView?.feed(byteArray: [UInt8](processed)[...])
                     self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                    // AI 错误侦探：在后台扫描错误模式
+                    if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
+                        let text = String(bytes: flushed, encoding: .utf8) ?? ""
+                        self.detectErrors(in: text)
+                    }
                 }
             }
         }

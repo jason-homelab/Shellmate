@@ -14,6 +14,7 @@ struct SettingsView: View {
         case security   = "安全"
         case terminal   = "终端"
         case cloudSync  = "iCloud 同步"
+        case ai         = "AI 助手"
 
         var id: String { rawValue }
 
@@ -24,6 +25,7 @@ struct SettingsView: View {
             case .security:   return "lock.shield.fill"
             case .terminal:   return "terminal.fill"
             case .cloudSync:  return "icloud.fill"
+            case .ai:         return "sparkles"
             }
         }
     }
@@ -117,6 +119,8 @@ struct SettingsView: View {
                 TerminalSettingsView()
             case .cloudSync:
                 CloudSyncSettingsView()
+            case .ai:
+                AISettingsView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

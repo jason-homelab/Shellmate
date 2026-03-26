@@ -113,6 +113,15 @@ struct TerminalView: View {
     /// W12.6：观察同步状态
     @ObservedObject private var syncStore = SyncInputStore.shared
 
+    // MARK: - AI 助手
+
+    /// AI 助手面板是否显示
+    @State private var isAIPanelOpen: Bool = false
+    /// 预填充的错误上下文（由错误侦探触发）
+    @State private var aiInitialError: String? = nil
+    /// AI 设置观察（用于工具栏按钮显示）
+    @ObservedObject private var aiSettings = AISettingsStore.shared
+
     private let minFontSize: Double = 9
     private let maxFontSize: Double = 24
 
@@ -337,9 +346,33 @@ struct TerminalView: View {
     /// 终端主区域 + Compose Pane 纵向布局（提取为独立属性以规避类型检查超时）
     private var terminalAndComposeView: some View {
         VStack(spacing: 0) {
-            // 终端内容区 + SFTP 右侧边栏
+            // 终端内容区 + SFTP 右侧边栏 + AI 助手面板
             HStack(spacing: 0) {
-                terminalContentView
+                // 终端内容 + 错误侦探徽章叠加
+                ZStack(alignment: .bottomTrailing) {
+                    terminalContentView
+
+                    // AI 错误侦探悬浮徽章
+                    if aiSettings.isEnabled,
+                       aiSettings.errorDetectiveEnabled,
+                       let errText = controller.detectedErrorText {
+                        AIErrorDetectiveView(
+                            errorText: errText,
+                            onAnalyze: { text in
+                                aiInitialError = text
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    isAIPanelOpen = true
+                                }
+                                controller.clearDetectedError()
+                            },
+                            onDismiss: {
+                                controller.clearDetectedError()
+                            }
+                        )
+                        .padding(DesignTokens.Spacing.md)
+                        .zIndex(10)
+                    }
+                }
 
                 sftpSidebarTabView
 
@@ -356,6 +389,22 @@ struct TerminalView: View {
                         }
                     )
                     .frame(width: sftpPanelWidth)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+
+                // AI 助手右侧面板
+                if isAIPanelOpen {
+                    AIAssistantPanelView(
+                        session: session,
+                        onClose: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isAIPanelOpen = false
+                                aiInitialError = nil
+                            }
+                        },
+                        initialError: aiInitialError
+                    )
+                    .frame(width: 340)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
@@ -478,6 +527,21 @@ struct TerminalView: View {
             }
 
             toolbarDivider
+
+            // AI 助手按钮（仅在 AI 功能启用时显示）
+            if aiSettings.isEnabled {
+                ToolbarButton(
+                    icon: "sparkles",
+                    tooltip: "AI 助手 (⌘⇧A)",
+                    isActive: isAIPanelOpen,
+                    tintColor: isAIPanelOpen ? nil : (controller.detectedErrorText != nil ? DesignTokens.Colors.statusConnecting : nil)
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isAIPanelOpen.toggle()
+                        if !isAIPanelOpen { aiInitialError = nil }
+                    }
+                }
+            }
 
             connectionButton
         }
