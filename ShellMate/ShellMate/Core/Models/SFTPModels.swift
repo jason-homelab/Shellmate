@@ -96,12 +96,11 @@ struct SFTPFileItem: Identifiable, Equatable {
         return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
     }
 
-    /// 格式化修改时间
+    /// 格式化修改时间（紧凑格式，适合窄列）
     var formattedDate: String {
         guard let date = modifiedAt else { return "—" }
         let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
+        formatter.dateFormat = "M/d HH:mm"
         return formatter.string(from: date)
     }
 }

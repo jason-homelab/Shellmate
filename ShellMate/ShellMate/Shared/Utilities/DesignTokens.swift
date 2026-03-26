@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// 设计令牌 v2.0 — 液态玻璃（Liquid Glass）设计语言
 /// 玻璃拟态 + 拟物化 + 现代极简的融合体系
@@ -8,33 +9,57 @@ enum DesignTokens {
 
     enum Colors {
 
-        // ── 基底色（深空蓝黑调色板）──────────────────────────────
+        // ── 自适应颜色辅助方法 ───────────────────────────────────
 
-        /// 应用最深背景：深空蓝黑
-        static let surfaceWindow    = Color(hex: "#07090F")
-        /// 次级面板背景：深蓝黑
-        static let surfacePanel     = Color(hex: "#0C1018")
-        /// 卡片背景：带蓝调的深色
-        static let surfaceCard      = Color(hex: "#101520")
-        /// 覆层背景：略亮的深蓝
-        static let surfaceOverlay   = Color(hex: "#161D2E")
-        /// 输入框背景：极深蓝黑
-        static let surfaceInput     = Color(hex: "#0A0E1A")
+        /// 根据外观模式（Aqua / Dark Aqua）返回不同颜色
+        private static func adaptive(light: NSColor, dark: NSColor) -> Color {
+            Color(nsColor: NSColor(name: nil) { traits in
+                traits.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
+            })
+        }
+
+        // ── 基底色（深空蓝黑 / 浅蓝灰双调色板）─────────────────
+
+        /// 应用最深背景
+        static let surfaceWindow = adaptive(
+            light: NSColor(srgbRed: 0.961, green: 0.965, blue: 0.980, alpha: 1), // #F5F6FA
+            dark:  NSColor(srgbRed: 0.027, green: 0.035, blue: 0.059, alpha: 1)  // #07090F
+        )
+        /// 次级面板背景
+        static let surfacePanel = adaptive(
+            light: NSColor(srgbRed: 0.914, green: 0.922, blue: 0.957, alpha: 1), // #E9EBF4
+            dark:  NSColor(srgbRed: 0.047, green: 0.063, blue: 0.094, alpha: 1)  // #0C1018
+        )
+        /// 卡片背景
+        static let surfaceCard = adaptive(
+            light: NSColor(srgbRed: 0.976, green: 0.976, blue: 0.988, alpha: 1), // #F9F9FC
+            dark:  NSColor(srgbRed: 0.063, green: 0.082, blue: 0.125, alpha: 1)  // #101520
+        )
+        /// 覆层背景
+        static let surfaceOverlay = adaptive(
+            light: NSColor(srgbRed: 0.878, green: 0.890, blue: 0.937, alpha: 1), // #E0E3EF
+            dark:  NSColor(srgbRed: 0.086, green: 0.114, blue: 0.180, alpha: 1)  // #161D2E
+        )
+        /// 输入框背景
+        static let surfaceInput = adaptive(
+            light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 1), // #FFFFFF
+            dark:  NSColor(srgbRed: 0.039, green: 0.055, blue: 0.102, alpha: 1)  // #0A0E1A
+        )
 
         // ── 玻璃覆层（叠加在 Material 之上）────────────────────
 
-        static let glassUltraLight  = Color.white.opacity(0.04)
-        static let glassLight       = Color.white.opacity(0.06)
-        static let glassMedium      = Color.white.opacity(0.09)
-        static let glassHoverColor  = Color.white.opacity(0.08)
-        static let glassPress       = Color.white.opacity(0.12)
+        static let glassUltraLight  = Color.primary.opacity(0.04)
+        static let glassLight       = Color.primary.opacity(0.06)
+        static let glassMedium      = Color.primary.opacity(0.09)
+        static let glassHoverColor  = Color.primary.opacity(0.08)
+        static let glassPress       = Color.primary.opacity(0.12)
         static let glassSelected    = Color(hex: "#2C7EF8").opacity(0.14)
 
         // ── 玻璃边框（光线折射效果）─────────────────────────────────
 
-        static let glassBorderTop    = Color.white.opacity(0.22)
-        static let glassBorderSide   = Color.white.opacity(0.08)
-        static let glassBorderBottom = Color.black.opacity(0.35)
+        static let glassBorderTop    = Color.primary.opacity(0.18)
+        static let glassBorderSide   = Color.primary.opacity(0.07)
+        static let glassBorderBottom = Color.primary.opacity(0.04)
         static let glassBorderAccent = Color(hex: "#2C7EF8").opacity(0.40)
 
         // ── 强调色（电光蓝）─────────────────────────────────────────
@@ -45,12 +70,24 @@ enum DesignTokens {
         static let accentGlow       = Color(hex: "#2C7EF8").opacity(0.20)
         static let accentGlowStrong = Color(hex: "#2C7EF8").opacity(0.38)
 
-        // ── 文字色（略带蓝调，更通透）───────────────────────────────
+        // ── 文字色（自适应）──────────────────────────────────────
 
-        static let textPrimary   = Color(hex: "#EDF0FF")
-        static let textSecondary = Color(hex: "#8892AA")
-        static let textTertiary  = Color(hex: "#525D78")
-        static let textDisabled  = Color(hex: "#323A52")
+        static let textPrimary = adaptive(
+            light: NSColor(srgbRed: 0.102, green: 0.114, blue: 0.180, alpha: 1), // #1A1D2E
+            dark:  NSColor(srgbRed: 0.929, green: 0.941, blue: 1.000, alpha: 1)  // #EDF0FF
+        )
+        static let textSecondary = adaptive(
+            light: NSColor(srgbRed: 0.294, green: 0.322, blue: 0.439, alpha: 1), // #4B5270
+            dark:  NSColor(srgbRed: 0.533, green: 0.573, blue: 0.667, alpha: 1)  // #8892AA
+        )
+        static let textTertiary = adaptive(
+            light: NSColor(srgbRed: 0.478, green: 0.510, blue: 0.627, alpha: 1), // #7A82A0
+            dark:  NSColor(srgbRed: 0.322, green: 0.365, blue: 0.471, alpha: 1)  // #525D78
+        )
+        static let textDisabled = adaptive(
+            light: NSColor(srgbRed: 0.690, green: 0.718, blue: 0.816, alpha: 1), // #B0B7D0
+            dark:  NSColor(srgbRed: 0.196, green: 0.227, blue: 0.322, alpha: 1)  // #323A52
+        )
 
         // ── 状态色（更鲜亮、更精致）────────────────────────────────
 
@@ -59,16 +96,16 @@ enum DesignTokens {
         static let statusError      = Color(hex: "#FB7185")
         static let statusOffline    = Color(hex: "#475569")
 
-        // ── 边框（基于透明白色）─────────────────────────────────
+        // ── 边框（自适应透明度）──────────────────────────────────
 
-        static let borderPrimary   = Color.white.opacity(0.10)
-        static let borderSecondary = Color.white.opacity(0.06)
+        static let borderPrimary   = Color.primary.opacity(0.10)
+        static let borderSecondary = Color.primary.opacity(0.06)
         static let borderFocus     = Color(hex: "#2C7EF8").opacity(0.65)
-        static let borderSubtle    = Color.white.opacity(0.04)
+        static let borderSubtle    = Color.primary.opacity(0.04)
 
         // ── 背景交互状态 ──────────────────────────────────────────
 
-        static let backgroundHover    = Color.white.opacity(0.06)
+        static let backgroundHover    = Color.primary.opacity(0.06)
         static let backgroundSelected = Color(hex: "#2C7EF8").opacity(0.14)
         static let backgroundPressed  = Color(hex: "#2C7EF8").opacity(0.22)
 
@@ -191,10 +228,10 @@ enum DesignTokens {
         static func glassBorder() -> LinearGradient {
             LinearGradient(
                 stops: [
-                    .init(color: Color.white.opacity(0.24), location: 0.00),
-                    .init(color: Color.white.opacity(0.14), location: 0.25),
-                    .init(color: Color.white.opacity(0.06), location: 0.60),
-                    .init(color: Color.black.opacity(0.08), location: 1.00),
+                    .init(color: Color.primary.opacity(0.20), location: 0.00),
+                    .init(color: Color.primary.opacity(0.12), location: 0.25),
+                    .init(color: Color.primary.opacity(0.05), location: 0.60),
+                    .init(color: Color.primary.opacity(0.03), location: 1.00),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

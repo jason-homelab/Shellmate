@@ -33,6 +33,19 @@
 
 **⚠️ 注意：** `Text/Tertiary`（`#5C5B68` 深色模式）对比度 2.8:1 不满足正文要求，**只能用于辅助性、非关键信息**（如分组标题、占位符、状态栏），不能用于主要内容文字。
 
+**Text/Tertiary 合规使用清单（已审查）：**
+
+| 使用位置 | 是否合规 | 说明 |
+|---------|---------|------|
+| 表单 Label 标题（Uppercase 小字） | ✅ 合规 | 辅助性标签，非正文 |
+| 分组折叠箭头图标 | ✅ 合规 | 图标状态指示，非文字 |
+| 状态栏分隔符 | ✅ 合规 | 纯装饰 |
+| SFTP 面包屑路径（非当前目录段） | ⚠️ 边界 | 字体 10.5pt SF Mono，建议升级为 Text/Secondary |
+| SFTP 列表 ColumnHeader 列名 | ⚠️ 边界 | Uppercase 10pt，建议升级为 Text/Secondary |
+| D01 弹窗 Tab 非激活项 | ⚠️ 边界 | 12pt 可点击元素，建议升级为 Text/Secondary |
+
+**修订规则：** 所有 10pt 以上的可交互元素（按钮、Tab 项、可点击列标题），一律使用 Text/Secondary（5.2:1 ✅）而非 Text/Tertiary。
+
 ### 1.2 颜色不能是唯一信息载体
 
 以下状态信息不能仅靠颜色区分，必须配合图标或文字：
@@ -135,12 +148,12 @@
 - [ ] D04 端口转发管理器（含详情编辑状态）
 - [ ] D05 快捷命令管理器（含命令选中编辑状态）
 
-**设置界面（5 个页面）：**
-- [ ] 外观（主题预览缩略图 × 6）
-- [ ] 关键词高亮（规则集列表 + 规则详情）
-- [ ] 安全（Known Hosts 表格 + SSH 密钥列表）
-- [ ] 终端（基础配置项）
-- [ ] iCloud 同步（同步选项）
+**设置界面（5 个页面，对应 06-设置面板规范.md）：**
+- [ ] S02 外观（主题预览缩略图 × 8 + 字体/光标/窗口配置）
+- [ ] S01 关键词高亮（规则集列表 + 规则详情 + 内联添加表单）
+- [ ] S03 安全（Known Hosts 表格 + SSH 密钥列表 + 主密码设置）
+- [ ] S04 终端行为（滚动缓冲区 + 编码与输入 + 日志 + 高级）
+- [ ] S05 iCloud 同步（总开关 + 同步范围 + 同步状态 + 冲突解决）
 
 ### ✅ Phase 4：可访问性检查
 
@@ -170,24 +183,66 @@
 
 ## 三、Light Mode 设计要求
 
-当前原型只展示了 Dark Mode，在 Figma 中必须同时提供 Light Mode 设计稿。
+当前所有规范文档默认以 Dark Mode 描述。Light Mode 是 **必须交付** 的设计变体，缺少 Light Mode 会导致用户在系统切换外观时界面出现视觉异常。
 
-### 3.1 Light Mode 关键调整
+### 3.1 Light Mode 完整语义颜色映射表
 
-| 元素 | Dark Mode | Light Mode |
-|------|-----------|------------|
-| 应用背景 | `#0C0C0E` | `#FFFFFF` |
-| 侧边栏 | 深色 Vibrancy | 浅色 Vibrancy |
-| 终端背景 | `#0C0C0E` | `#FAFAFA`（可自定义）|
-| 终端文字 | 高亮色系 | 较深色系（同色调） |
-| 分隔线 | `rgba(白, 0.08)` | `rgba(黑, 0.08)` |
-| 标签徽章 | 浅色半透明背景 | 相同规则（Light 变体）|
+以下为所有 Semantic Token 在 Light Mode 下的对应值（供 Figma Variables 的 Light Mode 配置）：
 
-### 3.2 Light Mode 注意事项
+| Token | Dark Mode | Light Mode |
+|-------|-----------|------------|
+| `Surface/App` | `#0C0C0E` | `#F2F2F7`（系统标准灰背景）|
+| `Surface/Window` | `#141418` | `#FFFFFF` |
+| `Surface/Sidebar` | Vibrancy/Dark | Vibrancy/Light |
+| `Surface/Panel` | `#1C1C22` | `#F7F7FA` |
+| `Surface/Toolbar` | `#222228` | `#EBEBF0` |
+| `Surface/Elevated` | `#2A2A32` | `#FFFFFF` |
+| `Surface/Overlay` | `#303038` | `#F0F0F5` |
+| `Surface/Input` | `#1A1A20` | `#FFFFFF` |
+| `Border/Faint` | `rgba(255,255,255,0.04)` | `rgba(0,0,0,0.06)` |
+| `Border/Subtle` | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.10)` |
+| `Border/Default` | `rgba(255,255,255,0.12)` | `rgba(0,0,0,0.15)` |
+| `Text/Primary` | `#EEEDF5` | `#1A1A1A` |
+| `Text/Secondary` | `#9D9CAA` | `#5C5C5C` |
+| `Text/Tertiary` | `#5C5B68` | `#8E8E93` |
+| `Text/Disabled` | `#3C3B48` | `#C7C7CC` |
+| `Terminal/Background` | `#0C0C0E` | `#FAFAFA`（用户可在主题中自定义）|
+| `Status/Connected` | `#2DCE7A` | `#1E8C52`（Light 下加深保持对比度）|
+| `Status/Error` | `#F04060` | `#D0293E` |
+| `Status/Connecting` | `#F5A623` | `#C47D10` |
+| `Accent/Dim` | `rgba(61,142,240,0.15)` | `rgba(0,122,255,0.10)` |
+| `Accent/Glow` | `rgba(61,142,240,0.08)` | `rgba(0,122,255,0.06)` |
+
+### 3.2 Light Mode 关键界面适配要点
+
+**终端区域（Light Mode 特殊处理）：**
+- 终端背景即使在 Light Mode 下也允许保持深色（用户通常偏好深色终端）
+- 终端边框 `1pt Border/Default（Light）` 区隔终端与浅色 UI 背景
+- Terminal/Dim `#74738A` 在白底对比度不足（2.6:1），Light Mode 下改为 `#595959`（6.5:1 ✅）
+
+**侧边栏 Vibrancy（Light Mode）：**
+- 使用 `NSVisualEffectView` material `.sidebar`，Light Mode 下自动呈现浅色磨砂效果
+- 侧边栏文字色自动切换（系统 NSColor 语义色会跟随模式）
+
+**连接状态指示灯（Light Mode）：**
+- 绿色状态点改用 `#1E8C52`（对比度 6.8:1 vs 白底 ✅）
+- 红色改用 `#D0293E`（对比度 5.1:1 ✅）
+
+**Figma 实施步骤：**
+```
+1. 在 Figma Variables 面板 → Collections → Semantic
+2. 添加「Light」Mode 列
+3. 将上表右列值逐一填入对应变量的 Light Mode
+4. 使用 View → Presentation → Light/Dark 切换验证所有 Screen
+5. 每个 Screen 截图对比，检查颜色遗漏（硬编码 hex 不会跟随切换）
+```
+
+### 3.3 Light Mode 注意事项
 
 - 侧边栏 Vibrancy 在 Light Mode 下更显著（透出浅色桌面壁纸），设计中需考虑内容的可读性
-- 终端在 Light Mode 下，`Terminal/Dim` 颜色需重新调整（`#74738A` 在白底上对比度不足）
+- 终端在 Light Mode 下，`Terminal/Dim` 颜色需重新调整为 `#595959`
 - 状态绿色在 Light Mode 下使用 `Status/Connected Light`（更深的绿：`#1E8C52`）
+- `Text/Tertiary` 在 Light Mode 下对应 `#8E8E93`，对比度 2.5:1，**同样只能用于辅助性非正文内容**
 
 ---
 

@@ -19,8 +19,8 @@ struct SessionRowView: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
 
-            // 发光状态点
-            glowingDot
+            // 服务器图标（含连接状态角标）
+            serverIcon
 
             // 会话信息
             VStack(alignment: .leading, spacing: 2) {
@@ -55,24 +55,29 @@ struct SessionRowView: View {
         .frame(height: DesignTokens.Sizes.sessionRowHeight)
         .background {
             if isSelected {
-                // 选中：蓝色玻璃光晕
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                // 选中：蓝色玻璃光晕（内缩居中 + 较大圆角）
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                     .fill(DesignTokens.Colors.glassSelected)
                     .overlay {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                             .strokeBorder(
                                 DesignTokens.Gradients.glassAccentBorder,
                                 lineWidth: 0.75
                             )
                     }
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, 2)
+                    .shadow(color: DesignTokens.Colors.accentGlow, radius: 8, x: 0, y: 0)
             } else if isHovering {
-                // 悬停：轻玻璃
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                // 悬停：轻玻璃（同样内缩居中）
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                     .fill(DesignTokens.Colors.glassHoverColor)
                     .overlay {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 0.5)
                     }
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, 2)
             }
         }
         .contentShape(Rectangle())
@@ -91,23 +96,44 @@ struct SessionRowView: View {
         .accessibilityValue(session.connectionState.displayName)
     }
 
-    // MARK: - 发光状态点
+    // MARK: - 服务器图标
 
-    @ViewBuilder
-    private var glowingDot: some View {
-        let dotColor = dotColorForState(session.connectionState)
-        GlowingStatusDot(
-            color: dotColor,
-            size: DesignTokens.Sizes.statusDotSize
-        )
+    private var serverIcon: some View {
+        ZStack(alignment: .bottomTrailing) {
+            // 图标背景圆角框
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
+                }
+                .frame(width: 32, height: 32)
+
+            // 服务器图标
+            Image(systemName: "server.rack")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(DesignTokens.Colors.accentPrimary.opacity(0.75))
+                .frame(width: 32, height: 32)
+
+            // 连接状态角标（仅非离线时显示）
+            if session.connectionState != .offline {
+                Circle()
+                    .fill(dotColorForState(session.connectionState))
+                    .frame(width: 7, height: 7)
+                    .overlay {
+                        Circle().strokeBorder(DesignTokens.Colors.surfaceWindow, lineWidth: 1.5)
+                    }
+                    .offset(x: 2, y: 2)
+            }
+        }
     }
 
     private func dotColorForState(_ state: ConnectionState) -> Color {
         switch state {
-        case .connected:              return DesignTokens.Colors.statusConnected
+        case .connected:                  return DesignTokens.Colors.statusConnected
         case .connecting, .disconnecting: return DesignTokens.Colors.statusConnecting
-        case .error:                  return DesignTokens.Colors.statusError
-        default:                      return DesignTokens.Colors.statusOffline
+        case .error:                      return DesignTokens.Colors.statusError
+        default:                          return DesignTokens.Colors.statusOffline
         }
     }
 }

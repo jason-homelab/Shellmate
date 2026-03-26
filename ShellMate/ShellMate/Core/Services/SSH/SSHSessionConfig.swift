@@ -76,7 +76,8 @@ struct SSHSessionConfig {
     // MARK: - 代理/跳板机设置
 
     /// 跳板机配置（用于 ProxyJump）
-    var proxyJump: SSHSessionConfig?
+    /// 使用引用类型包装避免 struct 递归包含自身
+    var proxyJump: SSHSessionConfigBox?
 
     // MARK: - 其他设置
 
@@ -106,14 +107,35 @@ struct SSHSessionConfig {
         self.authMethod = authMethod
     }
 
+    /// 完整初始化（用于测试和直接构造）
+    init(
+        host: String,
+        port: Int32 = 22,
+        username: String,
+        authMethod: AuthMethod = .password,
+        password: String? = nil,
+        privateKeyPath: String? = nil,
+        passphrase: String? = nil,
+        connectionTimeout: TimeInterval = 30
+    ) {
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authMethod = authMethod
+        self.password = password
+        self.privateKeyPath = privateKeyPath
+        self.passphrase = passphrase
+        self.connectionTimeout = connectionTimeout
+    }
+
     // MARK: - 便捷初始化
 
     /// 从 Session 模型创建配置
     /// - Parameters:
     ///   - session: 会话模型
-    ///   - password: 密码（从 Keychain 获取）
-    ///   - privateKeyData: 私钥数据（从 Keychain 获取）
-    ///   - passphrase: 私钥密码（从 Keychain 获取）
+    ///   - password: 密码（从凭据金库获取）
+    ///   - privateKeyData: 私钥数据（从凭据金库获取）
+    ///   - passphrase: 私钥密码（从凭据金库获取）
     static func from(
         session: Session,
         password: String? = nil,
@@ -132,10 +154,22 @@ struct SSHSessionConfig {
         config.privateKeyPath = session.privateKeyPath
         config.passphrase = passphrase
         config.keepAliveInterval = Int(session.keepAliveInterval)
-        config.encoding = String.Encoding(rawValue: UInt(session.encoding.hashValue)) ?? .utf8
+        // 通过 CoreFoundation IANA 名称转换编码（如 UTF-8、GBK、ISO-8859-1 等）
+        let cfEncoding = CFStringConvertIANACharSetNameToEncoding(session.encoding as CFString)
+        config.encoding = cfEncoding == kCFStringEncodingInvalidId
+            ? .utf8
+            : String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
 
         return config
     }
+}
+
+// MARK: - 跳板机配置包装器
+
+/// 包装 SSHSessionConfig 以避免 struct 递归包含自身
+final class SSHSessionConfigBox {
+    var config: SSHSessionConfig
+    init(_ config: SSHSessionConfig) { self.config = config }
 }
 
 // MARK: - 连接状态回调
@@ -309,6 +343,9 @@ final class SSHSessionWrapper {
 
         case .sshAgent:
             try bridge.authenticateWithAgent(username: config.username)
+
+        case .keyboardInteractive:
+            throw SSHError.authMethodNotSupported(method: "keyboard-interactive")
         }
     }
 

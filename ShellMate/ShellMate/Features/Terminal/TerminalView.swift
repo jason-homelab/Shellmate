@@ -73,12 +73,20 @@ struct TerminalView: View {
     /// SwiftTerm TerminalView 引用
     @State private var terminalViewRef: SwiftTerm.TerminalView?
 
-    /// 字号（绑定到外观设置，通过 updateNSView 同步到 SwiftTerm）
-    @AppStorage("appearance.fontSize") private var fontSize: Double = 13
     /// 字体族（绑定到外观设置，通过 updateNSView 同步到 SwiftTerm）
     @AppStorage("appearance.fontFamily") private var fontFamily: String = ""
-    /// 主题 ID（绑定到外观设置，变化时通过 updateNSView 实时应用到 SwiftTerm）
-    @AppStorage("appearance.themeId") private var themeId: String = "shellmate-dark"
+    /// 全局主题 ID（只读，用于无会话覆盖时回退）
+    @AppStorage("appearance.themeId") private var globalThemeId: String = "shellmate-dark"
+    /// 全局字号（只读，用于无会话覆盖时回退）
+    @AppStorage("appearance.fontSize") private var globalFontSize: Double = 13
+    /// 会话级别工作字号：初始化自有效值，工具栏 ±1 只修改此值，不写回 AppStorage
+    @State private var sessionFontSize: Double = 13
+
+    /// 实际生效主题：会话有覆盖时取覆盖值，否则跟随全局
+    private var effectiveThemeId: String {
+        if let ov = session.overrideThemeId, !ov.isEmpty { return ov }
+        return globalThemeId
+    }
 
     @State private var showSearch: Bool = false
     @State private var searchText: String = ""
@@ -94,8 +102,12 @@ struct TerminalView: View {
     @State private var tunnelErrorMessage: String = ""
     /// W11：快捷命令面板是否显示
     @State private var isQuickCommandOpen: Bool = false
-    /// W12.3：凭据缺失提示弹窗
-    @State private var showCredentialsMissing: Bool = false
+    /// 密码输入向导（password/keyboard-interactive 无凭据时显示）
+    @State private var showCredentialWizard: Bool = false
+    @State private var wizardPassword: String = ""
+    @State private var wizardSaveCredential: Bool = true
+    /// 私钥路径缺失提示（提示用户前往编辑会话）
+    @State private var showPrivateKeyMissing: Bool = false
     /// W12.6：同步输入确认弹窗
     @State private var showSyncConfirm: Bool = false
     /// W12.6：观察同步状态
@@ -128,9 +140,11 @@ struct TerminalView: View {
             // 终端主区域（含 Compose Pane 纵向布局）
             terminalAndComposeView
 
-            // 底部状态栏（连接状态 + 已连接时长 + 终端尺寸 + 编码）
+            // 底部状态栏（连接状态 + 主机指标）
             TerminalStatusBarView(
                 connectionState: controller.state.stateColor,
+                session: session,
+                serverMetrics: controller.serverMetrics,
                 columns: controller.terminalSize.columns,
                 rows: controller.terminalSize.rows,
                 encoding: session.encoding,
@@ -182,8 +196,18 @@ struct TerminalView: View {
         }
         .background(DesignTokens.Colors.surfaceWindow)
         .onAppear {
+            // 初始化会话字号：有覆盖则用覆盖值，否则跟随全局
+            sessionFontSize = session.overrideFontSize > 0
+                ? Double(session.overrideFontSize)
+                : globalFontSize
             Task { @MainActor in
                 connect()
+            }
+        }
+        .onChange(of: globalFontSize) { newVal in
+            // 无会话覆盖时同步全局变化，不覆盖有独立字号的会话
+            if session.overrideFontSize <= 0 {
+                sessionFontSize = newVal
             }
         }
         .onChange(of: terminalViewRef) { newView in
@@ -215,15 +239,22 @@ struct TerminalView: View {
             sessionId: session.id,
             controller: controller,
             showSearch: $showSearch,
-            fontSize: $fontSize,
+            fontSize: $sessionFontSize,
             isQuickCommandOpen: $isQuickCommandOpen,
             minFontSize: minFontSize,
             maxFontSize: maxFontSize,
             onToggleSFTP: toggleSFTPPanel
         ))
-        // W12.3：监听凭据缺失状态
-        .onChange(of: controller.credentialsMissing) { missing in
-            if missing { showCredentialsMissing = true }
+        // 监听凭据缺失状态
+        .onChange(of: controller.needsCredentialInput) { needed in
+            if needed {
+                wizardPassword = ""
+                wizardSaveCredential = true
+                showCredentialWizard = true
+            }
+        }
+        .onChange(of: controller.needsCredentialEdit) { needed in
+            if needed { showPrivateKeyMissing = true }
         }
         // W12.5：搜索文本变化时触发 SwiftTerm 搜索
         .onChange(of: searchText) { _ in
@@ -243,19 +274,18 @@ struct TerminalView: View {
             guard !searchText.isEmpty else { return }
             findNext()
         }
-        // W12.3：凭据缺失提示
-        .alert("本设备凭据缺失", isPresented: $showCredentialsMissing) {
-            Button("前往编辑") {
-                // 此处可触发编辑会话的导航；当前版本仅关闭弹窗
-                showCredentialsMissing = false
-                controller.credentialsMissing = false
-            }
-            Button("取消", role: .cancel) {
-                showCredentialsMissing = false
-                controller.credentialsMissing = false
+        // 私钥路径未配置提示
+        .alert("私钥路径未配置", isPresented: $showPrivateKeyMissing) {
+            Button("确定", role: .cancel) {
+                showPrivateKeyMissing = false
+                controller.needsCredentialEdit = false
             }
         } message: {
-            Text("此会话的密码/密钥未在本设备的 Keychain 中找到，可能是通过 iCloud 同步过来的。请在编辑会话页面重新输入凭据后再连接。")
+            Text("此会话使用私钥认证，但未设置私钥文件路径。请在「编辑会话 → 认证」中选择私钥文件后再连接。")
+        }
+        // 密码输入向导
+        .sheet(isPresented: $showCredentialWizard) {
+            credentialWizardView
         }
         // D02：首次连接新主机，显示主机密钥确认弹窗
         .sheet(
@@ -342,15 +372,7 @@ struct TerminalView: View {
 
     private var toolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                StatusDotView(state: controller.state.stateColor)
-                Text(controller.state.displayName)
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-            }
-
-            Spacer()
-
+            // 终端标题（已连接时显示，如 "ubuntu@host: ~"）
             if !controller.terminalTitle.isEmpty {
                 Text(controller.terminalTitle)
                     .font(DesignTokens.Typography.labelSmall)
@@ -360,19 +382,28 @@ struct TerminalView: View {
 
             Spacer()
 
+            // 右侧工具按钮
             toolButtonsView
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.surfacePanel)
-        .overlay(Divider(), alignment: .bottom)
+        .frame(height: 36)
+        .background {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Rectangle().fill(DesignTokens.Colors.glassUltraLight))
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(DesignTokens.Colors.glassBorderSide)
+                        .frame(height: 0.5)
+                }
+        }
     }
 
     private var toolButtonsView: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
+        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
             fontSizeControls
 
-            Divider().frame(height: 16).padding(.horizontal, DesignTokens.Spacing.xs)
+            toolbarDivider
 
             ToolbarButton(icon: "clear", tooltip: "清屏 (⌘K)") {
                 controller.clearTerminal()
@@ -386,11 +417,11 @@ struct TerminalView: View {
                 withAnimation { showSearch.toggle() }
             }
 
-            Divider().frame(height: 16).padding(.horizontal, DesignTokens.Spacing.xs)
+            toolbarDivider
 
             // SFTP 文件管理器按钮
             ToolbarButton(
-                icon: "folder.fill.badge.wifi",
+                icon: "arrow.up.arrow.down",
                 tooltip: "SFTP 文件管理器",
                 isEnabled: controller.state == .connected,
                 isActive: controller.isSFTPPanelOpen
@@ -446,33 +477,41 @@ struct TerminalView: View {
                 }
             }
 
-            Divider().frame(height: 16).padding(.horizontal, DesignTokens.Spacing.xs)
+            toolbarDivider
 
             connectionButton
         }
     }
 
+    private var toolbarDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.Colors.borderSecondary)
+            .frame(width: 1, height: 16)
+            .padding(.horizontal, DesignTokens.Spacing.xxs)
+    }
+
     private var fontSizeControls: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
+        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
             ToolbarButton(
                 icon: "minus.magnifyingglass",
                 tooltip: "减小字号 (⌘-)",
-                isEnabled: fontSize > minFontSize
+                isEnabled: sessionFontSize > minFontSize
             ) {
-                fontSize = max(minFontSize, fontSize - 1)
+                sessionFontSize = max(minFontSize, sessionFontSize - 1)
             }
 
-            Text("\(Int(fontSize))pt")
-                .font(DesignTokens.Typography.codeMedium)
+            Text("\(Int(sessionFontSize))pt")
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: 40)
+                .frame(width: 34)
+                .multilineTextAlignment(.center)
 
             ToolbarButton(
                 icon: "plus.magnifyingglass",
                 tooltip: "增大字号 (⌘+)",
-                isEnabled: fontSize < maxFontSize
+                isEnabled: sessionFontSize < maxFontSize
             ) {
-                fontSize = min(maxFontSize, fontSize + 1)
+                sessionFontSize = min(maxFontSize, sessionFontSize + 1)
             }
         }
     }
@@ -593,9 +632,9 @@ struct TerminalView: View {
             SwiftTermViewRepresentable(
                 viewRef: $terminalViewRef,
                 controller: controller,
-                fontSize: CGFloat(fontSize),
+                fontSize: CGFloat(sessionFontSize),
                 fontFamily: fontFamily,
-                themeId: themeId
+                themeId: effectiveThemeId
             )
 
             stateOverlay
@@ -710,6 +749,106 @@ struct TerminalView: View {
         .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
     }
 
+    // MARK: - 密码输入向导
+
+    private var credentialWizardView: some View {
+        VStack(spacing: 0) {
+            // 标题
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("输入连接凭据")
+                        .font(DesignTokens.Typography.titleMedium)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Text("\(session.username)@\(session.host):\(session.port)")
+                        .font(DesignTokens.Typography.codeSmall)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                Spacer()
+                Button(action: {
+                    showCredentialWizard = false
+                    controller.needsCredentialInput = false
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .frame(width: 24, height: 24)
+                        .background(DesignTokens.Colors.surfaceCard)
+                        .cornerRadius(12)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(DesignTokens.Spacing.lg)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                // 认证方式提示
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                    Text(session.authMethod == .keyboardInteractive ? "键盘交互认证" : "密码认证")
+                        .font(DesignTokens.Typography.labelMedium)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
+
+                // 密码输入
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("密码")
+                        .font(DesignTokens.Typography.labelSmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    SecureField("请输入密码", text: $wizardPassword)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { confirmCredentialWizard() }
+                }
+
+                // 记住密码选项
+                Toggle("记住密码（保存到本设备凭据金库）", isOn: $wizardSaveCredential)
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .toggleStyle(.checkbox)
+            }
+            .padding(DesignTokens.Spacing.lg)
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("取消") {
+                    showCredentialWizard = false
+                    controller.needsCredentialInput = false
+                }
+                .buttonStyle(.bordered)
+                .keyboardShortcut(.escape, modifiers: [])
+
+                Button("连接") {
+                    confirmCredentialWizard()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: .command)
+                .disabled(wizardPassword.isEmpty)
+            }
+            .padding(DesignTokens.Spacing.lg)
+        }
+        .frame(width: 380)
+        .background(DesignTokens.Colors.surfacePanel)
+    }
+
+    private func confirmCredentialWizard() {
+        guard !wizardPassword.isEmpty else { return }
+        let pwd = wizardPassword
+        let save = wizardSaveCredential
+        showCredentialWizard = false
+        Task {
+            do {
+                try await controller.connectWithTemporaryPassword(pwd, save: save)
+            } catch let error as SSHError {
+                connectionErrorMessage = error.localizedDescription
+                showConnectionError = true
+            }
+        }
+    }
+
     // MARK: - 方法
 
     private func connect() {
@@ -725,14 +864,13 @@ struct TerminalView: View {
 
     private func toggleSFTPPanel() {
         if controller.isSFTPPanelOpen {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                Task { await controller.closeSFTPPanel() }
+            Task {
+                await controller.closeSFTPPanel()
             }
         } else {
             Task {
                 do {
                     try await controller.openSFTPPanel()
-                    withAnimation(.easeInOut(duration: 0.2)) {}
                 } catch {
                     sftpErrorMessage = error.localizedDescription
                     showSFTPError = true

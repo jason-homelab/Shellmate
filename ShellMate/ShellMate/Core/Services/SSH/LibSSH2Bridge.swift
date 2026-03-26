@@ -225,7 +225,7 @@ final class LibSSH2Bridge {
     /// 设置会话阻塞模式
     /// - Parameter blocking: true 为阻塞模式，false 为非阻塞模式
     func setBlocking(_ blocking: Bool) {
-        guard let session = session else { return }
+        guard session != nil else { return }
 
         // 在实际实现中：
         // libssh2_session_set_blocking(session, blocking ? 1 : 0)
@@ -237,7 +237,7 @@ final class LibSSH2Bridge {
     /// 设置会话超时时间
     /// - Parameter timeout: 超时时间（毫秒）
     func setTimeout(_ timeout: Int) {
-        guard let session = session else { return }
+        guard session != nil else { return }
 
         // 在实际实现中：
         // libssh2_session_set_timeout(session, timeout)
@@ -305,7 +305,7 @@ final class LibSSH2Bridge {
     /// 执行 SSH 握手
     /// - Throws: SSHError 如果握手失败
     func handshake() throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -330,7 +330,7 @@ final class LibSSH2Bridge {
     /// - Returns: 主机密钥指纹信息
     /// - Throws: SSHError 如果获取失败
     func getHostKeyFingerprint() throws -> HostKeyFingerprint {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -360,7 +360,7 @@ final class LibSSH2Bridge {
     /// - Parameter username: 用户名
     /// - Returns: 认证方法列表（逗号分隔）
     func getUserAuthList(username: String) throws -> String {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 

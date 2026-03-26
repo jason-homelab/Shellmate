@@ -13,6 +13,9 @@ struct ShellMateApp: App {
     /// Core Data 持久化控制器
     let persistenceController = PersistenceController.shared
 
+    /// 窗口外观模式："auto"（跟随系统）/ "light"（浅色）/ "dark"（深色）
+    @AppStorage("appearance.windowMode") private var windowMode: String = "auto"
+
     // MARK: - 应用场景
 
     var body: some Scene {
@@ -95,6 +98,35 @@ struct ShellMateApp: App {
 
         // 视图菜单
         CommandMenu("视图") {
+            // 外观模式子菜单
+            Menu("外观模式") {
+                Button(action: { windowMode = "auto" }) {
+                    Label(
+                        windowMode == "auto" ? "✓ 跟随系统" : "跟随系统",
+                        systemImage: "circle.lefthalf.filled"
+                    )
+                }
+                .keyboardShortcut("1", modifiers: [.command, .option])
+
+                Button(action: { windowMode = "light" }) {
+                    Label(
+                        windowMode == "light" ? "✓ 浅色模式" : "浅色模式",
+                        systemImage: "sun.max"
+                    )
+                }
+                .keyboardShortcut("2", modifiers: [.command, .option])
+
+                Button(action: { windowMode = "dark" }) {
+                    Label(
+                        windowMode == "dark" ? "✓ 深色模式" : "深色模式",
+                        systemImage: "moon"
+                    )
+                }
+                .keyboardShortcut("3", modifiers: [.command, .option])
+            }
+
+            Divider()
+
             Button("切换侧边栏") {
                 NotificationCenter.default.post(name: .toggleSidebarRequested, object: nil)
             }
@@ -219,14 +251,11 @@ struct ShellMateApp: App {
     // MARK: - 外观配置
 
     private func configureAppearance() {
-        // 配置窗口外观
-        // 在这里可以设置全局外观偏好
-
         // W15.1 冷启动优化：在 UI 就绪后立即在后台预热 HighlightEngine
-        // 避免首次 SSH 连接时正则编译阻塞主线程（HighlightEngine 是 @MainActor 单例）
         Task { @MainActor in
             _ = HighlightEngine.shared
         }
+        // 注：NSApp.appearance 由 AppDelegate.windowModeObserver (KVO) 统一管理
     }
 }
 

@@ -36,7 +36,7 @@ struct SessionFormSheet: View {
     @State private var passphrase: String = ""
 
     // 认证设置（新增）
-    @State private var saveToKeychain: Bool = true
+    @State private var saveCredential: Bool = true
 
     // 高级设置
     @State private var keepAliveInterval: Int32 = 60
@@ -48,15 +48,12 @@ struct SessionFormSheet: View {
     @State private var reconnectInterval: Int32 = 5
     @State private var envVarEntries: [EnvVarEntry] = []
 
-    // 外观设置
+    // 外观设置（覆盖：空字符串/0 表示跟随全局，不修改全局设置）
     @State private var colorHex: String = "#4A90D9"
     @State private var tags: [String] = []
-    @State private var overrideTheme: Bool = false
     @State private var overrideThemeId: String = ""
-    @State private var overrideFontSize: Bool = false
-    @State private var overrideFontSizeValue: Int32 = 13
+    @State private var overrideFontSizeValue: Int32 = 0
     @State private var startupCommand: String = ""
-    @State private var envLabel: String = ""
 
     // 验证状态
     @State private var validationErrors: [String] = []
@@ -225,7 +222,7 @@ struct SessionFormSheet: View {
                 privateKeyPath: $privateKeyPath,
                 password: $password,
                 passphrase: $passphrase,
-                saveToKeychain: $saveToKeychain
+                saveCredential: $saveCredential
             )
 
         case .advanced:
@@ -241,12 +238,9 @@ struct SessionFormSheet: View {
 
         case .appearance:
             SessionAppearanceTab(
-                overrideTheme: $overrideTheme,
                 overrideThemeId: $overrideThemeId,
-                overrideFontSize: $overrideFontSize,
                 overrideFontSizeValue: $overrideFontSizeValue,
-                startupCommand: $startupCommand,
-                envLabel: $envLabel
+                startupCommand: $startupCommand
             )
         }
     }
@@ -310,15 +304,12 @@ struct SessionFormSheet: View {
         reconnectInterval = session.reconnectInterval
         envVarEntries = session.envVars.map { EnvVarEntry(key: $0.key, value: $0.value) }
         startupCommand = session.startupCommand ?? ""
-        envLabel = session.envLabel ?? ""
         overrideThemeId = session.overrideThemeId ?? ""
-        overrideTheme = !overrideThemeId.isEmpty
-        overrideFontSizeValue = session.overrideFontSize > 0 ? session.overrideFontSize : 13
-        overrideFontSize = session.overrideFontSize > 0
+        overrideFontSizeValue = session.overrideFontSize
 
-        // 从 Keychain 预读密码（编辑时显示占位符，实际密码不回显但可覆写）
-        password = (try? KeychainService.shared.getPassword(for: session.id, type: .password)) ?? ""
-        passphrase = (try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)) ?? ""
+        // 编辑时不回显已存储的密码，保持空白（用户若要修改则重新输入）
+        password = ""
+        passphrase = ""
     }
 
     // MARK: - 保存会话
@@ -380,9 +371,8 @@ struct SessionFormSheet: View {
                 reconnectInterval: reconnectInterval,
                 envVars: envVars,
                 startupCommand: startupCommand.isEmpty ? nil : startupCommand,
-                envLabel: envLabel.isEmpty ? nil : envLabel,
-                overrideThemeId: overrideTheme ? overrideThemeId : nil,
-                overrideFontSize: overrideFontSize ? overrideFontSizeValue : 0
+                overrideThemeId: overrideThemeId.isEmpty ? nil : overrideThemeId,
+                overrideFontSize: overrideFontSizeValue
             )
         } else {
             session = Session(
@@ -404,24 +394,26 @@ struct SessionFormSheet: View {
                 reconnectInterval: reconnectInterval,
                 envVars: envVars,
                 startupCommand: startupCommand.isEmpty ? nil : startupCommand,
-                envLabel: envLabel.isEmpty ? nil : envLabel,
-                overrideThemeId: overrideTheme ? overrideThemeId : nil,
-                overrideFontSize: overrideFontSize ? overrideFontSizeValue : 0
+                overrideThemeId: overrideThemeId.isEmpty ? nil : overrideThemeId,
+                overrideFontSize: overrideFontSizeValue
             )
         }
 
-        // 将密码/Passphrase 写入 Keychain
+        // 将密码/Passphrase 写入凭据金库
         saveCredentials(for: session)
 
         onSave?(session)
     }
 
     private func saveCredentials(for session: Session) {
-        if !password.isEmpty {
-            try? KeychainService.shared.savePassword(password, for: session.id, type: .password)
-        }
-        if !passphrase.isEmpty {
-            try? KeychainService.shared.savePassword(passphrase, for: session.id, type: .passphrase)
+        guard saveCredential else { return }
+        Task {
+            if !password.isEmpty {
+                try? await CredentialVault.shared.save(password, sessionId: session.id, type: .password)
+            }
+            if !passphrase.isEmpty {
+                try? await CredentialVault.shared.save(passphrase, sessionId: session.id, type: .passphrase)
+            }
         }
     }
 }

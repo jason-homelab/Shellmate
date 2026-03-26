@@ -103,8 +103,10 @@ final class ShellMateTerminalView: NSView {
     /// 滚动位置
     private var scrollPosition: Int = 0
 
-    /// 回滚缓冲区行数（W15.3 内存控制：2000 行 ≈ 160KB/标签，峰值内存 < 150MB）
-    var scrollbackLines: Int = 2000
+    /// 回滚缓冲区行数（PRD §3.3.3 默认 10000 行，可在设置→终端中调整）
+    var scrollbackLines: Int = UserDefaults.standard.integer(forKey: "terminal.scrollbackLines") > 0
+        ? UserDefaults.standard.integer(forKey: "terminal.scrollbackLines")
+        : 10000
 
     /// 终端标题
     private(set) var terminalTitle: String = ""
@@ -554,7 +556,7 @@ final class ShellMateTerminalView: NSView {
 
     /// 解析 ESC 序列
     private func parseEscapeSequence(_ string: String, from start: String.Index) -> String.Index {
-        var index = string.index(after: start)
+        let index = string.index(after: start)
         guard index < string.endIndex else { return index }
 
         let nextChar = string[index]

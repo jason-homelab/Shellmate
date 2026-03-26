@@ -117,8 +117,12 @@ final class TerminalController: ObservableObject {
     /// 待用户确认的主机密钥状态（nil = 无待确认）
     @Published var pendingHostKeyState: PendingHostKeyState?
 
-    /// W12.3：本设备凭据缺失（iCloud 同步后首次连接提示）
-    @Published var credentialsMissing: Bool = false
+    /// 凭据缺失：需要用户通过向导输入密码（password / keyboard-interactive）
+    @Published var needsCredentialInput: Bool = false
+    /// 凭据缺失：私钥路径未配置，需要前往编辑会话
+    @Published var needsCredentialEdit: Bool = false
+    /// 临时密码（向导输入后一次性使用，connect() 读取后立即清空）
+    private var temporaryPassword: String?
 
     /// ProxyJump 连接管理器（多跳场景使用）
     private var proxyJumpManager: ProxyJumpManager?
@@ -140,6 +144,12 @@ final class TerminalController: ObservableObject {
 
     /// Compose Pane 是否显示
     @Published var isComposePaneOpen: Bool = false
+
+    /// 服务器实时性能指标（仅私钥/SSH Agent 认证时可用）
+    @Published private(set) var serverMetrics: ServerMetrics?
+
+    /// 服务器指标监控器
+    private var metricsMonitor: ServerMetricsMonitor?
 
     private var reconnectTask: Task<Void, Never>?
     private var userDisconnected = false
@@ -192,12 +202,22 @@ final class TerminalController: ObservableObject {
     func connect() async throws {
         guard state == .disconnected || state.isFailed else { return }
 
-        // W12.3：凭据预检查（iCloud 同步后本设备无凭据时给出提示）
-        if isCredentialMissing() {
-            credentialsMissing = true
-            return
+        // 凭据预检查：根据认证方式决定是否需要向导或编辑
+        switch session.authMethod {
+        case .password, .keyboardInteractive:
+            let hasCred = await CredentialVault.shared.exists(sessionId: session.id, type: .password)
+            if !hasCred && temporaryPassword == nil {
+                needsCredentialInput = true
+                return
+            }
+        case .privateKey:
+            if session.privateKeyPath == nil || (session.privateKeyPath?.isEmpty ?? true) {
+                needsCredentialEdit = true
+                return
+            }
+        case .sshAgent:
+            break
         }
-        credentialsMissing = false
 
         userDisconnected = false
         pendingHostKeyState = nil
@@ -210,9 +230,15 @@ final class TerminalController: ObservableObject {
             return
         }
 
-        // 从 Keychain 读取凭据
-        let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
-        let passphrase = try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)
+        // 从凭据金库读取凭据（向导输入的临时密码优先）
+        let password: String?
+        if let tempPass = temporaryPassword {
+            password = tempPass
+            temporaryPassword = nil
+        } else {
+            password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
+        }
+        let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
         let privateKeyPath = session.privateKeyPath
         let authMethod = session.authMethod
         let host = session.host
@@ -330,6 +356,8 @@ final class TerminalController: ObservableObject {
             delegate?.terminalController(self, didChangeState: state)
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
             tunnelManager.handleSSHConnected(config: sessionConfig, sessionID: session.id)
+            // 启动性能指标轮询
+            startMetricsMonitor()
 
         } catch let error as SSHError {
             switch error {
@@ -362,6 +390,19 @@ final class TerminalController: ObservableObject {
         }
     }
 
+    /// 用户通过向导输入密码后调用：临时存入密码并触发连接
+    /// - Parameters:
+    ///   - password: 用户在向导中输入的密码
+    ///   - save: 是否持久化到本地凭据金库
+    func connectWithTemporaryPassword(_ password: String, save: Bool) async throws {
+        if save {
+            try? await CredentialVault.shared.save(password, sessionId: session.id, type: .password)
+        }
+        temporaryPassword = password
+        needsCredentialInput = false
+        try await connect()
+    }
+
     func disconnect() async {
         userDisconnected = true
         reconnectTask?.cancel()
@@ -376,9 +417,38 @@ final class TerminalController: ObservableObject {
         await closeSFTPPanel()
         // 断开时停止所有隧道
         tunnelManager.handleSSHDisconnected()
+        // 停止性能指标监控
+        stopMetricsMonitor()
         state = .disconnected
         connectedAt = nil
         delegate?.terminalController(self, didChangeState: state)
+    }
+
+    // MARK: - 性能指标监控
+
+    private func startMetricsMonitor() {
+        Task {
+            // 从凭据金库加载认证凭据，传入监控器（安全只在内存中使用）
+            let password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
+            let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
+
+            let monitor = ServerMetricsMonitor(
+                session: session,
+                password: password,
+                passphrase: passphrase
+            )
+            monitor.onUpdate = { [weak self] metrics in
+                self?.serverMetrics = metrics
+            }
+            metricsMonitor = monitor
+            monitor.start()
+        }
+    }
+
+    private func stopMetricsMonitor() {
+        metricsMonitor?.stop()
+        metricsMonitor = nil
+        serverMetrics = nil
     }
 
     // MARK: - SFTP 面板管理
@@ -392,9 +462,9 @@ final class TerminalController: ObservableObject {
             return
         }
 
-        // 从 Keychain 读取凭据
-        let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
-        let passphrase = try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)
+        // 从凭据金库读取凭据
+        let password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
+        let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
 
         let newSFTPSession = SFTPSession()
         try await newSFTPSession.connect(
@@ -467,8 +537,19 @@ final class TerminalController: ObservableObject {
 
     /// 通过跳板机链连接目标服务器（9.1/9.2 ProxyJump）
     private func connectViaProxyJump() async throws {
-        let password = try? KeychainService.shared.getPassword(for: session.id, type: .password)
-        let passphrase = try? KeychainService.shared.getPassword(for: session.id, type: .passphrase)
+        let password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
+        let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
+
+        // 预加载各跳板机密码（异步，避免同步连接阶段调用 Keychain/Vault）
+        var resolvedChain: [ProxyJumpConfig] = []
+        for var hop in session.jumpHosts {
+            if let vid = hop.vaultId {
+                hop.resolvedPassword = try? await CredentialVault.shared.load(
+                    sessionId: vid, type: .password
+                )
+            }
+            resolvedChain.append(hop)
+        }
 
         var targetConfig = SSHSessionConfig.from(
             session: session,
@@ -479,7 +560,7 @@ final class TerminalController: ObservableObject {
         targetConfig.terminalRows = terminalSize.rows
 
         let manager = ProxyJumpManager(
-            proxyChain: session.jumpHosts,
+            proxyChain: resolvedChain,
             targetConfig: targetConfig
         )
 
@@ -524,6 +605,8 @@ final class TerminalController: ObservableObject {
         state = .connected
         connectedAt = Date()
         delegate?.terminalController(self, didChangeState: state)
+        // 启动性能指标轮询（ProxyJump 路径）
+        startMetricsMonitor()
     }
 
     // MARK: - 数据传输
@@ -644,17 +727,6 @@ final class TerminalController: ObservableObject {
     }
 
     /// W12.3：检查本设备是否缺少凭据（iCloud 同步后首次连接场景）
-    private func isCredentialMissing() -> Bool {
-        switch session.authMethod {
-        case .password, .keyboardInteractive:
-            return (try? KeychainService.shared.getPassword(for: session.id, type: .password)) == nil
-        case .privateKey:
-            return session.privateKeyPath == nil || (session.privateKeyPath?.isEmpty ?? true)
-        case .sshAgent:
-            return false
-        }
-    }
-
     private func shouldAutoReconnect(after error: SSHError) -> Bool {
         guard reconnectConfig.enabled && !userDisconnected else { return false }
         switch error {

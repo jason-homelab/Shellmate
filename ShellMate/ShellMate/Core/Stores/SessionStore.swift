@@ -94,6 +94,9 @@ final class SessionStore: ObservableObject {
             do {
                 filteredSessions = try await repository.search(query: query)
             } catch {
+                // 仅在 sessions 已加载完成时才使用内存过滤兜底，
+                // 避免初次加载尚未完成时将 filteredSessions 错误地置为空列表
+                guard !sessions.isEmpty else { return }
                 filteredSessions = sessions.filter { session in
                     session.name.localizedCaseInsensitiveContains(query) ||
                     session.host.localizedCaseInsensitiveContains(query) ||

@@ -65,8 +65,8 @@ enum ConnectionState: Int, CaseIterable, Identifiable {
     }
 }
 
-/// 隧道类型枚举
-enum TunnelType: Int16, CaseIterable, Identifiable {
+/// 隧道类型枚举（Core Data 存储用，与 TunnelModels.TunnelType 区分）
+enum CDTunnelType: Int16, CaseIterable, Identifiable {
     /// 本地端口转发
     case local = 0
     /// 远程端口转发

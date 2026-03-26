@@ -30,6 +30,7 @@ struct SFTPPanelView: View {
     @State private var permissionsTarget: SFTPFileItem?
     @State private var permissionsInput: String = ""
     @State private var showTransferPanel: Bool = false
+    @State private var isDragTargeted: Bool = false
 
     // MARK: - 视图
 
@@ -93,7 +94,7 @@ struct SFTPPanelView: View {
         VStack(spacing: 0) {
             // SFTPHeader（Figma 规范：高 28pt，含标题 + 收起按钮）
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "folder.fill.badge.wifi")
+                Image(systemName: "arrow.up.arrow.down.square")
                     .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.textTertiary)
 
@@ -236,29 +237,90 @@ struct SFTPPanelView: View {
     }
 
     private var fileListView: some View {
-        List(selection: $selectedItemId) {
-            if items.isEmpty && !isLoading {
-                Text("目录为空")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+        ZStack {
+            List(selection: $selectedItemId) {
+                if items.isEmpty && !isLoading {
+                    VStack(spacing: 8) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 28))
+                            .foregroundColor(DesignTokens.Colors.textDisabled)
+                            .opacity(0.4)
+                        Text("此目录为空")
+                            .font(DesignTokens.Typography.bodySmall)
+                            .foregroundColor(DesignTokens.Colors.textDisabled)
+                    }
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, DesignTokens.Spacing.xl)
+                    .padding(.vertical, DesignTokens.Spacing.xxxl)
                     .listRowBackground(Color.clear)
-            } else {
-                ForEach(items) { item in
-                    SFTPFileRowView(item: item)
-                        .tag(item.id)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            handleDoubleClick(item: item)
-                        }
-                        .contextMenu {
-                            fileContextMenu(for: item)
-                        }
+                } else {
+                    ForEach(items) { item in
+                        SFTPFileRowView(item: item)
+                            .tag(item.id)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                handleDoubleClick(item: item)
+                            }
+                            .contextMenu {
+                                fileContextMenu(for: item)
+                            }
+                    }
+                }
+            }
+            .listStyle(.inset(alternatesRowBackgrounds: true))
+
+            // 拖拽 Drop Zone 覆盖层
+            if isDragTargeted {
+                dropZoneOverlay
+            }
+        }
+        .onDrop(of: [.fileURL], isTargeted: $isDragTargeted) { providers in
+            handleDropProviders(providers)
+            return true
+        }
+    }
+
+    private var dropZoneOverlay: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(
+                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])
+                )
+                .foregroundColor(DesignTokens.Colors.accentPrimary)
+
+            VStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "arrow.up.doc.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+
+                Text("拖放文件上传到此目录")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+
+                Text("当前路径：\(currentPath)")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+        }
+        .padding(DesignTokens.Spacing.md)
+        .transition(.opacity)
+    }
+
+    private func handleDropProviders(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { item, _ in
+                guard let data = item as? Data,
+                      let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+                let remotePath = currentPath.hasSuffix("/")
+                    ? "\(currentPath)\(url.lastPathComponent)"
+                    : "\(currentPath)/\(url.lastPathComponent)"
+                DispatchQueue.main.async {
+                    transferQueue.enqueueUpload(localPath: url.path, remotePath: remotePath)
+                    showTransferPanel = true
                 }
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
     }
 
     private var loadingOverlay: some View {
@@ -299,32 +361,53 @@ struct SFTPPanelView: View {
 
     @ViewBuilder
     private func fileContextMenu(for item: SFTPFileItem) -> some View {
+        // 下载（仅文件）
         if item.fileType == .regularFile {
             Button(action: { downloadItem(item) }) {
-                Label("下载", systemImage: "arrow.down.circle")
+                Label("下载到本地", systemImage: "arrow.down.to.line")
             }
         }
+        // 进入目录
         if item.fileType.isDirectory {
             Button(action: { navigateTo(path: item.path) }) {
-                Label("进入目录", systemImage: "folder.fill.badge.plus")
+                Label("进入目录", systemImage: "folder.fill")
             }
         }
+
         Divider()
+
         Button(action: {
             renameTarget = item
             newName = item.name
             showRenameDialog = true
         }) {
-            Label("重命名", systemImage: "pencil")
+            Label("重命名…", systemImage: "pencil")
         }
+
+        Button(action: {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(item.path, forType: .string)
+        }) {
+            Label("复制路径", systemImage: "doc.on.clipboard")
+        }
+
+        Button(action: { showNewFolderDialog = true }) {
+            Label("新建文件夹…", systemImage: "folder.badge.plus")
+        }
+
+        Divider()
+
         Button(action: {
             permissionsTarget = item
             permissionsInput = String(format: "%o", item.permissions)
             showPermissionsDialog = true
         }) {
-            Label("修改权限", systemImage: "lock.fill")
+            Label("属性", systemImage: "info.circle")
         }
+
         Divider()
+
         Button(role: .destructive, action: { deleteItem(item) }) {
             Label("删除", systemImage: "trash")
         }
@@ -597,36 +680,32 @@ struct SFTPFileRowView: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 文件类型图标
             Image(systemName: item.fileType.sfSymbolName)
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .foregroundColor(iconColor)
-                .frame(width: 20, alignment: .center)
+                .frame(width: 18, alignment: .center)
 
-            // 文件名（flex）
+            // 文件名（flex，确保始终有足够显示空间）
             Text(item.name)
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
-                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                .truncationMode(.middle)
+                .frame(minWidth: 40, maxWidth: .infinity, alignment: .leading)
 
             // 文件大小
             Text(item.formattedSize)
                 .font(DesignTokens.Typography.codeSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: 72, alignment: .trailing)
+                .frame(width: 54, alignment: .trailing)
 
-            // 权限
-            Text(item.permissionsString)
-                .font(DesignTokens.Typography.codeSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: 88, alignment: .leading)
-
-            // 修改时间
+            // 修改时间（移除权限列，腾出空间给文件名）
             Text(item.formattedDate)
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: 108, alignment: .trailing)
+                .frame(width: 72, alignment: .trailing)
         }
         .padding(.vertical, 1)
+        .help(item.name + "  " + item.permissionsString)
     }
 
     private var iconColor: Color {

@@ -68,6 +68,9 @@
 | 下载 | `arrow.down.to.line` | 11pt | Text/Secondary |
 | 新建目录 | `folder.badge.plus` | 11pt | Text/Secondary |
 | 显示/隐藏 | `eye` / `eye.slash` | 11pt | Text/Secondary |
+| **SFTP 面板头部图标** | **`folder.fill.badge.wifi`** | **13pt** | **Text/Tertiary** |
+| **SFTP 面板折叠按钮** | **`sidebar.right`** | **13pt** | **Text/Tertiary** |
+| **拖拽上传提示** | **`arrow.up.doc.fill`** | **28pt** | **Accent/Default** |
 
 ### 2.4 文件类型图标（File Type Icons）
 

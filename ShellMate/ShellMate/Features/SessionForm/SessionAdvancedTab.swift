@@ -1,114 +1,279 @@
 import SwiftUI
 
+// MARK: - 环境变量条目（表单内 Identifiable 包装）
+
+struct EnvVarEntry: Identifiable {
+    var id: UUID = UUID()
+    var key: String
+    var value: String
+}
+
+// MARK: - 高级设置 Tab（D01 Tab 3）
+
 /// 会话高级设置 Tab
-/// 包含超时、重连、编码等高级选项
+/// 包含跳板机 ProxyJump、自动重连、Keep-Alive、连接超时、环境变量
 struct SessionAdvancedTab: View {
 
     // MARK: - 属性
 
-    @Binding var keepAliveInterval: Int32
+    @Binding var proxyJump: String
     @Binding var autoReconnect: Bool
-    @Binding var encoding: String
+    @Binding var maxReconnectRetries: Int32
+    @Binding var reconnectInterval: Int32
+    /// keepAliveInterval == 0 表示禁用，> 0 表示启用并为秒数
+    @Binding var keepAliveInterval: Int32
+    @Binding var connectTimeout: Int32
+    @Binding var envVarEntries: [EnvVarEntry]
 
-    // MARK: - 常量
+    // MARK: - 私有状态
 
-    private let encodingOptions = [
-        "UTF-8",
-        "GBK",
-        "GB2312",
-        "GB18030",
-        "BIG5",
-        "ISO-8859-1",
-        "EUC-JP",
-        "Shift_JIS",
-        "EUC-KR"
-    ]
+    /// 用于 Keep-Alive 关闭时记住上次间隔值
+    @State private var lastKeepAliveInterval: Int32 = 60
 
-    private let keepAliveOptions: [(String, Int32)] = [
-        ("关闭", 0),
-        ("30 秒", 30),
-        ("60 秒", 60),
-        ("120 秒", 120),
-        ("300 秒", 300)
-    ]
+    // MARK: - 计算属性
+
+    private var keepAliveEnabled: Bool {
+        keepAliveInterval > 0
+    }
 
     // MARK: - 视图
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
-            // 连接设置
-            settingsSection(title: "连接设置") {
-                // Keep-Alive 间隔
-                FormField(label: "Keep-Alive 间隔") {
-                    Picker("", selection: $keepAliveInterval) {
-                        ForEach(keepAliveOptions, id: \.1) { option in
-                            Text(option.0).tag(option.1)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(maxWidth: 200)
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                proxyJumpSection
+                    .padding(.bottom, 14)
 
-                Text("定期发送 Keep-Alive 包以保持连接活跃")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Divider().padding(.bottom, 14)
+
+                reconnectSection
+                    .padding(.bottom, 14)
+
+                Divider().padding(.bottom, 14)
+
+                keepAliveSection
+                    .padding(.bottom, 14)
+
+                Divider().padding(.bottom, 14)
+
+                timeoutSection
+                    .padding(.bottom, 14)
+
+                Divider().padding(.bottom, 14)
+
+                envVarsSection
             }
-
-            Divider()
-
-            // 重连设置
-            settingsSection(title: "重连设置") {
-                Toggle(isOn: $autoReconnect) {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-                        Text("自动重连")
-                            .font(DesignTokens.Typography.bodyMedium)
-                            .foregroundColor(DesignTokens.Colors.textPrimary)
-
-                        Text("连接断开时自动尝试重新连接")
-                            .font(DesignTokens.Typography.bodySmall)
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
-                    }
-                }
-                .toggleStyle(.switch)
-            }
-
-            Divider()
-
-            // 编码设置
-            settingsSection(title: "终端编码") {
-                FormField(label: "字符编码") {
-                    Picker("", selection: $encoding) {
-                        ForEach(encodingOptions, id: \.self) { encoding in
-                            Text(encoding).tag(encoding)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(maxWidth: 200)
-                }
-
-                Text("用于终端显示和输入的字符编码")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-
-            Spacer()
+            .padding(18)
         }
-        .padding(DesignTokens.Spacing.lg)
     }
 
-    // MARK: - 设置分组
+    // MARK: - 跳板机
+
+    private var proxyJumpSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionLabel("跳板机（ProxyJump）")
+
+            TextField("user@jump-host.example.com:22", text: $proxyJump)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 11, design: .monospaced))
+
+            Text("多跳板机用英文逗号分隔，如 user@host1,user@host2")
+                .font(.system(size: 9.5))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+        }
+    }
+
+    // MARK: - 自动重连
+
+    private var reconnectSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: $autoReconnect) {
+                Text("断连后自动重连")
+                    .font(.system(size: 12))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            .toggleStyle(.switch)
+
+            if autoReconnect {
+                VStack(alignment: .leading, spacing: 8) {
+                    subOptionRow(label: "最大重试次数", unit: "次") {
+                        int32StepperField($maxReconnectRetries, range: 1...20)
+                    }
+                    subOptionRow(label: "重试间隔", unit: "秒") {
+                        int32StepperField($reconnectInterval, range: 1...60)
+                    }
+                }
+                .padding(.leading, 14)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .animation(DesignTokens.Animation.fast, value: autoReconnect)
+    }
+
+    // MARK: - Keep-Alive
+
+    private var keepAliveSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: Binding(
+                get: { keepAliveInterval > 0 },
+                set: { enabled in
+                    if enabled {
+                        keepAliveInterval = lastKeepAliveInterval > 0 ? lastKeepAliveInterval : 60
+                    } else {
+                        lastKeepAliveInterval = keepAliveInterval
+                        keepAliveInterval = 0
+                    }
+                }
+            )) {
+                Text("发送 Keep-Alive 心跳包")
+                    .font(.system(size: 12))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            .toggleStyle(.switch)
+
+            if keepAliveEnabled {
+                subOptionRow(label: "心跳间隔", unit: "秒") {
+                    int32StepperField(Binding(
+                        get: { keepAliveInterval > 0 ? keepAliveInterval : 60 },
+                        set: { keepAliveInterval = $0 }
+                    ), range: 10...300, step: 10)
+                }
+                .padding(.leading, 14)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .animation(DesignTokens.Animation.fast, value: keepAliveEnabled)
+    }
+
+    // MARK: - 连接超时
+
+    private var timeoutSection: some View {
+        subOptionRow(label: "连接超时", unit: "秒") {
+            int32StepperField($connectTimeout, range: 5...120, step: 5)
+        }
+    }
+
+    // MARK: - 环境变量
+
+    private var envVarsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                sectionLabel("环境变量")
+                Spacer()
+                Button(action: {
+                    withAnimation(DesignTokens.Animation.fast) {
+                        envVarEntries.append(EnvVarEntry(key: "", value: ""))
+                    }
+                }) {
+                    Label("添加", systemImage: "plus")
+                        .font(.system(size: 10))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+            }
+
+            if envVarEntries.isEmpty {
+                Text("暂无环境变量")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textDisabled)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach($envVarEntries) { $entry in
+                        HStack(spacing: 6) {
+                            TextField("KEY", text: $entry.key)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 11, design: .monospaced))
+                                .frame(maxWidth: .infinity)
+
+                            Text("=")
+                                .font(.system(size: 10))
+                                .foregroundColor(DesignTokens.Colors.textDisabled)
+
+                            TextField("value", text: $entry.value)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 11, design: .monospaced))
+                                .frame(maxWidth: .infinity)
+
+                            Button(action: {
+                                withAnimation(DesignTokens.Animation.fast) {
+                                    envVarEntries.removeAll { $0.id == entry.id }
+                                }
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(DesignTokens.Colors.textDisabled)
+                            }
+                            .buttonStyle(.plain)
+                            .help("删除此环境变量")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - 辅助组件
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundColor(DesignTokens.Colors.textSecondary)
+            .textCase(.uppercase)
+            .kerning(0.4)
+    }
 
     @ViewBuilder
-    private func settingsSection<Content: View>(
-        title: String,
+    private func subOptionRow<Content: View>(
+        label: String,
+        unit: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Text(title)
-                .font(DesignTokens.Typography.titleSmall)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+        HStack(spacing: 10) {
+            Text(label)
+                .frame(width: 120, alignment: .leading)
+                .font(.system(size: 11))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
 
             content()
+
+            Text(unit)
+                .font(.system(size: 9.5))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+        }
+    }
+
+    /// 数字输入框 + 步进器组合，与 Int32 Binding 配合
+    private func int32StepperField(
+        _ value: Binding<Int32>,
+        range: ClosedRange<Int32>,
+        step: Int32 = 1
+    ) -> some View {
+        // Stepper 需要 Int（Strideable），使用 Int Binding 做桥接
+        let intBinding = Binding<Int>(
+            get: { Int(value.wrappedValue) },
+            set: { value.wrappedValue = Int32(clamping: $0) }
+        )
+        let intRange = Int(range.lowerBound)...Int(range.upperBound)
+        let intStep  = Int(step)
+
+        return HStack(spacing: 0) {
+            TextField("", text: Binding(
+                get: { String(value.wrappedValue) },
+                set: { text in
+                    if let n = Int32(text), range.contains(n) {
+                        value.wrappedValue = n
+                    }
+                }
+            ))
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 52)
+            .multilineTextAlignment(.center)
+            .font(.system(size: 11, design: .monospaced))
+
+            Stepper("", value: intBinding, in: intRange, step: intStep)
+                .labelsHidden()
         }
     }
 }
@@ -117,10 +282,17 @@ struct SessionAdvancedTab: View {
 
 #Preview("高级设置 Tab") {
     SessionAdvancedTab(
-        keepAliveInterval: .constant(60),
+        proxyJump: .constant(""),
         autoReconnect: .constant(true),
-        encoding: .constant("UTF-8")
+        maxReconnectRetries: .constant(3),
+        reconnectInterval: .constant(5),
+        keepAliveInterval: .constant(60),
+        connectTimeout: .constant(30),
+        envVarEntries: .constant([
+            EnvVarEntry(key: "TERM", value: "xterm-256color"),
+            EnvVarEntry(key: "LANG", value: "en_US.UTF-8")
+        ])
     )
-    .frame(width: 480, height: 400)
+    .frame(width: 504, height: 460)
     .background(DesignTokens.Colors.surfacePanel)
 }

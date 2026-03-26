@@ -1,4 +1,10 @@
 import Foundation
+import Darwin
+
+/// 用于在 @Sendable 闭包中安全传递 OpaquePointer 的包装类型
+private struct SendableOpaquePointer: @unchecked Sendable {
+    let value: OpaquePointer
+}
 
 // MARK: - 跳板机配置
 
@@ -19,11 +25,14 @@ struct ProxyJumpConfig: Equatable, Codable {
     /// 私钥路径（如果使用私钥认证）
     let privateKeyPath: String?
 
-    /// Keychain 引用（用于获取密码或私钥密码）
-    let keychainRef: String?
+    /// 凭据金库中的 Session/JumpHost ID（用于异步预取密码）
+    let vaultId: UUID?
 
     /// 连接超时（秒）
     var connectionTimeout: TimeInterval = 30
+
+    /// 预加载的密码（由 TerminalController 在异步阶段填入，同步连接阶段直接使用）
+    var resolvedPassword: String?
 
     /// 初始化
     init(
@@ -32,7 +41,7 @@ struct ProxyJumpConfig: Equatable, Codable {
         username: String,
         authMethod: AuthMethod = .password,
         privateKeyPath: String? = nil,
-        keychainRef: String? = nil,
+        vaultId: UUID? = nil,
         connectionTimeout: TimeInterval = 30
     ) {
         self.host = host
@@ -40,7 +49,7 @@ struct ProxyJumpConfig: Equatable, Codable {
         self.username = username
         self.authMethod = authMethod
         self.privateKeyPath = privateKeyPath
-        self.keychainRef = keychainRef
+        self.vaultId = vaultId
         self.connectionTimeout = connectionTimeout
     }
 
@@ -95,12 +104,12 @@ struct ProxyJumpConfig: Equatable, Codable {
 
 /// 跳板机连接管理器
 /// 实现 ProxyJump（-J）功能，通过一个或多个跳板机连接到目标服务器
+/// 技术路径：libssh2 direct-tcpip 通道 + socketpair 桥接线程
 actor ProxyJumpManager {
 
     // MARK: - 类型定义
 
-    /// 连接状态
-    enum State {
+    enum State: Equatable {
         case disconnected
         case connectingToProxy(index: Int, total: Int)
         case openingChannel(index: Int, total: Int)
@@ -109,46 +118,31 @@ actor ProxyJumpManager {
         case failed(String)
     }
 
-    /// 隧道信息
-    struct TunnelInfo {
-        /// 隧道 ID
-        let id: UUID
-
-        /// 连接链
-        let connections: [SSHConnection]
-
-        /// 最终通道（direct-tcpip）
-        /// 用于数据传输
-        let channel: OpaquePointer?
-    }
-
     // MARK: - 属性
 
-    /// 当前状态
     private(set) var state: State = .disconnected
-
-    /// 跳板机配置列表
     private let proxyChain: [ProxyJumpConfig]
-
-    /// 目标服务器配置
     private let targetConfig: SSHSessionConfig
 
-    /// 已建立的连接
-    private var connections: [SSHConnection] = []
+    /// 每一跳的 SSH 桥接（hopBridges[0] = 第一个跳板机 ...）
+    private var hopBridges: [LibSSH2BridgeReal] = []
 
-    /// 最终通道
-    private var finalChannel: OpaquePointer?
+    /// 每两跳之间的 socketpair：[bridgeSide fd, sessionSide fd]
+    private var socketPairs: [[Int32]] = []
 
-    /// 数据流
+    /// 目标服务器的 SSH 桥接与 Shell 通道
+    private var targetBridge: LibSSH2BridgeReal?
+    private var targetShellChannel: OpaquePointer?
+
+    /// 目标读取 Task（用于取消）
+    private var readTask: Task<Void, Never>?
+
+    /// 数据流（向 SwiftTerm 输送终端数据）
     private var dataStream: AsyncStream<Data>?
     private var dataContinuation: AsyncStream<Data>.Continuation?
 
     // MARK: - 初始化
 
-    /// 初始化跳板机管理器
-    /// - Parameters:
-    ///   - proxyChain: 跳板机链（按连接顺序）
-    ///   - targetConfig: 目标服务器配置
     init(proxyChain: [ProxyJumpConfig], targetConfig: SSHSessionConfig) {
         self.proxyChain = proxyChain
         self.targetConfig = targetConfig
@@ -156,28 +150,94 @@ actor ProxyJumpManager {
 
     // MARK: - 连接
 
-    /// 建立连接
-    /// 按顺序连接所有跳板机，最后通过 direct-tcpip 连接到目标
     func connect() async throws {
         guard state == .disconnected else {
             throw SSHError.libssh2Error(code: -1, message: "已有连接")
         }
-
         guard !proxyChain.isEmpty else {
             throw SSHError.libssh2Error(code: -1, message: "跳板机链为空")
         }
 
         do {
-            // 连接第一个跳板机
-            try await connectToFirstProxy()
+            // ── 步骤 1：直接 TCP 连接第一个跳板机 ──────────────────────────
+            state = .connectingToProxy(index: 0, total: proxyChain.count)
+            let bridge0 = LibSSH2BridgeReal()
+            try bridge0.sessionInit()
+            bridge0.setTimeout(30_000)
+            let p0 = proxyChain[0]
+            try bridge0.tcpConnect(host: p0.host, port: p0.port)
+            try bridge0.handshake()
+            try authenticateProxy(bridge: bridge0, config: p0)
+            hopBridges.append(bridge0)
+            print("[ProxyJump] 跳板机 0 (\(p0.host):\(p0.port)) 认证成功")
 
-            // 连接后续跳板机（通过 direct-tcpip）
+            // ── 步骤 2：通过 direct-tcpip 链接后续跳板机（多跳）────────────
             for i in 1..<proxyChain.count {
-                try await connectToNextProxy(index: i)
+                let pCurrent = proxyChain[i]
+                let prevBridge = hopBridges[i - 1]
+                state = .openingChannel(index: i - 1, total: proxyChain.count)
+
+                guard let ch = prevBridge.openDirectTCPIPChannel(
+                    host: pCurrent.host, port: pCurrent.port,
+                    sourceHost: "127.0.0.1", sourcePort: 0
+                ) else {
+                    throw SSHError.channelOpenFailed(
+                        reason: "无法打开到跳板机 \(i) (\(pCurrent.host):\(pCurrent.port)) 的直连通道"
+                    )
+                }
+
+                // 建立 socketpair 并在后台线程桥接通道 I/O
+                let pairFDs = try makeSocketPairBridge(channel: ch, bridge: prevBridge)
+                socketPairs.append(pairFDs)
+
+                // 在 socketpair 会话侧建立新 SSH 会话
+                state = .connectingToProxy(index: i, total: proxyChain.count)
+                let newBridge = LibSSH2BridgeReal()
+                try newBridge.sessionInit()
+                newBridge.setTimeout(30_000)
+                try newBridge.handshakeOnFD(pairFDs[1])
+                try authenticateProxy(bridge: newBridge, config: pCurrent)
+                hopBridges.append(newBridge)
+                print("[ProxyJump] 跳板机 \(i) (\(pCurrent.host):\(pCurrent.port)) 认证成功")
             }
 
-            // 连接到目标服务器
-            try await connectToTarget()
+            // ── 步骤 3：direct-tcpip 通道连接目标 ────────────────────────────
+            state = .connectingToTarget
+            let lastBridge = hopBridges.last!
+
+            guard let targetChannel = lastBridge.openDirectTCPIPChannel(
+                host: targetConfig.host, port: targetConfig.port,
+                sourceHost: "127.0.0.1", sourcePort: 0
+            ) else {
+                throw SSHError.channelOpenFailed(
+                    reason: "无法打开到目标 \(targetConfig.host):\(targetConfig.port) 的直连通道"
+                )
+            }
+
+            let targetPairFDs = try makeSocketPairBridge(channel: targetChannel, bridge: lastBridge)
+            socketPairs.append(targetPairFDs)
+
+            // 在目标通道上建立完整 SSH 会话 + Shell
+            let tBridge = LibSSH2BridgeReal()
+            try tBridge.sessionInit()
+            tBridge.setTimeout(30_000)
+            try tBridge.handshakeOnFD(targetPairFDs[1])
+            try authenticateTarget(bridge: tBridge)
+
+            let shellCh = try tBridge.openShellChannel()
+            try tBridge.requestPTY(
+                channel: shellCh,
+                term: targetConfig.terminalType,
+                cols: targetConfig.terminalColumns,
+                rows: targetConfig.terminalRows
+            )
+            try tBridge.startShell(channel: shellCh)
+            tBridge.setBlocking(false)
+
+            targetBridge = tBridge
+            targetShellChannel = shellCh
+            setupDataStream()
+            startReadTask()
 
             state = .connected
             print("[ProxyJump] 连接成功，跳数: \(proxyChain.count)")
@@ -189,19 +249,33 @@ actor ProxyJumpManager {
         }
     }
 
-    /// 断开连接
+    // MARK: - 断开
+
     func disconnect() async {
-        // 关闭最终通道
-        closeFinalChannel()
+        readTask?.cancel()
+        readTask = nil
 
-        // 反向断开所有连接
-        for connection in connections.reversed() {
-            await connection.disconnect()
+        if let ch = targetShellChannel, let bridge = targetBridge {
+            bridge.closeChannel(channel: ch)
         }
-        connections.removeAll()
+        targetShellChannel = nil
+        targetBridge = nil
 
-        // 结束数据流
+        // 关闭 socketpair 两侧 fd（桥接线程因 fd 关闭而自然退出）
+        for pair in socketPairs {
+            Darwin.close(pair[0])
+            Darwin.close(pair[1])
+        }
+        socketPairs.removeAll()
+
+        for bridge in hopBridges.reversed() {
+            bridge.disconnect()
+        }
+        hopBridges.removeAll()
+
         dataContinuation?.finish()
+        dataContinuation = nil
+        dataStream = nil
 
         state = .disconnected
         print("[ProxyJump] 已断开连接")
@@ -209,190 +283,210 @@ actor ProxyJumpManager {
 
     // MARK: - 数据传输
 
-    /// 写入数据
     func write(_ data: Data) async throws {
-        guard state == .connected, finalChannel != nil else {
+        guard state == .connected,
+              let ch = targetShellChannel,
+              let bridge = targetBridge else {
             throw SSHError.channelNotOpen
         }
-
-        // 通过最终通道写入
-        // 在实际实现中：
-        // var written = 0
-        // data.withUnsafeBytes { buffer in
-        //     let ptr = buffer.baseAddress!.assumingMemoryBound(to: CChar.self)
-        //     while written < data.count {
-        //         let rc = libssh2_channel_write(finalChannel, ptr.advanced(by: written), data.count - written)
-        //         if rc < 0 { break }
-        //         written += Int(rc)
-        //     }
-        // }
-
-        print("[ProxyJump] 写入数据: \(data.count) 字节")
+        let localBridge = bridge
+        let localChannel = ch
+        try await Task.detached(priority: .userInitiated) {
+            try data.withUnsafeBytes { rawBuf in
+                guard let ptr = rawBuf.baseAddress?.assumingMemoryBound(to: UInt8.self) else { return }
+                var sent = 0
+                while sent < data.count {
+                    let rc = localBridge.writeChannel(
+                        channel: localChannel,
+                        data: ptr.advanced(by: sent),
+                        length: data.count - sent
+                    )
+                    if rc > 0 {
+                        sent += rc
+                    } else if rc == -37 { // LIBSSH2_ERROR_EAGAIN
+                        usleep(1_000)
+                    } else {
+                        throw SSHError.writeFailed(reason: localBridge.getLastErrorMessage())
+                    }
+                }
+            }
+        }.value
     }
 
-    /// 获取数据流
     func getDataStream() -> AsyncStream<Data>? {
         return dataStream
     }
 
-    // MARK: - 私有方法
-
-    /// 连接到第一个跳板机
-    private func connectToFirstProxy() async throws {
-        let proxy = proxyChain[0]
-        state = .connectingToProxy(index: 0, total: proxyChain.count)
-
-        print("[ProxyJump] 连接到第一个跳板机: \(proxy.host):\(proxy.port)")
-
-        // 创建配置
-        let config = createSSHConfig(from: proxy)
-
-        // 创建并连接
-        let connection = SSHConnection(config: config)
-        try await connection.connect()
-
-        connections.append(connection)
-        print("[ProxyJump] 第一个跳板机连接成功")
+    func resizeTerminal(cols: Int, rows: Int) {
+        guard let ch = targetShellChannel, let bridge = targetBridge else { return }
+        bridge.resizePTY(channel: ch, cols: cols, rows: rows)
     }
 
-    /// 连接到下一个跳板机（通过 direct-tcpip）
-    private func connectToNextProxy(index: Int) async throws {
-        let proxy = proxyChain[index]
-        state = .connectingToProxy(index: index, total: proxyChain.count)
+    // MARK: - 私有：socketpair 桥接
 
-        print("[ProxyJump] 通过 direct-tcpip 连接到跳板机 \(index + 1): \(proxy.host):\(proxy.port)")
-
-        // 获取上一个连接
-        guard let previousConnection = connections.last else {
-            throw SSHError.sessionNotInitialized
+    /// 创建 socketpair 并启动后台桥接线程，双向转发 direct-tcpip 通道 I/O
+    /// - Returns: [bridgeSide fd, sessionSide fd]
+    private func makeSocketPairBridge(
+        channel: OpaquePointer,
+        bridge: LibSSH2BridgeReal
+    ) throws -> [Int32] {
+        var fds = [Int32](repeating: -1, count: 2)
+        let result = fds.withUnsafeMutableBufferPointer { ptr in
+            Darwin.socketpair(AF_UNIX, SOCK_STREAM, 0, ptr.baseAddress)
+        }
+        guard result == 0 else {
+            throw SSHError.connectionFailed(host: "socketpair", port: 0, underlying: nil)
         }
 
-        // 打开 direct-tcpip 通道到下一个跳板机
-        state = .openingChannel(index: index, total: proxyChain.count)
-
-        // 在实际实现中：
-        // let channel = libssh2_channel_direct_tcpip_ex(
-        //     previousSession,
-        //     proxy.host,
-        //     Int32(proxy.port),
-        //     "127.0.0.1",
-        //     22
-        // )
-        // guard channel != nil else {
-        //     throw SSHError.channelOpenFailed(reason: "无法打开 direct-tcpip 通道")
-        // }
-
-        // 通过通道创建新的 SSH 连接
-        let config = createSSHConfig(from: proxy)
-        let connection = SSHConnection(config: config)
-
-        // 注意：这里需要特殊处理，让新连接使用 direct-tcpip 通道而不是直接 TCP
-        // 实际实现需要修改 SSHConnection 以支持通过通道连接
-
-        try await connection.connect()
-        connections.append(connection)
-
-        print("[ProxyJump] 跳板机 \(index + 1) 连接成功")
-    }
-
-    /// 连接到目标服务器
-    private func connectToTarget() async throws {
-        state = .connectingToTarget
-
-        print("[ProxyJump] 通过 direct-tcpip 连接到目标: \(targetConfig.host):\(targetConfig.port)")
-
-        guard let lastConnection = connections.last else {
-            throw SSHError.sessionNotInitialized
+        let capturedBridge = bridge
+        let capturedChannel = SendableOpaquePointer(value: channel)
+        let bridgeFD = fds[0]
+        Thread.detachNewThread {
+            Self.channelSocketBridgeLoop(
+                channel: capturedChannel.value,
+                bridge: capturedBridge,
+                socketFD: bridgeFD
+            )
         }
-
-        // 打开到目标的 direct-tcpip 通道
-        // 在实际实现中：
-        // finalChannel = libssh2_channel_direct_tcpip_ex(
-        //     lastSession,
-        //     targetConfig.host,
-        //     Int32(targetConfig.port),
-        //     "127.0.0.1",
-        //     22
-        // )
-        // guard finalChannel != nil else {
-        //     throw SSHError.channelOpenFailed(reason: "无法打开到目标的 direct-tcpip 通道")
-        // }
-
-        // 设置数据流
-        setupDataStream()
-
-        // 启动数据读取
-        startDataReading()
-
-        print("[ProxyJump] 目标连接成功")
+        return fds
     }
 
-    /// 创建 SSH 配置
-    private func createSSHConfig(from proxy: ProxyJumpConfig) -> SSHSessionConfig {
-        var password: String? = nil
+    /// 后台线程：在 direct-tcpip 通道和 socketpair 之间双向转发数据
+    private static func channelSocketBridgeLoop(
+        channel: OpaquePointer,
+        bridge: LibSSH2BridgeReal,
+        socketFD: Int32
+    ) {
+        var channelBuf = [UInt8](repeating: 0, count: 32_768)
+        var socketBuf = [UInt8](repeating: 0, count: 32_768)
 
-        // 从 Keychain 获取密码
-        if let ref = proxy.keychainRef,
-           let parsed = KeychainService.shared.parseKeychainRef(ref) {
-            password = try? KeychainService.shared.getPassword(for: parsed.sessionId, type: parsed.type)
+        while true {
+            var didWork = false
+
+            // 方向 1：channel → socketFD
+            let n = bridge.readChannel(channel: channel, buffer: &channelBuf, bufferSize: channelBuf.count)
+            if n > 0 {
+                channelBuf.withUnsafeBytes { rawPtr in
+                    _ = Darwin.send(socketFD, rawPtr.baseAddress!, n, 0)
+                }
+                didWork = true
+            } else if n != -37 && n < 0 {
+                break // 非 EAGAIN 的真实错误，退出
+            }
+
+            // 方向 2：socketFD → channel（非阻塞 poll）
+            var pfd = pollfd(fd: socketFD, events: Int16(POLLIN), revents: 0)
+            if Darwin.poll(&pfd, 1, 0) > 0 && (pfd.revents & Int16(POLLIN)) != 0 {
+                let m = Darwin.recv(socketFD, &socketBuf, socketBuf.count, 0)
+                if m > 0 {
+                    socketBuf.withUnsafeBytes { rawPtr in
+                        _ = bridge.writeChannel(
+                            channel: channel,
+                            data: rawPtr.baseAddress!.assumingMemoryBound(to: UInt8.self),
+                            length: m
+                        )
+                    }
+                    didWork = true
+                } else if m == 0 {
+                    break // socketFD 对端已关闭
+                }
+            }
+
+            if !didWork {
+                usleep(500) // 0.5ms 空转防止 CPU 满载
+            }
         }
-
-        return SSHSessionConfig(
-            host: proxy.host,
-            port: proxy.port,
-            username: proxy.username,
-            authMethod: proxy.authMethod,
-            password: password,
-            privateKeyPath: proxy.privateKeyPath,
-            connectionTimeout: proxy.connectionTimeout
-        )
     }
 
-    /// 关闭最终通道
-    private func closeFinalChannel() {
-        guard finalChannel != nil else { return }
+    // MARK: - 私有：认证
 
-        // 在实际实现中：
-        // libssh2_channel_close(finalChannel)
-        // libssh2_channel_free(finalChannel)
+    private func authenticateProxy(bridge: LibSSH2BridgeReal, config: ProxyJumpConfig) throws {
+        let password = config.resolvedPassword
 
-        finalChannel = nil
+        switch config.authMethod {
+        case .password, .keyboardInteractive:
+            guard let pwd = password else {
+                throw SSHError.authenticationFailed(method: "password", reason: "跳板机 \(config.host) 密码未提供")
+            }
+            try bridge.authenticateWithPassword(username: config.username, password: pwd)
+
+        case .privateKey:
+            guard let keyPath = config.privateKeyPath, !keyPath.isEmpty else {
+                throw SSHError.invalidPrivateKey(reason: "跳板机 \(config.host) 私钥路径未提供")
+            }
+            try bridge.authenticateWithPublicKey(
+                username: config.username,
+                publicKeyPath: nil,
+                privateKeyPath: keyPath,
+                passphrase: password
+            )
+
+        case .sshAgent:
+            try bridge.authenticateWithAgent(username: config.username)
+        }
     }
 
-    /// 设置数据流
+    private func authenticateTarget(bridge: LibSSH2BridgeReal) throws {
+        switch targetConfig.authMethod {
+        case .password, .keyboardInteractive:
+            guard let pwd = targetConfig.password else {
+                throw SSHError.authenticationFailed(method: "password", reason: "目标服务器密码未提供")
+            }
+            try bridge.authenticateWithPassword(username: targetConfig.username, password: pwd)
+
+        case .privateKey:
+            guard let keyPath = targetConfig.privateKeyPath, !keyPath.isEmpty else {
+                throw SSHError.invalidPrivateKey(reason: "目标私钥路径未提供")
+            }
+            try bridge.authenticateWithPublicKey(
+                username: targetConfig.username,
+                publicKeyPath: nil,
+                privateKeyPath: keyPath,
+                passphrase: targetConfig.passphrase
+            )
+
+        case .sshAgent:
+            try bridge.authenticateWithAgent(username: targetConfig.username)
+        }
+    }
+
+    // MARK: - 私有：数据流与读取
+
     private func setupDataStream() {
         let (stream, continuation) = AsyncStream<Data>.makeStream(
-            bufferingPolicy: .bufferingNewest(100)
+            bufferingPolicy: .bufferingNewest(200)
         )
         self.dataStream = stream
         self.dataContinuation = continuation
     }
 
-    /// 启动数据读取
-    private func startDataReading() {
-        Task { [weak self] in
-            await self?.readLoop()
-        }
-    }
+    private func startReadTask() {
+        let capturedBridge = targetBridge!
+        let capturedChannel = targetShellChannel!
+        let capturedContinuation = dataContinuation!
 
-    /// 读取循环
-    private func readLoop() async {
-        let bufferSize = 32768
-        var buffer = [UInt8](repeating: 0, count: bufferSize)
+        readTask = Task.detached(priority: .userInitiated) {
+            var buffer = [UInt8](repeating: 0, count: 4_096)
 
-        while state == .connected {
-            // 在实际实现中：
-            // let rc = libssh2_channel_read(finalChannel, &buffer, bufferSize)
-            // if rc > 0 {
-            //     let data = Data(bytes: buffer, count: Int(rc))
-            //     dataContinuation?.yield(data)
-            // } else if rc == LIBSSH2_ERROR_EAGAIN {
-            //     try? await Task.sleep(nanoseconds: 1_000_000)
-            // } else {
-            //     break
-            // }
+            while !Task.isCancelled {
+                let n = capturedBridge.readChannel(
+                    channel: capturedChannel,
+                    buffer: &buffer,
+                    bufferSize: buffer.count
+                )
+                if n > 0 {
+                    let data = Data(bytes: buffer, count: n)
+                    capturedContinuation.yield(data)
+                } else if n == -37 { // LIBSSH2_ERROR_EAGAIN
+                    usleep(5_000) // 5ms
+                } else if n == 0 {
+                    break // EOF
+                } else {
+                    break // 读取错误
+                }
+            }
 
-            try? await Task.sleep(nanoseconds: 10_000_000)
+            capturedContinuation.finish()
         }
     }
 }
@@ -408,6 +502,7 @@ struct ProxyJumpConnectionFactory {
     ///   - session: 目标会话
     ///   - proxyChain: 跳板机链
     /// - Returns: 配置好的终端控制器
+    @MainActor
     static func createController(
         for session: Session,
         proxyChain: [ProxyJumpConfig]

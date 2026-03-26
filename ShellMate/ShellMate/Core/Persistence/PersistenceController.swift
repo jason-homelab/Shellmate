@@ -55,6 +55,9 @@ final class PersistenceController {
     /// NSPersistentContainer（暂时不使用 CloudKit）
     let container: NSPersistentContainer
 
+    /// 持久化存储加载错误（非 nil 时表示存储初始化失败，上层 UI 应展示降级提示）
+    private(set) var loadError: Error?
+
     /// 主线程视图上下文
     var viewContext: NSManagedObjectContext {
         container.viewContext
@@ -71,16 +74,44 @@ final class PersistenceController {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }
 
-        container.loadPersistentStores { storeDescription, error in
-            if let error = error as NSError? {
-                // 生产环境中应当优雅处理错误，而非 fatalError
-                fatalError("持久化存储加载失败: \(error), \(error.userInfo)")
-            }
+        // 启用自动轻量级迁移，允许 Core Data 自动处理 schema 变更（新增实体/属性）
+        if let description = container.persistentStoreDescriptions.first {
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
         }
 
-        // 配置视图上下文
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        var storeLoadError: Error?
+        container.loadPersistentStores { [weak container] storeDescription, error in
+            if let error = error as NSError? {
+                print("❌ 持久化存储加载失败: \(error), \(error.userInfo)")
+
+                // 兜底：迁移不可挽救时删除旧库重建（开发阶段可接受数据丢失）
+                if let storeURL = storeDescription.url {
+                    do {
+                        try container?.persistentStoreCoordinator.destroyPersistentStore(
+                            at: storeURL, ofType: NSSQLiteStoreType, options: nil
+                        )
+                        try container?.persistentStoreCoordinator.addPersistentStore(
+                            ofType: NSSQLiteStoreType, configurationName: nil,
+                            at: storeURL, options: nil
+                        )
+                        print("⚠️ 旧数据库已删除并重建")
+                    } catch {
+                        print("❌ 重建数据库也失败: \(error)")
+                        storeLoadError = error
+                    }
+                } else {
+                    storeLoadError = error
+                }
+            }
+        }
+        self.loadError = storeLoadError
+
+        // 仅在存储成功加载时配置合并策略，避免在错误状态下操作上下文
+        if storeLoadError == nil {
+            container.viewContext.automaticallyMergesChangesFromParent = true
+            container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        }
     }
 
     // MARK: - 保存方法

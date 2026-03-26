@@ -88,6 +88,9 @@ actor SSHConnection {
     /// 数据流
     private var dataStream: AsyncStream<Data>?
 
+    /// 数据流迭代器（用于 receiveData() 串行消费）
+    private var dataStreamIterator: AsyncStream<Data>.AsyncIterator?
+
     /// 连接 ID
     let connectionId: UUID
 
@@ -284,23 +287,24 @@ actor SSHConnection {
     /// 接收数据（内部使用）
     fileprivate func receiveData() async -> Data? {
         guard state == .connected else { return nil }
-
-        // 从数据流获取下一个数据块
-        return await withCheckedContinuation { continuation in
-            // 这里应该从非阻塞 IO 获取数据
-            // 实际实现会使用 AsyncStream
-        }
+        // 必须先拷贝到本地变量再调用 mutating async next()，
+        // 避免 Swift actor 对 "actor-isolated property 上调用 mutating async" 的限制
+        guard var iter = dataStreamIterator else { return nil }
+        let data = await iter.next()
+        dataStreamIterator = iter
+        return data
     }
 
     /// 设置数据流
     private func setupDataStream() {
         let (stream, continuation) = AsyncStream<Data>.makeStream()
         self.dataStream = stream
+        self.dataStreamIterator = stream.makeAsyncIterator()
         self.dataContinuation = continuation
 
         // 设置非阻塞 IO 的数据回调
         nonBlockingIO?.onDataReceived = { [weak self] data in
-            self?.dataContinuation?.yield(data)
+            Task { await self?.dataContinuation?.yield(data) }
         }
 
         nonBlockingIO?.onError = { [weak self] error in
@@ -482,6 +486,8 @@ actor SSHConnection {
 
         case .sshAgent:
             try bridge.authenticateWithAgent(username: config.username)
+        case .keyboardInteractive:
+            throw SSHError.authMethodNotSupported(method: "keyboard-interactive")
         }
     }
 

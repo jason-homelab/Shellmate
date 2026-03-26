@@ -2,7 +2,7 @@ import Foundation
 
 /// SSH 认证方式枚举
 /// 对应数据库中 CDSession.authMethodRaw 字段
-enum AuthMethod: Int16, CaseIterable, Identifiable {
+enum AuthMethod: Int16, CaseIterable, Identifiable, Codable {
     /// 密码认证
     case password = 0
     /// 私钥认证

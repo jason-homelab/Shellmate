@@ -299,10 +299,11 @@ final class SSHChannelManager {
 
     /// 处理写入队列
     private func processWriteQueue() async {
-        writeLock.lock()
-        let dataToWrite = writeQueue
-        writeQueue.removeAll()
-        writeLock.unlock()
+        let dataToWrite = writeLock.withLock {
+            let items = writeQueue
+            writeQueue.removeAll()
+            return items
+        }
 
         for data in dataToWrite {
             writeSync(data)

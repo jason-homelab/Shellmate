@@ -182,7 +182,7 @@ final class SSHEventLoop {
             self.eventHandler?(.readable)
         }
 
-        source.setCancelHandler { [weak self] in
+        source.setCancelHandler {
             print("[SSHEventLoop] 读取源已取消")
         }
 
@@ -203,7 +203,7 @@ final class SSHEventLoop {
             self.eventHandler?(.writable)
         }
 
-        source.setCancelHandler { [weak self] in
+        source.setCancelHandler {
             print("[SSHEventLoop] 写入源已取消")
         }
 
@@ -389,7 +389,7 @@ final class SSHNonBlockingIO {
         }
 
         // 获取待写入数据
-        var data = writeQueue.removeFirst()
+        _ = writeQueue.removeFirst()
 
         // 在实际实现中，这里会调用 libssh2_channel_write
         // let bytesWritten = data.withUnsafeBytes { ptr in

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A4010001 /* AppVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4020001 /* AppVariant.swift */; };
 		0001000100010001 /* ShellMateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020002 /* ShellMateApp.swift */; };
 		0001000100010002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020003 /* ContentView.swift */; };
 		0001000100010003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0002000200020004 /* AppDelegate.swift */; };
@@ -51,14 +50,28 @@
 		000100010001002A /* SSH2Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002002E /* SSH2Connection.swift */; };
 		000100010001002B /* libssh2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000200020002002F /* libssh2.xcframework */; };
 		000100010001002C /* libssh2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 000200020002002F /* libssh2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1BAAF01EE41F4AF6ACCDE3C5 /* SyncInputConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */; };
+		49842E6B49184AE498EDDCBA /* SyncInputStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */; };
+		A1010001 /* HighlightSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010001 /* HighlightSettingsView.swift */; };
+		A1010002 /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010002 /* AppearanceSettingsView.swift */; };
+		A1010003 /* SecuritySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010003 /* SecuritySettingsView.swift */; };
+		A1010004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010004 /* SettingsView.swift */; };
+		A1010005 /* TerminalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010005 /* TerminalSettingsView.swift */; };
+		A1010006 /* CloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010006 /* CloudSyncSettingsView.swift */; };
+		A1010007 /* CredentialVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* CredentialVault.swift */; };
+		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
+		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
+		A4010001 /* AppVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4020001 /* AppVariant.swift */; };
 		BB010003 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = BB010002 /* SwiftTerm */; };
 		BB020002 /* TerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020001 /* TerminalController.swift */; };
 		BB020004 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020003 /* TerminalView.swift */; };
 		BB020006 /* TerminalToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020005 /* TerminalToolbarView.swift */; };
+		CB58174E97934750946FFCAB /* ShellMateTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */; };
 		CC010001 /* FormComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020001 /* FormComponents.swift */; };
 		CC010002 /* HostKeyConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020002 /* HostKeyConfirmationView.swift */; };
 		CC010003 /* HostKeyChangedWarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020003 /* HostKeyChangedWarningView.swift */; };
 		CC010004 /* KnownHostsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020004 /* KnownHostsManager.swift */; };
+		CC010010 /* AppearanceModePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020010 /* AppearanceModePickerView.swift */; };
 		DD010001 /* SFTPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD020001 /* SFTPModels.swift */; };
 		DD010002 /* SFTPSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD020002 /* SFTPSession.swift */; };
 		DD010003 /* SFTPTransferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD020003 /* SFTPTransferQueue.swift */; };
@@ -73,13 +86,6 @@
 		EE010008 /* TunnelManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE020008 /* TunnelManagerView.swift */; };
 		EE010009 /* QuickCommandManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE020009 /* QuickCommandManagerView.swift */; };
 		EE010010 /* ComposePaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE020010 /* ComposePaneView.swift */; };
-		FF060001 /* SSHConnectionIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050001 /* SSHConnectionIntegrationTests.swift */; };
-		FF060002 /* MemoryLeakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050002 /* MemoryLeakTests.swift */; };
-		FF060099 /* FeatureIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050099 /* FeatureIntegrationTests.swift */; };
-		FF060003 /* SessionRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050003 /* SessionRepositoryTests.swift */; };
-		FF060004 /* GroupRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050004 /* GroupRepositoryTests.swift */; };
-		FF060005 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050005 /* SessionStoreTests.swift */; };
-		FF060006 /* GroupStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050006 /* GroupStoreTests.swift */; };
 		FA010001 /* SSHConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020001 /* SSHConnection.swift */; };
 		FA010002 /* SSHSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020002 /* SSHSessionConfig.swift */; };
 		FA010003 /* SSHAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020003 /* SSHAuthService.swift */; };
@@ -88,17 +94,25 @@
 		FA010006 /* SSHNetworkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020006 /* SSHNetworkUtils.swift */; };
 		FA010007 /* SSHProcessBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020007 /* SSHProcessBridge.swift */; };
 		FA010008 /* SSHProxyJump.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA020008 /* SSHProxyJump.swift */; };
-		CB58174E97934750946FFCAB /* ShellMateTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */; };
 		FD0397BF947A490A8E1942CF /* HighlightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */; };
-		49842E6B49184AE498EDDCBA /* SyncInputStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */; };
-		1BAAF01EE41F4AF6ACCDE3C5 /* SyncInputConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */; };
-		A1010001 /* HighlightSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010001 /* HighlightSettingsView.swift */; };
-		A1010002 /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010002 /* AppearanceSettingsView.swift */; };
-		A1010003 /* SecuritySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010003 /* SecuritySettingsView.swift */; };
-		A1010004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010004 /* SettingsView.swift */; };
-		A1010005 /* TerminalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010005 /* TerminalSettingsView.swift */; };
-		A1010006 /* CloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010006 /* CloudSyncSettingsView.swift */; };
+		FF060001 /* SSHConnectionIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050001 /* SSHConnectionIntegrationTests.swift */; };
+		FF060002 /* MemoryLeakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050002 /* MemoryLeakTests.swift */; };
+		FF060003 /* SessionRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050003 /* SessionRepositoryTests.swift */; };
+		FF060004 /* GroupRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050004 /* GroupRepositoryTests.swift */; };
+		FF060005 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050005 /* SessionStoreTests.swift */; };
+		FF060006 /* GroupStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050006 /* GroupStoreTests.swift */; };
+		FF060099 /* FeatureIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050099 /* FeatureIntegrationTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FF080001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0006000600060001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0005000500050001;
+			remoteInfo = ShellMate;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		0003000300030002 /* Embed Frameworks */ = {
@@ -116,7 +130,6 @@
 
 /* Begin PBXFileReference section */
 		0002000200020001 /* ShellMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShellMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A4020001 /* AppVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVariant.swift; sourceTree = "<group>"; };
 		0002000200020002 /* ShellMateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellMateApp.swift; sourceTree = "<group>"; };
 		0002000200020003 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		0002000200020004 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -162,6 +175,19 @@
 		000200020002002E /* SSH2Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSH2Connection.swift; sourceTree = "<group>"; };
 		000200020002002F /* libssh2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libssh2.xcframework; path = ../Frameworks/libssh2.xcframework; sourceTree = "<group>"; };
 		0002000200020030 /* ShellMate-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ShellMate-Bridging-Header.h"; sourceTree = "<group>"; };
+		29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncInputConfirmView.swift; sourceTree = "<group>"; };
+		72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightEngine.swift; sourceTree = "<group>"; };
+		8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellMateTerminalView.swift; sourceTree = "<group>"; };
+		A2010001 /* HighlightSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightSettingsView.swift; sourceTree = "<group>"; };
+		A2010002 /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
+		A2010003 /* SecuritySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecuritySettingsView.swift; sourceTree = "<group>"; };
+		A2010004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A2010005 /* TerminalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSettingsView.swift; sourceTree = "<group>"; };
+		A2010006 /* CloudSyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncSettingsView.swift; sourceTree = "<group>"; };
+		A2010007 /* CredentialVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVault.swift; sourceTree = "<group>"; };
+		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
+		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
+		A4020001 /* AppVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVariant.swift; sourceTree = "<group>"; };
 		BB020001 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
 		BB020003 /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
 		BB020005 /* TerminalToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalToolbarView.swift; sourceTree = "<group>"; };
@@ -169,6 +195,7 @@
 		CC020002 /* HostKeyConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyConfirmationView.swift; sourceTree = "<group>"; };
 		CC020003 /* HostKeyChangedWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyChangedWarningView.swift; sourceTree = "<group>"; };
 		CC020004 /* KnownHostsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownHostsManager.swift; sourceTree = "<group>"; };
+		CC020010 /* AppearanceModePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceModePickerView.swift; sourceTree = "<group>"; };
 		DD020001 /* SFTPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPModels.swift; sourceTree = "<group>"; };
 		DD020002 /* SFTPSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPSession.swift; sourceTree = "<group>"; };
 		DD020003 /* SFTPTransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPTransferQueue.swift; sourceTree = "<group>"; };
@@ -183,14 +210,7 @@
 		EE020008 /* TunnelManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelManagerView.swift; sourceTree = "<group>"; };
 		EE020009 /* QuickCommandManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCommandManagerView.swift; sourceTree = "<group>"; };
 		EE020010 /* ComposePaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePaneView.swift; sourceTree = "<group>"; };
-		FF040001 /* ShellMateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellMateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FF050001 /* SSHConnectionIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnectionIntegrationTests.swift; sourceTree = "<group>"; };
-		FF050002 /* MemoryLeakTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLeakTests.swift; sourceTree = "<group>"; };
-		FF050099 /* FeatureIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureIntegrationTests.swift; sourceTree = "<group>"; };
-		FF050003 /* SessionRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepositoryTests.swift; sourceTree = "<group>"; };
-		FF050004 /* GroupRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRepositoryTests.swift; sourceTree = "<group>"; };
-		FF050005 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
-		FF050006 /* GroupStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoreTests.swift; sourceTree = "<group>"; };
+		F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncInputStore.swift; sourceTree = "<group>"; };
 		FA020001 /* SSHConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnection.swift; sourceTree = "<group>"; };
 		FA020002 /* SSHSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHSessionConfig.swift; sourceTree = "<group>"; };
 		FA020003 /* SSHAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHAuthService.swift; sourceTree = "<group>"; };
@@ -199,16 +219,14 @@
 		FA020006 /* SSHNetworkUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHNetworkUtils.swift; sourceTree = "<group>"; };
 		FA020007 /* SSHProcessBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHProcessBridge.swift; sourceTree = "<group>"; };
 		FA020008 /* SSHProxyJump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHProxyJump.swift; sourceTree = "<group>"; };
-		8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellMateTerminalView.swift; sourceTree = "<group>"; };
-		72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightEngine.swift; sourceTree = "<group>"; };
-		F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncInputStore.swift; sourceTree = "<group>"; };
-		29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncInputConfirmView.swift; sourceTree = "<group>"; };
-		A2010001 /* HighlightSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightSettingsView.swift; sourceTree = "<group>"; };
-		A2010002 /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
-		A2010003 /* SecuritySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecuritySettingsView.swift; sourceTree = "<group>"; };
-		A2010004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		A2010005 /* TerminalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSettingsView.swift; sourceTree = "<group>"; };
-		A2010006 /* CloudSyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncSettingsView.swift; sourceTree = "<group>"; };
+		FF040001 /* ShellMateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellMateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF050001 /* SSHConnectionIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConnectionIntegrationTests.swift; sourceTree = "<group>"; };
+		FF050002 /* MemoryLeakTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryLeakTests.swift; sourceTree = "<group>"; };
+		FF050003 /* SessionRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepositoryTests.swift; sourceTree = "<group>"; };
+		FF050004 /* GroupRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRepositoryTests.swift; sourceTree = "<group>"; };
+		FF050005 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
+		FF050006 /* GroupStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoreTests.swift; sourceTree = "<group>"; };
+		FF050099 /* FeatureIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -221,7 +239,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FF020002 /* Frameworks (ShellMateTests) */ = {
+		FF020002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -266,44 +284,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FF070001 /* ShellMateTests */ = {
-			isa = PBXGroup;
-			children = (
-				FF070002 /* IntegrationTests */,
-				FF070003 /* RepositoryTests */,
-				FF070004 /* StoreTests */,
-			);
-			path = ShellMateTests;
-			sourceTree = "<group>";
-		};
-		FF070002 /* IntegrationTests */ = {
-			isa = PBXGroup;
-			children = (
-				FF050001 /* SSHConnectionIntegrationTests.swift */,
-				FF050002 /* MemoryLeakTests.swift */,
-				FF050099 /* FeatureIntegrationTests.swift */,
-			);
-			path = IntegrationTests;
-			sourceTree = "<group>";
-		};
-		FF070003 /* RepositoryTests */ = {
-			isa = PBXGroup;
-			children = (
-				FF050003 /* SessionRepositoryTests.swift */,
-				FF050004 /* GroupRepositoryTests.swift */,
-			);
-			path = RepositoryTests;
-			sourceTree = "<group>";
-		};
-		FF070004 /* StoreTests */ = {
-			isa = PBXGroup;
-			children = (
-				FF050005 /* SessionStoreTests.swift */,
-				FF050006 /* GroupStoreTests.swift */,
-			);
-			path = StoreTests;
-			sourceTree = "<group>";
-		};
 		0004000400040004 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -343,30 +323,6 @@
 			path = Features;
 			sourceTree = "<group>";
 		};
-		EE030002 /* Tunnel */ = {
-			isa = PBXGroup;
-			children = (
-				EE020008 /* TunnelManagerView.swift */,
-			);
-			path = Tunnel;
-			sourceTree = "<group>";
-		};
-		EE030003 /* QuickCommand */ = {
-			isa = PBXGroup;
-			children = (
-				EE020009 /* QuickCommandManagerView.swift */,
-			);
-			path = QuickCommand;
-			sourceTree = "<group>";
-		};
-		DD030002 /* SFTP */ = {
-			isa = PBXGroup;
-			children = (
-				DD020004 /* SFTPPanelView.swift */,
-			);
-			path = SFTP;
-			sourceTree = "<group>";
-		};
 		0004000400040007 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -394,6 +350,7 @@
 				DD020001 /* SFTPModels.swift */,
 				EE020001 /* TunnelModels.swift */,
 				EE020002 /* QuickCommandModels.swift */,
+				SM020001 /* ServerMetrics.swift */,
 				0004000400040012 /* Enums */,
 			);
 			path = Models;
@@ -414,7 +371,7 @@
 				000200020002000F /* SessionStore.swift */,
 				0002000200020010 /* GroupStore.swift */,
 				0002000200020027 /* TabBarStore.swift */,
-					EE020007 /* QuickCommandStore.swift */,
+				EE020007 /* QuickCommandStore.swift */,
 				F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */,
 			);
 			path = Stores;
@@ -451,7 +408,7 @@
 				BB020001 /* TerminalController.swift */,
 				BB020003 /* TerminalView.swift */,
 				BB020005 /* TerminalToolbarView.swift */,
-					EE020010 /* ComposePaneView.swift */,
+				EE020010 /* ComposePaneView.swift */,
 				29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */,
 				8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */,
 			);
@@ -465,6 +422,7 @@
 				0002000200020014 /* TagBadgeView.swift */,
 				0002000200020015 /* EmptyStateView.swift */,
 				CC020001 /* FormComponents.swift */,
+				CC020010 /* AppearanceModePickerView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -506,33 +464,15 @@
 		0004000400040014 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-					0002000200020025 /* KeychainService.swift */,
+				0002000200020025 /* KeychainService.swift */,
+				A2010007 /* CredentialVault.swift */,
 				72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */,
+				SM020002 /* ServerMetricsMonitor.swift */,
 				0004000400040017 /* SSH */,
 				DD030001 /* SFTP */,
 				EE030001 /* PortForwarding */,
 			);
 			path = Services;
-			sourceTree = "<group>";
-		};
-		EE030001 /* PortForwarding */ = {
-			isa = PBXGroup;
-			children = (
-				EE020003 /* LocalPortForwarder.swift */,
-				EE020004 /* RemotePortForwarder.swift */,
-				EE020005 /* Socks5Proxy.swift */,
-				EE020006 /* TunnelManager.swift */,
-			);
-			path = PortForwarding;
-			sourceTree = "<group>";
-		};
-		DD030001 /* SFTP */ = {
-			isa = PBXGroup;
-			children = (
-				DD020002 /* SFTPSession.swift */,
-				DD020003 /* SFTPTransferQueue.swift */,
-			);
-			path = SFTP;
 			sourceTree = "<group>";
 		};
 		0004000400040015 /* TabBar */ = {
@@ -581,16 +521,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		CC030001 /* HostKey */ = {
-			isa = PBXGroup;
-			children = (
-				CC020002 /* HostKeyConfirmationView.swift */,
-				CC020003 /* HostKeyChangedWarningView.swift */,
-			);
-			path = HostKey;
-			sourceTree = "<group>";
-		};
-
 		A3010001 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -604,44 +534,100 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		CC030001 /* HostKey */ = {
+			isa = PBXGroup;
+			children = (
+				CC020002 /* HostKeyConfirmationView.swift */,
+				CC020003 /* HostKeyChangedWarningView.swift */,
+			);
+			path = HostKey;
+			sourceTree = "<group>";
+		};
+		DD030001 /* SFTP */ = {
+			isa = PBXGroup;
+			children = (
+				DD020002 /* SFTPSession.swift */,
+				DD020003 /* SFTPTransferQueue.swift */,
+			);
+			path = SFTP;
+			sourceTree = "<group>";
+		};
+		DD030002 /* SFTP */ = {
+			isa = PBXGroup;
+			children = (
+				DD020004 /* SFTPPanelView.swift */,
+			);
+			path = SFTP;
+			sourceTree = "<group>";
+		};
+		EE030001 /* PortForwarding */ = {
+			isa = PBXGroup;
+			children = (
+				EE020003 /* LocalPortForwarder.swift */,
+				EE020004 /* RemotePortForwarder.swift */,
+				EE020005 /* Socks5Proxy.swift */,
+				EE020006 /* TunnelManager.swift */,
+			);
+			path = PortForwarding;
+			sourceTree = "<group>";
+		};
+		EE030002 /* Tunnel */ = {
+			isa = PBXGroup;
+			children = (
+				EE020008 /* TunnelManagerView.swift */,
+			);
+			path = Tunnel;
+			sourceTree = "<group>";
+		};
+		EE030003 /* QuickCommand */ = {
+			isa = PBXGroup;
+			children = (
+				EE020009 /* QuickCommandManagerView.swift */,
+			);
+			path = QuickCommand;
+			sourceTree = "<group>";
+		};
+		FF070001 /* ShellMateTests */ = {
+			isa = PBXGroup;
+			children = (
+				FF070002 /* IntegrationTests */,
+				FF070003 /* RepositoryTests */,
+				FF070004 /* StoreTests */,
+			);
+			path = ShellMateTests;
+			sourceTree = "<group>";
+		};
+		FF070002 /* IntegrationTests */ = {
+			isa = PBXGroup;
+			children = (
+				FF050001 /* SSHConnectionIntegrationTests.swift */,
+				FF050002 /* MemoryLeakTests.swift */,
+				FF050099 /* FeatureIntegrationTests.swift */,
+			);
+			path = IntegrationTests;
+			sourceTree = "<group>";
+		};
+		FF070003 /* RepositoryTests */ = {
+			isa = PBXGroup;
+			children = (
+				FF050003 /* SessionRepositoryTests.swift */,
+				FF050004 /* GroupRepositoryTests.swift */,
+			);
+			path = RepositoryTests;
+			sourceTree = "<group>";
+		};
+		FF070004 /* StoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				FF050005 /* SessionStoreTests.swift */,
+				FF050006 /* GroupStoreTests.swift */,
+			);
+			path = StoreTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
-/* Begin PBXContainerItemProxy section */
-		FF080001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0006000600060001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0005000500050001;
-			remoteInfo = ShellMate;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		FF090001 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0005000500050001 /* ShellMate */;
-			targetProxy = FF080001 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin PBXNativeTarget section */
-		FF010001 /* ShellMateTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FF030003 /* Build configuration list for PBXNativeTarget "ShellMateTests" */;
-			buildPhases = (
-				FF020001 /* Sources */,
-				FF020002 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				FF090001 /* PBXTargetDependency */,
-			);
-			name = ShellMateTests;
-			productName = ShellMateTests;
-			productReference = FF040001 /* ShellMateTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		0005000500050001 /* ShellMate */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0007000700070001 /* Build configuration list for PBXNativeTarget "ShellMate" */;
@@ -662,6 +648,23 @@
 			productName = ShellMate;
 			productReference = 0002000200020001 /* ShellMate.app */;
 			productType = "com.apple.product-type.application";
+		};
+		FF010001 /* ShellMateTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF030003 /* Build configuration list for PBXNativeTarget "ShellMateTests" */;
+			buildPhases = (
+				FF020001 /* Sources */,
+				FF020002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FF090001 /* PBXTargetDependency */,
+			);
+			name = ShellMateTests;
+			productName = ShellMateTests;
+			productReference = FF040001 /* ShellMateTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -756,6 +759,9 @@
 				BB020004 /* TerminalView.swift in Sources */,
 				BB020006 /* TerminalToolbarView.swift in Sources */,
 				0001000100010021 /* KeychainService.swift in Sources */,
+				A1010007 /* CredentialVault.swift in Sources */,
+				SM010001 /* ServerMetrics.swift in Sources */,
+				SM010002 /* ServerMetricsMonitor.swift in Sources */,
 				0001000100010022 /* TerminalTab.swift in Sources */,
 				0001000100010023 /* TabBarStore.swift in Sources */,
 				0001000100010024 /* TerminalTabView.swift in Sources */,
@@ -766,6 +772,7 @@
 				0001000100010029 /* LibSSH2BridgeReal.swift in Sources */,
 				000100010001002A /* SSH2Connection.swift in Sources */,
 				CC010001 /* FormComponents.swift in Sources */,
+				CC010010 /* AppearanceModePickerView.swift in Sources */,
 				CC010002 /* HostKeyConfirmationView.swift in Sources */,
 				CC010003 /* HostKeyChangedWarningView.swift in Sources */,
 				CC010004 /* KnownHostsManager.swift in Sources */,
@@ -804,8 +811,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-
-		FF020001 /* Sources (ShellMateTests) */ = {
+		FF020001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -820,6 +826,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FF090001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0005000500050001 /* ShellMate */;
+			targetProxy = FF080001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0008000800080001 /* Debug */ = {
@@ -949,6 +963,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = ShellMate/ShellMate.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -994,6 +1009,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = ShellMate/ShellMate.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1034,8 +1050,7 @@
 			};
 			name = Release;
 		};
-
-		FF030001 /* Debug (ShellMateTests) */ = {
+		FF030001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1043,6 +1058,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64",
 				);
+				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64/libssh2.framework/Headers",
@@ -1052,8 +1068,7 @@
 					"$(inherited)",
 					"-lz",
 				);
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.shellmate.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = app.shellmate.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "ShellMate/Core/Services/SSH/ShellMate-Bridging-Header.h";
@@ -1062,7 +1077,7 @@
 			};
 			name = Debug;
 		};
-		FF030002 /* Release (ShellMateTests) */ = {
+		FF030002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1070,6 +1085,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64",
 				);
+				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/../Frameworks/libssh2.xcframework/macos-arm64_x86_64/libssh2.framework/Headers",
@@ -1079,8 +1095,7 @@
 					"$(inherited)",
 					"-lz",
 				);
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.shellmate.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = app.shellmate.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "ShellMate/Core/Services/SSH/ShellMate-Bridging-Header.h";
@@ -1110,7 +1125,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-
 		FF030003 /* Build configuration list for PBXNativeTarget "ShellMateTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -36,10 +36,10 @@ struct GroupHeaderView: View {
             .buttonStyle(.plain)
             .frame(width: 16, height: 16)
 
-            // 分组颜色指示器
-            Circle()
-                .fill(group.color)
-                .frame(width: 8, height: 8)
+            // 文件夹图标
+            Image(systemName: group.isExpanded ? "folder.fill" : "folder.fill")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(DesignTokens.Colors.accentPrimary)
 
             // 分组名称
             Text(group.name)
@@ -49,14 +49,15 @@ struct GroupHeaderView: View {
 
             Spacer()
 
-            // 会话数量
+            // 会话数量角标
             Text("\(sessionCount)")
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
+                .frame(minWidth: 18)
                 .padding(.horizontal, DesignTokens.Spacing.xs)
                 .padding(.vertical, DesignTokens.Spacing.xxxs)
-                .background(DesignTokens.Colors.surfaceCard)
-                .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+                .background(DesignTokens.Colors.glassMedium)
+                .clipShape(Capsule())
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .frame(height: DesignTokens.Sizes.groupRowHeight)

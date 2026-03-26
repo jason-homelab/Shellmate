@@ -80,8 +80,8 @@ final class SSHAuthService {
     /// 委托
     weak var delegate: SSHAuthServiceDelegate?
 
-    /// Keychain 服务
-    private let keychainService = KeychainService.shared
+    /// 凭据金库
+    private let vault = CredentialVault.shared
 
     /// Known Hosts 管理器
     private let knownHostsManager = KnownHostsManager.shared
@@ -190,16 +190,16 @@ final class SSHAuthService {
 
         case .sshAgent:
             return .sshAgent
+
+        case .keyboardInteractive:
+            throw SSHError.authMethodNotSupported(method: "keyboard-interactive")
         }
     }
 
     /// 获取密码凭据
     private func getPasswordCredentials(for session: Session) async throws -> AuthCredentials {
-        // 尝试从 Keychain 获取
-        if let password = try? keychainService.getPassword(
-            for: session.id,
-            type: .password
-        ) {
+        // 尝试从凭据金库获取
+        if let password = try? await vault.load(sessionId: session.id, type: .password) {
             return .password(password)
         }
 
@@ -226,8 +226,9 @@ final class SSHAuthService {
             // 从文件读取
             let keyURL = URL(fileURLWithPath: keyPath)
             privateKeyData = try Data(contentsOf: keyURL)
-        } else if let keyData = try? keychainService.getPrivateKeyData(for: session.id) {
-            // 从 Keychain 读取
+        } else if let keyString = try? await vault.load(sessionId: session.id, type: .privateKey),
+                  let keyData = keyString.data(using: .utf8) {
+            // 从凭据金库读取
             privateKeyData = keyData
         } else {
             throw SSHError.invalidPrivateKey(reason: "未找到私钥")
@@ -238,17 +239,14 @@ final class SSHAuthService {
 
         // 检查私钥是否加密
         if isPrivateKeyEncrypted(privateKeyData) {
-            // 尝试从 Keychain 获取
-            passphrase = try? keychainService.getPassword(
-                for: session.id,
-                type: .passphrase
-            )
+            // 尝试从凭据金库获取
+            passphrase = try? await vault.load(sessionId: session.id, type: .passphrase)
 
             // 请求用户输入
             if passphrase == nil, let delegate = delegate {
                 passphrase = await delegate.authService(
                     self,
-                    requestPassphraseFor: session.privateKeyPath ?? "Keychain"
+                    requestPassphraseFor: session.privateKeyPath ?? "本地金库"
                 )
             }
         }
@@ -284,24 +282,27 @@ final class SSHAuthService {
 
     // MARK: - 凭据保存
 
-    /// 保存密码到 Keychain
-    func savePassword(_ password: String, for session: Session) throws {
-        try keychainService.savePassword(password, for: session.id, type: .password)
+    /// 保存密码到凭据金库
+    func savePassword(_ password: String, for session: Session) async throws {
+        try await CredentialVault.shared.save(password, sessionId: session.id, type: .password)
     }
 
-    /// 保存私钥到 Keychain
-    func savePrivateKey(_ data: Data, for session: Session) throws {
-        try keychainService.savePrivateKey(data, for: session.id)
+    /// 保存私钥到凭据金库
+    func savePrivateKey(_ data: Data, for session: Session) async throws {
+        guard let keyString = String(data: data, encoding: .utf8) else {
+            throw CredentialVaultError.encodingFailed
+        }
+        try await CredentialVault.shared.save(keyString, sessionId: session.id, type: .privateKey)
     }
 
-    /// 保存私钥密码到 Keychain
-    func savePassphrase(_ passphrase: String, for session: Session) throws {
-        try keychainService.savePassword(passphrase, for: session.id, type: .passphrase)
+    /// 保存私钥密码到凭据金库
+    func savePassphrase(_ passphrase: String, for session: Session) async throws {
+        try await CredentialVault.shared.save(passphrase, sessionId: session.id, type: .passphrase)
     }
 
     /// 删除会话的所有凭据
-    func deleteCredentials(for session: Session) {
-        keychainService.deleteAllCredentials(for: session.id)
+    func deleteCredentials(for session: Session) async throws {
+        try await CredentialVault.shared.deleteAll(sessionId: session.id)
     }
 }
 

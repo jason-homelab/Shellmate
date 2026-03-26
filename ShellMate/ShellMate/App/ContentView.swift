@@ -23,6 +23,10 @@ struct ContentView: View {
     @State private var splitSessionId: Session.ID? = nil
     @State private var showSplitSessionPicker: Bool = false
 
+    // MARK: - 外观状态
+    @AppStorage("appearance.windowMode") private var windowMode: String = "auto"
+    @State private var showAppearancePicker: Bool = false
+
     // MARK: - 视图
 
     var body: some View {
@@ -109,9 +113,8 @@ struct ContentView: View {
         }
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
-        // 14.5：终端类应用强制深色模式，确保颜色令牌始终正确渲染
-        // 用户可在系统设置中覆盖（外观设置面板 S02 将来接管此逻辑）
-        .preferredColorScheme(.dark)
+        // 根据用户选择的外观模式应用 ColorScheme；nil 表示跟随系统
+        .preferredColorScheme(preferredColorScheme)
         // 数据加载 + 菜单栏通知处理（拆分以规避 Swift 类型检查超时）
         .modifier(ContentViewLifecycleModifier(
             sessionStore: sessionStore,
@@ -244,6 +247,35 @@ struct ContentView: View {
                 }
                 .help(splitLayout != .none ? "分屏管理" : "开启分屏")
             }
+        }
+
+        // 外观模式快速切换
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                showAppearancePicker.toggle()
+            } label: {
+                Image(systemName: windowModeIcon)
+                    .help("外观模式（⌘⌥1/2/3）")
+            }
+            .popover(isPresented: $showAppearancePicker, arrowEdge: .bottom) {
+                AppearanceModePickerView(windowMode: $windowMode)
+            }
+        }
+    }
+
+    private var windowModeIcon: String {
+        switch windowMode {
+        case "light": return "sun.max"
+        case "dark":  return "moon"
+        default:      return "circle.lefthalf.filled"
+        }
+    }
+
+    private var preferredColorScheme: ColorScheme? {
+        switch windowMode {
+        case "light": return .light
+        case "dark":  return .dark
+        default:      return nil
         }
     }
 

@@ -66,6 +66,9 @@ enum SSHError: LocalizedError {
     /// 主机密钥已变更（可能的中间人攻击）
     case hostKeyChanged(oldFingerprint: String, newFingerprint: HostKeyFingerprint)
 
+    /// 首次连接到未知主机，需要用户确认
+    case hostKeyUnknown(HostKeyFingerprint)
+
     /// 主机密钥类型不支持
     case unsupportedHostKeyType(type: String)
 
@@ -94,6 +97,43 @@ enum SSHError: LocalizedError {
 
     /// 写入失败
     case writeFailed(reason: String)
+
+    // MARK: - SFTP 错误
+
+    /// SFTP 子系统未连接
+    case sftpNotConnected
+
+    /// SFTP 打开文件/目录失败
+    case sftpOpenFailed(path: String, code: UInt32)
+
+    /// SFTP 读取失败
+    case sftpReadFailed(code: UInt32)
+
+    /// SFTP 写入失败
+    case sftpWriteFailed(code: UInt32)
+
+    /// SFTP 权限拒绝
+    case sftpPermissionDenied(path: String)
+
+    /// SFTP 文件/目录不存在
+    case sftpFileNotFound(path: String)
+
+    /// SFTP 传输失败
+    case sftpTransferFailed(reason: String)
+
+    /// SFTP 操作失败
+    case sftpOperationFailed(operation: String, code: UInt32)
+
+    // MARK: - 端口转发错误
+
+    /// 隧道端口绑定失败
+    case tunnelBindFailed(port: Int, reason: String)
+
+    /// 隧道远端监听失败
+    case tunnelListenFailed(port: Int, reason: String)
+
+    /// 隧道对应的 SSH 会话未连接
+    case tunnelSessionNotConnected
 
     // MARK: - 通用错误
 
@@ -164,6 +204,9 @@ enum SSHError: LocalizedError {
         case .hostKeyChanged(_, let newFingerprint):
             return "警告：主机密钥已变更！新指纹: \(newFingerprint.sha256Display)"
 
+        case .hostKeyUnknown(let fingerprint):
+            return "首次连接到此主机，密钥指纹: \(fingerprint.sha256Display)"
+
         case .unsupportedHostKeyType(let type):
             return "不支持的主机密钥类型: \(type)"
 
@@ -190,6 +233,39 @@ enum SSHError: LocalizedError {
 
         case .writeFailed(let reason):
             return "写入失败: \(reason)"
+
+        case .sftpNotConnected:
+            return "SFTP 未连接"
+
+        case .sftpOpenFailed(let path, let code):
+            return "SFTP 无法打开: \(path)（错误码: \(code)）"
+
+        case .sftpReadFailed(let code):
+            return "SFTP 读取失败（错误码: \(code)）"
+
+        case .sftpWriteFailed(let code):
+            return "SFTP 写入失败（错误码: \(code)）"
+
+        case .sftpPermissionDenied(let path):
+            return "SFTP 权限拒绝: \(path)"
+
+        case .sftpFileNotFound(let path):
+            return "SFTP 文件不存在: \(path)"
+
+        case .sftpTransferFailed(let reason):
+            return "SFTP 传输失败: \(reason)"
+
+        case .sftpOperationFailed(let operation, let code):
+            return "SFTP 操作失败（\(operation)，错误码: \(code)）"
+
+        case .tunnelBindFailed(let port, let reason):
+            return "端口 \(port) 绑定失败: \(reason)"
+
+        case .tunnelListenFailed(let port, let reason):
+            return "远端端口 \(port) 监听失败: \(reason)"
+
+        case .tunnelSessionNotConnected:
+            return "隧道所绑定的 SSH 会话未连接"
 
         case .libssh2Error(let code, let message):
             return "libssh2 错误 (\(code)): \(message)"
@@ -249,7 +325,7 @@ enum SSHError: LocalizedError {
     /// 是否为安全相关的错误
     var isSecurityRelated: Bool {
         switch self {
-        case .hostKeyVerificationFailed, .hostKeyChanged,
+        case .hostKeyVerificationFailed, .hostKeyChanged, .hostKeyUnknown,
              .invalidPassword, .invalidPrivateKey, .invalidPassphrase,
              .authenticationFailed:
             return true

@@ -4,19 +4,23 @@ import AppKit
 /// 处理应用级别的生命周期事件
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    private static let windowModeKey = "appearance.windowMode"
+
     // MARK: - 应用生命周期
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // ① 类级别：在 WindowGroup 创建任何 NSWindow 之前禁用自动标签合并
-        // applicationWillFinishLaunching 早于 WindowGroup 窗口创建，确保拦截所有窗口
         NSWindow.allowsAutomaticWindowTabbing = false
+
+        // ② 启动时立即应用已保存的外观模式（在窗口创建前设好，避免闪烁）
+        applyWindowMode(UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "auto")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // ② 实例级别：对所有已创建窗口（包括 NavigationSplitView 内部列窗口）逐一禁用
+        // 对已创建窗口逐一禁用标签合并
         NSApp.windows.forEach { $0.tabbingMode = .disallowed }
 
-        // ③ 前向防御：后续任何新窗口成为 Key 时立即禁用
+        // 后续任何新窗口成为 Key 时立即禁用
         NotificationCenter.default.addObserver(
             forName: NSWindow.didBecomeKeyNotification,
             object: nil,
@@ -25,14 +29,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             (notification.object as? NSWindow)?.tabbingMode = .disallowed
         }
 
+        // 监听外观模式变化（Commands/工具栏/设置均通过 UserDefaults 写入）
+        NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: UserDefaults.standard,
+            queue: .main
+        ) { [weak self] _ in
+            let mode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "auto"
+            self?.applyWindowMode(mode)
+        }
+
         print("ShellMate 启动完成")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        // 应用即将终止
-        // 保存 Core Data 上下文
         PersistenceController.shared.save()
         print("ShellMate 即将终止")
+    }
+
+    // MARK: - 外观模式
+
+    private func applyWindowMode(_ mode: String) {
+        switch mode {
+        case "light":
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark":
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: // "auto" — 跟随系统
+            NSApp.appearance = nil
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

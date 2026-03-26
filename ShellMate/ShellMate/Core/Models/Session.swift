@@ -15,7 +15,7 @@ struct Session: Identifiable, Hashable {
     var username: String
     /// 认证方式
     var authMethod: AuthMethod
-    /// Keychain 引用（用于存取密码/私钥密码）
+    /// 旧版 Keychain 引用（保留用于迁移兼容，新数据由 CredentialVault 管理）
     var keychainRef: String?
     /// 私钥文件路径
     var privateKeyPath: String?
@@ -41,6 +41,26 @@ struct Session: Identifiable, Hashable {
     var isSoftDeleted: Bool
     /// 所属分组 ID
     var groupId: UUID?
+
+    /// 跳板机简易字符串（如 "user@host:22"，逗号分隔多跳板机）
+    var proxyJumpString: String?
+    /// 连接超时（秒）
+    var connectTimeout: Int32
+    /// 最大重连次数
+    var maxReconnectRetries: Int32
+    /// 重连间隔（秒）
+    var reconnectInterval: Int32
+    /// 环境变量（JSON 序列化，key-value 对）
+    var envVars: [String: String]
+    /// 启动后自动执行的命令
+    var startupCommand: String?
+    /// 覆盖全局主题 ID（空字符串表示跟随全局）
+    var overrideThemeId: String?
+    /// 覆盖全局字号（0 表示跟随全局）
+    var overrideFontSize: Int32
+
+    /// 跳板机链配置（运行时从 CDJumpHost 加载，不单独存 Keychain）
+    var jumpHosts: [ProxyJumpConfig]
 
     // MARK: - 运行时状态（非持久化）
 
@@ -68,7 +88,16 @@ struct Session: Identifiable, Hashable {
         createdAt: Date = Date(),
         modifiedAt: Date = Date(),
         isSoftDeleted: Bool = false,
-        groupId: UUID? = nil
+        groupId: UUID? = nil,
+        proxyJumpString: String? = nil,
+        connectTimeout: Int32 = 30,
+        maxReconnectRetries: Int32 = 3,
+        reconnectInterval: Int32 = 5,
+        envVars: [String: String] = [:],
+        startupCommand: String? = nil,
+        overrideThemeId: String? = nil,
+        overrideFontSize: Int32 = 0,
+        jumpHosts: [ProxyJumpConfig] = []
     ) {
         self.id = id
         self.name = name
@@ -89,6 +118,15 @@ struct Session: Identifiable, Hashable {
         self.modifiedAt = modifiedAt
         self.isSoftDeleted = isSoftDeleted
         self.groupId = groupId
+        self.proxyJumpString = proxyJumpString
+        self.connectTimeout = connectTimeout
+        self.maxReconnectRetries = maxReconnectRetries
+        self.reconnectInterval = reconnectInterval
+        self.envVars = envVars
+        self.startupCommand = startupCommand
+        self.overrideThemeId = overrideThemeId
+        self.overrideFontSize = overrideFontSize
+        self.jumpHosts = jumpHosts
     }
 
     // MARK: - 从 Core Data 实体转换
@@ -113,6 +151,28 @@ struct Session: Identifiable, Hashable {
         self.modifiedAt = entity.modifiedAt ?? Date()
         self.isSoftDeleted = entity.isSoftDeleted
         self.groupId = entity.group?.id
+        self.proxyJumpString = entity.proxyJumpString
+        self.connectTimeout = entity.connectTimeout
+        self.maxReconnectRetries = entity.maxReconnectRetries
+        self.reconnectInterval = entity.reconnectInterval
+        self.envVars = Session.parseEnvVars(from: entity.envVarsJSON)
+        self.startupCommand = entity.startupCommand
+        self.overrideThemeId = entity.overrideThemeId
+        self.overrideFontSize = entity.overrideFontSize
+
+        // 从 CDJumpHost 关系加载跳板机链（按 sortOrder 排序）
+        let jumpHostEntities = (entity.jumpHosts as? Set<CDJumpHost>)?
+            .sorted { $0.sortOrder < $1.sortOrder } ?? []
+        self.jumpHosts = jumpHostEntities.map { jh in
+            ProxyJumpConfig(
+                host: jh.host ?? "",
+                port: jh.port,
+                username: jh.username ?? "",
+                authMethod: AuthMethod(rawValue: jh.authMethodRaw) ?? .password,
+                privateKeyPath: nil,
+                vaultId: jh.id
+            )
+        }
     }
 
     // MARK: - 辅助方法
@@ -125,6 +185,26 @@ struct Session: Identifiable, Hashable {
             return []
         }
         return tags
+    }
+
+    /// 解析环境变量 JSON 字符串
+    private static func parseEnvVars(from json: String?) -> [String: String] {
+        guard let json = json,
+              let data = json.data(using: .utf8),
+              let dict = try? JSONDecoder().decode([String: String].self, from: data) else {
+            return [:]
+        }
+        return dict
+    }
+
+    /// 将环境变量转换为 JSON 字符串
+    func envVarsToJSON() -> String? {
+        guard !envVars.isEmpty else { return nil }
+        guard let data = try? JSONEncoder().encode(envVars),
+              let json = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return json
     }
 
     /// 将标签转换为 JSON 字符串
@@ -156,6 +236,14 @@ struct Session: Identifiable, Hashable {
         entity.lastConnectedAt = lastConnectedAt
         entity.modifiedAt = Date()
         entity.isSoftDeleted = isSoftDeleted
+        entity.proxyJumpString = proxyJumpString
+        entity.connectTimeout = connectTimeout
+        entity.maxReconnectRetries = maxReconnectRetries
+        entity.reconnectInterval = reconnectInterval
+        entity.envVarsJSON = envVarsToJSON()
+        entity.startupCommand = startupCommand
+        entity.overrideThemeId = overrideThemeId
+        entity.overrideFontSize = overrideFontSize
     }
 
     // MARK: - Hashable

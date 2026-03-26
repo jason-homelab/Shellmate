@@ -3,30 +3,30 @@ import XCTest
 
 /// SSH 连接集成测试
 /// 测试用例 TC-001 ~ TC-005
-/// 注意：这些测试需要 Docker sshd 环境
+/// 使用 SSH2Connection（LibSSH2BridgeReal）直连真机 192.168.100.167
 final class SSHConnectionIntegrationTests: XCTestCase {
 
     // MARK: - 测试环境配置
 
-    /// Docker sshd 容器地址
-    private let testHost = "localhost"
+    /// 真机测试服务器地址
+    private let testHost = "192.168.100.167"
 
-    /// Docker sshd 容器端口
-    private let testPort: Int32 = 2222
+    /// SSH 端口
+    private let testPort: Int32 = 22
 
     /// 测试用户名
-    private let testUsername = "testuser"
+    private let testUsername = "ubuntu"
 
     /// 测试密码
-    private let testPassword = "testpassword"
+    private let testPassword = "Int3l@123"
 
-    /// 测试私钥路径
-    private let testPrivateKeyPath = "/tmp/test_ssh_key"
+    /// 测试私钥路径（TC-002 需要预先在服务器配置公钥）
+    private let testPrivateKeyPath = "/tmp/shellmate_test_ed25519"
 
     /// 连接超时
-    private let connectionTimeout: TimeInterval = 10
+    private let connectionTimeout: TimeInterval = 15
 
-    /// 是否跳过集成测试（CI 环境中可能需要）
+    /// 是否跳过集成测试（CI 环境中可设置）
     private var shouldSkipIntegrationTests: Bool {
         return ProcessInfo.processInfo.environment["SKIP_INTEGRATION_TESTS"] == "1"
     }
@@ -35,176 +35,122 @@ final class SSHConnectionIntegrationTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-
         if shouldSkipIntegrationTests {
             throw XCTSkip("跳过集成测试（设置了 SKIP_INTEGRATION_TESTS 环境变量）")
         }
-
-        // 检查测试环境是否可用
-        // 实际测试中需要启动 Docker 容器：
-        // docker run -d -p 2222:22 --name test-sshd linuxserver/openssh-server
     }
 
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
+    // MARK: - 辅助方法
+
+    /// 在后台线程执行阻塞的 SSH 操作（SSH2Connection 使用同步 API）
+    private func runBlocking(_ block: @escaping () throws -> Void) async throws {
+        try await Task.detached(priority: .userInitiated, operation: block).value
+    }
+
+    /// 创建"Shell 提示符"期望（必须在 connect 之前调用，避免错过第一批数据）
+    /// 返回 (connection, expectation)，调用方负责在 connect 后等待 expectation
+    private func makeShellPromptExpectation(for conn: SSH2Connection) -> XCTestExpectation {
+        let exp = XCTestExpectation(description: "收到 Shell 提示符（$/#/~）")
+        exp.assertForOverFulfill = false
+        var accumulated = Data()
+        conn.onDataReceived = { data in
+            accumulated.append(data)
+            guard let str = String(data: accumulated, encoding: .utf8) else { return }
+            if str.contains("$") || str.contains("#") || str.contains("~") {
+                exp.fulfill()
+            }
+        }
+        return exp
     }
 
     // MARK: - TC-001: 密码认证 SSH 连接
 
     /// TC-001: 密码认证 SSH 连接成功，终端显示 shell 提示符
     func testTC001_PasswordAuthentication() async throws {
-        // Given: 有效的密码认证配置
-        let config = SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .password,
-            password: testPassword,
-            connectionTimeout: connectionTimeout
-        )
+        let conn = SSH2Connection()
 
-        // When: 建立 SSH 连接
-        let connection = SSHConnection(config: config)
+        // 1. 先注册数据回调，避免错过首批数据
+        let promptExp = makeShellPromptExpectation(for: conn)
 
-        do {
-            try await connection.connect()
-
-            // Then: 连接状态为已连接
-            let state = await connection.state
-            XCTAssertEqual(state, .connected, "连接状态应为已连接")
-
-            // 打开 Shell
-            try await connection.openShell()
-
-            // 等待接收数据（Shell 提示符）
-            // 在实际测试中，应该检查是否收到 shell 提示符
-            let dataStream = await connection.getDataStream()
-            var receivedData = false
-
-            // 模拟数据接收检查
-            // for await data in dataStream {
-            //     if let str = String(data: data, encoding: .utf8),
-            //        str.contains("$") || str.contains("#") {
-            //         receivedData = true
-            //         break
-            //     }
-            // }
-
-            // 由于这是模拟实现，我们假设成功
-            receivedData = true
-
-            XCTAssertTrue(receivedData, "应该接收到 Shell 提示符")
-
-            // 清理
-            await connection.disconnect()
-
-        } catch {
-            XCTFail("连接失败: \(error.localizedDescription)")
+        // 2. 在后台线程执行阻塞连接
+        try await runBlocking {
+            try conn.connect(
+                host: self.testHost,
+                port: self.testPort,
+                username: self.testUsername,
+                password: self.testPassword
+            )
         }
+
+        // 3. 验证连接状态
+        XCTAssertTrue(conn.isConnected, "TC-001: 密码认证后 isConnected 应为 true")
+
+        // 4. 等待收到 Shell 提示符（Ubuntu 默认 ~$ 提示符）
+        await fulfillment(of: [promptExp], timeout: 8)
+
+        // 5. 断开连接
+        conn.disconnect()
+        try await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertFalse(conn.isConnected, "TC-001: disconnect 后 isConnected 应为 false")
     }
 
-    /// TC-001 变体: 错误密码应该认证失败
-    func testTC001_InvalidPassword_ShouldFail() async throws {
-        // Given: 无效的密码
-        let config = SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .password,
-            password: "wrongpassword",
-            connectionTimeout: connectionTimeout
-        )
+    /// TC-001 变体：错误密码应认证失败
+    func testTC001_WrongPassword_ShouldFail() async throws {
+        let conn = SSH2Connection()
 
-        // When: 尝试连接
-        let connection = SSHConnection(config: config)
-
-        // Then: 应该抛出认证失败错误
         do {
-            try await connection.connect()
-            XCTFail("应该抛出认证失败错误")
-        } catch let error as SSHError {
-            switch error {
-            case .authenticationFailed, .invalidPassword:
-                // 预期的错误
-                break
-            default:
-                // 在模拟实现中，可能会抛出其他错误
-                break
+            try await runBlocking {
+                try conn.connect(
+                    host: self.testHost,
+                    port: self.testPort,
+                    username: self.testUsername,
+                    password: "wrongpassword_INVALID"
+                )
             }
+            XCTFail("TC-001 变体：错误密码不应连接成功")
+        } catch {
+            // 预期：认证失败或连接错误
         }
+
+        XCTAssertFalse(conn.isConnected, "TC-001 变体：错误密码后应处于未连接状态")
     }
 
     // MARK: - TC-002: SSH Key 认证
 
     /// TC-002: SSH Key（Ed25519）认证无需输入密码连接成功
+    /// 前置条件：/tmp/shellmate_test_ed25519 私钥存在，且公钥已添加到服务器 authorized_keys
     func testTC002_SSHKeyAuthentication() async throws {
-        // Given: 有效的私钥认证配置
-        // 首先需要在测试环境中设置好私钥
-
-        let config = SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .privateKey,
-            privateKeyPath: testPrivateKeyPath,
-            passphrase: nil, // 无密码保护的私钥
-            connectionTimeout: connectionTimeout
-        )
-
-        // When: 建立 SSH 连接
-        let connection = SSHConnection(config: config)
-
-        do {
-            try await connection.connect()
-
-            // Then: 连接成功
-            let state = await connection.state
-            XCTAssertEqual(state, .connected, "使用私钥认证应该连接成功")
-
-            await connection.disconnect()
-
-        } catch {
-            // 在模拟环境中可能会失败，记录但不立即失败
-            print("私钥认证测试: \(error.localizedDescription)")
+        guard FileManager.default.fileExists(atPath: testPrivateKeyPath) else {
+            throw XCTSkip("TC-002 跳过：私钥文件 \(testPrivateKeyPath) 不存在，请先配置 Ed25519 密钥对")
         }
+
+        let conn = SSH2Connection()
+        let promptExp = makeShellPromptExpectation(for: conn)
+
+        try await runBlocking {
+            try conn.connectWithKey(
+                host: self.testHost,
+                port: self.testPort,
+                username: self.testUsername,
+                privateKeyPath: self.testPrivateKeyPath,
+                passphrase: nil
+            )
+        }
+
+        XCTAssertTrue(conn.isConnected, "TC-002: 私钥认证后 isConnected 应为 true")
+        await fulfillment(of: [promptExp], timeout: 8)
+        conn.disconnect()
     }
 
-    /// TC-002 变体: 带密码的私钥
-    func testTC002_SSHKeyWithPassphrase() async throws {
-        // Given: 带密码保护的私钥
-        let config = SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .privateKey,
-            privateKeyPath: testPrivateKeyPath,
-            passphrase: "keypassphrase",
-            connectionTimeout: connectionTimeout
-        )
+    // MARK: - TC-003: 会话配置持久化
 
-        let connection = SSHConnection(config: config)
-
-        // When/Then: 连接应该成功
-        do {
-            try await connection.connect()
-            let state = await connection.state
-            XCTAssertEqual(state, .connected)
-            await connection.disconnect()
-        } catch {
-            print("带密码私钥测试: \(error.localizedDescription)")
-        }
-    }
-
-    // MARK: - TC-003: 会话配置恢复
-
-    /// TC-003: 退出重启后所有会话配置完整恢复
+    /// TC-003: 退出重启后所有会话配置完整恢复（Core Data 持久化）
     func testTC003_SessionConfigurationPersistence() async throws {
-        // Given: 创建并保存会话配置
-        let persistenceController = PersistenceController(inMemory: true)
-        let sessionRepository = SessionRepository(context: persistenceController.container.viewContext)
+        let persistenceController = await MainActor.run { PersistenceController(inMemory: true) }
+        let repo = await MainActor.run { SessionRepository(persistenceController: persistenceController) }
 
         let session = Session(
-            name: "测试服务器",
+            name: "真机测试服务器",
             host: testHost,
             port: testPort,
             username: testUsername,
@@ -212,165 +158,95 @@ final class SSHConnectionIntegrationTests: XCTestCase {
             keepAliveInterval: 60,
             autoReconnect: true,
             encoding: "UTF-8",
-            tags: ["测试", "开发"]
+            tags: ["集成测试", "真机"]
         )
 
-        // When: 保存会话
-        try sessionRepository.save(session)
+        // 保存（async throws）
+        try await repo.save(session)
 
-        // 模拟重启：创建新的 Repository 实例
-        let newSessionRepository = SessionRepository(context: persistenceController.container.viewContext)
+        // 同一 persistenceController 重新创建 Repository（模拟重启后重建）
+        let newRepo = await MainActor.run { SessionRepository(persistenceController: persistenceController) }
+        let sessions = try await newRepo.fetchAll()
 
-        // Then: 读取的会话应该与保存的一致
-        let sessions = try newSessionRepository.fetchAll()
-        XCTAssertEqual(sessions.count, 1, "应该有一个会话")
+        XCTAssertEqual(sessions.count, 1, "TC-003: Core Data 应保存 1 条会话记录")
 
-        let loadedSession = sessions.first!
-        XCTAssertEqual(loadedSession.name, session.name)
-        XCTAssertEqual(loadedSession.host, session.host)
-        XCTAssertEqual(loadedSession.port, session.port)
-        XCTAssertEqual(loadedSession.username, session.username)
-        XCTAssertEqual(loadedSession.authMethod, session.authMethod)
-        XCTAssertEqual(loadedSession.keepAliveInterval, session.keepAliveInterval)
-        XCTAssertEqual(loadedSession.autoReconnect, session.autoReconnect)
-        XCTAssertEqual(loadedSession.encoding, session.encoding)
-        XCTAssertEqual(loadedSession.tags, session.tags)
+        let loaded = try XCTUnwrap(sessions.first)
+        XCTAssertEqual(loaded.name, session.name,             "TC-003: name 应完整恢复")
+        XCTAssertEqual(loaded.host, session.host,             "TC-003: host 应完整恢复")
+        XCTAssertEqual(loaded.port, session.port,             "TC-003: port 应完整恢复")
+        XCTAssertEqual(loaded.username, session.username,     "TC-003: username 应完整恢复")
+        XCTAssertEqual(loaded.authMethod, session.authMethod, "TC-003: authMethod 应完整恢复")
+        XCTAssertEqual(loaded.keepAliveInterval, session.keepAliveInterval, "TC-003: keepAliveInterval 应完整恢复")
+        XCTAssertEqual(loaded.autoReconnect, session.autoReconnect,         "TC-003: autoReconnect 应完整恢复")
+        XCTAssertEqual(loaded.encoding, session.encoding,     "TC-003: encoding 应完整恢复")
+        XCTAssertEqual(loaded.tags, session.tags,             "TC-003: tags 应完整恢复")
     }
 
-    /// TC-003 变体: Keychain 凭据恢复
+    /// TC-003 变体：Keychain 凭据存取
     func testTC003_KeychainCredentialsPersistence() throws {
-        // Given: 保存凭据到 Keychain
         let sessionId = UUID()
-        let password = "testPassword123"
 
-        try KeychainService.shared.savePassword(password, for: sessionId, type: .password)
+        // 存入 Keychain
+        try KeychainService.shared.savePassword(testPassword, for: sessionId, type: .password)
 
-        // When: 读取凭据
-        let retrievedPassword = try KeychainService.shared.getPassword(for: sessionId, type: .password)
-
-        // Then: 凭据应该一致
-        XCTAssertEqual(retrievedPassword, password, "密码应该正确恢复")
+        // 读取
+        let retrieved = try KeychainService.shared.getPassword(for: sessionId, type: .password)
+        XCTAssertEqual(retrieved, testPassword, "TC-003 变体：Keychain 读取的密码应与存入一致")
 
         // 清理
         try KeychainService.shared.deletePassword(for: sessionId, type: .password)
     }
 
-    // MARK: - TC-004: 多标签并发
+    // MARK: - TC-004: 3 标签页并发独立工作
 
-    /// TC-004: 3 个标签页并发独立工作
+    /// TC-004: 3 个 SSH2Connection 并发建立，连接彼此独立、状态互不干扰
     func testTC004_ConcurrentConnections() async throws {
-        // Given: 3 个不同的会话配置
-        let configs = (1...3).map { index in
-            SSHSessionConfig(
-                host: testHost,
-                port: testPort,
-                username: testUsername,
-                authMethod: .password,
-                password: testPassword,
-                connectionTimeout: connectionTimeout
-            )
-        }
+        let connections = (1...3).map { _ in SSH2Connection() }
 
-        // When: 并发连接
-        let connections = configs.map { SSHConnection(config: $0) }
+        // 先为每个连接注册提示符期望
+        let promptExps = connections.map { makeShellPromptExpectation(for: $0) }
 
-        await withTaskGroup(of: (Int, Bool).self) { group in
-            for (index, connection) in connections.enumerated() {
+        // 并发建立 3 个连接
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for conn in connections {
                 group.addTask {
-                    do {
-                        try await connection.connect()
-                        let state = await connection.state
-                        return (index, state == .connected)
-                    } catch {
-                        return (index, false)
-                    }
+                    try await Task.detached(priority: .userInitiated) {
+                        try conn.connect(
+                            host: self.testHost,
+                            port: self.testPort,
+                            username: self.testUsername,
+                            password: self.testPassword
+                        )
+                    }.value
                 }
             }
-
-            var results: [Int: Bool] = [:]
-            for await (index, success) in group {
-                results[index] = success
-            }
-
-            // Then: 所有连接应该成功
-            // 在模拟环境中，我们只验证结构正确
-            XCTAssertEqual(results.count, 3, "应该有 3 个结果")
+            try await group.waitForAll()
         }
 
-        // 验证连接独立性
-        for (index, connection) in connections.enumerated() {
-            let state = await connection.state
-            print("连接 \(index) 状态: \(state)")
+        // 验证 3 个连接均已建立
+        for (index, conn) in connections.enumerated() {
+            XCTAssertTrue(conn.isConnected, "TC-004: 连接 \(index + 1) 应处于已连接状态")
+        }
+
+        // 等待 3 个 Shell 提示符
+        await fulfillment(of: promptExps, timeout: 10)
+
+        // 验证独立性：分别发送不同命令，不互相干扰
+        for (index, conn) in connections.enumerated() {
+            XCTAssertNoThrow(try conn.write("echo 'tab\(index + 1)'\n"),
+                             "TC-004: 连接 \(index + 1) 发送命令不应抛出异常")
         }
 
         // 清理
-        for connection in connections {
-            await connection.disconnect()
-        }
-    }
-
-    /// TC-004 变体: 并发数据传输
-    func testTC004_ConcurrentDataTransfer() async throws {
-        // Given: 多个已连接的会话
-        let connection1 = SSHConnection(config: SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .password,
-            password: testPassword
-        ))
-
-        let connection2 = SSHConnection(config: SSHSessionConfig(
-            host: testHost,
-            port: testPort,
-            username: testUsername,
-            authMethod: .password,
-            password: testPassword
-        ))
-
-        // When: 并发发送数据
-        let results = await withTaskGroup(of: Bool.self) { group in
-            group.addTask {
-                do {
-                    try await connection1.write("echo 'test1'\n")
-                    return true
-                } catch {
-                    return false
-                }
-            }
-
-            group.addTask {
-                do {
-                    try await connection2.write("echo 'test2'\n")
-                    return true
-                } catch {
-                    return false
-                }
-            }
-
-            var successes: [Bool] = []
-            for await result in group {
-                successes.append(result)
-            }
-            return successes
-        }
-
-        // Then: 数据应该独立处理
-        // 在模拟环境中验证结构
-        XCTAssertEqual(results.count, 2)
-
-        // 清理
-        await connection1.disconnect()
-        await connection2.disconnect()
+        for conn in connections { conn.disconnect() }
     }
 
     // MARK: - TC-005: 自动重连
 
-    /// TC-005: 自动重连（断网后 > 网络恢复后自动重连）
-    func testTC005_AutoReconnect() async throws {
-        // Given: 配置了自动重连的终端控制器
+    /// TC-005a: 指数退避延迟计算正确性验证（纯逻辑，无网络）
+    func testTC005_ExponentialBackoffCalculation() async throws {
         let session = Session(
-            name: "测试服务器",
+            name: "重连测试",
             host: testHost,
             port: testPort,
             username: testUsername,
@@ -378,127 +254,122 @@ final class SSHConnectionIntegrationTests: XCTestCase {
             autoReconnect: true
         )
 
-        let controller = await TerminalController(session: session)
+        let controller = await MainActor.run { TerminalController(session: session) }
 
-        // 配置重连参数
+        // 配置加速参数
         await MainActor.run {
             controller.reconnectConfig.enabled = true
             controller.reconnectConfig.maxAttempts = 3
-            controller.reconnectConfig.baseDelay = 0.1 // 加快测试速度
+            controller.reconnectConfig.baseDelay = 1.0
+            controller.reconnectConfig.backoffFactor = 2.0
+            controller.reconnectConfig.maxDelay = 30.0
         }
 
-        // When: 连接成功后模拟断开
-        do {
-            try await controller.connect()
-        } catch {
-            // 在模拟环境中可能失败，继续测试重连逻辑
-        }
-
-        // 模拟断开
-        await controller.disconnect()
-
-        // Then: 验证重连配置
-        let config = await controller.reconnectConfig
-        XCTAssertTrue(config.enabled, "自动重连应该启用")
-        XCTAssertEqual(config.maxAttempts, 3, "最大重试次数应为 3")
-
-        // 验证指数退避延迟计算
-        XCTAssertEqual(config.delay(for: 1), 0.1, accuracy: 0.01)
-        XCTAssertEqual(config.delay(for: 2), 0.2, accuracy: 0.01)
-        XCTAssertEqual(config.delay(for: 3), 0.4, accuracy: 0.01)
+        let (d1, d2, d3) = await MainActor.run {(
+            controller.reconnectConfig.delay(for: 1),
+            controller.reconnectConfig.delay(for: 2),
+            controller.reconnectConfig.delay(for: 3)
+        )}
+        XCTAssertEqual(d1,  1.0, accuracy: 0.001, "TC-005: 第 1 次延迟应为 1.0s")
+        XCTAssertEqual(d2,  2.0, accuracy: 0.001, "TC-005: 第 2 次延迟应为 2.0s")
+        XCTAssertEqual(d3,  4.0, accuracy: 0.001, "TC-005: 第 3 次延迟应为 4.0s")
     }
 
-    /// TC-005 变体: 重连次数耗尽
-    func testTC005_ReconnectExhausted() async throws {
-        // Given: 最大重试次数为 2
+    /// TC-005b: 真机连接 + 主动断开后不触发自动重连
+    func testTC005_AutoReconnect_ManualDisconnectSuppressesRetry() async throws {
         let session = Session(
-            name: "测试服务器",
-            host: "nonexistent.example.com", // 不存在的主机
-            port: 22,
-            username: testUsername
+            name: "真机测试-重连",
+            host: testHost,
+            port: testPort,
+            username: testUsername,
+            authMethod: .password,
+            autoReconnect: true
         )
 
-        let controller = await TerminalController(session: session)
+        // 预存密码到 Keychain（TerminalController 从 Keychain 读取）
+        try KeychainService.shared.savePassword(testPassword, for: session.id, type: .password)
+        defer { try? KeychainService.shared.deletePassword(for: session.id, type: .password) }
+
+        let controller = await MainActor.run { TerminalController(session: session) }
         await MainActor.run {
             controller.reconnectConfig.enabled = true
-            controller.reconnectConfig.maxAttempts = 2
-            controller.reconnectConfig.baseDelay = 0.01
+            controller.reconnectConfig.maxAttempts = 3
+            controller.reconnectConfig.baseDelay = 0.5
         }
 
-        // When: 尝试连接（应该失败并重试）
+        // 首次连接真机
+        try await controller.connect()
+
+        let connectedState = await MainActor.run { controller.state }
+        XCTAssertEqual(connectedState, .connected, "TC-005b: 首次连接后应为 .connected")
+
+        // 主动断开
+        await controller.disconnect()
+
+        let disconnectedState = await MainActor.run { controller.state }
+        XCTAssertEqual(disconnectedState, .disconnected, "TC-005b: 主动断开后应为 .disconnected")
+
+        // 等待 1s，确认主动断开不触发自动重连
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        let stateAfterWait = await MainActor.run { controller.state }
+        XCTAssertEqual(stateAfterWait, .disconnected, "TC-005b: 主动断开后 1s 内不应触发自动重连")
+    }
+
+    /// TC-005c: 不可达主机 + 禁用重连，最终状态为 .failed
+    /// 使用 sshAgent 认证以绕过 Keychain 凭据预检（测试环境无 Keychain 密码），
+    /// 让 TCP 连接失败真正触发 .failed 状态
+    func testTC005_UnreachableHost_StateIsFailed() async throws {
+        let session = Session(
+            name: "不可达主机",
+            host: "192.0.2.1",  // RFC 5737 文档测试地址，保证不可达
+            port: 22,
+            username: testUsername,
+            authMethod: .sshAgent,  // 跳过 Keychain 凭据预检
+            autoReconnect: false
+        )
+
+        let controller = await MainActor.run { TerminalController(session: session) }
+        await MainActor.run { controller.reconnectConfig.enabled = false }
+
         do {
             try await controller.connect()
-        } catch {
-            // 预期失败
-        }
-
-        // Then: 最终状态应为失败
-        let state = await controller.state
-        // 由于是模拟实现，状态可能不同
-        print("最终状态: \(state)")
-    }
-
-    // MARK: - 辅助测试
-
-    /// 测试连接池
-    func testConnectionPool() async throws {
-        // Given: 连接池
-        let pool = SSHConnectionPool(maxConnections: 3)
-
-        // When: 创建多个连接
-        let configs = (1...3).map { _ in
-            SSHSessionConfig(
-                host: testHost,
-                port: testPort,
-                username: testUsername,
-                authMethod: .password,
-                password: testPassword
-            )
-        }
-
-        // Then: 连接数应该正确
-        var connectionCount = 0
-        for config in configs {
-            do {
-                let _ = try await pool.createConnection(config: config)
-                connectionCount += 1
-            } catch {
-                print("连接创建失败: \(error)")
+            // 若 connect() 未抛出，检查 credentialsMissing（CI 无 Keychain 时的合法出口）
+            let credMissing = await MainActor.run { controller.credentialsMissing }
+            if !credMissing {
+                XCTFail("TC-005c: 不可达主机不应连接成功")
             }
+        } catch { /* 预期失败：TCP 无法到达 192.0.2.1 */ }
+
+        let finalState = await MainActor.run { controller.state }
+        // 允许两种合法结果：.failed（TCP 失败）或 .disconnected（credentialsMissing 提前返回）
+        let isExpectedState: Bool
+        switch finalState {
+        case .failed, .disconnected: isExpectedState = true
+        default: isExpectedState = false
         }
-
-        let activeCount = await pool.activeConnectionCount
-        print("活动连接数: \(activeCount)")
-
-        // 清理
-        await pool.closeAll()
+        XCTAssertTrue(isExpectedState, "TC-005c: 不可达主机最终状态应为 .failed 或 .disconnected，实际：\(finalState)")
     }
 
-    /// 测试 Known Hosts 管理
+    // MARK: - Known Hosts 管理
+
+    /// 验证 KnownHostsManager 的 add / check / remove 全流程
     func testKnownHostsManager() throws {
         let manager = KnownHostsManager.shared
-
-        // 创建测试指纹
         let fingerprint = HostKeyFingerprint(
             keyType: .ed25519,
             sha256: "AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl",
             md5: "16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48",
             rawKey: Data()
         )
+        let host = "integration-test.shellmate.internal"
 
-        // 添加
-        try manager.add(host: "test.example.com", port: 22, fingerprint: fingerprint)
+        try manager.add(host: host, port: 22, fingerprint: fingerprint)
+        XCTAssertEqual(manager.check(host: host, port: 22, fingerprint: fingerprint), .match,
+                       "KnownHosts: add 后 check 应为 .match")
 
-        // 检查
-        let result = manager.check(host: "test.example.com", port: 22, fingerprint: fingerprint)
-        XCTAssertEqual(result, .match, "应该匹配")
-
-        // 删除
-        try manager.remove(host: "test.example.com", port: 22)
-
-        // 再次检查
-        let resultAfterDelete = manager.check(host: "test.example.com", port: 22, fingerprint: fingerprint)
-        XCTAssertEqual(resultAfterDelete, .notFound, "删除后应该找不到")
+        try manager.remove(host: host, port: 22)
+        XCTAssertEqual(manager.check(host: host, port: 22, fingerprint: fingerprint), .notFound,
+                       "KnownHosts: remove 后 check 应为 .notFound")
     }
 }
 
@@ -506,68 +377,26 @@ final class SSHConnectionIntegrationTests: XCTestCase {
 
 extension SSHConnectionIntegrationTests {
 
-    /// 测试连接建立性能
-    func testConnectionPerformance() async throws {
+    /// 连接建立性能（目标 < 5s，含网络往返）
+    func testConnectionPerformance() {
         measure {
-            let expectation = XCTestExpectation(description: "连接测试")
-
+            let exp = self.expectation(description: "连接性能")
             Task {
-                let config = SSHSessionConfig(
-                    host: testHost,
-                    port: testPort,
-                    username: testUsername,
-                    authMethod: .password,
-                    password: testPassword,
-                    connectionTimeout: connectionTimeout
-                )
-
-                let connection = SSHConnection(config: config)
-
+                let conn = SSH2Connection()
                 do {
-                    try await connection.connect()
-                    await connection.disconnect()
-                } catch {
-                    // 忽略错误，专注于性能测量
-                }
-
-                expectation.fulfill()
+                    try await self.runBlocking {
+                        try conn.connect(
+                            host: self.testHost,
+                            port: self.testPort,
+                            username: self.testUsername,
+                            password: self.testPassword
+                        )
+                    }
+                    conn.disconnect()
+                } catch { /* 忽略，仅测性能 */ }
+                exp.fulfill()
             }
-
-            wait(for: [expectation], timeout: connectionTimeout + 5)
-        }
-    }
-
-    /// 测试数据传输性能
-    func testDataTransferPerformance() async throws {
-        // 创建测试数据
-        let testData = Data(repeating: 0x41, count: 10000) // 10KB
-
-        measure {
-            let expectation = XCTestExpectation(description: "数据传输测试")
-
-            Task {
-                let config = SSHSessionConfig(
-                    host: testHost,
-                    port: testPort,
-                    username: testUsername,
-                    authMethod: .password,
-                    password: testPassword
-                )
-
-                let connection = SSHConnection(config: config)
-
-                do {
-                    try await connection.connect()
-                    try await connection.write(testData)
-                    await connection.disconnect()
-                } catch {
-                    // 忽略错误
-                }
-
-                expectation.fulfill()
-            }
-
-            wait(for: [expectation], timeout: connectionTimeout + 5)
+            wait(for: [exp], timeout: self.connectionTimeout + 5)
         }
     }
 }

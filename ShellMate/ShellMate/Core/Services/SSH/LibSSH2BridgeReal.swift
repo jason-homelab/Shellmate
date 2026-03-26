@@ -462,6 +462,71 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
         print("[LibSSH2] 通道已关闭")
     }
 
+    /// 执行命令并返回 stdout 输出（阻塞，适合指标采集等轻量命令）
+    /// 调用方须确保在同一线程/队列中访问，不得与 shell 通道读写并发
+    func execCommand(_ command: String) throws -> String {
+        guard let session = session else {
+            throw SSHError.sessionNotInitialized
+        }
+
+        // 打开 session 通道
+        let chanType = "session"
+        var ch: OpaquePointer?
+        repeat {
+            ch = libssh2_channel_open_ex(
+                session, chanType, UInt32(chanType.count),
+                LIBSSH2_CHANNEL_WINDOW_DEFAULT, LIBSSH2_CHANNEL_PACKET_DEFAULT,
+                nil, 0
+            )
+            if ch == nil {
+                let err = libssh2_session_last_errno(session)
+                if err != LIBSSH2_ERROR_EAGAIN {
+                    throw SSHError.channelOpenFailed(reason: getLastErrorMessage())
+                }
+            }
+        } while ch == nil
+        let channel = ch!
+        defer {
+            libssh2_channel_close(channel)
+            libssh2_channel_free(channel)
+        }
+
+        // 执行命令
+        var rc: Int32
+        let execType = "exec"
+        repeat {
+            rc = libssh2_channel_process_startup(
+                channel, execType, UInt32(execType.count),
+                command, UInt32(command.utf8.count)
+            )
+        } while rc == LIBSSH2_ERROR_EAGAIN
+        guard rc == 0 else {
+            throw SSHError.channelOpenFailed(reason: "exec 失败: \(getLastErrorMessage())")
+        }
+
+        // 阻塞读取 stdout 直到 EOF
+        var output = Data()
+        var buf = [UInt8](repeating: 0, count: 65536)
+        outer: while true {
+            let n = buf.withUnsafeMutableBufferPointer { ptr -> Int in
+                libssh2_channel_read_ex(
+                    channel, 0,
+                    UnsafeMutablePointer<CChar>(OpaquePointer(ptr.baseAddress!)),
+                    ptr.count
+                )
+            }
+            if n > 0 {
+                output.append(contentsOf: buf[0..<n])
+            } else if n == LIBSSH2_ERROR_EAGAIN {
+                Thread.sleep(forTimeInterval: 0.01)
+            } else {
+                break outer
+            }
+        }
+
+        return String(data: output, encoding: .utf8) ?? ""
+    }
+
     // MARK: - 断开连接
 
     /// 断开 SSH 连接

@@ -244,13 +244,15 @@ struct ToolbarButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 13, weight: .regular))
+                .imageScale(.medium)
                 .foregroundColor(buttonColor)
-                .frame(width: 24, height: 24)
+                .frame(width: 26, height: 26, alignment: .center)
                 .background(backgroundColor)
-                .cornerRadius(4)
+                .cornerRadius(5)
         }
         .buttonStyle(.plain)
+        .contentShape(Rectangle())
         .disabled(!isEnabled)
         .help(tooltip)
         .onHover { hovering in
@@ -282,7 +284,7 @@ struct ToolbarButton: View {
             return DesignTokens.Colors.accentPrimary.opacity(0.15)
         }
         if isHovered && isEnabled {
-            return DesignTokens.Colors.surfaceCard
+            return DesignTokens.Colors.glassHoverColor
         }
         return .clear
     }

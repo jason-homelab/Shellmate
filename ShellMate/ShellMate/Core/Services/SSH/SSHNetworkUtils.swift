@@ -250,7 +250,7 @@ struct TCPConnectionOptions {
 
 /// TCP 连接器
 /// 提供增强的 TCP 连接功能
-final class TCPConnector {
+final class TCPConnector: @unchecked Sendable {
 
     // MARK: - 属性
 
@@ -313,7 +313,7 @@ final class TCPConnector {
 
         // 设置非阻塞模式（用于超时控制）
         var flags = fcntl(fd, F_GETFL, 0)
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK)
+        _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
 
         // 构建地址结构
         let connectResult: Int32
@@ -321,7 +321,7 @@ final class TCPConnector {
         if isIPv6 {
             var addr = sockaddr_in6()
             addr.sin6_family = sa_family_t(AF_INET6)
-            addr.sin6_port = port.bigEndian
+            addr.sin6_port = in_port_t(port).bigEndian
             inet_pton(AF_INET6, address, &addr.sin6_addr)
 
             connectResult = withUnsafePointer(to: &addr) { ptr in
@@ -332,7 +332,7 @@ final class TCPConnector {
         } else {
             var addr = sockaddr_in()
             addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = port.bigEndian
+            addr.sin_port = in_port_t(UInt16(port)).bigEndian
             inet_pton(AF_INET, address, &addr.sin_addr)
 
             connectResult = withUnsafePointer(to: &addr) { ptr in
@@ -353,7 +353,7 @@ final class TCPConnector {
 
         // 恢复阻塞模式
         flags = fcntl(fd, F_GETFL, 0)
-        fcntl(fd, F_SETFL, flags & ~O_NONBLOCK)
+        _ = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK)
 
         print("[TCPConnector] TCP 连接成功: \(address):\(port)")
         return fd
@@ -389,14 +389,20 @@ final class TCPConnector {
                 var writeSet = fd_set()
                 var errorSet = fd_set()
 
-                // 初始化 fd_set
-                withUnsafeMutablePointer(to: &writeSet) { ptr in
-                    __darwin_fd_zero(ptr)
-                    __darwin_fd_set(fd, ptr)
+                // 初始化 fd_set（__darwin_fd_zero/__darwin_fd_set 在 Swift 中不可用，直接赋值置零后手动设位）
+                writeSet = fd_set()
+                errorSet = fd_set()
+                let byteIndex = Int(fd) / 32
+                let bitIndex = Int(fd) % 32
+                withUnsafeMutablePointer(to: &writeSet.fds_bits) { ptr in
+                    ptr.withMemoryRebound(to: Int32.self, capacity: 32) { bits in
+                        bits[byteIndex] |= Int32(bitPattern: UInt32(1) << bitIndex)
+                    }
                 }
-                withUnsafeMutablePointer(to: &errorSet) { ptr in
-                    __darwin_fd_zero(ptr)
-                    __darwin_fd_set(fd, ptr)
+                withUnsafeMutablePointer(to: &errorSet.fds_bits) { ptr in
+                    ptr.withMemoryRebound(to: Int32.self, capacity: 32) { bits in
+                        bits[byteIndex] |= Int32(bitPattern: UInt32(1) << bitIndex)
+                    }
                 }
 
                 // 设置超时

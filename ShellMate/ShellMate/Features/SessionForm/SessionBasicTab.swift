@@ -15,7 +15,15 @@ struct SessionBasicTab: View {
     /// 可选分组列表
     var groups: [SessionGroup] = []
 
-    // MARK: - 私有状态
+    // MARK: - 私有辅助
+
+    /// 将 UUID? binding 转为 String binding，规避 macOS Picker 对 Optional tag 的已知 bug
+    private var groupPickerBinding: Binding<String> {
+        Binding(
+            get: { selectedGroupId?.uuidString ?? "" },
+            set: { selectedGroupId = $0.isEmpty ? nil : UUID(uuidString: $0) }
+        )
+    }
 
     @State private var showingGroupPicker = false
 
@@ -50,9 +58,11 @@ struct SessionBasicTab: View {
             }
 
             // 分组选择
+            // 注：macOS 上 Picker 对 UUID? (Optional) binding 存在已知问题，
+            // 改用 String binding（空字符串 = 未分组）规避 tag 匹配失效的 bug
             FormField(label: "分组") {
-                Picker("选择分组", selection: $selectedGroupId) {
-                    Text("未分组").tag(nil as UUID?)
+                Picker("选择分组", selection: groupPickerBinding) {
+                    Text("未分组").tag("")
 
                     ForEach(groups) { group in
                         HStack {
@@ -61,39 +71,13 @@ struct SessionBasicTab: View {
                                 .frame(width: 8, height: 8)
                             Text(group.name)
                         }
-                        .tag(group.id as UUID?)
+                        .tag(group.id.uuidString)
                     }
                 }
                 .pickerStyle(.menu)
             }
         }
         .padding(DesignTokens.Spacing.lg)
-    }
-}
-
-/// 表单字段包装器
-struct FormField<Content: View>: View {
-
-    let label: String
-    var isRequired: Bool = false
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            HStack(spacing: DesignTokens.Spacing.xxs) {
-                Text(label)
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-
-                if isRequired {
-                    Text("*")
-                        .font(DesignTokens.Typography.labelSmall)
-                        .foregroundColor(DesignTokens.Colors.statusError)
-                }
-            }
-
-            content()
-        }
     }
 }
 

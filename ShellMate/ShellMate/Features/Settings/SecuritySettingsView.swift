@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - SSH 密钥模型
 
-/// 存储在 Keychain/文件系统中的 SSH 私钥记录（UI 展示用）
+/// SSH 私钥记录（UI 展示用，私钥存储于文件系统或凭据金库）
 struct SSHKeyRecord: Identifiable {
     let id: UUID
     let name: String
@@ -42,7 +42,53 @@ final class SecuritySettingsStore: ObservableObject {
     /// 刷新数据
     func refresh() {
         knownHosts = KnownHostsManager.shared.getAll()
-        sshKeys = SSHKeyRecord.examples  // W14: 替换为真实文件系统扫描
+        sshKeys = Self.scanSSHKeys()
+    }
+
+    /// 扫描 ~/.ssh/ 目录，返回私钥文件列表
+    private static func scanSSHKeys() -> [SSHKeyRecord] {
+        let sshDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".ssh")
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: sshDir, includingPropertiesForKeys: nil
+        ) else { return [] }
+
+        return contents.compactMap { url -> SSHKeyRecord? in
+            let name = url.lastPathComponent
+            // 跳过公钥、known_hosts 等非私钥文件
+            guard !name.hasSuffix(".pub"),
+                  !name.hasSuffix(".old"),
+                  name != "known_hosts",
+                  name != "known_hosts.old",
+                  name != "config",
+                  name != "authorized_keys",
+                  !name.hasPrefix(".") else { return nil }
+
+            // 读文件首行判断密钥类型
+            guard let firstLine = (try? String(contentsOf: url, encoding: .utf8))?
+                    .components(separatedBy: "\n").first else { return nil }
+            guard firstLine.hasPrefix("-----BEGIN ") else { return nil }
+
+            let keyType: String
+            if firstLine.contains("ED25519")       { keyType = "Ed25519" }
+            else if firstLine.contains("ECDSA")    { keyType = "ECDSA" }
+            else if firstLine.contains("RSA")      { keyType = "RSA" }
+            else if firstLine.contains("DSA")      { keyType = "DSA" }
+            else if firstLine.contains("OPENSSH")  { keyType = "OpenSSH" }
+            else                                   { keyType = "Unknown" }
+
+            let displayPath = url.path.replacingOccurrences(
+                of: FileManager.default.homeDirectoryForCurrentUser.path,
+                with: "~"
+            )
+            return SSHKeyRecord(
+                id: UUID(),
+                name: name,
+                path: displayPath,
+                keyType: keyType,
+                linkedSessionCount: 0  // 按需对接 SessionRepository
+            )
+        }.sorted { $0.name < $1.name }
     }
 
     /// 删除 Known Host 条目
@@ -73,8 +119,13 @@ struct SecuritySettingsView: View {
     @State private var showKeyGenSheet: Bool = false
     /// 是否显示清除确认 Alert
     @State private var showClearConfirm: Bool = false
+    /// 是否显示修改主密码 Sheet
+    @State private var showMasterPasswordSheet: Bool = false
     /// Known Hosts 悬停行 ID
     @State private var hoveredKHId: UUID? = nil
+    /// 导入私钥错误提示
+    @State private var showImportError: Bool = false
+    @State private var importErrorMessage: String = ""
 
     // MARK: - 视图
 
@@ -99,6 +150,14 @@ struct SecuritySettingsView: View {
         }
         .sheet(isPresented: $showKeyGenSheet) {
             KeyGenSheet(isPresented: $showKeyGenSheet)
+        }
+        .sheet(isPresented: $showMasterPasswordSheet) {
+            MasterPasswordSheet(isPresented: $showMasterPasswordSheet)
+        }
+        .alert("导入失败", isPresented: $showImportError) {
+            Button("好") {}
+        } message: {
+            Text(importErrorMessage)
         }
         .alert("清除所有已信任指纹", isPresented: $showClearConfirm) {
             Button("取消", role: .cancel) {}
@@ -149,7 +208,7 @@ struct SecuritySettingsView: View {
 
             // 修改主密码按钮
             Button("修改主密码…") {
-                // W14: 打开修改主密码 Sheet
+                showMasterPasswordSheet = true
             }
             .buttonStyle(BorderedButtonStyle())
             .controlSize(.small)
@@ -425,10 +484,56 @@ struct SecuritySettingsView: View {
         panel.title = "选择私钥文件"
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
+        panel.showsHiddenFiles = true
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".ssh")
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            // W14: 导入私钥逻辑
-            _ = url
+            performImport(from: url)
+        }
+    }
+
+    private func performImport(from url: URL) {
+        let fm = FileManager.default
+        let sshDir = fm.homeDirectoryForCurrentUser.appendingPathComponent(".ssh")
+        let destURL = sshDir.appendingPathComponent(url.lastPathComponent)
+
+        // 沙盒安全作用域访问
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+
+        do {
+            // 校验是否为 PEM 格式私钥
+            let content = try String(contentsOf: url, encoding: .utf8)
+            guard content.contains("-----BEGIN ") else {
+                DispatchQueue.main.async {
+                    importErrorMessage = "所选文件不是有效的 PEM 格式私钥，请重新选择。"
+                    showImportError = true
+                }
+                return
+            }
+
+            // 确保 ~/.ssh 目录存在
+            if !fm.fileExists(atPath: sshDir.path) {
+                try fm.createDirectory(at: sshDir, withIntermediateDirectories: true, attributes: nil)
+            }
+
+            // 文件已在 ~/.ssh/ 目录内则无需复制，直接刷新
+            if !fm.fileExists(atPath: destURL.path) {
+                try fm.copyItem(at: url, to: destURL)
+                // 设置私钥权限为 0600（owner read/write only）
+                try fm.setAttributes([.posixPermissions: NSNumber(value: 0o600)],
+                                     ofItemAtPath: destURL.path)
+            }
+
+            DispatchQueue.main.async {
+                store.refresh()
+            }
+        } catch {
+            DispatchQueue.main.async {
+                importErrorMessage = error.localizedDescription
+                showImportError = true
+            }
         }
     }
 }
@@ -553,6 +658,194 @@ struct KeyGenSheet: View {
     }
 }
 
+// MARK: - 修改主密码 Sheet
+
+/// 修改主密码弹窗
+/// 验证旧密码后允许设置新密码，写入系统 Keychain（仅主密码本身）
+struct MasterPasswordSheet: View {
+
+    @Binding var isPresented: Bool
+
+    @State private var oldPassword: String = ""
+    @State private var newPassword: String = ""
+    @State private var confirmPassword: String = ""
+    @State private var errorMessage: String = ""
+    @State private var isFirstSetup: Bool = false
+
+    private let keychainKey = "shellmate.masterPassword"
+    private let keychainService = "com.shellmate.app"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // 标题栏
+            HStack {
+                Text(isFirstSetup ? "设置主密码" : "修改主密码")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Spacer()
+                Button(action: { isPresented = false }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .frame(width: 22, height: 22)
+                        .background(DesignTokens.Colors.surfaceCard)
+                        .cornerRadius(11)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(18)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 14) {
+                // 说明
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "lock.shield")
+                        .font(.system(size: 12))
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                    Text("主密码存储于本设备 Keychain，用于应用启动时身份验证。SSH 凭据使用 AES-256-GCM 加密存储于本地数据库，不参与 iCloud 同步。忘记主密码后需重置应用数据。")
+                        .font(.system(size: 10.5))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(10)
+                .background(DesignTokens.Colors.surfaceWindow)
+                .cornerRadius(6)
+
+                // 旧密码（首次设置时隐藏）
+                if !isFirstSetup {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("当前密码")
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                        SecureField("请输入当前主密码", text: $oldPassword)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 12))
+                    }
+                }
+
+                // 新密码
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("新密码")
+                        .font(.system(size: 11))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    SecureField("至少 8 位，建议包含字母和数字", text: $newPassword)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 12))
+                }
+
+                // 确认新密码
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("确认新密码")
+                        .font(.system(size: 11))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    SecureField("再次输入新密码", text: $confirmPassword)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 12))
+                }
+
+                // 错误信息
+                if !errorMessage.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11))
+                        Text(errorMessage)
+                            .font(.system(size: 11))
+                    }
+                    .foregroundColor(DesignTokens.Colors.statusError)
+                }
+            }
+            .padding(18)
+
+            Divider()
+
+            // 底部按钮
+            HStack {
+                Spacer()
+                Button("取消") { isPresented = false }
+                    .buttonStyle(.bordered)
+                    .keyboardShortcut(.escape, modifiers: [])
+
+                Button(isFirstSetup ? "设置" : "修改") {
+                    saveMasterPassword()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: .command)
+                .disabled(newPassword.count < 8 || confirmPassword.isEmpty)
+            }
+            .padding(18)
+        }
+        .frame(width: 400)
+        .background(DesignTokens.Colors.surfacePanel)
+        .onAppear { checkFirstSetup() }
+    }
+
+    private func checkFirstSetup() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainKey,
+            kSecReturnData as String: false
+        ]
+        let status = SecItemCopyMatching(query as CFDictionary, nil)
+        isFirstSetup = (status == errSecItemNotFound)
+    }
+
+    private func saveMasterPassword() {
+        errorMessage = ""
+
+        // 验证新密码
+        guard newPassword.count >= 8 else {
+            errorMessage = "新密码至少需要 8 位"; return
+        }
+        guard newPassword == confirmPassword else {
+            errorMessage = "两次输入的新密码不一致"; return
+        }
+
+        // 验证旧密码（非首次设置）
+        if !isFirstSetup {
+            let query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: keychainService,
+                kSecAttrAccount as String: keychainKey,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ]
+            var result: AnyObject?
+            let status = SecItemCopyMatching(query as CFDictionary, &result)
+            guard status == errSecSuccess,
+                  let data = result as? Data,
+                  let stored = String(data: data, encoding: .utf8),
+                  stored == oldPassword else {
+                errorMessage = "当前密码错误"; return
+            }
+            // 删除旧条目
+            let deleteQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: keychainService,
+                kSecAttrAccount as String: keychainKey
+            ]
+            SecItemDelete(deleteQuery as CFDictionary)
+        }
+
+        // 写入新密码
+        let newData = Data(newPassword.utf8)
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainKey,
+            kSecValueData as String: newData,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        if addStatus == errSecSuccess {
+            isPresented = false
+        } else {
+            errorMessage = "主密码写入失败（错误码：\(addStatus)）"
+        }
+    }
+}
+
 // MARK: - 预览
 
 #Preview("安全设置") {
@@ -564,4 +857,8 @@ struct KeyGenSheet: View {
 #Preview("生成密钥对") {
     KeyGenSheet(isPresented: .constant(true))
         .background(DesignTokens.Colors.surfaceWindow)
+}
+
+#Preview("修改主密码") {
+    MasterPasswordSheet(isPresented: .constant(true))
 }

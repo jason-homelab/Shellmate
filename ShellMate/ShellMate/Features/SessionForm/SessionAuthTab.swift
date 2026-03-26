@@ -1,175 +1,230 @@
 import SwiftUI
+import AppKit
 
-/// 会话认证 Tab
-/// 选择认证方式并配置相关参数
+/// 会话认证 Tab（D01 Tab 2）
+/// 选择认证方式并配置相关参数；含凭据保存开关和 SSH Agent 状态检测
 struct SessionAuthTab: View {
 
     // MARK: - 属性
 
     @Binding var authMethod: AuthMethod
     @Binding var privateKeyPath: String
+    @Binding var password: String
+    @Binding var passphrase: String
+    @Binding var saveCredential: Bool
 
     // MARK: - 私有状态
 
-    @State private var showingKeyFilePicker = false
+    @State private var showingKeyFilePicker = false  // 保留以兼容旧调用
+    @State private var agentAvailable: Bool = false
+    @State private var agentChecked: Bool = false
 
     // MARK: - 视图
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-            // 认证方式选择
-            Text("认证方式")
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                // 认证方式卡片（3 选一）
+                authMethodCards
 
-            // 认证方式卡片
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: DesignTokens.Spacing.md) {
-                ForEach(AuthMethod.allCases) { method in
-                    AuthMethodCard(
-                        method: method,
-                        isSelected: authMethod == method,
-                        onSelect: {
-                            withAnimation(DesignTokens.Animation.fast) {
-                                authMethod = method
-                            }
-                        }
-                    )
+                Divider()
+
+                // 认证详情区（根据选中方式动态切换）
+                Group {
+                    switch authMethod {
+                    case .password:
+                        passwordAuthSection
+                    case .privateKey:
+                        privateKeyAuthSection
+                    case .sshAgent:
+                        sshAgentAuthSection
+                    case .keyboardInteractive:
+                        keyboardInteractiveSection
+                    }
                 }
+                .transition(.opacity)
+                .animation(DesignTokens.Animation.fast, value: authMethod)
+
+                Spacer()
             }
-
-            // 根据认证方式显示额外配置
-            switch authMethod {
-            case .password:
-                passwordAuthSection
-
-            case .privateKey:
-                privateKeyAuthSection
-
-            case .sshAgent:
-                sshAgentAuthSection
-
-            case .keyboardInteractive:
-                keyboardInteractiveSection
-            }
-
-            Spacer()
+            .padding(DesignTokens.Spacing.lg)
         }
-        .padding(DesignTokens.Spacing.lg)
+        .onAppear {
+            checkSSHAgent()
+        }
     }
 
-    // MARK: - 密码认证配置
+    // MARK: - 认证方式卡片
+
+    private var authMethodCards: some View {
+        HStack(spacing: 10) {
+            ForEach(AuthMethod.allCases.filter { $0 != .sshAgent || AppVariant.supportsSSHAgent }) { method in
+                AuthMethodCard(
+                    method: method,
+                    isSelected: authMethod == method,
+                    onSelect: {
+                        withAnimation(DesignTokens.Animation.fast) {
+                            authMethod = method
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    // MARK: - 密码认证
 
     private var passwordAuthSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Divider()
-                .padding(.vertical, DesignTokens.Spacing.sm)
-
-            Text("密码将安全存储在系统钥匙串中")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-
-            FormField(label: "密码") {
-                SecureField("输入密码（可选，连接时输入）", text: .constant(""))
+            FormField(label: "SSH 密码") {
+                SecureField("输入密码（可选，连接时输入）", text: $password)
                     .textFieldStyle(.roundedBorder)
             }
+
+            Toggle(isOn: $saveCredential) {
+                Text("记住密码（加密存储到本地）")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            .toggleStyle(.checkbox)
         }
     }
 
-    // MARK: - 私钥认证配置
+    // MARK: - 私钥认证
 
     private var privateKeyAuthSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Divider()
-                .padding(.vertical, DesignTokens.Spacing.sm)
-
-            FormField(label: "私钥文件") {
-                HStack {
-                    TextField("选择私钥文件", text: $privateKeyPath)
+            FormField(label: "私钥文件路径") {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    TextField("~/.ssh/id_ed25519", text: $privateKeyPath)
                         .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, design: .monospaced))
 
-                    Button("浏览...") {
-                        showingKeyFilePicker = true
+                    Button("浏览…") {
+                        browsePrivateKey()
                     }
                     .buttonStyle(.bordered)
                 }
             }
 
-            FormField(label: "私钥密码") {
-                SecureField("如果私钥有密码保护", text: .constant(""))
+            Text("支持 Ed25519、RSA、ECDSA 格式")
+                .font(.system(size: 9.5))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+
+            FormField(label: "私钥密码（Passphrase）") {
+                SecureField("留空表示无 Passphrase", text: $passphrase)
                     .textFieldStyle(.roundedBorder)
             }
 
-            // 常用私钥路径提示
-            HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "lightbulb")
-                    .font(.system(size: 12))
-                Text("常用路径: ~/.ssh/id_rsa, ~/.ssh/id_ed25519")
-                    .font(DesignTokens.Typography.bodySmall)
+            Toggle(isOn: $saveCredential) {
+                Text("记住密码（加密存储到本地）")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
-            .foregroundColor(DesignTokens.Colors.textTertiary)
+            .toggleStyle(.checkbox)
         }
-        .fileImporter(
-            isPresented: $showingKeyFilePicker,
-            allowedContentTypes: [.data],
-            allowsMultipleSelection: false
-        ) { result in
-            if case .success(let urls) = result, let url = urls.first {
-                privateKeyPath = url.path
-            }
-        }
+        // fileImporter 不支持显示隐藏文件夹，已改用 browsePrivateKey() 调用 NSOpenPanel
     }
 
-    // MARK: - SSH Agent 认证配置
+    // MARK: - SSH Agent 认证
 
     private var sshAgentAuthSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Divider()
-                .padding(.vertical, DesignTokens.Spacing.sm)
-
+            // 状态行
             HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "info.circle")
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+                if !agentChecked {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: agentAvailable
+                          ? "checkmark.circle.fill"
+                          : "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(agentAvailable
+                            ? DesignTokens.Colors.statusConnected
+                            : DesignTokens.Colors.statusError)
+                }
 
-                Text("将使用系统 SSH Agent 进行认证。请确保已将密钥添加到 Agent。")
-                    .font(DesignTokens.Typography.bodySmall)
+                Text(agentAvailable
+                     ? "SSH Agent 已连接（SSH_AUTH_SOCK）"
+                     : "未检测到 SSH Agent，请确认 ssh-agent 正在运行")
+                    .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
-            .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.accentPrimary.opacity(0.1))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
 
-            Text("注意：此功能在 App Store 版本中不可用")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.statusConnecting)
+            // App Store 沙盒限制提示
+            if !agentAvailable || AppVariant.isAppStoreBuild {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(hex: "#F5A623"))
+
+                    Text(AppVariant.isAppStoreBuild
+                         ? "Direct 版支持 SSH Agent，App Store 版受沙盒限制"
+                         : "请先在终端运行 eval \"$(ssh-agent -s)\" 并用 ssh-add 添加密钥")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(hex: "#F5A623"))
+                }
+                .padding(DesignTokens.Spacing.md)
+                .background(Color(hex: "#F5A623").opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
+                        .stroke(Color(hex: "#F5A623").opacity(0.2), lineWidth: 1)
+                )
+                .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            }
         }
     }
 
-    // MARK: - 键盘交互认证配置
+    // MARK: - 键盘交互认证
 
     private var keyboardInteractiveSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Divider()
-                .padding(.vertical, DesignTokens.Spacing.sm)
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(DesignTokens.Colors.accentPrimary)
 
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "info.circle")
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+            Text("服务器会在连接时逐步提示输入认证信息（如一次性密码、验证码等）。")
+                .font(.system(size: 11))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+        }
+        .padding(DesignTokens.Spacing.md)
+        .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
+        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+    }
 
-                Text("服务器会在连接时提示输入认证信息（如一次性密码、验证码等）。")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+    // MARK: - 私钥文件选择（NSOpenPanel，支持显示隐藏文件夹）
+
+    private func browsePrivateKey() {
+        let panel = NSOpenPanel()
+        panel.title = "选择私钥文件"
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.showsHiddenFiles = true
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".ssh")
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            privateKeyPath = url.path
+        }
+    }
+
+    // MARK: - SSH Agent 检测
+
+    private func checkSSHAgent() {
+        Task.detached(priority: .background) {
+            let socketPath = ProcessInfo.processInfo.environment["SSH_AUTH_SOCK"] ?? ""
+            let available = !socketPath.isEmpty && FileManager.default.fileExists(atPath: socketPath)
+            await MainActor.run {
+                agentAvailable = available
+                agentChecked = true
             }
-            .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.accentPrimary.opacity(0.1))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
         }
     }
 }
 
-/// 认证方式卡片
+// MARK: - 认证方式卡片（Figma 08-缺失组件补充 §三）
+
 struct AuthMethodCard: View {
 
     let method: AuthMethod
@@ -179,21 +234,40 @@ struct AuthMethodCard: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: method.iconName)
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textSecondary)
+                // 图标圆形背景
+                ZStack {
+                    Circle()
+                        .fill(isSelected
+                              ? DesignTokens.Colors.accentPrimary.opacity(0.2)
+                              : DesignTokens.Colors.surfaceOverlay)
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: method.iconName)
+                        .font(.system(size: 16))
+                        .foregroundColor(isSelected
+                            ? DesignTokens.Colors.accentPrimary
+                            : DesignTokens.Colors.textSecondary)
+                }
 
                 Text(method.displayName)
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(isSelected ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(isSelected
+                        ? DesignTokens.Colors.accentPrimary
+                        : DesignTokens.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 80)
-            .background(isSelected ? DesignTokens.Colors.backgroundSelected : DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .frame(height: 70)
+            .padding(.horizontal, 12)
+            .background(isSelected
+                ? DesignTokens.Colors.accentPrimary.opacity(0.08)
+                : DesignTokens.Colors.surfacePanel)
+            .cornerRadius(8)
             .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                    .stroke(isSelected ? DesignTokens.Colors.accentPrimary : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(
+                        isSelected ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.borderSubtle,
+                        lineWidth: isSelected ? 2 : 1
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -202,20 +276,26 @@ struct AuthMethodCard: View {
 
 // MARK: - 预览
 
-#Preview("认证 Tab") {
+#Preview("认证 Tab - 密码") {
     SessionAuthTab(
         authMethod: .constant(.password),
-        privateKeyPath: .constant("")
+        privateKeyPath: .constant(""),
+        password: .constant(""),
+        passphrase: .constant(""),
+        saveCredential: .constant(true)
     )
-    .frame(width: 480, height: 400)
+    .frame(width: 504, height: 400)
     .background(DesignTokens.Colors.surfacePanel)
 }
 
 #Preview("认证 Tab - 私钥") {
     SessionAuthTab(
         authMethod: .constant(.privateKey),
-        privateKeyPath: .constant("~/.ssh/id_rsa")
+        privateKeyPath: .constant("~/.ssh/id_ed25519"),
+        password: .constant(""),
+        passphrase: .constant(""),
+        saveCredential: .constant(true)
     )
-    .frame(width: 480, height: 400)
+    .frame(width: 504, height: 400)
     .background(DesignTokens.Colors.surfacePanel)
 }

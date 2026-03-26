@@ -37,7 +37,12 @@ enum CredentialType: String {
 
 /// Keychain 服务
 /// 负责安全地存储和检索 SSH 凭证
-/// 使用 kSecAttrAccessibleWhenUnlockedThisDeviceOnly 确保凭证仅在设备解锁时可访问
+///
+/// 凭证分级存储策略：
+/// - 密码 / Passphrase：kSecAttrSynchronizable = true，写入 iCloud Keychain
+///   → 可在 Apple Passwords App 的"App"分区查看，跨设备同步，无 ACL 弹窗
+/// - 私钥：kSecAttrAccessibleWhenUnlockedThisDeviceOnly，仅本地存储
+///   → 私钥不上传云端，遵循最小暴露原则
 final class KeychainService {
 
     // MARK: - 单例
@@ -75,12 +80,21 @@ final class KeychainService {
         // 先尝试删除已存在的项
         try? deletePassword(for: sessionId, type: type)
 
+        // 私钥仅本地存储；密码和 Passphrase 启用 iCloud 同步（Apple Passwords 可见）
+        let accessible: CFString = (type == .privateKey)
+            ? kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            : kSecAttrAccessibleWhenUnlocked
+        let synchronizable: CFBoolean = (type == .privateKey)
+            ? kCFBooleanFalse
+            : kCFBooleanTrue
+
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecAttrAccessible as String: accessible,
+            kSecAttrSynchronizable as String: synchronizable,
             kSecAttrLabel as String: "ShellMate SSH Credential"
         ]
 
@@ -88,7 +102,16 @@ final class KeychainService {
             query[kSecAttrAccessGroup as String] = accessGroup
         }
 
-        let status = SecItemAdd(query as CFDictionary, nil)
+        var status = SecItemAdd(query as CFDictionary, nil)
+
+        // errSecMissingEntitlement(-34018): iCloud Keychain 权限不足（测试环境或无 iCloud 账户）
+        // 自动降级为本地存储，确保功能正常运行
+        if status == errSecMissingEntitlement, synchronizable == kCFBooleanTrue {
+            var localQuery = query
+            localQuery[kSecAttrSynchronizable as String] = kCFBooleanFalse
+            localQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            status = SecItemAdd(localQuery as CFDictionary, nil)
+        }
 
         guard status == errSecSuccess else {
             if status == errSecDuplicateItem {
@@ -113,7 +136,9 @@ final class KeychainService {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            // 同时匹配本地项（旧数据）和 iCloud 同步项（新数据），确保迁移过渡期兼容
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
         ]
 
         if let accessGroup = accessGroup {
@@ -155,7 +180,8 @@ final class KeychainService {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
         ]
 
         if let accessGroup = accessGroup {
@@ -188,7 +214,8 @@ final class KeychainService {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
         ]
 
         if let accessGroup = accessGroup {

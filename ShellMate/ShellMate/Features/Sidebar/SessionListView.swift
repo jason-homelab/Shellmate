@@ -35,8 +35,8 @@ struct SessionListView: View {
     private var ungroupedSessionsSection: some View {
         let ungroupedSessions = sessionStore.filteredSessions.filter { $0.groupId == nil }
 
-        // 未分组区域头部（作为拖拽目标）
-        if !ungroupedSessions.isEmpty || draggedSessionId != nil {
+        // 未分组区域头部（有未分组会话或有分组时始终显示，作为拖拽目标）
+        if !ungroupedSessions.isEmpty || !groupStore.topLevelGroups.isEmpty {
             HStack {
                 Text("未分组")
                     .font(DesignTokens.Typography.labelSmall)
@@ -46,10 +46,15 @@ struct SessionListView: View {
             .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, DesignTokens.Spacing.xs)
             .background(Color.clear)
-            .onDrop(of: [.text], delegate: UngroupedDropDelegate(
-                sessionStore: sessionStore,
-                draggedSessionId: $draggedSessionId
-            ))
+            .dropDestination(for: String.self) { items, _ in
+                guard let idString = items.first,
+                      let sessionId = UUID(uuidString: idString),
+                      let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
+                      session.groupId != nil else { return false }
+                draggedSessionId = nil
+                Task { await sessionStore.moveSession(session, to: nil) }
+                return true
+            }
         }
 
         ForEach(ungroupedSessions) { session in
@@ -63,27 +68,42 @@ struct SessionListView: View {
     private func groupSection(_ group: SessionGroup) -> some View {
         let sessionsInGroup = sessionStore.filteredSessions.filter { $0.groupId == group.id }
 
-        // 分组头部
-        GroupHeaderView(
-            group: group,
-            sessionCount: sessionsInGroup.count,
-            onToggle: {
-                Task {
-                    await groupStore.toggleExpanded(group)
+        // 分组头部（用 VStack 包裹透明缓冲区以扩大拖拽命中区域）
+        VStack(spacing: 0) {
+            GroupHeaderView(
+                group: group,
+                sessionCount: sessionsInGroup.count,
+                onToggle: {
+                    Task {
+                        await groupStore.toggleExpanded(group)
+                    }
+                },
+                onDoubleClick: {
+                    groupStore.showEditGroupForm(for: group)
                 }
-            },
-            onDoubleClick: {
-                groupStore.showEditGroupForm(for: group)
+            )
+            .contextMenu {
+                groupContextMenu(group)
             }
-        )
-        .contextMenu {
-            groupContextMenu(group)
+
+            // 透明缓冲区：将拖拽命中高度从 30pt 扩大至 44pt
+            Color.clear.frame(height: 14)
         }
-        .onDrop(of: [.text], delegate: GroupDropDelegate(
-            targetGroup: group,
-            sessionStore: sessionStore,
-            draggedSessionId: $draggedSessionId
-        ))
+        .dropDestination(for: String.self) { items, _ in
+            guard let idString = items.first,
+                  let sessionId = UUID(uuidString: idString),
+                  let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
+                  session.groupId != group.id else { return false }
+            draggedSessionId = nil
+            Task {
+                await sessionStore.moveSession(session, to: group.id)
+                // 自动展开目标分组，让用户看到移入的会话
+                if !group.isExpanded {
+                    await groupStore.setExpanded(group, isExpanded: true)
+                }
+            }
+            return true
+        }
 
         // 分组下的会话（展开时显示）
         if group.isExpanded {
@@ -160,6 +180,11 @@ struct SessionListView: View {
                 Button(group.name) {
                     Task {
                         await sessionStore.moveSession(session, to: group.id)
+                        // 自动展开目标分组，让用户看到移入的会话
+                        if let current = groupStore.groups.first(where: { $0.id == group.id }),
+                           !current.isExpanded {
+                            await groupStore.setExpanded(current, isExpanded: true)
+                        }
                     }
                 }
             }
@@ -272,102 +297,6 @@ struct SessionListView: View {
     }
 }
 
-// MARK: - 未分组拖拽代理
-
-/// 未分组拖拽代理
-/// 处理将会话拖拽到未分组区域的操作
-struct UngroupedDropDelegate: DropDelegate {
-    let sessionStore: SessionStore
-    @Binding var draggedSessionId: UUID?
-
-    func performDrop(info: DropInfo) -> Bool {
-        guard let draggedId = draggedSessionId else {
-            return false
-        }
-
-        // 查找被拖拽的会话
-        guard let session = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
-            return false
-        }
-
-        // 移动会话到未分组
-        Task {
-            await sessionStore.moveSession(session, to: nil)
-        }
-
-        draggedSessionId = nil
-        return true
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .move)
-    }
-
-    func validateDrop(info: DropInfo) -> Bool {
-        guard let draggedId = draggedSessionId else {
-            return false
-        }
-
-        // 检查会话是否已经是未分组的
-        guard let session = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
-            return false
-        }
-
-        return session.groupId != nil
-    }
-}
-
-// MARK: - 分组拖拽代理
-
-/// 分组拖拽代理
-/// 处理将会话拖拽到分组上的操作
-struct GroupDropDelegate: DropDelegate {
-    let targetGroup: SessionGroup
-    let sessionStore: SessionStore
-    @Binding var draggedSessionId: UUID?
-
-    func performDrop(info: DropInfo) -> Bool {
-        guard let draggedId = draggedSessionId else {
-            return false
-        }
-
-        // 查找被拖拽的会话
-        guard let session = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
-            return false
-        }
-
-        // 移动会话到目标分组
-        Task {
-            await sessionStore.moveSession(session, to: targetGroup.id)
-        }
-
-        draggedSessionId = nil
-        return true
-    }
-
-    func dropEntered(info: DropInfo) {
-        // 可以添加视觉反馈，如高亮分组
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .move)
-    }
-
-    func validateDrop(info: DropInfo) -> Bool {
-        // 验证是否可以放置
-        guard let draggedId = draggedSessionId else {
-            return false
-        }
-
-        // 检查会话是否已经在目标分组中
-        guard let session = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
-            return false
-        }
-
-        return session.groupId != targetGroup.id
-    }
-}
-
 // MARK: - 会话拖拽代理
 
 /// 会话拖拽代理
@@ -378,7 +307,45 @@ struct SessionDropDelegate: DropDelegate {
     @Binding var draggedSessionId: UUID?
 
     func performDrop(info: DropInfo) -> Bool {
-        draggedSessionId = nil
+        defer { draggedSessionId = nil }
+
+        // 优先从 NSItemProvider 读取，避免 @Binding 时序问题
+        let providers = info.itemProviders(for: [.text])
+        if let provider = providers.first {
+            provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { item, _ in
+                let idString: String?
+                if let data = item as? Data {
+                    idString = String(data: data, encoding: .utf8)
+                } else if let str = item as? String {
+                    idString = str
+                } else {
+                    idString = nil
+                }
+                guard let str = idString,
+                      let draggedId = UUID(uuidString: str),
+                      draggedId != targetSession.id,
+                      let draggedSession = sessionStore.filteredSessions.first(where: { $0.id == draggedId }),
+                      draggedSession.groupId != targetSession.groupId else { return }
+                Task { @MainActor in
+                    await sessionStore.moveSession(draggedSession, to: targetSession.groupId)
+                }
+            }
+            return true
+        }
+
+        // 兜底：使用 @Binding（同组内重排时走此路径，跨组则依赖上方）
+        guard let draggedId = draggedSessionId,
+              draggedId != targetSession.id,
+              let draggedSession = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
+            return false
+        }
+
+        if draggedSession.groupId != targetSession.groupId {
+            Task {
+                await sessionStore.moveSession(draggedSession, to: targetSession.groupId)
+            }
+        }
+
         return true
     }
 
@@ -388,13 +355,12 @@ struct SessionDropDelegate: DropDelegate {
             return
         }
 
-        // 只能在同一分组内排序
+        // 仅在同一分组内处理排序
         let draggedSession = sessionStore.filteredSessions.first { $0.id == draggedId }
         guard draggedSession?.groupId == targetSession.groupId else {
             return
         }
 
-        // 获取同一分组内的会话列表
         let groupSessions = sessionStore.filteredSessions.filter { $0.groupId == targetSession.groupId }
 
         guard let sourceIndex = groupSessions.firstIndex(where: { $0.id == draggedId }),
@@ -402,7 +368,6 @@ struct SessionDropDelegate: DropDelegate {
             return
         }
 
-        // 更新排序
         Task {
             await sessionStore.updateSortOrder(
                 from: IndexSet(integer: sourceIndex),
