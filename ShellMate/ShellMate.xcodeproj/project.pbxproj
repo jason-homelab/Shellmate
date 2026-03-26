@@ -477,7 +477,7 @@
 				A2010007 /* CredentialVault.swift */,
 				72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */,
 				SM020002 /* ServerMetricsMonitor.swift */,
-				AI020001 /* AIService.swift */,
+				AI030003 /* AI */,
 				0004000400040017 /* SSH */,
 				DD030001 /* SFTP */,
 				EE030001 /* PortForwarding */,
@@ -559,6 +559,14 @@
 			children = (
 				AI020002 /* AIAssistantPanelView.swift */,
 				AI020003 /* AIErrorDetectiveView.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		AI030003 /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				AI020001 /* AIService.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
