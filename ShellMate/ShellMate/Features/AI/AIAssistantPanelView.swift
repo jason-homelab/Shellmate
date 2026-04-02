@@ -127,21 +127,17 @@ struct AIAssistantPanelView: View {
     }
 
     var body: some View {
+        // 对齐规范：h-full flex flex-col bg-white/90 backdrop-blur-xl
         VStack(spacing: 0) {
             headerView
-
-            Divider().opacity(0.5)
-
             messageListView
-
-            Divider().opacity(0.5)
-
             inputView
         }
+        .background(Color.white.opacity(0.90))
         .background(.ultraThinMaterial)
         .overlay(alignment: .leading) {
             Rectangle()
-                .fill(DesignTokens.Colors.glassBorderSide)
+                .fill(Color(hex: "#d2d2d7").opacity(0.5))
                 .frame(width: 0.5)
         }
         .onAppear {
@@ -150,52 +146,74 @@ struct AIAssistantPanelView: View {
     }
 
     // MARK: - 头部
+    // 对齐规范：p-4 border-b border-[#d2d2d7]/50 bg-white/60 backdrop-blur-xl
 
     private var headerView: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color(hex: "#60A5FA"), Color(hex: "#A78BFA")],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
+        HStack(spacing: 10) {
+            // AI 品牌图标（渐变圆角方块：from-[#007aff] to-[#5856d6]）
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-            Text("AI 助手")
-                .font(DesignTokens.Typography.labelLarge)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+                    .frame(width: 32, height: 32)
+                    .shadow(color: Color(hex: "#007aff").opacity(0.35), radius: 6, x: 0, y: 2)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+            }
+
+            // 标题文字组
+            VStack(alignment: .leading, spacing: 1) {
+                Text("AI 助手")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
+                Text("Helping with \(vm.session.name)")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(hex: "#86868b"))
+                    .lineLimit(1)
+            }
 
             Spacer()
 
             // 模型选择器
             modelPickerView
 
-            // 清空
-            Button { withAnimation { vm.clear() } } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            // 清空按钮
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) { vm.clear() }
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 12))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
-            .help("清空对话")
+            .help("新对话")
 
-            // 关闭
+            // 关闭按钮
             Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
             .help("关闭 AI 助手")
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .frame(height: 40)
-        .background(
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.6))
+        .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay(Rectangle().fill(DesignTokens.Colors.glassUltraLight))
-        )
+                .fill(Color(hex: "#d2d2d7").opacity(0.5))
+                .frame(height: 0.5)
+        }
     }
+
+    // MARK: - 模型选择器
 
     private var modelPickerView: some View {
         Menu {
@@ -216,32 +234,38 @@ struct AIAssistantPanelView: View {
                 }
             }
         } label: {
-            HStack(spacing: 3) {
+            HStack(spacing: 4) {
                 Text(aiSettings.currentModel.name)
-                    .font(DesignTokens.Typography.labelSmall)
+                    .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 8, weight: .medium))
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(DesignTokens.Colors.glassMedium)
-            .cornerRadius(5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(DesignTokens.Colors.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
+            )
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
     }
 
     // MARK: - 消息列表
+    // 对齐规范：flex-1 p-4，space-y-4
 
     private var messageListView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: DesignTokens.Spacing.md) {
+                LazyVStack(spacing: 12) {
                     if vm.messages.isEmpty && !vm.isStreaming {
                         emptyStateView
+                            .padding(.top, DesignTokens.Spacing.xxl)
                     } else {
                         ForEach(vm.messages) { msg in
                             AIMessageBubbleView(message: msg)
@@ -257,9 +281,13 @@ struct AIAssistantPanelView: View {
                     }
                     if let err = vm.errorMessage {
                         errorBanner(err)
+                            .padding(.horizontal, 14)
+                            .padding(.top, 6)
                     }
+                    // 底部留白，避免最后一条消息贴着输入框
+                    Color.clear.frame(height: 8)
                 }
-                .padding(DesignTokens.Spacing.md)
+                .padding(14)
             }
             .onChange(of: vm.streamingContent) { _ in
                 withAnimation(.easeOut(duration: 0.1)) {
@@ -272,151 +300,189 @@ struct AIAssistantPanelView: View {
                 }
             }
         }
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     // MARK: - 空状态
 
     private var emptyStateView: some View {
-        VStack(spacing: DesignTokens.Spacing.xl) {
-            Spacer().frame(height: 8)
-
-            VStack(spacing: DesignTokens.Spacing.md) {
+        VStack(spacing: 20) {
+            // 图标
+            ZStack {
+                Circle()
+                    .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                    .frame(width: 52, height: 52)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 28))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color(hex: "#60A5FA").opacity(0.8), Color(hex: "#A78BFA").opacity(0.8)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
-                VStack(spacing: 4) {
-                    Text("AI 助手")
-                        .font(DesignTokens.Typography.titleSmall)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
-                    Text("\(vm.session.username)@\(vm.session.host)")
-                        .font(DesignTokens.Typography.codeSmall)
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                }
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
-            // 快速建议
-            VStack(spacing: DesignTokens.Spacing.xs) {
-                suggestionChip(icon: "magnifyingglass",   text: "查找大于 100MB 的文件")
-                suggestionChip(icon: "gauge.with.dots.needle.33percent", text: "分析 CPU 与内存占用")
-                suggestionChip(icon: "doc.text",          text: "生成日志自动归档脚本")
-                suggestionChip(icon: "network",           text: "检查端口占用情况")
-                suggestionChip(icon: "lock.open",         text: "修复常见 Permission denied 错误")
+            VStack(spacing: 4) {
+                Text("有什么可以帮助你？")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("\(vm.session.username)@\(vm.session.host)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
             }
+
+            // 快速建议列表
+            VStack(spacing: 1) {
+                suggestionRow(icon: "magnifyingglass",   text: "查找大于 100MB 的文件")
+                suggestionRow(icon: "cpu",               text: "分析 CPU 与内存占用")
+                suggestionRow(icon: "doc.text",          text: "生成日志自动归档脚本")
+                suggestionRow(icon: "network",           text: "检查端口占用情况")
+                suggestionRow(icon: "lock.open",         text: "修复 Permission denied 错误")
+            }
+            .background(DesignTokens.Colors.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
+            )
         }
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity)
     }
 
-    private func suggestionChip(icon: String, text: String) -> some View {
+    private func suggestionRow(icon: String, text: String) -> some View {
         Button { vm.send(text: text) } label: {
-            HStack(spacing: DesignTokens.Spacing.xs) {
+            HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
-                    .frame(width: 16)
+                    .frame(width: 18)
                 Text(text)
-                    .font(DesignTokens.Typography.bodySmall)
+                    .font(.system(size: 12))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 9))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(DesignTokens.Colors.glassMedium)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
-                    .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 0.5)
-            )
+            .padding(.vertical, DesignTokens.Spacing.sm + 1)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
+        .background(
+            Color(nsColor: NSColor.controlHighlightColor).opacity(0)
+        )
     }
 
     private func errorBanner(_ msg: String) -> some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
+        HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 11))
                 .foregroundColor(DesignTokens.Colors.statusError)
             Text(msg)
-                .font(DesignTokens.Typography.bodySmall)
+                .font(.system(size: 11))
                 .foregroundColor(DesignTokens.Colors.statusError)
                 .lineLimit(3)
             Spacer()
             Button { vm.errorMessage = nil } label: {
-                Image(systemName: "xmark").font(.system(size: 10))
+                Image(systemName: "xmark")
+                    .font(.system(size: 10))
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)
         }
-        .padding(DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.statusError.opacity(0.10))
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(DesignTokens.Colors.statusError.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
-                .strokeBorder(DesignTokens.Colors.statusError.opacity(0.30), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.statusError.opacity(0.25), lineWidth: 0.5)
         )
     }
 
     // MARK: - 输入区
+    // 对齐规范：p-4 border-t border-[#d2d2d7]/50 bg-white/60 backdrop-blur-xl
 
     private var inputView: some View {
-        HStack(alignment: .bottom, spacing: DesignTokens.Spacing.sm) {
-            TextField("问我任何问题…", text: $vm.inputText, axis: .vertical)
-                .textFieldStyle(.plain)
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
-                .lineLimit(1...5)
-                .onSubmit {
-                    guard !vm.isStreaming else { return }
-                    vm.send(text: vm.inputText)
-                }
-                .submitLabel(.send)
-
-            if vm.isStreaming {
-                Button { vm.cancel() } label: {
-                    Image(systemName: "stop.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(DesignTokens.Colors.statusError)
-                }
-                .buttonStyle(.plain)
-                .help("停止生成")
-            } else {
-                let canSend = !vm.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                Button { vm.send(text: vm.inputText) } label: {
-                    if canSend {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(hex: "#60A5FA"), Color(hex: "#A78BFA")],
-                                    startPoint: .topLeading, endPoint: .bottomTrailing
-                                )
-                            )
-                    } else {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(DesignTokens.Colors.textTertiary.opacity(0.5))
+        VStack(spacing: 6) {
+            // 输入框行（flex gap-2）
+            HStack(alignment: .center, spacing: 8) {
+                // 输入框（bg-white/80 border-[#d2d2d7]/50 rounded-xl shadow-sm）
+                ZStack(alignment: .leading) {
+                    if vm.inputText.isEmpty {
+                        Text("Ask me anything about terminal commands...")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(hex: "#86868b"))
+                            .padding(.horizontal, 12)
+                            .allowsHitTesting(false)
                     }
+                    TextField("", text: $vm.inputText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "#1d1d1f"))
+                        .padding(.horizontal, 12)
+                        .onSubmit {
+                            guard !vm.isStreaming else { return }
+                            vm.send(text: vm.inputText)
+                        }
                 }
-                .buttonStyle(.plain)
-                .disabled(!canSend)
-                .help("发送（Return）")
+                .frame(minHeight: 38)
+                .background(Color.white.opacity(0.80))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 0.75)
+                )
+                .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
+
+                // 发送/停止按钮
+                if vm.isStreaming {
+                    // 停止按钮
+                    Button { vm.cancel() } label: {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(DesignTokens.Colors.statusError)
+                            .frame(width: 38, height: 38)
+                            .background(DesignTokens.Colors.statusError.opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .help("停止生成")
+                } else {
+                    // 发送按钮（h-11 px-4 rounded-xl bg-[#007aff] hover:bg-[#0051d5] shadow-lg disabled:opacity-40）
+                    let canSend = !vm.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    Button { vm.send(text: vm.inputText) } label: {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white)
+                            .frame(width: 38, height: 38)
+                            .background(Color(hex: "#007aff"))
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 6, x: 0, y: 2)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSend)
+                    .opacity(canSend ? 1.0 : 0.4)
+                    .help("发送（Return）")
+                }
             }
+
+            // 提示文字（text-xs text-[#86868b]）
+            Text("Press Enter to send, Shift+Enter for new line")
+                .font(.system(size: 10))
+                .foregroundColor(Color(hex: "#86868b"))
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.glassLight)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color.white.opacity(0.60))
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color(hex: "#d2d2d7").opacity(0.5))
+                .frame(height: 0.5)
+        }
     }
 }
 
 // MARK: - 消息气泡
+// 对齐 Figma-Spec-v2 §09：AI左/用户右，圆角气泡，头像
 
 struct AIMessageBubbleView: View {
     let message: AIMessage
@@ -425,35 +491,89 @@ struct AIMessageBubbleView: View {
     private var isUser: Bool { message.role == .user }
 
     var body: some View {
-        HStack(alignment: .top, spacing: DesignTokens.Spacing.xs) {
-            if isUser { Spacer(minLength: 32) }
-
-            if !isUser { avatarView(isUser: false) }
-
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
-                bubbleBody
-                if isStreaming && message.content.isEmpty {
-                    typingIndicator
+        Group {
+            if isUser {
+                // 用户消息：右对齐（flex gap-3 justify-end）
+                HStack(alignment: .bottom, spacing: 8) {
+                    Spacer(minLength: 32)
+                    // 气泡（bg-[#007aff] text-white shadow-lg shadow-[#007aff]/30）
+                    Text(message.content)
+                        .font(.system(size: 12))
+                        .foregroundColor(.white)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Color(hex: "#007aff"))
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 8, x: 0, y: 3)
+                    // 头像（bg-[#86868b] text-white "U"）
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: "#86868b"))
+                            .frame(width: 28, height: 28)
+                        Text("U")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
+                }
+            } else {
+                // AI 消息：左对齐（flex gap-3 justify-start）
+                HStack(alignment: .top, spacing: 8) {
+                    // 头像（渐变圆形 from-[#007aff] to-[#5856d6]）
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 28, height: 28)
+                            .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    // 气泡（bg-white/80 border border-[#d2d2d7]/50 shadow-sm）
+                    VStack(alignment: .leading, spacing: 0) {
+                        if isStreaming && message.content.isEmpty {
+                            typingIndicator
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                        } else {
+                            aiBubbleContent
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                    .background(Color.white.opacity(0.80))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 0.75)
+                    )
+                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+                    Spacer(minLength: 32)
                 }
             }
-
-            if !isUser { Spacer(minLength: 32) }
-
-            if isUser { avatarView(isUser: true) }
         }
     }
 
+    // AI 消息内容（支持 Markdown 代码块）
     @ViewBuilder
-    private var bubbleBody: some View {
+    private var aiBubbleContent: some View {
         let segments = AIMarkdownParser.parse(message.content)
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
                 switch seg {
                 case .text(let t):
                     if !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text(t)
-                            .font(DesignTokens.Typography.bodySmall)
-                            .foregroundColor(isUser ? .white : DesignTokens.Colors.textPrimary)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(hex: "#1d1d1f"))
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -461,69 +581,32 @@ struct AIMessageBubbleView: View {
                     AICodeBlockView(code: code, language: lang)
                 case .inlineCode(let c):
                     Text(c)
-                        .font(DesignTokens.Typography.codeSmall)
-                        .foregroundColor(Color(hex: "#93C5FD"))
-                        .padding(.horizontal, 4).padding(.vertical, 1)
-                        .background(Color.black.opacity(0.20))
-                        .cornerRadius(3)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(
-            Group {
-                if isUser {
-                    LinearGradient(
-                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentTertiary],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    )
-                } else {
-                    DesignTokens.Colors.glassMedium
-                }
-            }
-        )
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                .strokeBorder(
-                    isUser ? Color.white.opacity(0.15) : DesignTokens.Colors.glassBorderSide,
-                    lineWidth: 0.5
-                )
-        )
     }
 
-    @ViewBuilder
-    private func avatarView(isUser: Bool) -> some View {
-        Circle()
-            .fill(
-                isUser
-                    ? AnyShapeStyle(DesignTokens.Colors.accentPrimary.opacity(0.15))
-                    : AnyShapeStyle(LinearGradient(
-                        colors: [Color(hex: "#3B82F6").opacity(0.7), Color(hex: "#8B5CF6").opacity(0.7)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing))
-            )
-            .frame(width: 24, height: 24)
-            .overlay(
-                Image(systemName: isUser ? "person.fill" : "sparkles")
-                    .font(.system(size: isUser ? 10 : 9, weight: .semibold))
-                    .foregroundColor(isUser ? DesignTokens.Colors.accentPrimary : .white)
-            )
-    }
-
+    // Typing 指示器（三点弹跳，对齐规范 §09 §06）
     private var typingIndicator: some View {
         HStack(spacing: 4) {
             ForEach(0..<3, id: \.self) { i in
                 Circle()
-                    .fill(DesignTokens.Colors.textTertiary)
-                    .frame(width: 5, height: 5)
-                    .opacity(0.6)
+                    .fill(Color(hex: "#86868b"))
+                    .frame(width: 6, height: 6)
+                    // 错开弹跳延迟
+                    .animation(
+                        .easeInOut(duration: 0.5)
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(i) * 0.15),
+                        value: isStreaming
+                    )
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, 6)
-        .background(DesignTokens.Colors.glassMedium)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
     }
 }
 
@@ -540,7 +623,7 @@ struct AICodeBlockView: View {
             HStack {
                 if let lang = language, !lang.isEmpty {
                     Text(lang.lowercased())
-                        .font(DesignTokens.Typography.labelSmall)
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 Spacer()
@@ -556,7 +639,7 @@ struct AICodeBlockView: View {
                         Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
                             .font(.system(size: 10))
                         Text(isCopied ? "已复制" : "复制")
-                            .font(DesignTokens.Typography.labelSmall)
+                            .font(.system(size: 10))
                     }
                     .foregroundColor(isCopied
                         ? DesignTokens.Colors.statusConnected
@@ -564,25 +647,25 @@ struct AICodeBlockView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, DesignTokens.Spacing.sm)
-            .padding(.vertical, 4)
-            .background(Color.black.opacity(0.20))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(DesignTokens.Colors.borderSecondary.opacity(0.5))
 
             // 代码内容
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(code.trimmingCharacters(in: .newlines))
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(Color(hex: "#93C5FD"))
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary.opacity(0.9))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(DesignTokens.Spacing.sm)
+                    .padding(10)
             }
         }
-        .background(Color.black.opacity(0.28))
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+        .background(DesignTokens.Colors.surfaceWindow)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
         )
     }
 }

@@ -38,14 +38,16 @@ struct TunnelManagerView: View {
                 detailPanelView(rule: rule)
             }
         }
+        // 对齐规范 §11：max-w-[700px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
         .frame(width: 640, height: showEditPanel ? 480 : 292)
-        .background(DesignTokens.Colors.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .background(Color.white.opacity(0.95))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.75), radius: 32, x: 0, y: 24)
+        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
         .alert("启动失败", isPresented: $showStartError) {
             Button("确定", role: .cancel) {}
         } message: {

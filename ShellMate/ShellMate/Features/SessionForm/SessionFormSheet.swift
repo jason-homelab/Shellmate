@@ -386,7 +386,7 @@ struct SessionFormSheet: View {
 
             Spacer()
 
-            // 取消按钮
+            // 取消按钮（对齐规范：ghost，text-[#1d1d1f]，hover:bg-black/5，rounded-lg）
             Button("取消") {
                 onCancel?()
             }
@@ -394,25 +394,26 @@ struct SessionFormSheet: View {
             .foregroundColor(Color(hex: "#1d1d1f"))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color(hex: "#f2f2f7"))
+            .background(Color.clear)
             .cornerRadius(8)
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: [])
 
-            // 保存按钮
-            Button(isEditing ? "保存" : "创建") {
+            // 保存按钮（对齐规范：bg-[#007aff] hover:bg-[#0051d5] shadow-lg shadow-[#007aff]/30 disabled:opacity-40）
+            Button(isEditing ? "保存会话" : "保存会话") {
                 saveSession()
             }
             .font(.system(size: 14, weight: .medium))
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(canSave ? Color(hex: "#007aff") : Color(hex: "#007aff").opacity(0.4))
+            .background(Color(hex: "#007aff"))
             .cornerRadius(8)
-            .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 8, x: 0, y: 4)
+            .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 12, x: 0, y: 4)
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(!canSave)
+            .opacity(canSave ? 1.0 : 0.4)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)

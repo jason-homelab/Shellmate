@@ -38,19 +38,45 @@ struct SettingsView: View {
     }
 
     // MARK: - 顶部选择器
+    // 对齐 Figma-Spec-v2 §07：grid-cols-3，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
 
     private var tabPickerBar: some View {
-        HStack {
-            Picker("", selection: $selectedTab) {
-                ForEach(SettingsTab.allCases) { tab in
-                    Text(tab.rawValue).tag(tab)
+        HStack(spacing: 2) {
+            // 三 Tab 按钮（对齐规范：bg-black/5，选中态 bg-white + shadow-sm）
+            ForEach(SettingsTab.allCases) { tab in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        selectedTab = tab
+                    }
+                } label: {
+                    Text(tab.rawValue)
+                        .font(.system(size: 13, weight: selectedTab == tab ? .medium : .regular))
+                        .foregroundColor(
+                            selectedTab == tab
+                                ? Color(hex: "#1d1d1f")
+                                : Color(hex: "#6e6e73")
+                        )
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 30)
+                        .background(
+                            selectedTab == tab
+                                ? Color.white.opacity(0.95)
+                                : Color.clear
+                        )
+                        .cornerRadius(8)
+                        .shadow(
+                            color: selectedTab == tab ? Color.black.opacity(0.1) : .clear,
+                            radius: 2, x: 0, y: 1
+                        )
                 }
+                .buttonStyle(.plain)
             }
-            .pickerStyle(.segmented)
-            .frame(width: 240)
         }
+        .padding(4)
+        .background(Color.black.opacity(0.06))
+        .cornerRadius(10)
         .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background(DesignTokens.Colors.surfaceWindow)
     }
