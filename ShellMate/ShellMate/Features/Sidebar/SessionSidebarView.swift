@@ -44,7 +44,9 @@ struct SessionSidebarView: View {
         .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
         .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
-        .background(DesignTokens.Colors.surfaceWindow)
+        // Figma: bg-[#f5f5f7]/95 backdrop-blur-xl border-r border-[#d2d2d7]/50
+        .background(.ultraThinMaterial)
+        .background(Color(hex: "#f5f5f7").opacity(0.95))
         .task {
             await loadData()
         }
@@ -65,9 +67,10 @@ struct SessionSidebarView: View {
     /// 顶部操作头部：显示标题 + 新建会话、分组、设置快捷按钮
     private var sidebarHeader: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
+            // Figma: text-sm font-medium text-[#1d1d1f]
             Text("会话")
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(Color(hex: "#1d1d1f"))
 
             Spacer()
 
@@ -107,11 +110,12 @@ struct SessionSidebarView: View {
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.sm)
         .background {
+            // Figma: border-b border-[#d2d2d7]/50 bg-white/40
             Rectangle()
-                .fill(DesignTokens.Colors.surfacePanel.opacity(0.7))
+                .fill(Color.white.opacity(0.40))
                 .overlay(alignment: .bottom) {
                     Rectangle()
-                        .fill(DesignTokens.Colors.borderSecondary)
+                        .fill(Color(hex: "#d2d2d7").opacity(0.50))
                         .frame(height: 0.5)
                 }
         }

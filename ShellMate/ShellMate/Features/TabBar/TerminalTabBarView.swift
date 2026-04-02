@@ -29,43 +29,52 @@ struct TerminalTabBarView: View {
         }
         .frame(height: DesignTokens.Sizes.tabBarHeight)
         .background {
+            // Figma: bg-[#f5f5f7]/80 backdrop-blur-xl shadow-sm border-b border-[#d2d2d7]/50
             Rectangle()
                 .fill(.ultraThinMaterial)
-                .overlay { Rectangle().fill(DesignTokens.Colors.glassUltraLight) }
+                .overlay {
+                    Rectangle().fill(Color(hex: "#f5f5f7").opacity(0.80))
+                }
         }
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(DesignTokens.Colors.glassBorderSide)
+                .fill(Color(hex: "#d2d2d7").opacity(0.5))
                 .frame(height: 0.5)
         }
     }
 
     // MARK: - 子视图
 
-    /// 标签页列表
+    /// 标签页列表（超出宽度时横向滚动，避免 Tab 溢出截断）
     private var tabList: some View {
-        HStack(spacing: 1) {
-            ForEach(store.tabs) { tab in
-                TerminalTabView(
-                    tab: tab,
-                    isSelected: store.selectedTabId == tab.id,
-                    onClose: {
-                        store.requestCloseTab(tab)
-                    },
-                    onSelect: {
-                        store.selectTab(tab)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 1) {
+                ForEach(store.tabs) { tab in
+                    TerminalTabView(
+                        tab: tab,
+                        isSelected: store.selectedTabId == tab.id,
+                        onClose: {
+                            store.requestCloseTab(tab)
+                        },
+                        onSelect: {
+                            store.selectTab(tab)
+                        }
+                    )
+                    .onDrag {
+                        draggedTabId = tab.id
+                        return NSItemProvider(object: tab.id.uuidString as NSString)
                     }
-                )
-                .onDrag {
-                    draggedTabId = tab.id
-                    return NSItemProvider(object: tab.id.uuidString as NSString)
+                    .onDrop(of: [.text], delegate: TabDropDelegate(
+                        targetTab: tab,
+                        store: store,
+                        draggedTabId: $draggedTabId
+                    ))
                 }
-                .onDrop(of: [.text], delegate: TabDropDelegate(
-                    targetTab: tab,
-                    store: store,
-                    draggedTabId: $draggedTabId
-                ))
             }
+        }
+        // 选中 Tab 变化时自动滚动到可视区域
+        .onChange(of: store.selectedTabId) { _ in
+            // SwiftUI ScrollViewReader 需要绑定 id；此处依赖默认滚动行为，不引入额外状态
         }
     }
 

@@ -140,12 +140,19 @@ struct ContentView: View {
         // 欢迎界面覆层（首次启动，Figma-Spec-v2 §13）
         .overlay {
             if !hasLaunchedBefore {
-                WelcomeScreenView(onDismiss: {
-                    hasLaunchedBefore = true
-                }, onCreateSession: {
-                    hasLaunchedBefore = true
-                    sessionStore.showNewSessionForm()
-                })
+                WelcomeScreenView(
+                    onDismiss: {
+                        hasLaunchedBefore = true
+                    },
+                    onCreateSession: {
+                        hasLaunchedBefore = true
+                        sessionStore.showNewSessionForm()
+                    },
+                    onImportConfiguration: {
+                        hasLaunchedBefore = true
+                        sessionStore.showNewSessionForm() // 临时指向新建，后续对接导入
+                    }
+                )
                 .zIndex(100)
                 .transition(.opacity.animation(.easeInOut(duration: 0.3)))
             }
@@ -172,9 +179,9 @@ struct ContentView: View {
     @ViewBuilder
     private var terminalContentArea: some View {
         if tabBarStore.tabs.isEmpty {
-            // 空状态：渐变图标卡片 + 引导按钮（对齐 Figma 设计）
-            VStack(spacing: DesignTokens.Spacing.xl) {
-                // 渐变图标框
+            // 空状态（对齐 Figma App.tsx：🖥️ emoji + 渐变卡片 + 蓝色按钮）
+            VStack(spacing: 0) {
+                // 渐变 emoji 图标卡片
                 ZStack {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(LinearGradient(
@@ -185,32 +192,28 @@ struct ContentView: View {
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ))
-                    Image(systemName: "terminal.fill")
-                        .font(.system(size: 40, weight: .light))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [
-                                    DesignTokens.Colors.accentPrimary,
-                                    DesignTokens.Colors.accentIndigo
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 6)
+                    Text("🖥️")
+                        .font(.system(size: 48))
                 }
                 .frame(width: 96, height: 96)
-                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.12), radius: 16, x: 0, y: 6)
 
-                VStack(spacing: DesignTokens.Spacing.sm) {
-                    Text("暂无活跃会话")
-                        .font(DesignTokens.Typography.titleMedium)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
-                    Text("从左侧选择一个会话，或创建新会话开始连接")
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
+                Spacer().frame(height: 24)
 
+                Text("暂无活跃会话")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
+
+                Spacer().frame(height: 8)
+
+                Text("从左侧选择一个会话，或创建新会话开始连接")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "#86868b"))
+                    .multilineTextAlignment(.center)
+
+                Spacer().frame(height: 24)
+
+                // bg-[#007aff] hover:bg-[#0051d5] rounded-xl
                 Button("新建会话") {
                     sessionStore.showNewSessionForm()
                 }

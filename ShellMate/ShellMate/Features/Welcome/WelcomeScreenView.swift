@@ -1,24 +1,24 @@
 import SwiftUI
 
 /// 欢迎界面（首次启动，三步引导）
-/// 对齐 Figma-Spec-v2 §13：WelcomeScreen 三步骤、英雄区、操作卡片
+/// 完全对齐 Figma Make 原型 WelcomeScreen.tsx
 struct WelcomeScreenView: View {
 
     // MARK: - 属性
 
     var onDismiss: (() -> Void)?
     var onCreateSession: (() -> Void)?
+    var onImportConfiguration: (() -> Void)?
 
     // MARK: - 状态
 
     @State private var currentStep: Int = 0
 
-    // MARK: - 步骤数据
+    // MARK: - 步骤数据（对齐 Figma welcomeSteps 数组）
 
     private struct StepData {
         let emoji: String
-        let gradientStart: Color
-        let gradientEnd: Color
+        let gradientColors: [Color]
         let title: String
         let description: String
     }
@@ -26,22 +26,19 @@ struct WelcomeScreenView: View {
     private let steps: [StepData] = [
         StepData(
             emoji: "👋",
-            gradientStart: Color.blue.opacity(0.15),
-            gradientEnd: Color.purple.opacity(0.15),
+            gradientColors: [Color.blue.opacity(0.10), Color.purple.opacity(0.10)],
             title: "欢迎使用 ShellMate",
             description: "专为开发者和运维工程师打造的 macOS 原生 SSH 会话管理工具"
         ),
         StepData(
             emoji: "🚀",
-            gradientStart: Color.green.opacity(0.15),
-            gradientEnd: Color.blue.opacity(0.15),
+            gradientColors: [Color.green.opacity(0.10), Color.blue.opacity(0.10)],
             title: "强大的功能，极致的体验",
             description: "多标签管理、分屏模式、AI 智能助手、SFTP 文件传输，一切尽在掌控"
         ),
         StepData(
             emoji: "⚡",
-            gradientStart: Color.orange.opacity(0.15),
-            gradientEnd: Color.red.opacity(0.15),
+            gradientColors: [Color.orange.opacity(0.10), Color.red.opacity(0.10)],
             title: "准备好了，开始使用！",
             description: "创建您的第一个连接，或导入已有配置，立即开始工作"
         )
@@ -51,7 +48,7 @@ struct WelcomeScreenView: View {
 
     var body: some View {
         ZStack {
-            // 背景渐变
+            // bg-gradient-to-br from-[#f5f5f7] via-white to-[#e8e8ed]
             LinearGradient(
                 colors: [Color(hex: "#f5f5f7"), .white, Color(hex: "#e8e8ed")],
                 startPoint: .topLeading,
@@ -60,13 +57,13 @@ struct WelcomeScreenView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // 关闭按钮
+                // 关闭按钮 — absolute top-4 right-4
                 HStack {
                     Spacer()
                     Button(action: { onDismiss?() }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Color(hex: "#1d1d1f"))
                             .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.06))
                             .clipShape(Circle())
@@ -78,28 +75,32 @@ struct WelcomeScreenView: View {
 
                 Spacer()
 
-                // 英雄区
-                heroSection
+                // 中央内容区（max-w-5xl）
+                VStack(spacing: 0) {
+                    heroSection
+                    Spacer().frame(height: 32)
 
-                Spacer().frame(height: 32)
+                    // 步骤 1：特性网格（4格）
+                    if currentStep == 1 {
+                        featuresGrid
+                        Spacer().frame(height: 32)
+                    }
 
-                // 步骤指示器
-                stepIndicator
+                    // 步骤 2：操作卡片（3列）
+                    if currentStep == 2 {
+                        actionCards
+                        Spacer().frame(height: 32)
+                    }
 
-                Spacer().frame(height: 40)
-
-                // 步骤内容
-                if currentStep < 2 {
-                    // 步骤 0 / 1：特性展示 + 导航按钮
-                    navigationButtons
-                } else {
-                    // 步骤 2：操作卡片
-                    actionCards
+                    // 步骤 0 / 1：导航按钮
+                    if currentStep < 2 {
+                        navigationButtons
+                    }
                 }
+                .frame(maxWidth: 900)
 
                 Spacer()
             }
-            .padding(.horizontal, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -108,36 +109,39 @@ struct WelcomeScreenView: View {
 
     private var heroSection: some View {
         let step = steps[currentStep]
-        return VStack(spacing: 20) {
-            // 渐变图标卡片
+        return VStack(spacing: 16) {
+            // 渐变 emoji 卡片（w-32 h-32 rounded-[2.5rem]）
             ZStack {
                 RoundedRectangle(cornerRadius: 40, style: .continuous)
                     .fill(LinearGradient(
-                        colors: [step.gradientStart, step.gradientEnd],
+                        colors: step.gradientColors,
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))
                     .frame(width: 128, height: 128)
-                    .shadow(color: Color.black.opacity(0.08), radius: 24, x: 0, y: 8)
+                    .shadow(color: .black.opacity(0.10), radius: 24, x: 0, y: 8)
                 Text(step.emoji)
                     .font(.system(size: 56))
             }
-            .animation(.easeInOut(duration: 0.3), value: currentStep)
+            .animation(.easeInOut(duration: 0.5), value: currentStep)
 
-            // 标题
+            // 标题（text-5xl font-bold text-[#1d1d1f]）
             Text(step.title)
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(.system(size: 40, weight: .bold, design: .rounded))
                 .foregroundColor(Color(hex: "#1d1d1f"))
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
 
-            // 描述
+            // 描述（text-xl text-[#86868b]）
             Text(step.description)
-                .font(.system(size: 16))
+                .font(.system(size: 17))
                 .foregroundColor(Color(hex: "#86868b"))
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 480)
+                .frame(maxWidth: 560)
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
+
+            // 步骤指示器
+            stepIndicator
         }
     }
 
@@ -146,39 +150,47 @@ struct WelcomeScreenView: View {
     private var stepIndicator: some View {
         HStack(spacing: 8) {
             ForEach(0..<steps.count, id: \.self) { index in
-                if index == currentStep {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(DesignTokens.Colors.accentPrimary)
-                        .frame(width: 28, height: 8)
-                } else {
-                    Circle()
-                        .fill(Color(hex: "#d2d2d7"))
-                        .frame(width: 8, height: 8)
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) { currentStep = index }
+                }) {
+                    if index == currentStep {
+                        // w-8 h-2 rounded-full bg-[#007aff]
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(hex: "#007aff"))
+                            .frame(width: 32, height: 8)
+                    } else {
+                        // w-2 h-2 rounded-full bg-[#d2d2d7]
+                        Circle()
+                            .fill(Color(hex: "#d2d2d7"))
+                            .frame(width: 8, height: 8)
+                    }
                 }
+                .buttonStyle(.plain)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: currentStep)
-        .onTapGesture { }
+        .padding(.top, 8)
     }
 
     // MARK: - 步骤 0/1 导航按钮
 
     private var navigationButtons: some View {
         HStack(spacing: 16) {
-            Button("跳过") {
-                onDismiss?()
+            // 跳过按钮（variant="ghost"）
+            Button(action: { onDismiss?() }) {
+                Text("跳过")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(Color(hex: "#86868b"))
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(Color.black.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
-            .foregroundColor(Color(hex: "#86868b"))
-            .padding(.horizontal, 24)
-            .padding(.vertical, 10)
-            .background(Color.black.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
+            // 下一步按钮（bg-[#007aff]）
             Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    currentStep += 1
-                }
+                withAnimation(.easeInOut(duration: 0.3)) { currentStep += 1 }
             }) {
                 HStack(spacing: 6) {
                     Text("下一步")
@@ -191,110 +203,172 @@ struct WelcomeScreenView: View {
                 .padding(.vertical, 10)
             }
             .buttonStyle(.plain)
-            .background(DesignTokens.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.3), radius: 8, x: 0, y: 4)
+            .background(Color(hex: "#007aff"))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 12, x: 0, y: 4)
         }
     }
 
-    // MARK: - 步骤 2 操作卡片
+    // MARK: - 步骤 1 特性展示（grid-cols-4，对齐 Figma WelcomeScreen.tsx currentStep===1）
+
+    private let features: [(emoji: String, label: String)] = [
+        ("🔐", "安全加密"),
+        ("📁", "SFTP 传输"),
+        ("🤖", "AI 助手"),
+        ("📜", "脚本自动化")
+    ]
+
+    private var featuresGrid: some View {
+        HStack(spacing: 16) {
+            ForEach(features, id: \.label) { feature in
+                VStack(spacing: 8) {
+                    Text(feature.emoji)
+                        .font(.system(size: 36))
+                    Text(feature.label)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Color(hex: "#1d1d1f"))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(Color.white.opacity(0.60))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 1)
+                )
+            }
+        }
+    }
+
+    // MARK: - 步骤 2 操作卡片（grid-cols-3，对齐 Figma WelcomeScreen.tsx）
 
     private var actionCards: some View {
         HStack(spacing: 20) {
             // 创建第一个连接
             actionCard(
-                icon: "plus",
-                iconColor: DesignTokens.Colors.accentPrimary,
-                iconBgColor: DesignTokens.Colors.accentPrimary.opacity(0.1),
+                iconName: "plus",
+                iconFg: Color(hex: "#007aff"),
+                iconBg: LinearGradient(
+                    colors: [Color(hex: "#007aff").opacity(0.10), Color(hex: "#5856d6").opacity(0.10)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing),
+                cardHoverBorder: Color(hex: "#007aff").opacity(0.50),
                 title: "创建第一个连接",
                 description: "填写服务器信息，快速开始工作",
                 buttonTitle: "立即创建",
-                buttonStyle: .primary
-            ) {
-                onCreateSession?()
-            }
+                buttonFg: .white,
+                buttonBg: AnyShapeStyle(Color(hex: "#007aff")),
+                action: { onCreateSession?() }
+            )
+
+            // 导入配置
+            actionCard(
+                iconName: "arrow.down.doc",
+                iconFg: Color(hex: "#34c759"),
+                iconBg: LinearGradient(
+                    colors: [Color(hex: "#34c759").opacity(0.10), Color(hex: "#30d158").opacity(0.10)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing),
+                cardHoverBorder: Color(hex: "#34c759").opacity(0.50),
+                title: "导入配置",
+                description: "从文件导入已有的会话配置",
+                buttonTitle: "导入配置",
+                buttonFg: Color(hex: "#34c759"),
+                buttonBg: AnyShapeStyle(Color.clear),
+                isOutline: true,
+                outlineColor: Color(hex: "#34c759"),
+                action: { onImportConfiguration?() }
+            )
 
             // 跳过设置
             actionCard(
-                icon: "sparkles",
-                iconColor: Color(hex: "#86868b"),
-                iconBgColor: Color(hex: "#86868b").opacity(0.1),
+                iconName: "sparkles",
+                iconFg: Color(hex: "#86868b"),
+                iconBg: LinearGradient(
+                    colors: [Color(hex: "#86868b").opacity(0.10), Color(hex: "#636366").opacity(0.10)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing),
+                cardHoverBorder: Color(hex: "#86868b").opacity(0.50),
                 title: "探索应用",
                 description: "先熟悉界面，稍后再添加连接",
                 buttonTitle: "直接进入",
-                buttonStyle: .ghost
-            ) {
-                onDismiss?()
-            }
+                buttonFg: Color(hex: "#86868b"),
+                buttonBg: AnyShapeStyle(Color.black.opacity(0.05)),
+                action: { onDismiss?() }
+            )
         }
-        .frame(maxWidth: 600)
     }
 
-    // MARK: - 操作卡片组件
+    // MARK: - 操作卡片通用组件
 
-    private enum ButtonStyleType { case primary, ghost }
-
-    @ViewBuilder
     private func actionCard(
-        icon: String,
-        iconColor: Color,
-        iconBgColor: Color,
+        iconName: String,
+        iconFg: Color,
+        iconBg: LinearGradient,
+        cardHoverBorder: Color,
         title: String,
         description: String,
         buttonTitle: String,
-        buttonStyle: ButtonStyleType,
+        buttonFg: Color,
+        buttonBg: AnyShapeStyle,
+        isOutline: Bool = false,
+        outlineColor: Color = .clear,
         action: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            // 图标
+            // 图标容器（w-14 h-14 rounded-2xl）
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(iconBgColor)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(iconBg)
                     .frame(width: 52, height: 52)
-                Image(systemName: icon)
+                Image(systemName: iconName)
                     .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(iconColor)
+                    .foregroundColor(iconFg)
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Color(hex: "#1d1d1f"))
-
                 Text(description)
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "#86868b"))
-                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
 
-            // 按钮
+            // 操作按钮
             Button(action: action) {
-                Text(buttonTitle)
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .foregroundColor(buttonStyle == .primary ? .white : Color(hex: "#86868b"))
+                HStack {
+                    Spacer()
+                    Text(buttonTitle)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(buttonFg)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(buttonFg)
+                    Spacer()
+                }
+                .padding(.vertical, 9)
             }
             .buttonStyle(.plain)
-            .background(
-                buttonStyle == .primary
-                    ? DesignTokens.Colors.accentPrimary
-                    : Color.black.opacity(0.05)
+            .background(buttonBg)
+            .overlay(
+                isOutline
+                    ? RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(outlineColor, lineWidth: 1)
+                    : nil
             )
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .padding(20)
-        .frame(maxWidth: .infinity, minHeight: 200)
-        .background(Color.white.opacity(0.8))
+        .frame(maxWidth: .infinity, minHeight: 220)
+        .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 1)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.05), radius: 12, x: 0, y: 4)
+        .onTapGesture { action() }
     }
 }
 
@@ -303,7 +377,8 @@ struct WelcomeScreenView: View {
 #Preview("欢迎界面 - 步骤 0") {
     WelcomeScreenView(
         onDismiss: { print("关闭") },
-        onCreateSession: { print("创建会话") }
+        onCreateSession: { print("创建会话") },
+        onImportConfiguration: { print("导入配置") }
     )
-    .frame(width: 900, height: 700)
+    .frame(width: 960, height: 720)
 }

@@ -48,10 +48,9 @@ struct TerminalTabView: View {
 
             Spacer(minLength: 0)
 
-            // 关闭按钮
-            if isHovering || isSelected {
-                closeButton
-            }
+            // 关闭按钮（始终占位，仅 hover/selected 时可见，避免标签宽度跳动）
+            closeButton
+                .opacity(isHovering || isSelected ? 1 : 0)
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .frame(height: DesignTokens.Sizes.tabBarHeight)
@@ -85,16 +84,16 @@ struct TerminalTabView: View {
         }
     }
 
-    /// 关闭按钮
+    /// 关闭按钮（Figma: ml-2 h-5 w-5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10）
     private var closeButton: some View {
         Button(action: onClose) {
             Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: DesignTokens.Sizes.tabCloseButtonSize, height: DesignTokens.Sizes.tabCloseButtonSize)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .frame(width: 20, height: 20)
                 .background(
-                    Circle()
-                        .fill(DesignTokens.Colors.glassHoverColor)
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Color.black.opacity(0.10))
                         .opacity(isHovering ? 1 : 0)
                 )
         }
@@ -102,35 +101,30 @@ struct TerminalTabView: View {
         .help("关闭标签页")
     }
 
-    /// 标签背景
+    /// 标签背景（Figma-Spec-v2：选中 white/90 + shadow-sm，悬停轻灰，否则透明）
     @ViewBuilder
     private var tabBackground: some View {
         if isSelected {
+            // data-[state=active]:bg-white/90 backdrop-blur-xl shadow-sm
             Rectangle()
-                .fill(DesignTokens.Colors.glassSelected)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(DesignTokens.Colors.glassBorderAccent)
-                        .frame(height: 0.5)
-                }
+                .fill(Color.white.opacity(0.90))
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 0, y: 1)
         } else if isHovering {
             Rectangle()
-                .fill(DesignTokens.Colors.glassHoverColor)
+                .fill(Color.black.opacity(0.04))
         } else {
             Color.clear
         }
     }
 
-    /// 标签底部强调线（选中时）
+    /// 右侧分隔线（Figma: border-r border-[#d2d2d7]/50）
     @ViewBuilder
     private var tabBorder: some View {
-        if isSelected {
-            VStack(spacing: 0) {
-                Spacer()
-                Rectangle()
-                    .fill(DesignTokens.Colors.accentPrimary)
-                    .frame(height: 2)
-            }
+        HStack(spacing: 0) {
+            Spacer()
+            Rectangle()
+                .fill(Color(hex: "#d2d2d7").opacity(0.5))
+                .frame(width: 1)
         }
     }
 
