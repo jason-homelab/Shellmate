@@ -25,6 +25,9 @@ struct TerminalStatusBarView: View {
     /// W12.6：观察同步输入状态
     @ObservedObject private var syncStore = SyncInputStore.shared
 
+    /// CPU 历史读数（最近 8 次，用于 sparkline 柱状图）
+    @State private var cpuHistory: [Double] = []
+
     // MARK: - 视图
 
     var body: some View {
@@ -44,6 +47,12 @@ struct TerminalStatusBarView: View {
             Rectangle()
                 .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
+        }
+        // CPU 历史记录：每次 metrics 更新时追加，保留最近 8 条
+        .onChange(of: serverMetrics?.cpuUsage) { newValue in
+            guard let v = newValue else { return }
+            cpuHistory.append(v)
+            if cpuHistory.count > 8 { cpuHistory.removeFirst() }
         }
     }
 
@@ -191,23 +200,29 @@ struct TerminalStatusBarView: View {
         }
     }
 
-    /// CPU 迷你柱状图（8 根，Figma: w-0.5 h-[n] rounded-full opacity-60）
+    /// CPU 迷你 sparkline（8 根柱，使用历史读数；历史不足时用当前值填充）
     private func cpuMiniChart(_ m: ServerMetrics) -> some View {
-        let barCount = 8
         let maxH: CGFloat = 12
+        let minH: CGFloat = 2     // 最低可见高度
         let color = cpuColor(m.cpuColor)
-        return HStack(spacing: 1) {
-            ForEach(0..<barCount, id: \.self) { i in
-                let ratio = CGFloat(m.cpuUsage) / 100.0
-                // 锯齿波形：奇数稍低，营造动态感
-                let h = max(2, maxH * ratio * (i % 2 == 0 ? 1.0 : 0.7))
+
+        // 填充到 8 条：历史不足时用当前值补齐
+        var bars = cpuHistory
+        while bars.count < 8 { bars.insert(m.cpuUsage, at: 0) }
+        let last8 = Array(bars.suffix(8))
+
+        return HStack(alignment: .bottom, spacing: 1) {
+            ForEach(Array(last8.enumerated()), id: \.offset) { _, v in
+                let ratio = CGFloat(v) / 100.0
+                // 保证最低可见：minH + 剩余高度按比例缩放
+                let h = minH + (maxH - minH) * ratio
                 RoundedRectangle(cornerRadius: 1, style: .continuous)
                     .fill(color)
-                    .frame(width: 2, height: h)
-                    .opacity(0.60)
+                    .frame(width: 2, height: max(minH, h))
+                    .opacity(0.70)
             }
         }
-        .frame(height: maxH)
+        .frame(height: maxH, alignment: .bottom)
     }
 
     private func cpuColor(_ load: ServerMetrics.CPULoad) -> Color {
