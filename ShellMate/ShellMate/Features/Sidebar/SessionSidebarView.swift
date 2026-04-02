@@ -19,6 +19,9 @@ struct SessionSidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // 顶部操作头部：标题 + 操作图标按钮
+            sidebarHeader
+
             // 搜索框
             SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $searchFocusTrigger)
                 .padding(.horizontal, DesignTokens.Spacing.sm)
@@ -37,16 +40,6 @@ struct SessionSidebarView: View {
                     onConnect: onConnect
                 )
             }
-
-            // 底部操作栏
-            SidebarFooterView(
-                onNewSession: {
-                    sessionStore.showNewSessionForm()
-                },
-                onNewGroup: {
-                    groupStore.showNewGroupForm()
-                }
-            )
         }
         .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
         .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
@@ -65,6 +58,75 @@ struct SessionSidebarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .focusSidebarSearchRequested)) { _ in
             searchFocusTrigger = true
         }
+    }
+
+    // MARK: - 侧边栏头部
+
+    /// 顶部操作头部：显示标题 + 新建会话、分组、设置快捷按钮
+    private var sidebarHeader: some View {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
+            Text("会话")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+
+            Spacer()
+
+            // 新建会话
+            sidebarIconButton(systemImage: "plus", tooltip: "新建会话 (⌘N)") {
+                sessionStore.showNewSessionForm()
+            }
+            .keyboardShortcut("n", modifiers: .command)
+
+            // 新建分组
+            sidebarIconButton(systemImage: "folder.badge.plus", tooltip: "新建分组 (⌘⇧N)") {
+                groupStore.showNewGroupForm()
+            }
+
+            // 密码管理（KeyRound，对齐 Figma-Spec-v2 §02）
+            sidebarIconButton(systemImage: "key.fill", tooltip: "密码管理") {
+                // TODO: 打开密码管理器（PasswordManagerDialog）
+            }
+
+            // 打开设置（macOS 14+ 使用 SettingsLink，13 回退到 sendAction）
+            if #available(macOS 14.0, *) {
+                SettingsLink {
+                    Image(systemName: "gear")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("偏好设置")
+            } else {
+                sidebarIconButton(systemImage: "gear", tooltip: "偏好设置") {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }
+            }
+        }
+        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background {
+            Rectangle()
+                .fill(DesignTokens.Colors.surfacePanel.opacity(0.7))
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(DesignTokens.Colors.borderSecondary)
+                        .frame(height: 0.5)
+                }
+        }
+    }
+
+    private func sidebarIconButton(systemImage: String, tooltip: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(tooltip)
     }
 
     // MARK: - 加载中视图

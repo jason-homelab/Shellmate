@@ -1,129 +1,72 @@
 import SwiftUI
 
-// MARK: - 设置面板主窗口（Screen 07）
+// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07）
 
 /// 设置窗口主容器
-/// 左侧导航 160pt + 右侧内容 480pt，共 640×520pt，不可调整大小
+/// 顶部 Segmented Picker (通用/外观/终端)，共 600×500pt
 struct SettingsView: View {
 
-    // MARK: - 导航项
+    // MARK: - 导航项（三主 Tab，对齐 Figma-Spec-v2 §07）
 
     enum SettingsTab: String, CaseIterable, Identifiable {
+        case general    = "通用"
         case appearance = "外观"
-        case highlight  = "关键词高亮"
-        case security   = "安全"
         case terminal   = "终端"
-        case cloudSync  = "iCloud 同步"
-        case ai         = "AI 助手"
 
         var id: String { rawValue }
-
-        var iconName: String {
-            switch self {
-            case .appearance: return "paintbrush.fill"
-            case .highlight:  return "highlighter"
-            case .security:   return "lock.shield.fill"
-            case .terminal:   return "terminal.fill"
-            case .cloudSync:  return "icloud.fill"
-            case .ai:         return "sparkles"
-            }
-        }
     }
 
     // MARK: - 状态
 
-    @State private var selectedTab: SettingsTab = .appearance
+    @State private var selectedTab: SettingsTab = .general
 
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: 0) {
-            // 左侧导航 (160pt)
-            navPanel
+        VStack(spacing: 0) {
+            // 顶部 Tab 选择器
+            tabPickerBar
 
             Divider()
 
-            // 右侧内容 (480pt)
+            // 内容区域
             contentPanel
-                .frame(width: 480)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 640, height: 520)
+        .frame(width: 600, height: 500)
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
-    // MARK: - 左侧导航栏
+    // MARK: - 顶部选择器
 
-    private var navPanel: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(SettingsTab.allCases) { tab in
-                navItem(tab)
+    private var tabPickerBar: some View {
+        HStack {
+            Picker("", selection: $selectedTab) {
+                ForEach(SettingsTab.allCases) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
             }
-            Spacer()
+            .pickerStyle(.segmented)
+            .frame(width: 240)
         }
-        .padding(.vertical, 10)
-        .frame(width: 160)
-        .background(
-            VisualEffectBlur(material: .sidebar, blendingMode: .behindWindow)
-        )
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
-    private func navItem(_ tab: SettingsTab) -> some View {
-        let isSelected = selectedTab == tab
-
-        return Button(action: { selectedTab = tab }) {
-            HStack(spacing: 8) {
-                Image(systemName: tab.iconName)
-                    .font(.system(size: 14))
-                    .frame(width: 16, alignment: .center)
-
-                Text(tab.rawValue)
-                    .font(.system(size: 12))
-
-                Spacer()
-            }
-            .foregroundColor(isSelected
-                ? DesignTokens.Colors.textPrimary
-                : DesignTokens.Colors.textSecondary)
-            .padding(.vertical, 6)
-            .padding(.leading, 14)
-            .padding(.trailing, 8)
-            .background(
-                isSelected
-                    ? Color.accentColor.opacity(0.15)
-                    : Color.clear
-            )
-            .overlay(
-                // 左侧 2pt 指示线
-                Rectangle()
-                    .fill(isSelected ? Color.accentColor : Color.clear)
-                    .frame(width: 2),
-                alignment: .leading
-            )
-            .cornerRadius(4, corners: [.topRight, .bottomRight])
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - 右侧内容区
+    // MARK: - 内容区
 
     @ViewBuilder
     private var contentPanel: some View {
-        Group {
-            switch selectedTab {
-            case .appearance:
-                AppearanceSettingsView()
-            case .highlight:
-                HighlightSettingsView()
-            case .security:
-                SecuritySettingsView()
-            case .terminal:
-                TerminalSettingsView()
-            case .cloudSync:
-                CloudSyncSettingsView()
-            case .ai:
-                AISettingsView()
-            }
+        switch selectedTab {
+        case .general:
+            GeneralSettingsView()
+        case .appearance:
+            AppearanceSettingsView()
+        case .terminal:
+            TerminalSettingsView()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

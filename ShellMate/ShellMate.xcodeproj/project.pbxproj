@@ -58,6 +58,7 @@
 		A1010004 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010004 /* SettingsView.swift */; };
 		A1010005 /* TerminalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010005 /* TerminalSettingsView.swift */; };
 		A1010006 /* CloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010006 /* CloudSyncSettingsView.swift */; };
+		GS010001 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GS020001 /* GeneralSettingsView.swift */; };
 		A1010007 /* CredentialVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* CredentialVault.swift */; };
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
@@ -65,7 +66,12 @@
 		AI010002 /* AIAssistantPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020002 /* AIAssistantPanelView.swift */; };
 		AI010003 /* AIErrorDetectiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020003 /* AIErrorDetectiveView.swift */; };
 		AI010004 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020004 /* AISettingsView.swift */; };
+		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
 		A4010001 /* AppVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4020001 /* AppVariant.swift */; };
+		SL010001 /* ScriptModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020001 /* ScriptModels.swift */; };
+		SL010002 /* ScriptStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020002 /* ScriptStore.swift */; };
+		SL010003 /* ScriptLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020003 /* ScriptLibraryView.swift */; };
+		SL010004 /* ScriptEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020004 /* ScriptEditorSheet.swift */; };
 		BB010003 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = BB010002 /* SwiftTerm */; };
 		BB020002 /* TerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020001 /* TerminalController.swift */; };
 		BB020004 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020003 /* TerminalView.swift */; };
@@ -106,6 +112,12 @@
 		FF060005 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050005 /* SessionStoreTests.swift */; };
 		FF060006 /* GroupStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050006 /* GroupStoreTests.swift */; };
 		FF060099 /* FeatureIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050099 /* FeatureIntegrationTests.swift */; };
+		L0010001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = L0020001 /* Localizable.strings */; };
+		TM010001 /* TmuxModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020001 /* TmuxModels.swift */; };
+		TM010002 /* TmuxConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020002 /* TmuxConfigStore.swift */; };
+		TM010003 /* TmuxSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020003 /* TmuxSessionStore.swift */; };
+		TM010004 /* TmuxManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020004 /* TmuxManagerView.swift */; };
+		TM010005 /* TmuxNewSessionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020005 /* TmuxNewSessionSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -188,6 +200,7 @@
 		A2010004 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A2010005 /* TerminalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSettingsView.swift; sourceTree = "<group>"; };
 		A2010006 /* CloudSyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncSettingsView.swift; sourceTree = "<group>"; };
+		GS020001 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		A2010007 /* CredentialVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVault.swift; sourceTree = "<group>"; };
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
@@ -195,7 +208,12 @@
 		AI020002 /* AIAssistantPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantPanelView.swift; sourceTree = "<group>"; };
 		AI020003 /* AIErrorDetectiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIErrorDetectiveView.swift; sourceTree = "<group>"; };
 		AI020004 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
 		A4020001 /* AppVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVariant.swift; sourceTree = "<group>"; };
+		SL020001 /* ScriptModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptModels.swift; sourceTree = "<group>"; };
+		SL020002 /* ScriptStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptStore.swift; sourceTree = "<group>"; };
+		SL020003 /* ScriptLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptLibraryView.swift; sourceTree = "<group>"; };
+		SL020004 /* ScriptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditorSheet.swift; sourceTree = "<group>"; };
 		BB020001 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
 		BB020003 /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
 		BB020005 /* TerminalToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalToolbarView.swift; sourceTree = "<group>"; };
@@ -235,7 +253,24 @@
 		FF050005 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		FF050006 /* GroupStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoreTests.swift; sourceTree = "<group>"; };
 		FF050099 /* FeatureIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureIntegrationTests.swift; sourceTree = "<group>"; };
+		L0020002 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		TM020001 /* TmuxModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxModels.swift; sourceTree = "<group>"; };
+		TM020002 /* TmuxConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxConfigStore.swift; sourceTree = "<group>"; };
+		TM020003 /* TmuxSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxSessionStore.swift; sourceTree = "<group>"; };
+		TM020004 /* TmuxManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxManagerView.swift; sourceTree = "<group>"; };
+		TM020005 /* TmuxNewSessionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxNewSessionSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXVariantGroup section */
+		L0020001 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				L0020002 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0003000300030001 /* Frameworks */ = {
@@ -276,6 +311,7 @@
 				0004000400040007 /* Shared */,
 				0002000200020007 /* ShellMate.xcdatamodeld */,
 				0002000200020005 /* Assets.xcassets */,
+				L0020001 /* Localizable.strings */,
 				0002000200020022 /* ShellMate.entitlements */,
 				0002000200020023 /* Info.plist */,
 				0004000400040008 /* Preview Content */,
@@ -323,11 +359,14 @@
 				0004000400040016 /* StatusBar */,
 				0004000400040015 /* TabBar */,
 				000400040004000E /* Terminal */,
+				TM030001 /* Tmux */,
 				DD030002 /* SFTP */,
 				EE030002 /* Tunnel */,
 				A3010001 /* Settings */,
 				EE030003 /* QuickCommand */,
 				AI030001 /* AI */,
+				SL030001 /* Scripts */,
+				WC030001 /* Welcome */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -360,6 +399,7 @@
 				EE020001 /* TunnelModels.swift */,
 				EE020002 /* QuickCommandModels.swift */,
 				SM020001 /* ServerMetrics.swift */,
+				TM020001 /* TmuxModels.swift */,
 				0004000400040012 /* Enums */,
 			);
 			path = Models;
@@ -382,6 +422,8 @@
 				0002000200020027 /* TabBarStore.swift */,
 				EE020007 /* QuickCommandStore.swift */,
 				F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */,
+				TM020002 /* TmuxConfigStore.swift */,
+				TM020003 /* TmuxSessionStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -540,6 +582,7 @@
 				A2010004 /* SettingsView.swift */,
 				A2010005 /* TerminalSettingsView.swift */,
 				A2010006 /* CloudSyncSettingsView.swift */,
+				GS020001 /* GeneralSettingsView.swift */,
 				AI020004 /* AISettingsView.swift */,
 			);
 			path = Settings;
@@ -569,6 +612,25 @@
 				AI020001 /* AIService.swift */,
 			);
 			path = AI;
+			sourceTree = "<group>";
+		};
+		SL030001 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				SL020001 /* ScriptModels.swift */,
+				SL020002 /* ScriptStore.swift */,
+				SL020003 /* ScriptLibraryView.swift */,
+				SL020004 /* ScriptEditorSheet.swift */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
+		WC030001 /* Welcome */ = {
+			isa = PBXGroup;
+			children = (
+				WC020001 /* WelcomeScreenView.swift */,
+			);
+			path = Welcome;
 			sourceTree = "<group>";
 		};
 		DD030001 /* SFTP */ = {
@@ -613,6 +675,15 @@
 				EE020009 /* QuickCommandManagerView.swift */,
 			);
 			path = QuickCommand;
+			sourceTree = "<group>";
+		};
+		TM030001 /* Tmux */ = {
+			isa = PBXGroup;
+			children = (
+				TM020004 /* TmuxManagerView.swift */,
+				TM020005 /* TmuxNewSessionSheet.swift */,
+			);
+			path = Tmux;
 			sourceTree = "<group>";
 		};
 		FF070001 /* ShellMateTests */ = {
@@ -743,6 +814,7 @@
 			files = (
 				0001000100010004 /* Assets.xcassets in Resources */,
 				0001000100010005 /* Preview Assets.xcassets in Resources */,
+				L0010001 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -828,6 +900,11 @@
 				A1010004 /* SettingsView.swift in Sources */,
 				A1010005 /* TerminalSettingsView.swift in Sources */,
 				A1010006 /* CloudSyncSettingsView.swift in Sources */,
+				GS010001 /* GeneralSettingsView.swift in Sources */,
+				SL010001 /* ScriptModels.swift in Sources */,
+				SL010002 /* ScriptStore.swift in Sources */,
+				SL010003 /* ScriptLibraryView.swift in Sources */,
+				SL010004 /* ScriptEditorSheet.swift in Sources */,
 				FA010001 /* SSHConnection.swift in Sources */,
 				FA010002 /* SSHSessionConfig.swift in Sources */,
 				FA010003 /* SSHAuthService.swift in Sources */,
@@ -840,6 +917,12 @@
 				FD0397BF947A490A8E1942CF /* HighlightEngine.swift in Sources */,
 				49842E6B49184AE498EDDCBA /* SyncInputStore.swift in Sources */,
 				1BAAF01EE41F4AF6ACCDE3C5 /* SyncInputConfirmView.swift in Sources */,
+				TM010001 /* TmuxModels.swift in Sources */,
+				TM010002 /* TmuxConfigStore.swift in Sources */,
+				TM010003 /* TmuxSessionStore.swift in Sources */,
+				TM010004 /* TmuxManagerView.swift in Sources */,
+				TM010005 /* TmuxNewSessionSheet.swift in Sources */,
+				WC010001 /* WelcomeScreenView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
