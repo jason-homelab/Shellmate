@@ -17,6 +17,11 @@ struct TerminalStatusBarView: View {
     var encoding: String = "UTF-8"
     var connectedAt: Date? = nil
 
+    /// tmux 状态：附加的会话名（nil 表示未附加）
+    var tmuxAttachedSession: String? = nil
+    /// tmux 状态：已知会话总数（0 表示无会话或 tmux 不可用）
+    var tmuxSessionCount: Int = 0
+
     /// W12.6：观察同步输入状态
     @ObservedObject private var syncStore = SyncInputStore.shared
 
@@ -30,15 +35,14 @@ struct TerminalStatusBarView: View {
                 disconnectedContent
             }
         }
-        .frame(height: 28)
-        .background {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay { Rectangle().fill(DesignTokens.Colors.glassUltraLight) }
-        }
+        .frame(height: DesignTokens.Sizes.statusBarHeight)
+        // Figma: bg-[#f5f5f7]/90 backdrop-blur-2xl
+        .background(.ultraThinMaterial)
+        .background(Color(hex: "#f5f5f7").opacity(0.90))
+        // Figma: border-t border-[#d2d2d7]/50
         .overlay(alignment: .top) {
             Rectangle()
-                .fill(DesignTokens.Colors.glassBorderSide)
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
         }
     }
@@ -71,14 +75,32 @@ struct TerminalStatusBarView: View {
 
                 if let session {
                     Text(session.name)
-                        .font(DesignTokens.Typography.labelSmall)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Color(hex: "#1d1d1f"))
                         .lineLimit(1)
-
+                    // Figma: 分隔点 •
+                    Text("•")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(hex: "#86868b"))
                     Text("\(session.username)@\(session.host)")
                         .font(DesignTokens.Typography.codeSmall)
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .foregroundColor(Color(hex: "#86868b"))
                         .lineLimit(1)
+                }
+
+                // 连接时长（本地化格式）
+                if let connectedAt {
+                    Text(connectionDuration(from: connectedAt))
+                        .font(DesignTokens.Typography.labelSmall)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .monospacedDigit()
+                }
+
+                // tmux 状态指示器
+                if let sessionName = tmuxAttachedSession {
+                    tmuxBadge(sessionName: sessionName)
+                } else if tmuxSessionCount > 0 {
+                    tmuxIdleBadge(count: tmuxSessionCount)
                 }
 
                 // W12.6：同步输入状态
@@ -132,31 +154,66 @@ struct TerminalStatusBarView: View {
             networkView(m)
             divider
 
-            // 终端尺寸
-            Text("\(columns)×\(rows)")
-                .font(DesignTokens.Typography.codeSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+            // Figma §9: Activity icon + "SSH Port {port}"
+            HStack(spacing: 4) {
+                Image(systemName: "network")
+                    .font(.system(size: 9))
+                    .foregroundColor(Color(hex: "#86868b"))
+                Text("SSH Port \(session?.port ?? 22)")
+                    .font(DesignTokens.Typography.labelSmall)
+                    .foregroundColor(Color(hex: "#86868b"))
+            }
         }
     }
 
     // MARK: - CPU
 
     private func cpuView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
+            // 彩色图标徽章（Figma: p-1 rounded-md bg-[#007aff]/10）
+            ZStack {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(hex: "#007aff").opacity(0.10))
+                    .frame(width: 16, height: 16)
+                Image(systemName: "cpu")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundColor(Color(hex: "#007aff"))
+            }
             Text("CPU")
                 .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .foregroundColor(Color(hex: "#86868b"))
             Text(String(format: "%.1f%%", m.cpuUsage))
-                .font(DesignTokens.Typography.codeSmall)
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(cpuColor(m.cpuColor))
                 .monospacedDigit()
+            // Figma: 8 根迷你柱状图，高度随 CPU% 缩放，颜色随阈值
+            cpuMiniChart(m)
         }
+    }
+
+    /// CPU 迷你柱状图（8 根，Figma: w-0.5 h-[n] rounded-full opacity-60）
+    private func cpuMiniChart(_ m: ServerMetrics) -> some View {
+        let barCount = 8
+        let maxH: CGFloat = 12
+        let color = cpuColor(m.cpuColor)
+        return HStack(spacing: 1) {
+            ForEach(0..<barCount, id: \.self) { i in
+                let ratio = CGFloat(m.cpuUsage) / 100.0
+                // 锯齿波形：奇数稍低，营造动态感
+                let h = max(2, maxH * ratio * (i % 2 == 0 ? 1.0 : 0.7))
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(color)
+                    .frame(width: 2, height: h)
+                    .opacity(0.60)
+            }
+        }
+        .frame(height: maxH)
     }
 
     private func cpuColor(_ load: ServerMetrics.CPULoad) -> Color {
         switch load {
         case .low: return DesignTokens.Colors.statusConnected
-        case .medium: return .orange
+        case .medium: return DesignTokens.Colors.statusConnecting
         case .high: return DesignTokens.Colors.statusError
         }
     }
@@ -164,65 +221,84 @@ struct TerminalStatusBarView: View {
     // MARK: - 内存
 
     private func memoryView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 3) {
-            Text("MEM")
+        HStack(spacing: 4) {
+            // Figma: p-1 rounded-md bg-[#5856d6]/10
+            ZStack {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(hex: "#5856d6").opacity(0.10))
+                    .frame(width: 16, height: 16)
+                Image(systemName: "memorychip")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundColor(Color(hex: "#5856d6"))
+            }
+            Text("Memory")
                 .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .foregroundColor(Color(hex: "#86868b"))
             HStack(spacing: 2) {
                 Text(ServerMetrics.formatBytes(m.memoryUsed))
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(memoryBarColor(m.memoryRatio))
                     .monospacedDigit()
                 Text("/")
                     .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .foregroundColor(Color(hex: "#86868b"))
                 Text(ServerMetrics.formatBytes(m.memoryTotal))
                     .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .foregroundColor(Color(hex: "#86868b"))
                     .monospacedDigit()
             }
-            // 内存使用率迷你条
+            // Figma: w-12 h-1.5 bg-black/5 rounded-full
             memoryBar(ratio: m.memoryRatio)
         }
     }
 
     private func memoryBar(ratio: Double) -> some View {
+        // Figma: w-12 h-1.5 bg-black/5 rounded-full
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 1.5)
-                    .fill(DesignTokens.Colors.borderSecondary)
-                RoundedRectangle(cornerRadius: 1.5)
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.black.opacity(0.05))
+                RoundedRectangle(cornerRadius: 3)
                     .fill(memoryBarColor(ratio))
                     .frame(width: geo.size.width * CGFloat(min(ratio, 1)))
             }
         }
-        .frame(width: 32, height: 4)
+        .frame(width: 48, height: 6)
     }
 
     private func memoryBarColor(_ ratio: Double) -> Color {
         if ratio < 0.7 { return DesignTokens.Colors.statusConnected }
-        if ratio < 0.9 { return .orange }
+        if ratio < 0.9 { return DesignTokens.Colors.statusConnecting }
         return DesignTokens.Colors.statusError
     }
 
     // MARK: - 磁盘
 
     private func diskView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 3) {
-            Text("DISK")
+        HStack(spacing: 4) {
+            // Figma: p-1 rounded-md bg-[#ff9500]/10
+            ZStack {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(hex: "#ff9500").opacity(0.10))
+                    .frame(width: 16, height: 16)
+                Image(systemName: "internaldrive")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundColor(Color(hex: "#ff9500"))
+            }
+            Text("Disk")
                 .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .foregroundColor(Color(hex: "#86868b"))
             HStack(spacing: 2) {
                 Text(ServerMetrics.formatBytes(m.diskUsed))
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
                     .monospacedDigit()
                 Text("/")
                     .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .foregroundColor(Color(hex: "#86868b"))
                 Text(ServerMetrics.formatBytes(m.diskTotal))
                     .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .foregroundColor(Color(hex: "#86868b"))
                     .monospacedDigit()
             }
         }
@@ -231,44 +307,90 @@ struct TerminalStatusBarView: View {
     // MARK: - 网络
 
     private func networkView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-            HStack(spacing: 2) {
-                Text("↓")
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.statusConnected)
-                Text(ServerMetrics.formatRate(m.networkRxRate))
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .monospacedDigit()
+        HStack(spacing: 4) {
+            // Figma: p-1 rounded-md bg-[#34c759]/10
+            ZStack {
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(hex: "#34c759").opacity(0.10))
+                    .frame(width: 16, height: 16)
+                Image(systemName: "wifi")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundColor(Color(hex: "#34c759"))
             }
-            HStack(spacing: 2) {
-                Text("↑")
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(.orange)
-                Text(ServerMetrics.formatRate(m.networkTxRate))
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .monospacedDigit()
+            HStack(spacing: 6) {
+                HStack(spacing: 2) {
+                    Text("↓")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Color(hex: "#34c759"))  // Figma: green
+                    Text(ServerMetrics.formatRate(m.networkRxRate))
+                        .font(DesignTokens.Typography.codeSmall)
+                        .foregroundColor(Color(hex: "#34c759"))
+                        .monospacedDigit()
+                }
+                HStack(spacing: 2) {
+                    Text("↑")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Color(hex: "#007aff"))  // Figma: blue（非橙色）
+                    Text(ServerMetrics.formatRate(m.networkTxRate))
+                        .font(DesignTokens.Typography.codeSmall)
+                        .foregroundColor(Color(hex: "#007aff"))
+                        .monospacedDigit()
+                }
             }
         }
     }
 
     // MARK: - 共用组件
 
+    /// 使用 DateComponentsFormatter 本地化输出连接时长
+    private func connectionDuration(from date: Date) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.maximumUnitCount = 2
+        return formatter.string(from: date, to: Date()) ?? ""
+    }
+
+    // Figma: h-4 w-px bg-[#d2d2d7]/50
     private var divider: some View {
         Rectangle()
-            .fill(DesignTokens.Colors.borderSecondary)
-            .frame(width: 1, height: 10)
+            .fill(Color(hex: "#d2d2d7").opacity(0.50))
+            .frame(width: 1, height: 16)
     }
 
     private var syncBadge: some View {
         HStack(spacing: 3) {
             Image(systemName: "bolt.fill")
                 .font(.system(size: 9))
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("同步(\(syncStore.syncCount))")
                 .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.Colors.statusConnecting)
+        }
+    }
+
+    /// 已附加 tmux 会话时的绿色徽章
+    private func tmuxBadge(sessionName: String) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: "rectangle.3.group.fill")
+                .font(.system(size: 9))
+                .foregroundColor(DesignTokens.Colors.statusConnected)
+            Text("tmux:\(sessionName)")
+                .font(DesignTokens.Typography.labelSmall)
+                .foregroundColor(DesignTokens.Colors.statusConnected)
+                .lineLimit(1)
+        }
+    }
+
+    /// 有 tmux 会话但未附加时的灰色徽章
+    private func tmuxIdleBadge(count: Int) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: "rectangle.3.group")
+                .font(.system(size: 9))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+            Text("tmux[\(count)]")
+                .font(DesignTokens.Typography.labelSmall)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
         }
     }
 }
