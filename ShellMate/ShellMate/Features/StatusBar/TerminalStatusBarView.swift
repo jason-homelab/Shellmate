@@ -195,34 +195,7 @@ struct TerminalStatusBarView: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(cpuColor(m.cpuColor))
                 .monospacedDigit()
-            // Figma: 8 根迷你柱状图，高度随 CPU% 缩放，颜色随阈值
-            cpuMiniChart(m)
         }
-    }
-
-    /// CPU 迷你 sparkline（8 根柱，使用历史读数；历史不足时用当前值填充）
-    private func cpuMiniChart(_ m: ServerMetrics) -> some View {
-        let maxH: CGFloat = 12
-        let minH: CGFloat = 2     // 最低可见高度
-        let color = cpuColor(m.cpuColor)
-
-        // 填充到 8 条：历史不足时用当前值补齐
-        var bars = cpuHistory
-        while bars.count < 8 { bars.insert(m.cpuUsage, at: 0) }
-        let last8 = Array(bars.suffix(8))
-
-        return HStack(alignment: .bottom, spacing: 1) {
-            ForEach(Array(last8.enumerated()), id: \.offset) { _, v in
-                let ratio = CGFloat(v) / 100.0
-                // 保证最低可见：minH + 剩余高度按比例缩放
-                let h = minH + (maxH - minH) * ratio
-                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                    .fill(color)
-                    .frame(width: 2, height: max(minH, h))
-                    .opacity(0.70)
-            }
-        }
-        .frame(height: maxH, alignment: .bottom)
     }
 
     private func cpuColor(_ load: ServerMetrics.CPULoad) -> Color {
