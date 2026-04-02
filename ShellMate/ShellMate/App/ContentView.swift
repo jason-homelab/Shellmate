@@ -77,7 +77,14 @@ struct ContentView: View {
                 // 终端内容区域
                 terminalContentArea
             }
-            .background(DesignTokens.Colors.surfaceWindow)
+            // Figma: bg-gradient-to-br from-[#f5f5f7] to-[#e8e8ed]
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "#f5f5f7"), Color(hex: "#e8e8ed")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
         }
         .navigationTitle("")
         .toolbar {
@@ -221,7 +228,6 @@ struct ContentView: View {
             }
             .padding(DesignTokens.Spacing.xxl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DesignTokens.Colors.surfaceWindow)
         } else {
             // 分屏：有分屏会话时显示分割布局
             if splitLayout != .none,
@@ -272,7 +278,9 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow)
+        // Figma: bg-white/50 backdrop-blur-sm
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.50))
     }
 
     // MARK: - 工具栏

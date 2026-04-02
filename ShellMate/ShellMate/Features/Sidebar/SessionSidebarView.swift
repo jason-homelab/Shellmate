@@ -15,6 +15,9 @@ struct SessionSidebarView: View {
     /// 搜索框焦点触发器（⌘F 快捷键驱动）
     @State private var searchFocusTrigger: Bool = false
 
+    /// 搜索栏是否可见（默认隐藏，⌘F 触发，对齐 Figma 无搜索栏设计）
+    @State private var isSearchBarVisible: Bool = false
+
     // MARK: - 视图
 
     var body: some View {
@@ -22,11 +25,14 @@ struct SessionSidebarView: View {
             // 顶部操作头部：标题 + 操作图标按钮
             sidebarHeader
 
-            // 搜索框
-            SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $searchFocusTrigger)
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .padding(.top, DesignTokens.Spacing.sm)
-                .padding(.bottom, DesignTokens.Spacing.xs)
+            // 搜索框（默认隐藏，⌘F 触发后显示，对齐 Figma 无持久搜索栏设计）
+            if isSearchBarVisible || !sessionStore.searchQuery.isEmpty {
+                SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $searchFocusTrigger)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.top, DesignTokens.Spacing.sm)
+                    .padding(.bottom, DesignTokens.Spacing.xs)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             // 会话列表
             if sessionStore.isLoading {
@@ -50,14 +56,18 @@ struct SessionSidebarView: View {
         .task {
             await loadData()
         }
-        // PRD 8.1：⌘F 聚焦搜索框
+        // PRD 8.1：⌘F 唤出并聚焦搜索框
         .background(
-            Button("") { searchFocusTrigger = true }
-                .keyboardShortcut("f", modifiers: .command)
-                .hidden()
+            Button("") {
+                withAnimation(DesignTokens.Animation.fast) { isSearchBarVisible = true }
+                searchFocusTrigger = true
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            .hidden()
         )
         // 菜单栏 ⌘L 聚焦侧边栏搜索框
         .onReceive(NotificationCenter.default.publisher(for: .focusSidebarSearchRequested)) { _ in
+            withAnimation(DesignTokens.Animation.fast) { isSearchBarVisible = true }
             searchFocusTrigger = true
         }
     }
