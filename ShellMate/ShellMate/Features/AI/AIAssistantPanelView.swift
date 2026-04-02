@@ -13,7 +13,22 @@ final class AIAssistantViewModel: ObservableObject {
     private var streamingTask: Task<Void, Never>?
     let session: Session
 
-    init(session: Session) { self.session = session }
+    init(session: Session) {
+        self.session = session
+        // 面板打开时预填充欢迎消息（对齐 Figma §09 初始状态）
+        self._messages = .init(initialValue: [
+            .assistant("""
+            Hello! I'm your AI terminal assistant. I can help you with:
+
+            • Command suggestions and explanations
+            • Script generation
+            • Troubleshooting errors
+            • Best practices and security tips
+
+            What would you like help with?
+            """)
+        ])
+    }
 
     // MARK: - 系统提示词
 
@@ -103,7 +118,7 @@ final class AIAssistantViewModel: ObservableObject {
 
     /// 预填充错误上下文（面板首次打开时调用）
     func prefillError(_ errorText: String) {
-        guard messages.isEmpty && !isStreaming else { return }
+        guard !isStreaming else { return }
         let prompt = "请帮我分析以下终端错误并给出修复建议：\n\n```\n\(errorText)\n```"
         send(text: prompt)
     }
@@ -150,9 +165,9 @@ struct AIAssistantPanelView: View {
 
     private var headerView: some View {
         HStack(spacing: 10) {
-            // AI 品牌图标（渐变圆角方块：from-[#007aff] to-[#5856d6]）
+            // Figma: w-10 h-10 rounded-xl bg-gradient from-[#007aff] to-[#5856d6] shadow-lg
             ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                Circle()
                     .fill(
                         LinearGradient(
                             colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
@@ -160,10 +175,10 @@ struct AIAssistantPanelView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 32, height: 32)
-                    .shadow(color: Color(hex: "#007aff").opacity(0.35), radius: 6, x: 0, y: 2)
+                    .frame(width: 40, height: 40)
+                    .shadow(color: Color(hex: "#007aff").opacity(0.40), radius: 8, x: 0, y: 3)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.white)
             }
 
@@ -262,29 +277,27 @@ struct AIAssistantPanelView: View {
     private var messageListView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 12) {
-                    if vm.messages.isEmpty && !vm.isStreaming {
-                        emptyStateView
-                            .padding(.top, DesignTokens.Spacing.xxl)
-                    } else {
-                        ForEach(vm.messages) { msg in
-                            AIMessageBubbleView(message: msg)
-                                .id(msg.id)
-                        }
-                        if vm.isStreaming {
-                            AIMessageBubbleView(
-                                message: .assistant(vm.streamingContent),
-                                isStreaming: true
-                            )
-                            .id("streaming")
-                        }
+                LazyVStack(spacing: 16) {
+                    ForEach(vm.messages) { msg in
+                        AIMessageBubbleView(message: msg)
+                            .id(msg.id)
+                    }
+                    if vm.isStreaming {
+                        AIMessageBubbleView(
+                            message: .assistant(vm.streamingContent),
+                            isStreaming: true
+                        )
+                        .id("streaming")
+                    }
+                    // Figma §7: 仅初始欢迎消息时显示快速建议（messages.count <= 1）
+                    if vm.messages.count <= 1 && !vm.isStreaming {
+                        quickSuggestionsView
                     }
                     if let err = vm.errorMessage {
                         errorBanner(err)
                             .padding(.horizontal, 14)
                             .padding(.top, 6)
                     }
-                    // 底部留白，避免最后一条消息贴着输入框
                     Color.clear.frame(height: 8)
                 }
                 .padding(14)
@@ -300,74 +313,56 @@ struct AIAssistantPanelView: View {
                 }
             }
         }
-        .background(DesignTokens.Colors.surfaceWindow)
+        // Figma: 透明背景，继承容器 bg-white/90
     }
 
-    // MARK: - 空状态
+    // MARK: - 快速建议（Figma §7：胶囊按钮 2 列网格）
 
-    private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            // 图标
-            ZStack {
-                Circle()
-                    .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
-                    .frame(width: 52, height: 52)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+    private let quickSuggestions = [
+        "How do I find large files?",
+        "Check disk space",
+        "Monitor CPU usage",
+        "Create a backup script"
+    ]
+
+    private var quickSuggestionsView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // 标题行：💡 Quick suggestions
+            HStack(spacing: 6) {
+                Image(systemName: "lightbulb")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(hex: "#ff9500"))
+                Text("Quick suggestions")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(Color(hex: "#86868b"))
             }
 
-            VStack(spacing: 4) {
-                Text("有什么可以帮助你？")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("\(vm.session.username)@\(vm.session.host)")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            // 2×2 胶囊按钮网格
+            let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(quickSuggestions, id: \.self) { suggestion in
+                    Button { vm.send(text: suggestion) } label: {
+                        Text(suggestion)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Color(hex: "#1d1d1f"))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.white.opacity(0.80))
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-
-            // 快速建议列表
-            VStack(spacing: 1) {
-                suggestionRow(icon: "magnifyingglass",   text: "查找大于 100MB 的文件")
-                suggestionRow(icon: "cpu",               text: "分析 CPU 与内存占用")
-                suggestionRow(icon: "doc.text",          text: "生成日志自动归档脚本")
-                suggestionRow(icon: "network",           text: "检查端口占用情况")
-                suggestionRow(icon: "lock.open",         text: "修复 Permission denied 错误")
-            }
-            .background(DesignTokens.Colors.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
-            )
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-        .frame(maxWidth: .infinity)
-    }
-
-    private func suggestionRow(icon: String, text: String) -> some View {
-        Button { vm.send(text: text) } label: {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
-                    .frame(width: 18)
-                Text(text)
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm + 1)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .background(
-            Color(nsColor: NSColor.controlHighlightColor).opacity(0)
-        )
+        .padding(.horizontal, 4)
+        .padding(.top, 8)
     }
 
     private func errorBanner(_ msg: String) -> some View {
