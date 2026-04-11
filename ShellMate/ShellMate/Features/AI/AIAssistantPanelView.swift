@@ -1,5 +1,12 @@
 import SwiftUI
 
+// MARK: - 输入模式
+
+enum AIInputMode: String, CaseIterable {
+    case chat = "对话"
+    case nlCommand = "生成命令"
+}
+
 // MARK: - ViewModel
 
 @MainActor
@@ -9,6 +16,7 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var streamingContent: String = ""
     @Published var errorMessage: String?
     @Published var inputText: String = ""
+    @Published var inputMode: AIInputMode = .chat
 
     private var streamingTask: Task<Void, Never>?
     let session: Session
@@ -32,7 +40,7 @@ final class AIAssistantViewModel: ObservableObject {
 
     // MARK: - 系统提示词
 
-    private var systemPrompt: String {
+    private var chatSystemPrompt: String {
         """
         You are an expert DevOps engineer and SSH terminal assistant integrated into ShellMate, \
         a professional macOS SSH client.
@@ -47,13 +55,28 @@ final class AIAssistantViewModel: ObservableObject {
         """
     }
 
+    /// 自然语言→命令模式：只返回一条可执行的 shell 命令代码块，不加任何解释
+    private var nlCommandSystemPrompt: String {
+        """
+        You are a shell command generator for ShellMate SSH client.
+        Current connection: \(session.username)@\(session.host) (port \(session.port))
+
+        Rules:
+        1. Return ONLY a single fenced shell code block (```bash ... ```) with the command to execute.
+        2. Do NOT include any explanation, preamble, or text outside the code block.
+        3. If the request is dangerous (rm -rf, dd, chmod 777 etc.), prepend the block with exactly one line: ⚠️ 高风险命令，请确认后再执行
+        4. If you cannot generate a safe command, return a comment inside the block explaining why.
+        """
+    }
+
     // MARK: - 发送消息
 
     func send(text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isStreaming else { return }
 
-        messages.append(.user(trimmed))
+        let displayText = inputMode == .nlCommand ? "[\(AIInputMode.nlCommand.rawValue)] \(trimmed)" : trimmed
+        messages.append(.user(displayText))
         inputText = ""
         errorMessage = nil
 
@@ -72,8 +95,10 @@ final class AIAssistantViewModel: ObservableObject {
         isStreaming = true
         streamingContent = ""
 
-        let msgs = messages
-        let prompt = systemPrompt
+        let msgs = inputMode == .nlCommand
+            ? [AIMessage.user(trimmed)]           // NL 模式只发原始输入，避免历史消息干扰
+            : messages
+        let prompt = inputMode == .nlCommand ? nlCommandSystemPrompt : chatSystemPrompt
         let model = settings.modelId
         let key = settings.apiKey
         let url = settings.baseURL
@@ -134,11 +159,19 @@ struct AIAssistantPanelView: View {
     @ObservedObject private var aiSettings = AISettingsStore.shared
     var onClose: () -> Void
     var initialError: String?
+    /// 一键插入终端回调（AI-03）：将生成的命令发送到当前活跃 SSH 会话
+    var onInsertCommand: ((String) -> Void)?
 
-    init(session: Session, onClose: @escaping () -> Void, initialError: String? = nil) {
+    init(
+        session: Session,
+        onClose: @escaping () -> Void,
+        initialError: String? = nil,
+        onInsertCommand: ((String) -> Void)? = nil
+    ) {
         _vm = StateObject(wrappedValue: AIAssistantViewModel(session: session))
         self.onClose = onClose
         self.initialError = initialError
+        self.onInsertCommand = onInsertCommand
     }
 
     var body: some View {
@@ -279,13 +312,14 @@ struct AIAssistantPanelView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(vm.messages) { msg in
-                        AIMessageBubbleView(message: msg)
+                        AIMessageBubbleView(message: msg, onInsertCommand: onInsertCommand)
                             .id(msg.id)
                     }
                     if vm.isStreaming {
                         AIMessageBubbleView(
                             message: .assistant(vm.streamingContent),
-                            isStreaming: true
+                            isStreaming: true,
+                            onInsertCommand: onInsertCommand
                         )
                         .id("streaming")
                     }
@@ -397,12 +431,17 @@ struct AIAssistantPanelView: View {
 
     private var inputView: some View {
         VStack(spacing: 6) {
+            // 模式切换条（AI-03：对话 / 生成命令）
+            modeSwitchBar
+
             // 输入框行（flex gap-2）
             HStack(alignment: .center, spacing: 8) {
                 // 输入框（bg-white/80 border-[#d2d2d7]/50 rounded-xl shadow-sm）
                 ZStack(alignment: .leading) {
                     if vm.inputText.isEmpty {
-                        Text("Ask me anything about terminal commands...")
+                        Text(vm.inputMode == .nlCommand
+                             ? "用自然语言描述你想执行的操作..."
+                             : "Ask me anything about terminal commands...")
                             .font(.system(size: 12))
                             .foregroundColor(Color(hex: "#86868b"))
                             .padding(.horizontal, 12)
@@ -423,7 +462,12 @@ struct AIAssistantPanelView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 0.75)
+                        .strokeBorder(
+                            vm.inputMode == .nlCommand
+                                ? Color(hex: "#5856d6").opacity(0.50)
+                                : Color(hex: "#d2d2d7").opacity(0.5),
+                            lineWidth: vm.inputMode == .nlCommand ? 1.0 : 0.75
+                        )
                 )
                 .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
 
@@ -434,33 +478,37 @@ struct AIAssistantPanelView: View {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(DesignTokens.Colors.statusError)
-                            .frame(width: 44, height: 44)   // h-11（Figma-Spec-v2 §09）
+                            .frame(width: 44, height: 44)
                             .background(DesignTokens.Colors.statusError.opacity(0.12))
                             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .help("停止生成")
                 } else {
-                    // 发送按钮（h-11 px-4 rounded-xl bg-[#007aff] hover:bg-[#0051d5] shadow-lg disabled:opacity-40）
                     let canSend = !vm.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    let sendColor = vm.inputMode == .nlCommand
+                        ? Color(hex: "#5856d6")
+                        : Color(hex: "#007aff")
                     Button { vm.send(text: vm.inputText) } label: {
-                        Image(systemName: "paperplane.fill")
+                        Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "paperplane.fill")
                             .font(.system(size: 13))
                             .foregroundColor(.white)
-                            .frame(width: 44, height: 44)   // h-11（Figma-Spec-v2 §09）
-                            .background(Color(hex: "#007aff"))
+                            .frame(width: 44, height: 44)
+                            .background(sendColor)
                             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-                            .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 6, x: 0, y: 2)
+                            .shadow(color: sendColor.opacity(0.3), radius: 6, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)
                     .disabled(!canSend)
                     .opacity(canSend ? 1.0 : 0.4)
-                    .help("发送（Return）")
+                    .help(vm.inputMode == .nlCommand ? "生成命令（Return）" : "发送（Return）")
                 }
             }
 
-            // 提示文字（text-xs text-[#86868b]）
-            Text("Press Enter to send, Shift+Enter for new line")
+            // 提示文字
+            Text(vm.inputMode == .nlCommand
+                 ? "AI 将生成一条 shell 命令，可一键插入终端执行"
+                 : "Press Enter to send, Shift+Enter for new line")
                 .font(.system(size: 10))
                 .foregroundColor(Color(hex: "#86868b"))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -474,6 +522,44 @@ struct AIAssistantPanelView: View {
                 .frame(height: 0.5)
         }
     }
+
+    // MARK: - 模式切换条（AI-03）
+
+    private var modeSwitchBar: some View {
+        HStack(spacing: 4) {
+            ForEach(AIInputMode.allCases, id: \.rawValue) { mode in
+                let isSelected = vm.inputMode == mode
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        vm.inputMode = mode
+                        vm.inputText = ""
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: mode == .chat ? "bubble.left" : "terminal")
+                            .font(.system(size: 10, weight: .medium))
+                        Text(mode.rawValue)
+                            .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                    }
+                    .foregroundColor(isSelected
+                        ? (mode == .nlCommand ? Color(hex: "#5856d6") : Color(hex: "#007aff"))
+                        : Color(hex: "#86868b"))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        isSelected
+                            ? (mode == .nlCommand
+                               ? Color(hex: "#5856d6").opacity(0.10)
+                               : Color(hex: "#007aff").opacity(0.10))
+                            : Color.clear
+                    )
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+    }
 }
 
 // MARK: - 消息气泡
@@ -482,6 +568,8 @@ struct AIAssistantPanelView: View {
 struct AIMessageBubbleView: View {
     let message: AIMessage
     var isStreaming: Bool = false
+    /// 一键插入终端（AI-03），nil 表示不显示插入按钮
+    var onInsertCommand: ((String) -> Void)?
 
     private var isUser: Bool { message.role == .user }
 
@@ -573,7 +661,7 @@ struct AIMessageBubbleView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 case .code(let code, let lang):
-                    AICodeBlockView(code: code, language: lang)
+                    AICodeBlockView(code: code, language: lang, onInsert: onInsertCommand)
                 case .inlineCode(let c):
                     Text(c)
                         .font(.system(size: 11, design: .monospaced))
@@ -610,18 +698,33 @@ struct AIMessageBubbleView: View {
 struct AICodeBlockView: View {
     let code: String
     let language: String?
+    /// 一键插入终端（AI-03），nil 表示不显示该按钮
+    var onInsert: ((String) -> Void)?
     @State private var isCopied: Bool = false
+    @State private var isInserted: Bool = false
+
+    /// 提取纯命令文本（去除 ⚠️ 警告行和首尾空白）
+    private var cleanCommand: String {
+        code
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .components(separatedBy: "\n")
+            .filter { !$0.hasPrefix("⚠️") }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 标题栏
-            HStack {
+            HStack(spacing: 6) {
                 if let lang = language, !lang.isEmpty {
                     Text(lang.lowercased())
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 Spacer()
+
+                // 复制按钮
                 Button {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(code, forType: .string)
@@ -641,6 +744,37 @@ struct AICodeBlockView: View {
                         : DesignTokens.Colors.textTertiary)
                 }
                 .buttonStyle(.plain)
+
+                // 插入终端按钮（AI-03，仅注入回调时显示）
+                if let onInsert {
+                    Button {
+                        onInsert(cleanCommand)
+                        withAnimation { isInserted = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation { isInserted = false }
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: isInserted ? "checkmark.circle.fill" : "terminal")
+                                .font(.system(size: 10))
+                            Text(isInserted ? "已插入" : "插入终端")
+                                .font(.system(size: 10, weight: .medium))
+                        }
+                        .foregroundColor(isInserted
+                            ? DesignTokens.Colors.statusConnected
+                            : Color(hex: "#5856d6"))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(
+                            isInserted
+                                ? DesignTokens.Colors.statusConnected.opacity(0.10)
+                                : Color(hex: "#5856d6").opacity(0.10)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .help("将命令插入当前终端并执行")
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)

@@ -442,7 +442,11 @@ struct TerminalView: View {
                                 aiInitialError = nil
                             }
                         },
-                        initialError: aiInitialError
+                        initialError: aiInitialError,
+                        onInsertCommand: { command in
+                            // AI-03：将生成命令插入当前 SSH 会话执行
+                            controller.sendComposeContent(command + "\r")
+                        }
                     )
                     .frame(width: DesignTokens.Sizes.aiPanelWidth)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
