@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="iconClip">
+      <rect width="1024" height="1024" rx="224" ry="224"/>
+    </clipPath>
+
+    <!--
+      品牌渐变背景：左上深紫黑 → 右下深青黑
+      区别于 Terminal.app 纯黑，形成 ShellMate 色彩标识
+    -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#150922"/>
+      <stop offset="42%"  stop-color="#080E1C"/>
+      <stop offset="100%" stop-color="#041614"/>
+    </linearGradient>
+
+    <!-- 四角暗角，增加立体感 -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="35%"  stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.52"/>
+    </radialGradient>
+
+    <!--
+      >_ 统一横向渐变
+      x1=215（> 左端臂）x2=758（_ 右端 528+230）
+      两元素共享同一渐变 → 视觉完全统一
+    -->
+    <linearGradient id="markGrad" gradientUnits="userSpaceOnUse"
+                    x1="215" y1="0" x2="758" y2="0">
+      <stop offset="0%"   stop-color="#A0FFE8"/>
+      <stop offset="44%"  stop-color="#00E0A8"/>
+      <stop offset="100%" stop-color="#00A07A"/>
+    </linearGradient>
+
+    <!-- macOS 顶部玻璃高光（左上光源惯例） -->
+    <linearGradient id="glassTop" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.11"/>
+      <stop offset="55%"  stop-color="#FFFFFF" stop-opacity="0.01"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="glassLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 极大环境光（仅扩散） -->
+    <filter id="fAmbient" x="-140%" y="-140%" width="380%" height="380%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="85"/>
+    </filter>
+
+    <!-- 主发光（phosphor 效果） -->
+    <filter id="fGlow" x="-70%" y="-70%" width="240%" height="240%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="28" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8"  result="b2"/>
+      <feMerge>
+        <feMergeNode in="b1"/>
+        <feMergeNode in="b2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- 背景圆环柔化 -->
+    <filter id="fRing" x="-25%" y="-25%" width="150%" height="150%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="16"/>
+    </filter>
+
+    <!-- 信号弧发光 -->
+    <filter id="fArc" x="-70%" y="-70%" width="240%" height="240%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- 细点底纹 -->
+    <pattern id="noise" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.7" fill="#FFFFFF" fill-opacity="0.016"/>
+    </pattern>
+  </defs>
+
+  <g clip-path="url(#iconClip)">
+
+    <!-- ════════════════════════════════
+         L1  背景
+    ════════════════════════════════ -->
+    <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+    <rect width="1024" height="1024" fill="url(#noise)"/>
+    <rect width="1024" height="1024" fill="url(#vignette)"/>
+
+    <!-- ════════════════════════════════
+         L2  背景定位光环
+         圆心对齐 >_ 视觉重心 (486,512)
+    ════════════════════════════════ -->
+    <circle cx="486" cy="512" r="318"
+            fill="none" stroke="#00DDA0" stroke-width="1.5"
+            opacity="0.15" filter="url(#fRing)"/>
+    <circle cx="486" cy="512" r="262"
+            fill="none" stroke="#00DDA0" stroke-width="1"
+            opacity="0.08" filter="url(#fRing)"/>
+
+    <!-- ════════════════════════════════
+         L3  >_ 大环境光
+    ════════════════════════════════ -->
+    <g filter="url(#fAmbient)" opacity="0.46">
+      <polyline points="215,382 485,512 215,642"
+                fill="none" stroke="#00DDA0" stroke-width="72"
+                stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="528" y="509" width="230" height="54" rx="13" fill="#00DDA0"/>
+    </g>
+
+    <!-- ════════════════════════════════
+         L4  >_ 主发光层
+    ════════════════════════════════ -->
+    <g filter="url(#fGlow)" opacity="0.52">
+      <polyline points="215,382 485,512 215,642"
+                fill="none" stroke="#00DDA0" stroke-width="60"
+                stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="528" y="509" width="230" height="54" rx="13" fill="#00DDA0"/>
+    </g>
+
+    <!-- ════════════════════════════════
+         L5  > 主体
+         坐标：(215,382) → (485,512) → (215,642)
+         垂直跨度 260px，stroke-width=50
+    ════════════════════════════════ -->
+    <polyline points="215,382 485,512 215,642"
+              fill="none" stroke="url(#markGrad)" stroke-width="50"
+              stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 顶部斜面高光 -->
+    <polyline points="215,382 485,512 215,642"
+              fill="none" stroke="#FFFFFF" stroke-width="50"
+              stroke-linecap="round" stroke-linejoin="round"
+              stroke-opacity="0.09" stroke-dasharray="40 5000"/>
+
+    <!-- ════════════════════════════════
+         L6  _ 游标（等权重版本）
+         x=528（tip 485 + 间距 43）
+         y=509（tip y=512 − 3，视觉贴合基线）
+         w=230  h=54（高度匹配 > stroke-width，等视觉权重）
+         与 > 共享 markGrad，完全统一
+    ════════════════════════════════ -->
+    <rect x="528" y="509" width="230" height="54" rx="13"
+          fill="url(#markGrad)"/>
+    <!-- 顶部高光（对应 > 的斜面高光） -->
+    <rect x="528" y="509" width="230" height="14" rx="7"
+          fill="#FFFFFF" fill-opacity="0.18"/>
+
+    <!-- ════════════════════════════════
+         L7  信号弧（从 _ 右端发出）
+         圆心：x=773（_ 右边缘 758 + 间距 15）
+                y=536（_ 纵向中心 509+27=536）
+         角度 ±45°（cos=sin=0.7071）
+         实色描边，同色系青绿
+
+         R=50  → (808,501)/(808,571)  sw=9  op=0.88
+         R=75  → (826,483)/(826,589)  sw=6  op=0.65
+         R=100 → (844,465)/(844,607)  sw=3.5 op=0.38
+    ════════════════════════════════ -->
+    <path d="M 844 465 A 100 100 0 0 1 844 607"
+          fill="none" stroke="#00C890" stroke-width="3.5"
+          stroke-linecap="round" opacity="0.38" filter="url(#fArc)"/>
+    <path d="M 826 483 A 75 75 0 0 1 826 589"
+          fill="none" stroke="#00D49C" stroke-width="6"
+          stroke-linecap="round" opacity="0.65" filter="url(#fArc)"/>
+    <path d="M 808 501 A 50 50 0 0 1 808 571"
+          fill="none" stroke="#00E0A8" stroke-width="9"
+          stroke-linecap="round" opacity="0.88" filter="url(#fArc)"/>
+
+    <!-- ════════════════════════════════
+         L8  macOS 顶部玻璃高光
+    ════════════════════════════════ -->
+    <rect x="0" y="0" width="1024" height="460" fill="url(#glassTop)"/>
+    <rect x="0" y="0" width="160" height="1024" fill="url(#glassLeft)"/>
+
+    <!-- ════════════════════════════════
+         L9  最外层描边
+    ════════════════════════════════ -->
+    <rect x="1.5" y="1.5" width="1021" height="1021" rx="223"
+          fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.06"/>
+
+  </g>
+</svg>
