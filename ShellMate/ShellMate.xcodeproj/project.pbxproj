@@ -74,6 +74,7 @@
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
 		CS010002 /* CommandSafetyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS020002 /* CommandSafetyChecker.swift */; };
+		NM010001 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = NM020001 /* NetworkMonitor.swift */; };
 		SFP010001 /* SessionFormatParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = SFP020001 /* SessionFormatParser.swift */; };
 		AI010001 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020001 /* AIService.swift */; };
 		AI010002 /* AIAssistantPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020002 /* AIAssistantPanelView.swift */; };
@@ -246,6 +247,7 @@
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
 		CS020002 /* CommandSafetyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandSafetyChecker.swift; sourceTree = "<group>"; };
+		NM020001 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		SFP020001 /* SessionFormatParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormatParser.swift; sourceTree = "<group>"; };
 		AI020001 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		AI020002 /* AIAssistantPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantPanelView.swift; sourceTree = "<group>"; };
@@ -601,6 +603,7 @@
 				72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */,
 				SM020002 /* ServerMetricsMonitor.swift */,
 				CS020002 /* CommandSafetyChecker.swift */,
+				NM020001 /* NetworkMonitor.swift */,
 				SFP020001 /* SessionFormatParser.swift */,
 				AI030003 /* AI */,
 				0004000400040017 /* SSH */,
@@ -1000,6 +1003,7 @@
 				SM010001 /* ServerMetrics.swift in Sources */,
 				SM010002 /* ServerMetricsMonitor.swift in Sources */,
 				CS010002 /* CommandSafetyChecker.swift in Sources */,
+				NM010001 /* NetworkMonitor.swift in Sources */,
 				SFP010001 /* SessionFormatParser.swift in Sources */,
 				AI010001 /* AIService.swift in Sources */,
 				AI010002 /* AIAssistantPanelView.swift in Sources */,

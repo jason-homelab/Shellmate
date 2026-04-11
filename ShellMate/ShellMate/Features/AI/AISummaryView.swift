@@ -194,6 +194,14 @@ struct AISummaryView: View {
 
     private func startSummary() {
         streamTask?.cancel()
+
+        // 21.4 离线预检
+        if !NetworkMonitor.shared.isConnected {
+            errorMessage = "网络不可用，请检查网络连接后重试"
+            isStreaming = false
+            return
+        }
+
         isStreaming = true
         errorMessage = nil
 

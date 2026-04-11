@@ -78,14 +78,56 @@ struct AIMessage: Identifiable, Equatable {
 enum AIServiceError: LocalizedError {
     case noAPIKey(AIProvider)
     case requestFailed(String)
+    case networkOffline
+    case timeout
+    case rateLimited
     case cancelled
 
     var errorDescription: String? {
         switch self {
-        case .noAPIKey(let p):       return "未配置 \(p.displayName) 的 API Key，请前往「设置 → AI 助手」进行配置"
+        case .noAPIKey(let p):  return "未配置 \(p.displayName) 的 API Key，请前往「设置 → AI 助手」进行配置"
         case .requestFailed(let m): return m
-        case .cancelled:            return "已停止"
+        case .networkOffline:   return "网络不可用，请检查网络连接后重试"
+        case .timeout:          return "请求超时，服务器响应过慢，请稍后重试"
+        case .rateLimited:      return "请求频率超限，请稍等片刻后重试"
+        case .cancelled:        return "已停止"
         }
+    }
+
+    /// 是否允许用户重试（取消操作和 API Key 缺失不可重试）
+    var isRetryable: Bool {
+        switch self {
+        case .cancelled, .noAPIKey: return false
+        default: return true
+        }
+    }
+}
+
+// MARK: - URLError 映射（21.4 离线降级）
+
+extension AIServiceError {
+    /// 将 URLError / HTTP 状态码转换为用户友好的 AIServiceError
+    static func from(_ error: Error, httpStatus: Int? = nil) -> AIServiceError {
+        if let urlErr = error as? URLError {
+            switch urlErr.code {
+            case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost,
+                 .cannotConnectToHost, .dnsLookupFailed:
+                return .networkOffline
+            case .timedOut:
+                return .timeout
+            default:
+                return .requestFailed(urlErr.localizedDescription)
+            }
+        }
+        if let status = httpStatus {
+            switch status {
+            case 429: return .rateLimited
+            case 401, 403: return .requestFailed("API Key 无效或无权限（HTTP \(status)），请检查密钥配置")
+            case 500...599: return .requestFailed("服务器内部错误（HTTP \(status)），请稍后重试")
+            default: return .requestFailed("请求失败（HTTP \(status)），请检查 API Key 是否有效")
+            }
+        }
+        return .requestFailed(error.localizedDescription)
     }
 }
 
@@ -133,7 +175,7 @@ struct ClaudeAIService: AIServiceProtocol {
                     let (bytes, resp) = try await URLSession.shared.bytes(for: req)
                     let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
                     guard status == 200 else {
-                        throw AIServiceError.requestFailed("请求失败（HTTP \(status)），请检查 API Key 是否有效")
+                        throw AIServiceError.from(URLError(.badServerResponse), httpStatus: status)
                     }
 
                     for try await line in bytes.lines {
@@ -149,8 +191,10 @@ struct ClaudeAIService: AIServiceProtocol {
                     }
                 } catch is CancellationError {
                     continuation.finish(throwing: AIServiceError.cancelled)
+                } catch let e as AIServiceError {
+                    continuation.finish(throwing: e)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: AIServiceError.from(error))
                 }
             }
         }
@@ -185,7 +229,7 @@ struct OpenAIService: AIServiceProtocol {
                     let (bytes, resp) = try await URLSession.shared.bytes(for: req)
                     let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
                     guard status == 200 else {
-                        throw AIServiceError.requestFailed("请求失败（HTTP \(status)），请检查 API Key 是否有效")
+                        throw AIServiceError.from(URLError(.badServerResponse), httpStatus: status)
                     }
 
                     for try await line in bytes.lines {
@@ -202,8 +246,10 @@ struct OpenAIService: AIServiceProtocol {
                     }
                 } catch is CancellationError {
                     continuation.finish(throwing: AIServiceError.cancelled)
+                } catch let e as AIServiceError {
+                    continuation.finish(throwing: e)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: AIServiceError.from(error))
                 }
             }
         }
@@ -237,7 +283,10 @@ struct OllamaAIService: AIServiceProtocol {
                     let (bytes, resp) = try await URLSession.shared.bytes(for: req)
                     let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
                     guard status == 200 else {
-                        throw AIServiceError.requestFailed("Ollama 服务无响应，请确认已启动（默认 \(baseURL)）")
+                        let msg = status == 0
+                            ? "Ollama 服务无响应，请确认已启动（\(baseURL)）"
+                            : "Ollama 返回错误（HTTP \(status)）"
+                        throw AIServiceError.requestFailed(msg)
                     }
 
                     for try await line in bytes.lines {
@@ -253,8 +302,10 @@ struct OllamaAIService: AIServiceProtocol {
                     }
                 } catch is CancellationError {
                     continuation.finish(throwing: AIServiceError.cancelled)
+                } catch let e as AIServiceError {
+                    continuation.finish(throwing: e)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: AIServiceError.from(error))
                 }
             }
         }

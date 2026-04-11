@@ -15,10 +15,14 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var isStreaming: Bool = false
     @Published var streamingContent: String = ""
     @Published var errorMessage: String?
+    /// 当前错误是否可重试（21.4 离线降级）
+    @Published var canRetry: Bool = false
     @Published var inputText: String = ""
     @Published var inputMode: AIInputMode = .chat
 
     private var streamingTask: Task<Void, Never>?
+    /// 上一次发送的原始文本（供重试使用）
+    private var lastSentText: String = ""
     let session: Session
 
     init(session: Session) {
@@ -75,10 +79,20 @@ final class AIAssistantViewModel: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !isStreaming else { return }
 
+        // 21.4 离线预检：网络不可用时直接报错，不发起 API 请求
+        if !NetworkMonitor.shared.isConnected {
+            errorMessage = AIServiceError.networkOffline.errorDescription
+            canRetry = true
+            lastSentText = trimmed
+            return
+        }
+
         let displayText = inputMode == .nlCommand ? "[\(AIInputMode.nlCommand.rawValue)] \(trimmed)" : trimmed
         messages.append(.user(displayText))
         inputText = ""
         errorMessage = nil
+        canRetry = false
+        lastSentText = trimmed
 
         let settings = AISettingsStore.shared
         let service: AIServiceProtocol
@@ -86,9 +100,11 @@ final class AIAssistantViewModel: ObservableObject {
             service = try settings.makeService()
         } catch let e as AIServiceError {
             errorMessage = e.localizedDescription
+            canRetry = e.isRetryable
             return
         } catch {
             errorMessage = error.localizedDescription
+            canRetry = false
             return
         }
 
@@ -117,13 +133,29 @@ final class AIAssistantViewModel: ObservableObject {
                     self.messages.append(.assistant(self.streamingContent))
                 }
             } catch let e as AIServiceError {
-                if case .cancelled = e {} else { self.errorMessage = e.localizedDescription }
+                if case .cancelled = e {
+                    // 用户主动取消，不显示错误
+                } else {
+                    self.errorMessage = e.errorDescription
+                    self.canRetry = e.isRetryable
+                }
             } catch {
                 self.errorMessage = error.localizedDescription
+                self.canRetry = true
             }
             self.streamingContent = ""
             self.isStreaming = false
         }
+    }
+
+    /// 21.4：重试上一次失败的请求
+    func retry() {
+        guard canRetry, !lastSentText.isEmpty else { return }
+        // 移除上次追加的用户消息（避免重复），重新发送
+        if let last = messages.last, last.role == .user { messages.removeLast() }
+        errorMessage = nil
+        canRetry = false
+        send(text: lastSentText)
     }
 
     func cancel() {
@@ -157,6 +189,8 @@ struct AIAssistantPanelView: View {
 
     @StateObject private var vm: AIAssistantViewModel
     @ObservedObject private var aiSettings = AISettingsStore.shared
+    /// 21.4：网络状态监听
+    @ObservedObject private var networkMonitor = NetworkMonitor.shared
     var onClose: () -> Void
     var initialError: String?
     /// 一键插入终端回调（AI-03）：将生成的命令发送到当前活跃 SSH 会话
@@ -327,6 +361,9 @@ struct AIAssistantPanelView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 16) {
+                    // 21.4：网络离线横幅
+                    offlineBannerView
+
                     ForEach(vm.messages) { msg in
                         AIMessageBubbleView(message: msg, onInsertCommand: onInsertCommand)
                             .id(msg.id)
@@ -416,21 +453,39 @@ struct AIAssistantPanelView: View {
     }
 
     private func errorBanner(_ msg: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 11))
-                .foregroundColor(DesignTokens.Colors.statusError)
-            Text(msg)
-                .font(.system(size: 11))
-                .foregroundColor(DesignTokens.Colors.statusError)
-                .lineLimit(3)
-            Spacer()
-            Button { vm.errorMessage = nil } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+        VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.statusError)
+                Text(msg)
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.statusError)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button { vm.errorMessage = nil; vm.canRetry = false } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+
+            // 21.4：重试按钮
+            if vm.canRetry {
+                HStack {
+                    Spacer()
+                    Button {
+                        vm.retry()
+                    } label: {
+                        Label("重试", systemImage: "arrow.clockwise")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(DesignTokens.Colors.accentPrimary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -440,6 +495,33 @@ struct AIAssistantPanelView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .strokeBorder(DesignTokens.Colors.statusError.opacity(0.25), lineWidth: 0.5)
         )
+    }
+
+    /// 21.4：网络离线横幅（显示于消息列表顶部）
+    @ViewBuilder
+    private var offlineBannerView: some View {
+        if !networkMonitor.isConnected {
+            HStack(spacing: 8) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
+                Text("网络不可用，AI 请求将在网络恢复后才能发送")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
+                    .lineLimit(2)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DesignTokens.Colors.statusConnecting.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.statusConnecting.opacity(0.25), lineWidth: 0.5)
+            )
+            .padding(.horizontal, 14)
+            .padding(.top, 6)
+        }
     }
 
     // MARK: - 输入区
