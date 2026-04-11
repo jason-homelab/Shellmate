@@ -120,6 +120,8 @@ struct ConnectionErrorView: View {
     let errorMessage: String
     var onRetry: () -> Void
     var onDismiss: () -> Void
+    /// AI-04：点击后以错误上下文预填充 AI 助手面板，nil 表示 AI 功能未启用
+    var onAIDiagnose: (() -> Void)?
 
     private var analysis: ConnectionErrorAnalysis {
         ConnectionErrorAnalysis.analyze(errorMessage)
@@ -234,6 +236,18 @@ struct ConnectionErrorView: View {
 
     private var footerView: some View {
         HStack {
+            // AI-04：AI 诊断按钮（仅 AI 功能启用时显示）
+            if let onAIDiagnose {
+                Button {
+                    onDismiss()
+                    onAIDiagnose()
+                } label: {
+                    Label("AI 诊断", systemImage: "sparkles")
+                }
+                .buttonStyle(.bordered)
+                .help("用 AI 分析此错误并给出修复建议")
+            }
+
             Spacer()
             Button("关闭", action: onDismiss)
                 .buttonStyle(.bordered)

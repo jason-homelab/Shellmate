@@ -162,6 +162,8 @@ struct AIAssistantPanelView: View {
     /// 一键插入终端回调（AI-03）：将生成的命令发送到当前活跃 SSH 会话
     var onInsertCommand: ((String) -> Void)?
 
+    @State private var showPrivacyConsent: Bool = false
+
     init(
         session: Session,
         onClose: @escaping () -> Void,
@@ -189,7 +191,21 @@ struct AIAssistantPanelView: View {
                 .frame(width: 0.5)
         }
         .onAppear {
-            if let err = initialError { vm.prefillError(err) }
+            // 19.5 Privacy 合规：首次使用前展示数据说明弹窗
+            if !aiSettings.hasShownPrivacyConsent {
+                showPrivacyConsent = true
+            } else if let err = initialError {
+                vm.prefillError(err)
+            }
+        }
+        .sheet(isPresented: $showPrivacyConsent) {
+            AIPrivacyConsentView {
+                aiSettings.hasShownPrivacyConsent = true
+                showPrivacyConsent = false
+                if let err = initialError { vm.prefillError(err) }
+            } onDecline: {
+                onClose()
+            }
         }
     }
 
@@ -849,6 +865,111 @@ enum AIMarkdownParser {
     }
 }
 
+// MARK: - 19.5 AI 隐私数据说明弹窗（App Store 合规）
+
+struct AIPrivacyConsentView: View {
+    var onAccept: () -> Void
+    var onDecline: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // 头部图标
+            VStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 26, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                Text("AI 助手数据说明")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
+                Text("在开启 AI 功能前，请了解以下数据处理方式")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#86868b"))
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.top, 28)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
+
+            Divider()
+
+            // 数据说明条目
+            VStack(alignment: .leading, spacing: 14) {
+                privacyItem(
+                    icon: "text.alignleft",
+                    color: Color(hex: "#007aff"),
+                    title: "会发送的数据",
+                    body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击"发送给 AI"时的终端输出片段（最近 50 行）"
+                )
+                privacyItem(
+                    icon: "lock.slash",
+                    color: Color(hex: "#34c759"),
+                    title: "不会发送的数据",
+                    body: "• SSH 密码、私钥、Passphrase\n• 完整终端历史（仅发送您选择的片段）\n• 会话配置、iCloud 同步数据"
+                )
+                privacyItem(
+                    icon: "building.2",
+                    color: Color(hex: "#ff9500"),
+                    title: "数据去向",
+                    body: "数据发送至您配置的 AI 服务商（Claude / OpenAI / 本地 Ollama），ShellMate 本身不存储或上传任何数据。"
+                )
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+
+            Divider()
+
+            // 底部按钮
+            HStack(spacing: 12) {
+                Button("不使用 AI 功能", action: onDecline)
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
+                Button("我已了解，继续使用", action: onAccept)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+        }
+        .frame(width: 420)
+        .background(Color.white.opacity(0.97))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func privacyItem(icon: String, color: Color, title: String, body: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.12))
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(color)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
+                Text(body)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(hex: "#636366"))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
 // MARK: - 预览
 
 #Preview("AI 助手面板") {
@@ -858,4 +979,9 @@ enum AIMarkdownParser {
             .frame(width: 340)
     }
     .frame(height: 600)
+}
+
+#Preview("AI 隐私说明") {
+    AIPrivacyConsentView(onAccept: {}, onDecline: {})
+        .padding()
 }

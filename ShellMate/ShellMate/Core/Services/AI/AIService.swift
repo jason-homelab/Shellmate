@@ -281,8 +281,10 @@ final class AISettingsStore: ObservableObject {
     static let shared = AISettingsStore()
 
     // 功能开关
-    @AppStorage("ai.enabled")           var isEnabled: Bool   = true
-    @AppStorage("ai.errorDetective")    var errorDetectiveEnabled: Bool = true
+    @AppStorage("ai.enabled")               var isEnabled: Bool   = true
+    @AppStorage("ai.errorDetective")        var errorDetectiveEnabled: Bool = true
+    /// 首次使用 AI 功能时是否已展示隐私数据说明（App Store 合规要求）
+    @AppStorage("ai.hasShownPrivacyConsent") var hasShownPrivacyConsent: Bool = false
 
     // 提供商 & 模型
     @AppStorage("ai.providerRaw")       var providerRaw: String = AIProvider.claude.rawValue

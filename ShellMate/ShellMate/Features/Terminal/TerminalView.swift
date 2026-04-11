@@ -263,7 +263,15 @@ struct TerminalView: View {
                     showConnectionError = false
                     connect()
                 },
-                onDismiss: { showConnectionError = false }
+                onDismiss: { showConnectionError = false },
+                onAIDiagnose: AISettingsStore.shared.isEnabled ? {
+                    // AI-04：以连接错误上下文预填充 AI 助手面板
+                    showConnectionError = false
+                    aiInitialError = connectionErrorMessage
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isAIPanelOpen = true
+                    }
+                } : nil
             )
         }
         .sheet(isPresented: $showMonitorPanel) {
