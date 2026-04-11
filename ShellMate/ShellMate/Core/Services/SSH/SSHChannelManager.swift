@@ -143,7 +143,7 @@ final class SSHChannelManager {
     private(set) var stderrStream: AsyncStream<Data>?
 
     /// 读取缓冲区大小
-    private let readBufferSize = 32768 // 32KB
+    private let readBufferSize = AppConstants.sshReadBufferSize
 
     /// 写入队列
     private var writeQueue: [Data] = []
@@ -201,7 +201,7 @@ final class SSHChannelManager {
             // 启动读取循环
             startReadLoop()
 
-            print("[SSHChannelManager] Shell 通道已完全打开")
+            AppLogger.ssh.debug("[SSHChannelManager] Shell 通道已完全打开")
 
         } catch {
             state = .error(error.localizedDescription)
@@ -235,7 +235,7 @@ final class SSHChannelManager {
             // 启动读取循环
             startReadLoop()
 
-            print("[SSHChannelManager] Exec 通道已打开: \(command)")
+            AppLogger.ssh.debug("[SSHChannelManager] Exec 通道已打开: \(command)")
 
         } catch {
             state = .error(error.localizedDescription)
@@ -266,7 +266,7 @@ final class SSHChannelManager {
         state = .closed
         channel = nil
 
-        print("[SSHChannelManager] 通道已关闭")
+        AppLogger.ssh.debug("[SSHChannelManager] 通道已关闭")
     }
 
     // MARK: - 数据读写
@@ -330,7 +330,7 @@ final class SSHChannelManager {
         //         written += Int(rc)
         //     }
         // }
-        print("[SSHChannelManager] 写入数据: \(data.count) 字节")
+        AppLogger.ssh.debug("[SSHChannelManager] 写入数据: \(data.count) 字节")
     }
 
     // MARK: - PTY 控制
@@ -361,7 +361,7 @@ final class SSHChannelManager {
             rows: rows
         )
 
-        print("[SSHChannelManager] PTY 尺寸已调整: \(columns)x\(rows)")
+        AppLogger.ssh.debug("[SSHChannelManager] PTY 尺寸已调整: \(columns)x\(rows)")
     }
 
     // MARK: - 信号发送
@@ -379,7 +379,7 @@ final class SSHChannelManager {
         //     throw SSHError.libssh2Error(code: rc, message: "发送信号失败")
         // }
 
-        print("[SSHChannelManager] 信号已发送: \(signal)")
+        AppLogger.ssh.debug("[SSHChannelManager] 信号已发送: \(signal)")
     }
 
     /// 发送 EOF
@@ -392,7 +392,7 @@ final class SSHChannelManager {
         //     print("[SSHChannelManager] 发送 EOF 失败")
         // }
 
-        print("[SSHChannelManager] EOF 已发送")
+        AppLogger.ssh.debug("[SSHChannelManager] EOF 已发送")
     }
 
     // MARK: - 私有方法
@@ -406,7 +406,7 @@ final class SSHChannelManager {
         //     throw SSHError.channelOpenFailed(reason: error)
         // }
 
-        print("[SSHChannelManager] 会话通道已打开")
+        AppLogger.ssh.debug("[SSHChannelManager] 会话通道已打开")
     }
 
     /// 请求 PTY
@@ -434,7 +434,7 @@ final class SSHChannelManager {
         //     throw SSHError.ptyRequestFailed(reason: bridge?.getLastErrorMessage() ?? "未知错误")
         // }
 
-        print("[SSHChannelManager] PTY 已分配: \(config.terminalType) \(config.columns)x\(config.rows)")
+        AppLogger.ssh.debug("[SSHChannelManager] PTY 已分配: \(config.terminalType) \(config.columns)x\(config.rows)")
     }
 
     /// 构建 PTY 模式数据
@@ -461,7 +461,7 @@ final class SSHChannelManager {
         //     throw SSHError.shellStartFailed(reason: bridge?.getLastErrorMessage() ?? "未知错误")
         // }
 
-        print("[SSHChannelManager] Shell 已启动")
+        AppLogger.ssh.debug("[SSHChannelManager] Shell 已启动")
     }
 
     /// 执行命令
@@ -474,7 +474,7 @@ final class SSHChannelManager {
         //     throw SSHError.shellStartFailed(reason: "命令执行失败")
         // }
 
-        print("[SSHChannelManager] 命令已执行: \(command)")
+        AppLogger.ssh.debug("[SSHChannelManager] 命令已执行: \(command)")
     }
 
     /// 关闭通道（同步）
@@ -485,7 +485,7 @@ final class SSHChannelManager {
         // libssh2_channel_close(channel)
         // libssh2_channel_free(channel)
 
-        print("[SSHChannelManager] 通道已释放")
+        AppLogger.ssh.debug("[SSHChannelManager] 通道已释放")
     }
 
     /// 设置数据流
@@ -555,7 +555,7 @@ final class SSHChannelManager {
             try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
 
-        print("[SSHChannelManager] 读取循环已结束")
+        AppLogger.ssh.debug("[SSHChannelManager] 读取循环已结束")
     }
 
     // MARK: - 状态查询

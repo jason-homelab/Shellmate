@@ -106,8 +106,11 @@ final class KnownHostsManager {
     /// 已知主机列表
     private var knownHosts: [KnownHostEntry] = []
 
-    /// 访问锁
+    /// 访问锁（保护内存列表读写）
     private let lock = NSLock()
+
+    /// 文件 IO 串行队列（防止多线程并发写入 known_hosts.json 造成文件损坏）
+    private let ioQueue = DispatchQueue(label: "app.shellmate.knownhosts.io", qos: .utility)
 
     /// 是否已加载
     private var isLoaded = false
@@ -350,7 +353,7 @@ final class KnownHostsManager {
         do {
             try load()
         } catch {
-            print("[KnownHostsManager] 加载失败: \(error.localizedDescription)")
+            AppLogger.ssh.debug("[KnownHostsManager] 加载失败: \(error.localizedDescription)")
             knownHosts = []
         }
 
@@ -399,9 +402,12 @@ final class KnownHostsManager {
 
         knownHosts[index].lastVerifiedAt = Date()
 
-        // 异步保存，不阻塞
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            try? self?.save()
+        // 通过专用串行 ioQueue 异步保存，避免与其他写操作并发导致文件损坏
+        ioQueue.async { [weak self] in
+            guard let self else { return }
+            self.lock.lock()
+            try? self.save()
+            self.lock.unlock()
         }
     }
 }

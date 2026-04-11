@@ -55,6 +55,9 @@ final class SSHEventLoop {
     /// 事件回调
     var eventHandler: SSHEventHandler?
 
+    /// 保活触发回调（由调用方执行实际 keepalive 包发送，失败时应调用 eventHandler(.error(...))）
+    var onKeepAliveRequired: (() -> Void)?
+
     /// 超时时间（秒）
     var timeout: TimeInterval = 30
 
@@ -93,7 +96,7 @@ final class SSHEventLoop {
         defer { stateLock.unlock() }
 
         guard state == .stopped else {
-            print("[SSHEventLoop] 事件循环已在运行")
+            AppLogger.ssh.debug("[SSHEventLoop] 事件循环已在运行")
             return
         }
 
@@ -104,7 +107,7 @@ final class SSHEventLoop {
         state = .running
         lastActivityTime = Date()
 
-        print("[SSHEventLoop] 事件循环已启动")
+        AppLogger.ssh.debug("[SSHEventLoop] 事件循环已启动")
     }
 
     /// 停止事件循环
@@ -133,7 +136,7 @@ final class SSHEventLoop {
         }
 
         state = .stopped
-        print("[SSHEventLoop] 事件循环已停止")
+        AppLogger.ssh.debug("[SSHEventLoop] 事件循环已停止")
     }
 
     /// 暂停事件循环
@@ -148,7 +151,7 @@ final class SSHEventLoop {
         timer?.suspend()
 
         state = .paused
-        print("[SSHEventLoop] 事件循环已暂停")
+        AppLogger.ssh.debug("[SSHEventLoop] 事件循环已暂停")
     }
 
     /// 恢复事件循环
@@ -164,7 +167,7 @@ final class SSHEventLoop {
 
         state = .running
         lastActivityTime = Date()
-        print("[SSHEventLoop] 事件循环已恢复")
+        AppLogger.ssh.debug("[SSHEventLoop] 事件循环已恢复")
     }
 
     // MARK: - 事件源设置
@@ -183,7 +186,7 @@ final class SSHEventLoop {
         }
 
         source.setCancelHandler {
-            print("[SSHEventLoop] 读取源已取消")
+            AppLogger.ssh.debug("[SSHEventLoop] 读取源已取消")
         }
 
         source.resume()
@@ -204,7 +207,7 @@ final class SSHEventLoop {
         }
 
         source.setCancelHandler {
-            print("[SSHEventLoop] 写入源已取消")
+            AppLogger.ssh.debug("[SSHEventLoop] 写入源已取消")
         }
 
         // 写入源初始挂起，需要时再激活
@@ -243,10 +246,11 @@ final class SSHEventLoop {
         }
 
         // 发送保活（如果启用）
+        // 通知上层（SSHNonBlockingIO → SSHConnection）执行真实的 keepalive 包发送；
+        // 若发送失败，上层应通过 eventHandler(.error(...)) 触发连接状态机更新
         if keepAliveInterval > 0 && idleTime > keepAliveInterval {
-            // 触发保活检查
-            // 实际保活数据包由 SSHConnection 发送
             lastActivityTime = now
+            onKeepAliveRequired?()
         }
     }
 
@@ -300,8 +304,13 @@ final class SSHNonBlockingIO {
     /// 关闭回调
     var onClose: (() -> Void)?
 
+    /// 保活触发回调（上层需在此回调内发送 keepalive 包；失败时调用 onError 以触发状态机更新）
+    var onKeepAliveRequired: (() -> Void)? {
+        didSet { eventLoop.onKeepAliveRequired = onKeepAliveRequired }
+    }
+
     /// 缓冲区大小
-    private let bufferSize = 32768 // 32KB
+    private let bufferSize = AppConstants.sshReadBufferSize
 
     // MARK: - 初始化
 

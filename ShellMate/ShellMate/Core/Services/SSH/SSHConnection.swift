@@ -106,7 +106,8 @@ actor SSHConnection {
 
     /// 建立连接
     func connect() async throws {
-        guard state == .disconnected || state == .failed("") else {
+        // 使用 pattern matching 而非 == .failed("")（后者要求消息精确匹配空字符串，实际失败消息不为空）
+        guard state == .disconnected || { if case .failed = state { return true }; return false }() else {
             throw SSHError.libssh2Error(code: -1, message: "连接已存在或正在连接")
         }
 
@@ -151,7 +152,7 @@ actor SSHConnection {
             setupDataStream()
 
             state = .connected
-            print("[SSHConnection] 连接成功: \(config.host):\(config.port)")
+            AppLogger.ssh.debug("[SSHConnection] 连接成功: \(self.config.host):\(self.config.port)")
 
         } catch {
             state = .failed(error.localizedDescription)
@@ -176,12 +177,14 @@ actor SSHConnection {
         bridge?.disconnect(reason: "用户断开连接")
         bridge = nil
 
-        // 结束数据流
+        // 结束数据流，并释放 AsyncStream 缓冲区（防止重连后旧流缓冲区残留）
         dataContinuation?.finish()
         dataContinuation = nil
+        dataStreamIterator = nil
+        dataStream = nil
 
         state = .disconnected
-        print("[SSHConnection] 已断开连接")
+        AppLogger.ssh.debug("[SSHConnection] 已断开连接")
     }
 
     // MARK: - 通道管理
@@ -221,7 +224,7 @@ actor SSHConnection {
         // 启动非阻塞 IO
         nonBlockingIO?.start()
 
-        print("[SSHConnection] Shell 通道已打开")
+        AppLogger.ssh.debug("[SSHConnection] Shell 通道已打开")
     }
 
     /// 打开执行命令通道
@@ -243,7 +246,7 @@ actor SSHConnection {
         // }
 
         nonBlockingIO?.start()
-        print("[SSHConnection] Exec 通道已打开: \(command)")
+        AppLogger.ssh.debug("[SSHConnection] Exec 通道已打开: \(command)")
     }
 
     /// 关闭通道
@@ -255,7 +258,7 @@ actor SSHConnection {
         // libssh2_channel_free(channel)
 
         channel = nil
-        print("[SSHConnection] 通道已关闭")
+        AppLogger.ssh.debug("[SSHConnection] 通道已关闭")
     }
 
     // MARK: - 数据读写
@@ -303,20 +306,37 @@ actor SSHConnection {
         self.dataContinuation = continuation
 
         // 设置非阻塞 IO 的数据回调
+        // 外层闭包持有 weak self；内层 Task 同样捕获 [weak self]，避免在 actor 释放后继续持有强引用
         nonBlockingIO?.onDataReceived = { [weak self] data in
-            Task { await self?.dataContinuation?.yield(data) }
+            guard let self else { return }
+            Task { [weak self] in await self?.dataContinuation?.yield(data) }
         }
 
         nonBlockingIO?.onError = { [weak self] error in
-            print("[SSHConnection] 错误: \(error.localizedDescription)")
-            Task {
+            guard let self else { return }
+            AppLogger.ssh.debug("[SSHConnection] 错误: \(error.localizedDescription)")
+            Task { [weak self] in
                 await self?.handleError(error)
             }
         }
 
         nonBlockingIO?.onClose = { [weak self] in
-            Task {
+            guard let self else { return }
+            Task { [weak self] in
                 await self?.disconnect()
+            }
+        }
+
+        nonBlockingIO?.onKeepAliveRequired = { [weak self] in
+            guard let self else { return }
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.sendKeepAlive()
+                } catch {
+                    // keepAlive 失败：触发错误状态，让 UI 感知到连接已中断
+                    await self.handleError(SSHError.libssh2Error(code: -1, message: "保活失败，连接可能已中断"))
+                }
             }
         }
     }
@@ -344,7 +364,7 @@ actor SSHConnection {
         // }
 
         terminalSize = (columns, rows)
-        print("[SSHConnection] 终端尺寸已调整: \(columns)x\(rows)")
+        AppLogger.ssh.debug("[SSHConnection] 终端尺寸已调整: \(columns)x\(rows)")
     }
 
     /// 获取当前终端尺寸
@@ -367,7 +387,7 @@ actor SSHConnection {
         //     throw SSHError.libssh2Error(code: rc, message: "发送信号失败")
         // }
 
-        print("[SSHConnection] 信号已发送: \(signal)")
+        AppLogger.ssh.debug("[SSHConnection] 信号已发送: \(signal)")
     }
 
     /// 发送 EOF
@@ -382,7 +402,7 @@ actor SSHConnection {
         //     throw SSHError.libssh2Error(code: rc, message: "发送 EOF 失败")
         // }
 
-        print("[SSHConnection] EOF 已发送")
+        AppLogger.ssh.debug("[SSHConnection] EOF 已发送")
     }
 
     // MARK: - 保活
@@ -400,7 +420,7 @@ actor SSHConnection {
         //     throw SSHError.libssh2Error(code: rc, message: "发送保活失败")
         // }
 
-        print("[SSHConnection] 保活已发送")
+        AppLogger.ssh.debug("[SSHConnection] 保活已发送")
     }
 
     // MARK: - 私有方法
