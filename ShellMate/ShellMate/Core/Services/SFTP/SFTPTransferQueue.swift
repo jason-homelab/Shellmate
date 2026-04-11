@@ -24,7 +24,7 @@ final class SFTPTransferQueue: ObservableObject {
 
     // MARK: - 初始化
 
-    init(sftpSession: SFTPSession, maxConcurrent: Int = 3) {
+    init(sftpSession: SFTPSession, maxConcurrent: Int = AppConstants.sftpMaxConcurrentTransfers) {
         self.sftpSession = sftpSession
         self.maxConcurrent = maxConcurrent
     }

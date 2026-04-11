@@ -77,7 +77,7 @@ final class LocalPortForwarder {
             self?.acceptLoop(listenerFD: fd)
         }
 
-        print("[LocalForward] 已在 \(rule.localBindAddress):\(rule.localPort) 开始监听")
+        AppLogger.tunnel.debug("[LocalForward] 已在 \(self.rule.localBindAddress):\(self.rule.localPort) 开始监听")
     }
 
     // MARK: - 停止
@@ -89,7 +89,7 @@ final class LocalPortForwarder {
             listenerFD = -1
         }
         notifyStatus(.stopped)
-        print("[LocalForward] 已停止监听端口 \(rule.localPort)")
+        AppLogger.tunnel.debug("[LocalForward] 已停止监听端口 \(self.rule.localPort)")
     }
 
     // MARK: - 内部实现
@@ -107,7 +107,7 @@ final class LocalPortForwarder {
 
             guard clientFD >= 0 else {
                 if isRunning {
-                    print("[LocalForward] accept() 失败，errno: \(errno)")
+                    AppLogger.tunnel.debug("[LocalForward] accept() 失败，errno: \(errno)")
                 }
                 break
             }
@@ -140,7 +140,7 @@ final class LocalPortForwarder {
                 sourceHost: "127.0.0.1",
                 sourcePort: 0
             ) else {
-                print("[LocalForward] 无法打开 direct-tcpip 通道到 \(remoteHost):\(remotePort)")
+                AppLogger.tunnel.debug("[LocalForward] 无法打开 direct-tcpip 通道到 \(remoteHost):\(remotePort)")
                 return
             }
 
@@ -149,7 +149,7 @@ final class LocalPortForwarder {
             bridge.closeChannel(channel: channel)
 
         } catch {
-            print("[LocalForward] 连接处理失败: \(error.localizedDescription)")
+            AppLogger.tunnel.debug("[LocalForward] 连接处理失败: \(error.localizedDescription)")
         }
     }
 

@@ -81,7 +81,7 @@ final class Socks5Proxy {
             self?.acceptLoop(listenerFD: fd)
         }
 
-        print("[SOCKS5] 已在 127.0.0.1:\(rule.localPort) 开始监听")
+        AppLogger.tunnel.debug("[SOCKS5] 已在 127.0.0.1:\(self.rule.localPort) 开始监听")
     }
 
     // MARK: - 停止
@@ -93,7 +93,7 @@ final class Socks5Proxy {
             listenerFD = -1
         }
         DispatchQueue.main.async { self.rule.status = .stopped }
-        print("[SOCKS5] 已停止监听端口 \(rule.localPort)")
+        AppLogger.tunnel.debug("[SOCKS5] 已停止监听端口 \(self.rule.localPort)")
     }
 
     // MARK: - Accept 循环
@@ -152,7 +152,7 @@ final class Socks5Proxy {
             bridge.closeChannel(channel: channel)
 
         } catch {
-            print("[SOCKS5] 连接到目标 \(targetHost):\(targetPort) 失败: \(error.localizedDescription)")
+            AppLogger.tunnel.debug("[SOCKS5] 连接到目标 \(targetHost):\(targetPort) 失败: \(error.localizedDescription)")
             sendSocks5Response(clientFD: clientFD, success: false)
         }
     }

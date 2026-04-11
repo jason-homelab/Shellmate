@@ -108,7 +108,11 @@ struct ClaudeAIService: AIServiceProtocol {
                 apiKey: String, baseURL: String) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task {
+                // defer 确保无论何种退出路径（正常/取消/异常）continuation 都会被 finish，
+                // 防止消费方永久挂起在 for await 上
+                defer { continuation.finish() }
                 do {
+                    try Task.checkCancellation()
                     guard let url = URL(string: "\(baseURL)/v1/messages") else {
                         throw AIServiceError.requestFailed("无效的 API URL")
                     }
@@ -119,7 +123,7 @@ struct ClaudeAIService: AIServiceProtocol {
                     req.setValue("2023-06-01",       forHTTPHeaderField: "anthropic-version")
 
                     let payload: [String: Any] = [
-                        "model": model, "max_tokens": 4096, "stream": true,
+                        "model": model, "max_tokens": AppConstants.aiMaxTokens, "stream": true,
                         "system": systemPrompt,
                         "messages": messages.filter { $0.role != .system }
                             .map { ["role": $0.role.rawValue, "content": $0.content] }
@@ -143,7 +147,8 @@ struct ClaudeAIService: AIServiceProtocol {
                         else { continue }
                         continuation.yield(delta)
                     }
-                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: AIServiceError.cancelled)
                 } catch {
                     continuation.finish(throwing: error)
                 }
@@ -159,7 +164,9 @@ struct OpenAIService: AIServiceProtocol {
                 apiKey: String, baseURL: String) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task {
+                defer { continuation.finish() }
                 do {
+                    try Task.checkCancellation()
                     guard let url = URL(string: "\(baseURL)/v1/chat/completions") else {
                         throw AIServiceError.requestFailed("无效的 API URL")
                     }
@@ -193,7 +200,8 @@ struct OpenAIService: AIServiceProtocol {
                         else { continue }
                         continuation.yield(delta)
                     }
-                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: AIServiceError.cancelled)
                 } catch {
                     continuation.finish(throwing: error)
                 }
@@ -209,7 +217,9 @@ struct OllamaAIService: AIServiceProtocol {
                 apiKey: String, baseURL: String) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task {
+                defer { continuation.finish() }
                 do {
+                    try Task.checkCancellation()
                     guard let url = URL(string: "\(baseURL)/api/chat") else {
                         throw AIServiceError.requestFailed("无效的 Ollama URL")
                     }
@@ -241,7 +251,8 @@ struct OllamaAIService: AIServiceProtocol {
                         continuation.yield(content)
                         if (j["done"] as? Bool) == true { break }
                     }
-                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish(throwing: AIServiceError.cancelled)
                 } catch {
                     continuation.finish(throwing: error)
                 }

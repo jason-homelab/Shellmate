@@ -45,7 +45,7 @@ final class RemotePortForwarder {
             do {
                 try self.runRemoteForward()
             } catch {
-                print("[RemoteForward] 运行失败: \(error.localizedDescription)")
+                AppLogger.tunnel.debug("[RemoteForward] 运行失败: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self.rule.status = .failed(error.localizedDescription)
                 }
@@ -95,7 +95,7 @@ final class RemotePortForwarder {
         }
         listener = lst
 
-        print("[RemoteForward] 服务器已在端口 \(boundPort) 开始监听")
+        AppLogger.tunnel.debug("[RemoteForward] 服务器已在端口 \(boundPort) 开始监听")
         DispatchQueue.main.async { self.rule.status = .active }
 
         // 接受远端入站连接
@@ -137,7 +137,7 @@ final class RemotePortForwarder {
             }
         }
         guard connectResult == 0 else {
-            print("[RemoteForward] 连接本地 \(localHost):\(localPort) 失败")
+            AppLogger.tunnel.debug("[RemoteForward] 连接本地 \(localHost):\(localPort) 失败")
             return
         }
 
