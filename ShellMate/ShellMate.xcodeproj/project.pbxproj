@@ -73,11 +73,13 @@
 		A1010007 /* CredentialVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* CredentialVault.swift */; };
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
+		CS010002 /* CommandSafetyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS020002 /* CommandSafetyChecker.swift */; };
 		SFP010001 /* SessionFormatParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = SFP020001 /* SessionFormatParser.swift */; };
 		AI010001 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020001 /* AIService.swift */; };
 		AI010002 /* AIAssistantPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020002 /* AIAssistantPanelView.swift */; };
 		AI010003 /* AIErrorDetectiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020003 /* AIErrorDetectiveView.swift */; };
 		AI010005 /* AISummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020005 /* AISummaryView.swift */; };
+		AI010006 /* CommandSafetyAlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020006 /* CommandSafetyAlertView.swift */; };
 		AI010004 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020004 /* AISettingsView.swift */; };
 		CS010001 /* ColorsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS020001 /* ColorsSettingsView.swift */; };
 		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
@@ -243,11 +245,13 @@
 		A2010007 /* CredentialVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVault.swift; sourceTree = "<group>"; };
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
+		CS020002 /* CommandSafetyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandSafetyChecker.swift; sourceTree = "<group>"; };
 		SFP020001 /* SessionFormatParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormatParser.swift; sourceTree = "<group>"; };
 		AI020001 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		AI020002 /* AIAssistantPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantPanelView.swift; sourceTree = "<group>"; };
 		AI020003 /* AIErrorDetectiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIErrorDetectiveView.swift; sourceTree = "<group>"; };
 		AI020005 /* AISummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryView.swift; sourceTree = "<group>"; };
+		AI020006 /* CommandSafetyAlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandSafetyAlertView.swift; sourceTree = "<group>"; };
 		AI020004 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 		CS020001 /* ColorsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorsSettingsView.swift; sourceTree = "<group>"; };
 		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
@@ -596,6 +600,7 @@
 				A2010007 /* CredentialVault.swift */,
 				72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */,
 				SM020002 /* ServerMetricsMonitor.swift */,
+				CS020002 /* CommandSafetyChecker.swift */,
 				SFP020001 /* SessionFormatParser.swift */,
 				AI030003 /* AI */,
 				0004000400040017 /* SSH */,
@@ -686,6 +691,7 @@
 				AI020002 /* AIAssistantPanelView.swift */,
 				AI020003 /* AIErrorDetectiveView.swift */,
 				AI020005 /* AISummaryView.swift */,
+				AI020006 /* CommandSafetyAlertView.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -993,11 +999,13 @@
 				A1010007 /* CredentialVault.swift in Sources */,
 				SM010001 /* ServerMetrics.swift in Sources */,
 				SM010002 /* ServerMetricsMonitor.swift in Sources */,
+				CS010002 /* CommandSafetyChecker.swift in Sources */,
 				SFP010001 /* SessionFormatParser.swift in Sources */,
 				AI010001 /* AIService.swift in Sources */,
 				AI010002 /* AIAssistantPanelView.swift in Sources */,
 				AI010003 /* AIErrorDetectiveView.swift in Sources */,
 				AI010005 /* AISummaryView.swift in Sources */,
+				AI010006 /* CommandSafetyAlertView.swift in Sources */,
 				AI010004 /* AISettingsView.swift in Sources */,
 				CS010001 /* ColorsSettingsView.swift in Sources */,
 				0001000100010022 /* TerminalTab.swift in Sources */,

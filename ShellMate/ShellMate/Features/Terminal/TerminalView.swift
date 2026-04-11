@@ -142,6 +142,8 @@ struct TerminalView: View {
     @State private var aiInitialError: String? = nil
     /// AI-05：会话摘要面板是否显示
     @State private var showSummaryPanel: Bool = false
+    /// AI-06：待执行的高风险命令（非 nil 时显示安全审计弹窗）
+    @State private var pendingRiskyCommand: CommandRisk? = nil
     /// AI 设置观察（用于工具栏按钮显示）
     @ObservedObject private var aiSettings = AISettingsStore.shared
 
@@ -292,6 +294,19 @@ struct TerminalView: View {
                 sessionName: "\(session.name) · \(session.username)@\(session.host)",
                 terminalOutput: controller.recentTerminalOutput(),
                 onClose: { showSummaryPanel = false }
+            )
+        }
+        // AI-06：高风险命令安全审计弹窗
+        .sheet(item: $pendingRiskyCommand) { risk in
+            CommandSafetyAlertView(
+                risk: risk,
+                onConfirm: {
+                    pendingRiskyCommand = nil
+                    controller.sendComposeContent(risk.command + "\r")
+                },
+                onCancel: {
+                    pendingRiskyCommand = nil
+                }
             )
         }
         .modifier(TerminalViewAlertModifier(
@@ -462,8 +477,12 @@ struct TerminalView: View {
                         },
                         initialError: aiInitialError,
                         onInsertCommand: { command in
-                            // AI-03：将生成命令插入当前 SSH 会话执行
-                            controller.sendComposeContent(command + "\r")
+                            // AI-06：安全检查，高风险命令弹窗拦截
+                            if let risk = CommandSafetyChecker.check(command) {
+                                pendingRiskyCommand = risk
+                            } else {
+                                controller.sendComposeContent(command + "\r")
+                            }
                         }
                     )
                     .frame(width: DesignTokens.Sizes.aiPanelWidth)
@@ -473,7 +492,14 @@ struct TerminalView: View {
 
             if controller.isComposePaneOpen {
                 ComposePaneView(
-                    onSend: { text in controller.sendComposeContent(text) },
+                    onSend: { text in
+                        // AI-06：安全检查，高风险命令弹窗拦截
+                        if let risk = CommandSafetyChecker.check(text) {
+                            pendingRiskyCommand = risk
+                        } else {
+                            controller.sendComposeContent(text)
+                        }
+                    },
                     onClose: { controller.isComposePaneOpen = false },
                     contextProvider: { controller.recentTerminalOutput() }
                 )
