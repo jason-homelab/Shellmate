@@ -107,7 +107,7 @@ struct AISettingsView: View {
                         .foregroundColor(DesignTokens.Colors.statusConnected)
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(DesignTokens.Colors.statusConnected.opacity(0.12))
-                        .cornerRadius(4)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
             }
             .padding(DesignTokens.Spacing.sm)
@@ -116,9 +116,9 @@ struct AISettingsView: View {
                     ? DesignTokens.Colors.accentPrimary.opacity(0.08)
                     : DesignTokens.Colors.glassMedium
             )
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .strokeBorder(
                         isSelected
                             ? DesignTokens.Colors.accentPrimary.opacity(0.30)
@@ -159,9 +159,9 @@ struct AISettingsView: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .padding(DesignTokens.Spacing.sm)
                     .background(DesignTokens.Colors.surfaceInput)
-                    .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                     )
 
@@ -176,8 +176,11 @@ struct AISettingsView: View {
                     .help(showAPIKey ? "隐藏 API Key" : "显示 API Key")
 
                     Button {
-                        store.saveAPIKey(apiKeyInput, for: store.provider)
-                        withAnimation { saveKeyResult = apiKeyInput.isEmpty ? .empty : .success }
+                        let keyToSave = apiKeyInput
+                        store.saveAPIKey(keyToSave, for: store.provider)
+                        // 保存后立即清零 @State 内存中的明文 API Key
+                        apiKeyInput.removeAll(keepingCapacity: false)
+                        withAnimation { saveKeyResult = keyToSave.isEmpty ? .empty : .success }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             withAnimation { saveKeyResult = nil }
                         }
@@ -188,7 +191,7 @@ struct AISettingsView: View {
                             .padding(.horizontal, DesignTokens.Spacing.md)
                             .padding(.vertical, DesignTokens.Spacing.xs)
                             .background(DesignTokens.Colors.accentPrimary)
-                            .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -234,9 +237,9 @@ struct AISettingsView: View {
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .padding(DesignTokens.Spacing.sm)
                         .background(DesignTokens.Colors.surfaceInput)
-                        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                                 .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                         )
                     Spacer()
@@ -294,7 +297,7 @@ struct AISettingsView: View {
         }
         .padding(DesignTokens.Spacing.sm)
         .background(DesignTokens.Colors.glassMedium)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
     }
 
     // MARK: - 辅助

@@ -31,7 +31,7 @@ struct SidebarFooterView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: DesignTokens.Sizes.buttonHeight)
                 .background(DesignTokens.Colors.accentPrimary.opacity(0.1))
-                .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -44,14 +44,15 @@ struct SidebarFooterView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: DesignTokens.Sizes.buttonHeight, height: DesignTokens.Sizes.buttonHeight)
                     .background(DesignTokens.Colors.surfaceCard)
-                    .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             }
             .buttonStyle(.plain)
             .help("新建分组")
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(Color(hex: "#f5f5f7").opacity(0.90))
+        .background(.ultraThinMaterial)
     }
 }
 
@@ -61,8 +62,8 @@ struct SidebarFooterView: View {
     VStack {
         Spacer()
         SidebarFooterView(
-            onNewSession: { print("新建会话") },
-            onNewGroup: { print("新建分组") }
+            onNewSession: { AppLogger.general.debug("新建会话") },
+            onNewGroup: { AppLogger.general.debug("新建分组") }
         )
     }
     .frame(width: 220, height: 400)

@@ -178,12 +178,15 @@ struct SecuritySettingsView: View {
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             // 启用开关
-            Toggle(isOn: $store.masterPasswordEnabled) {
+            HStack {
                 Text("启用主密码（应用启动时要求验证）")
                     .font(.system(size: 12))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
+                Spacer()
+                Toggle("", isOn: $store.masterPasswordEnabled)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
             }
-            .toggleStyle(.checkbox)
 
             // 自动锁定
             HStack(spacing: 8) {
@@ -290,10 +293,10 @@ struct SecuritySettingsView: View {
         }
         .background(DesignTokens.Colors.surfaceWindow)
         .overlay(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .stroke(DesignTokens.Colors.borderSecondary, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
     }
 
     @ViewBuilder
@@ -425,10 +428,10 @@ struct SecuritySettingsView: View {
         }
         .background(DesignTokens.Colors.surfaceWindow)
         .overlay(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .stroke(DesignTokens.Colors.borderSecondary, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
     }
 
     private func sshKeyRow(_ key: SSHKeyRecord) -> some View {
@@ -581,22 +584,18 @@ struct KeyGenSheet: View {
             .frame(maxWidth: .infinity)
 
             // 注释
-            TextField("用途注释，如 work-laptop-2026", text: $comment)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "用途注释，如 work-laptop-2026", text: $comment)
 
             // Passphrase
-            SecureField("留空表示不设置 Passphrase", text: $passphrase)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "留空表示不设置 Passphrase", text: $passphrase, isSecure: true)
 
             if !passphrase.isEmpty {
-                SecureField("确认 Passphrase", text: $passphraseConfirm)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "确认 Passphrase", text: $passphraseConfirm, isSecure: true)
             }
 
             // 保存路径
             HStack(spacing: 8) {
-                TextField("", text: $savePath)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "", text: $savePath)
                     .font(.system(size: 11, design: .monospaced))
 
                 Button("选择…") {
@@ -689,7 +688,7 @@ struct MasterPasswordSheet: View {
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 22, height: 22)
                         .background(DesignTokens.Colors.surfaceCard)
-                        .cornerRadius(11)
+                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
@@ -710,7 +709,7 @@ struct MasterPasswordSheet: View {
                 }
                 .padding(10)
                 .background(DesignTokens.Colors.surfaceWindow)
-                .cornerRadius(6)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
 
                 // 旧密码（首次设置时隐藏）
                 if !isFirstSetup {
@@ -718,8 +717,7 @@ struct MasterPasswordSheet: View {
                         Text("当前密码")
                             .font(.system(size: 11))
                             .foregroundColor(DesignTokens.Colors.textSecondary)
-                        SecureField("请输入当前主密码", text: $oldPassword)
-                            .textFieldStyle(.roundedBorder)
+                        CustomTextField(placeholder: "请输入当前主密码", text: $oldPassword, isSecure: true)
                             .font(.system(size: 12))
                     }
                 }
@@ -729,9 +727,13 @@ struct MasterPasswordSheet: View {
                     Text("新密码")
                         .font(.system(size: 11))
                         .foregroundColor(DesignTokens.Colors.textSecondary)
-                    SecureField("至少 8 位，建议包含字母和数字", text: $newPassword)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "至少 8 位，建议包含大小写字母+数字", text: $newPassword, isSecure: true)
                         .font(.system(size: 12))
+
+                    // 密码强度指示器
+                    if !newPassword.isEmpty {
+                        passwordStrengthBar
+                    }
                 }
 
                 // 确认新密码
@@ -739,9 +741,14 @@ struct MasterPasswordSheet: View {
                     Text("确认新密码")
                         .font(.system(size: 11))
                         .foregroundColor(DesignTokens.Colors.textSecondary)
-                    SecureField("再次输入新密码", text: $confirmPassword)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "再次输入新密码", text: $confirmPassword, isSecure: true)
                         .font(.system(size: 12))
+                    // 不一致提示
+                    if !confirmPassword.isEmpty && confirmPassword != newPassword {
+                        Text("两次输入不一致")
+                            .font(.system(size: 10))
+                            .foregroundColor(DesignTokens.Colors.statusError)
+                    }
                 }
 
                 // 错误信息
@@ -780,6 +787,52 @@ struct MasterPasswordSheet: View {
         .onAppear { checkFirstSetup() }
     }
 
+    // MARK: - 密码强度
+
+    /// 密码强度（0-4）
+    private var passwordStrength: Int {
+        var score = 0
+        if newPassword.count >= 8  { score += 1 }
+        if newPassword.count >= 12 { score += 1 }
+        if newPassword.range(of: "[A-Z]", options: .regularExpression) != nil { score += 1 }
+        if newPassword.range(of: "[0-9]", options: .regularExpression) != nil { score += 1 }
+        if newPassword.range(of: "[^A-Za-z0-9]", options: .regularExpression) != nil { score += 1 }
+        return min(score, 4)
+    }
+
+    private var passwordStrengthLabel: String {
+        switch passwordStrength {
+        case 0, 1: return "弱"
+        case 2:    return "一般"
+        case 3:    return "较强"
+        default:   return "强"
+        }
+    }
+
+    private var passwordStrengthColor: Color {
+        switch passwordStrength {
+        case 0, 1: return DesignTokens.Colors.statusError
+        case 2:    return DesignTokens.Colors.statusConnecting
+        case 3:    return Color(hex: "#FFCC00")
+        default:   return DesignTokens.Colors.statusConnected
+        }
+    }
+
+    private var passwordStrengthBar: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<4, id: \.self) { i in
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(i < passwordStrength
+                          ? passwordStrengthColor
+                          : DesignTokens.Colors.borderSecondary)
+                    .frame(height: 3)
+            }
+            Text(passwordStrengthLabel)
+                .font(.system(size: 9.5))
+                .foregroundColor(passwordStrengthColor)
+        }
+    }
+
     private func checkFirstSetup() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -794,9 +847,15 @@ struct MasterPasswordSheet: View {
     private func saveMasterPassword() {
         errorMessage = ""
 
-        // 验证新密码
+        // 验证新密码：长度 + 必须包含字母 + 数字（复杂度最低要求）
         guard newPassword.count >= 8 else {
             errorMessage = "新密码至少需要 8 位"; return
+        }
+        guard newPassword.range(of: "[A-Za-z]", options: .regularExpression) != nil else {
+            errorMessage = "新密码必须包含至少一个字母"; return
+        }
+        guard newPassword.range(of: "[0-9]", options: .regularExpression) != nil else {
+            errorMessage = "新密码必须包含至少一个数字"; return
         }
         guard newPassword == confirmPassword else {
             errorMessage = "两次输入的新密码不一致"; return

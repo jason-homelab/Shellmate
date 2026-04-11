@@ -36,10 +36,10 @@ struct GroupHeaderView: View {
             .buttonStyle(.plain)
             .frame(width: 16, height: 16)
 
-            // 文件夹图标
-            Image(systemName: group.isExpanded ? "folder.fill" : "folder.fill")
+            // 文件夹图标（颜色取自分组 colorHex）
+            Image(systemName: "folder.fill")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
+                .foregroundColor(group.color)
 
             // 分组名称
             Text(group.name)
@@ -56,7 +56,7 @@ struct GroupHeaderView: View {
                 .frame(minWidth: 18)
                 .padding(.horizontal, DesignTokens.Spacing.xs)
                 .padding(.vertical, DesignTokens.Spacing.xxxs)
-                .background(DesignTokens.Colors.glassMedium)
+                .background(Color.black.opacity(0.05))
                 .clipShape(Capsule())
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)

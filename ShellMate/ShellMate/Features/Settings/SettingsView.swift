@@ -1,19 +1,32 @@
 import SwiftUI
 
-// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07）
+// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07，2026-04-03 更新至 5 Tab）
 
 /// 设置窗口主容器
-/// 顶部 Segmented Picker (通用/外观/终端)，共 600×500pt
+/// 顶部 Segmented Picker（通用/外观/终端/颜色/AI助手），共 640×520pt
+/// 对齐 Figma-Spec-v2 §07：grid-cols-5，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
 struct SettingsView: View {
 
-    // MARK: - 导航项（三主 Tab，对齐 Figma-Spec-v2 §07）
+    // MARK: - 导航项（五主 Tab，对齐 Figma-Spec-v2 §07 2026-04-03）
 
     enum SettingsTab: String, CaseIterable, Identifiable {
-        case general    = "通用"
-        case appearance = "外观"
-        case terminal   = "终端"
+        case general     = "通用"
+        case appearance  = "外观"
+        case terminal    = "终端"
+        case colors      = "颜色"
+        case aiAssistant = "AI 助手"
 
         var id: String { rawValue }
+
+        var iconName: String {
+            switch self {
+            case .general:     return "gearshape"
+            case .appearance:  return "paintpalette"
+            case .terminal:    return "terminal"
+            case .colors:      return "circle.hexagongrid.fill"
+            case .aiAssistant: return "sparkles"
+            }
+        }
     }
 
     // MARK: - 状态
@@ -24,7 +37,7 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 顶部 Tab 选择器
+            // 顶部 Tab 选择器（5 格等宽，对齐 Figma grid-cols-5）
             tabPickerBar
 
             Divider()
@@ -33,50 +46,53 @@ struct SettingsView: View {
             contentPanel
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 600, height: 500)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .frame(width: 600, height: 520)
+        .background(Color.white.opacity(0.95))
+        .background(.ultraThinMaterial)
     }
 
     // MARK: - 顶部选择器
-    // 对齐 Figma-Spec-v2 §07：grid-cols-3，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
 
     private var tabPickerBar: some View {
         HStack(spacing: 2) {
-            // 三 Tab 按钮（对齐规范：bg-black/5，选中态 bg-white + shadow-sm）
             ForEach(SettingsTab.allCases) { tab in
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         selectedTab = tab
                     }
                 } label: {
-                    Text(tab.rawValue)
-                        .font(.system(size: 13, weight: selectedTab == tab ? .medium : .regular))
-                        .foregroundColor(
-                            selectedTab == tab
-                                ? Color(hex: "#1d1d1f")
-                                : Color(hex: "#6e6e73")
-                        )
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 30)
-                        .background(
-                            selectedTab == tab
-                                ? Color.white.opacity(0.95)
-                                : Color.clear
-                        )
-                        .cornerRadius(8)
-                        .shadow(
-                            color: selectedTab == tab ? Color.black.opacity(0.1) : .clear,
-                            radius: 2, x: 0, y: 1
-                        )
+                    HStack(spacing: 4) {
+                        Image(systemName: tab.iconName)
+                            .font(.system(size: 11))
+                        Text(tab.rawValue)
+                            .font(.system(size: 12, weight: selectedTab == tab ? .medium : .regular))
+                    }
+                    .foregroundColor(
+                        selectedTab == tab
+                            ? Color(hex: "#1d1d1f")
+                            : Color(hex: "#6e6e73")
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 30)
+                    .background(
+                        selectedTab == tab
+                            ? Color.white.opacity(0.95)
+                            : Color.clear
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .shadow(
+                        color: selectedTab == tab ? Color.black.opacity(0.06) : .clear,
+                        radius: 2, x: 0, y: 1
+                    )
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(4)
-        .background(Color.black.opacity(0.06))
-        .cornerRadius(10)
+        .background(Color.black.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
         .background(DesignTokens.Colors.surfaceWindow)
     }
@@ -92,6 +108,10 @@ struct SettingsView: View {
             AppearanceSettingsView()
         case .terminal:
             TerminalSettingsView()
+        case .colors:
+            ColorsSettingsView()
+        case .aiAssistant:
+            AISettingsView()
         }
     }
 }

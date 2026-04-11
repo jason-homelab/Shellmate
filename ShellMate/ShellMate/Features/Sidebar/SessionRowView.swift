@@ -50,7 +50,7 @@ struct SessionRowView: View {
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.xs)
+        .padding(.vertical, DesignTokens.Spacing.sm)   // py-2 = 8px（Figma-Spec-v2 §02）
         .frame(height: DesignTokens.Sizes.sessionRowHeight)
         .background {
             if isSelected {

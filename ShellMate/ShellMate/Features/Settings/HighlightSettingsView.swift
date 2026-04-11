@@ -56,17 +56,18 @@ struct HighlightSettingsView: View {
 
     private var globalToggleSection: some View {
         HStack {
-            Toggle(isOn: $engine.isEnabled) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("启用关键词高亮")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
-                    Text("对终端输出中的关键词注入 ANSI 颜色序列")
-                        .font(.system(size: 10))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("启用关键词高亮")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("对终端输出中的关键词注入 ANSI 颜色序列")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .toggleStyle(.checkbox)
+            Spacer()
+            Toggle("", isOn: $engine.isEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
         }
     }
 
@@ -140,10 +141,10 @@ struct HighlightSettingsView: View {
         }
         .background(DesignTokens.Colors.surfaceWindow)
         .overlay(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .stroke(DesignTokens.Colors.borderSecondary, lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
     private var emptyRulesView: some View {
@@ -168,9 +169,10 @@ struct HighlightSettingsView: View {
                 get: { rule.enabled },
                 set: { var r = rule; r.enabled = $0; engine.updateRule(r) }
             ))
-            .toggleStyle(.checkbox)
+            .toggleStyle(.switch)
             .labelsHidden()
-            .frame(width: 20)
+            .controlSize(.mini)
+            .frame(width: 32)
 
             // 关键词
             Text(rule.pattern)
@@ -194,7 +196,7 @@ struct HighlightSettingsView: View {
                 Circle()
                     .fill(rule.color.previewColor)
                     .frame(width: 10, height: 10)
-                Text(rule.color.rawValue)
+                Text(rule.color.displayName)
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -231,20 +233,29 @@ struct HighlightSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             // 第一行：关键词输入 + 模式选项
             HStack(spacing: 10) {
-                TextField("error|ERROR|^Traceback", text: $newPattern)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "error|ERROR|^Traceback", text: $newPattern)
                     .font(.system(size: 11, design: .monospaced))
                     .frame(maxWidth: .infinity)
 
-                Toggle("正则", isOn: $newUseRegex)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                HStack(spacing: 4) {
+                    Toggle("", isOn: $newUseRegex)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                    Text("正则")
+                        .font(.system(size: 11))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
 
-                Toggle("大小写敏感", isOn: $newCaseSensitive)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                HStack(spacing: 4) {
+                    Toggle("", isOn: $newCaseSensitive)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                    Text("大小写敏感")
+                        .font(.system(size: 11))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
             }
 
             // 第二行：颜色选择
@@ -259,7 +270,7 @@ struct HighlightSettingsView: View {
                             Circle()
                                 .fill(color.previewColor)
                                 .frame(width: 10, height: 10)
-                            Text(color.rawValue)
+                            Text(color.displayName)
                         }
                         .tag(color)
                     }
@@ -275,7 +286,7 @@ struct HighlightSettingsView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(DesignTokens.Colors.surfacePanel)
-                        .cornerRadius(4)
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
 
                 Spacer()
@@ -304,9 +315,9 @@ struct HighlightSettingsView: View {
         }
         .padding(12)
         .background(DesignTokens.Colors.surfaceCard)
-        .cornerRadius(7)
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
     }
@@ -336,9 +347,22 @@ struct HighlightSettingsView: View {
     }
 }
 
-// MARK: - HighlightColor 预览颜色扩展
+// MARK: - HighlightColor SwiftUI 扩展
 
 extension HighlightColor {
+    /// 本地化显示名称（UI 展示，不影响 rawValue 持久化）
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .red:     return "红色"
+        case .yellow:  return "黄色"
+        case .green:   return "绿色"
+        case .cyan:    return "青色"
+        case .magenta: return "洋红"
+        case .blue:    return "蓝色"
+        case .white:   return "白色"
+        }
+    }
+
     /// SwiftUI 预览颜色（用于设置面板 UI 展示）
     var previewColor: Color {
         switch self {

@@ -26,7 +26,7 @@ enum CloudSyncStatus {
         }
     }
 
-    var label: String {
+    var label: LocalizedStringKey {
         switch self {
         case .synced:   return "已同步"
         case .syncing:  return "同步中…"
@@ -43,7 +43,7 @@ enum CloudConflictStrategy: String, CaseIterable {
     case localWins  = "localWins"
     case askEachTime = "askEachTime"
 
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
         case .latestWins:  return "以 iCloud 版本为准（最新修改优先）"
         case .localWins:   return "以本机版本为准"
@@ -51,7 +51,7 @@ enum CloudConflictStrategy: String, CaseIterable {
         }
     }
 
-    var subtitle: String {
+    var subtitle: LocalizedStringKey {
         switch self {
         case .latestWins:  return "多台设备同时修改时，取最后编辑时间较晚的版本"
         case .localWins:   return "同步时始终以本设备数据覆盖 iCloud"
@@ -82,7 +82,7 @@ struct CloudSyncSettingsView: View {
 
     // MARK: - 计算属性
 
-    private var appleIDString: String {
+    private var appleIDString: LocalizedStringKey {
         // 尝试从 NSUbiquitousKeyValueStore 或系统获取账号信息
         FileManager.default.ubiquityIdentityToken != nil
             ? "已登录 iCloud"
@@ -170,7 +170,7 @@ struct CloudSyncSettingsView: View {
             }
             .padding(12)
             .background(DesignTokens.Colors.surfaceWindow)
-            .cornerRadius(7)
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
     }
 
@@ -206,19 +206,22 @@ struct CloudSyncSettingsView: View {
         }
     }
 
-    private func syncScopeToggle(isOn: Binding<Bool>, label: String, hint: String) -> some View {
+    private func syncScopeToggle(isOn: Binding<Bool>, label: LocalizedStringKey, hint: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Toggle(isOn: isOn) {
-                Text(label)
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Text(hint)
+                        .font(.system(size: 9.5))
+                        .foregroundColor(DesignTokens.Colors.textDisabled)
+                }
+                Spacer()
+                Toggle("", isOn: isOn)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
             }
-            .toggleStyle(.checkbox)
-
-            Text(hint)
-                .font(.system(size: 9.5))
-                .foregroundColor(DesignTokens.Colors.textDisabled)
-                .padding(.leading, 22)
         }
     }
 
@@ -259,7 +262,7 @@ struct CloudSyncSettingsView: View {
             }
             .padding(12)
             .background(DesignTokens.Colors.surfaceWindow)
-            .cornerRadius(7)
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
 
             // 立即同步按钮
             Button(action: triggerSync) {
@@ -320,7 +323,7 @@ struct CloudSyncSettingsView: View {
 
     @ViewBuilder
     private func settingsSection<Content: View>(
-        title: String,
+        title: LocalizedStringKey,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -333,9 +336,9 @@ struct CloudSyncSettingsView: View {
 
     private func relativeDateString(_ date: Date) -> String {
         let diff = Date().timeIntervalSince(date)
-        if diff < 60 { return "刚刚" }
-        if diff < 3600 { return "\(Int(diff / 60)) 分钟前" }
-        if diff < 86400 { return "\(Int(diff / 3600)) 小时前" }
+        if diff < 60 { return String(localized: "刚刚") }
+        if diff < 3600 { return String(format: String(localized: "%lld 分钟前"), Int(diff / 60)) }
+        if diff < 86400 { return String(format: String(localized: "%lld 小时前"), Int(diff / 3600)) }
         return DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .short)
     }
 

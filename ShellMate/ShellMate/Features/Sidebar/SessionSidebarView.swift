@@ -18,6 +18,12 @@ struct SessionSidebarView: View {
     /// 搜索栏是否可见（默认隐藏，⌘F 触发，对齐 Figma 无搜索栏设计）
     @State private var isSearchBarVisible: Bool = false
 
+    /// 密码管理弹窗（任务 13.16）
+    @State private var showPasswordManager: Bool = false
+
+    /// 分组管理弹窗（任务 13.17）
+    @State private var showGroupManager: Bool = false
+
     // MARK: - 视图
 
     var body: some View {
@@ -90,14 +96,26 @@ struct SessionSidebarView: View {
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            // 新建分组
-            sidebarIconButton(systemImage: "folder.badge.plus", tooltip: "新建分组 (⌘⇧N)") {
-                groupStore.showNewGroupForm()
+            // 分组管理（任务 13.17）
+            sidebarIconButton(systemImage: "folder.badge.plus", tooltip: "分组管理 (⌘⇧N)") {
+                showGroupManager = true
+            }
+            .sheet(isPresented: $showGroupManager) {
+                GroupManagerView(
+                    groupStore: groupStore,
+                    onClose: { showGroupManager = false }
+                )
             }
 
             // 密码管理（KeyRound，对齐 Figma-Spec-v2 §02）
             sidebarIconButton(systemImage: "key.fill", tooltip: "密码管理") {
-                // TODO: 打开密码管理器（PasswordManagerDialog）
+                showPasswordManager = true
+            }
+            .sheet(isPresented: $showPasswordManager) {
+                PasswordManagerView(
+                    sessions: sessionStore.sessions,
+                    onClose: { showPasswordManager = false }
+                )
             }
 
             // 打开设置（macOS 14+ 使用 SettingsLink，13 回退到 sendAction）

@@ -53,9 +53,9 @@ struct SidebarSearchView: View {
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
         .background(DesignTokens.Colors.surfaceCard)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                 .stroke(
                     isFocused ? DesignTokens.Colors.borderFocus : Color.clear,
                     lineWidth: 1
