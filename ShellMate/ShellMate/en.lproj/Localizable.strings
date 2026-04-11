@@ -485,3 +485,90 @@
 "稍后重启" = "Later";
 "立即退出" = "Quit Now";
 
+// MARK: - tmux 集成（24.5）
+
+// --- TmuxManagerView 面板标题 ---
+"tmux 会话管理器" = "tmux Session Manager";
+"管理并监控服务器上的 tmux 会话" = "Manage and monitor tmux sessions on your server";
+
+// --- TmuxManagerView Tab 标签 ---
+"快捷操作" = "Quick Actions";
+
+// --- TmuxManagerView 会话 Tab ---
+"暂无会话" = "No Sessions";
+"%lld 个会话" = "%lld sessions";
+"正在检测 tmux…" = "Detecting tmux…";
+"远程服务器未安装 tmux" = "tmux is not installed on the remote server";
+"可通过 `sudo apt install tmux` 或 `brew install tmux` 安装" = "Install it with `sudo apt install tmux` or `brew install tmux`";
+"没有活跃的 tmux 会话" = "No active tmux sessions";
+"点击「新建会话」创建一个会话" = "Click \"New Session\" to create one";
+"已附加" = "Attached";
+"当前" = "Current";
+"%lld 个窗口" = "%lld windows";
+"附加此会话" = "Attach to this session";
+"分离此会话" = "Detach from this session";
+"终止此会话" = "Kill this session";
+
+// --- TmuxManagerView 窗口 Tab ---
+"选择会话：" = "Session:";
+"请选择" = "Select";
+"活跃窗口" = "Active Window";
+"请先选择一个会话" = "Select a session first";
+
+// --- TmuxManagerView 快捷操作 Tab ---
+"水平分割" = "Split Horizontally";
+"垂直分割" = "Split Vertically";
+"缩放窗格" = "Zoom Pane";
+"常用命令" = "Common Commands";
+"列出所有会话" = "List all sessions";
+"附加到指定会话" = "Attach to named session";
+"终止指定会话" = "Kill named session";
+"重命名会话" = "Rename session";
+
+// --- TmuxManagerView 终止确认弹窗 ---
+"确认终止 tmux 会话？" = "Kill tmux Session?";
+"会话「%@」及其中所有进程将被立即终止，此操作不可撤销。" = "Session \"%@\" and all its processes will be immediately killed. This cannot be undone.";
+"终止" = "Kill";
+
+// --- TmuxManagerView 状态栏 ---
+"%lld 个会话（%lld 个附加中）" = "%lld sessions (%lld attached)";
+
+// --- TmuxManagerView 版本警告（24.4）---
+"当前服务器的 tmux 版本低于 2.0，部分功能可能不兼容，建议升级至 tmux 2.0 或更高版本" = "The tmux version on this server is below 2.0. Some features may not be compatible. Upgrade to tmux 2.0 or later is recommended.";
+
+// --- TmuxNewSessionSheet ---
+"新建 tmux 会话" = "New tmux Session";
+"名称" = "Name";
+"留空则使用默认编号" = "Leave empty for default number";
+"窗口名" = "Window Name";
+"可选" = "Optional";
+
+// --- TmuxModels — TmuxAutoAttach rawValues ---
+"不自动附加" = "No Auto-Attach";
+"附加最近使用的会话" = "Attach Most Recent";
+"附加指定会话名" = "Attach Named Session";
+"创建新会话" = "Create New Session";
+
+// --- TmuxModels — TmuxDisconnectBehavior rawValues ---
+"仅分离（保留 tmux 会话）" = "Detach Only (Keep Session)";
+"终止 tmux 会话" = "Kill tmux Session";
+
+// --- SessionAdvancedTab — tmux 集成区 ---
+"tmux 集成" = "tmux Integration";
+"连接后自动检测 tmux" = "Auto-detect tmux on connect";
+"SSH 连接建立后自动检查 tmux 可用性及已有会话列表" = "Checks tmux availability and session list after SSH connection is established";
+"自动附加" = "Auto-Attach";
+"会话名" = "Session Name";
+"例如: dev" = "e.g.: dev";
+"新会话名" = "New Session Name";
+"SSH 断开时" = "On SSH Disconnect";
+"有会话时自动显示管理器" = "Show manager when sessions exist";
+
+// --- TerminalStatusBarView — tmux Popover ---
+"已附加 tmux 会话" = "tmux session attached";
+"点击切换 tmux 窗口" = "Click to switch tmux windows";
+"切换 tmux 窗口" = "Switch tmux Window";
+
+// --- 工具栏提示 ---
+"tmux 会话管理器 (⌘⇧T)" = "tmux Session Manager (⌘⇧T)";
+
