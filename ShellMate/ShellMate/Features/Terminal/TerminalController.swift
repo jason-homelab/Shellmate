@@ -154,7 +154,7 @@ final class TerminalController: ObservableObject {
 
     /// AI 命令补全上下文缓冲（最近 N 行终端输出，任务 14.8）
     private var _outputBuffer: String = ""
-    private let _outputBufferMaxChars = 8_000   // ~50 行 × 160 字符
+    private let _outputBufferMaxChars = 32_000  // ~200 行 × 160 字符（供 AI 摘要使用）
 
     /// 返回最近终端输出（供 AI 命令补全使用）
     func recentTerminalOutput() -> String {

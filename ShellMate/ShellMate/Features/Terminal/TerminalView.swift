@@ -140,6 +140,8 @@ struct TerminalView: View {
     @State private var isAIPanelOpen: Bool = false
     /// 预填充的错误上下文（由错误侦探触发）
     @State private var aiInitialError: String? = nil
+    /// AI-05：会话摘要面板是否显示
+    @State private var showSummaryPanel: Bool = false
     /// AI 设置观察（用于工具栏按钮显示）
     @ObservedObject private var aiSettings = AISettingsStore.shared
 
@@ -282,6 +284,14 @@ struct TerminalView: View {
                     set: { _ in }
                 ),
                 onClose: { showMonitorPanel = false }
+            )
+        }
+        // AI-05：会话摘要面板
+        .sheet(isPresented: $showSummaryPanel) {
+            AISummaryView(
+                sessionName: "\(session.name) · \(session.username)@\(session.host)",
+                terminalOutput: controller.recentTerminalOutput(),
+                onClose: { showSummaryPanel = false }
             )
         }
         .modifier(TerminalViewAlertModifier(
@@ -627,6 +637,15 @@ struct TerminalView: View {
                         isAIPanelOpen.toggle()
                         if !isAIPanelOpen { aiInitialError = nil }
                     }
+                }
+
+                // AI-05：会话摘要按钮（⌘⇧S）
+                ToolbarButton(
+                    icon: "text.viewfinder",
+                    tooltip: "会话摘要 (⌘⇧S)",
+                    isEnabled: controller.state == .connected
+                ) {
+                    showSummaryPanel = true
                 }
             }
         }

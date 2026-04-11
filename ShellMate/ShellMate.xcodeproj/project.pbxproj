@@ -77,6 +77,7 @@
 		AI010001 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020001 /* AIService.swift */; };
 		AI010002 /* AIAssistantPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020002 /* AIAssistantPanelView.swift */; };
 		AI010003 /* AIErrorDetectiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020003 /* AIErrorDetectiveView.swift */; };
+		AI010005 /* AISummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020005 /* AISummaryView.swift */; };
 		AI010004 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020004 /* AISettingsView.swift */; };
 		CS010001 /* ColorsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS020001 /* ColorsSettingsView.swift */; };
 		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
@@ -246,6 +247,7 @@
 		AI020001 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		AI020002 /* AIAssistantPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantPanelView.swift; sourceTree = "<group>"; };
 		AI020003 /* AIErrorDetectiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIErrorDetectiveView.swift; sourceTree = "<group>"; };
+		AI020005 /* AISummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryView.swift; sourceTree = "<group>"; };
 		AI020004 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 		CS020001 /* ColorsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorsSettingsView.swift; sourceTree = "<group>"; };
 		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
@@ -683,6 +685,7 @@
 			children = (
 				AI020002 /* AIAssistantPanelView.swift */,
 				AI020003 /* AIErrorDetectiveView.swift */,
+				AI020005 /* AISummaryView.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -994,6 +997,7 @@
 				AI010001 /* AIService.swift in Sources */,
 				AI010002 /* AIAssistantPanelView.swift in Sources */,
 				AI010003 /* AIErrorDetectiveView.swift in Sources */,
+				AI010005 /* AISummaryView.swift in Sources */,
 				AI010004 /* AISettingsView.swift in Sources */,
 				CS010001 /* ColorsSettingsView.swift in Sources */,
 				0001000100010022 /* TerminalTab.swift in Sources */,
