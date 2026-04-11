@@ -71,7 +71,14 @@ struct HostKeyConfirmationView: View {
             footerView
         }
         .frame(width: 520, height: 480)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(Color.white.opacity(0.95))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
 
     // MARK: - 子视图
@@ -94,8 +101,8 @@ struct HostKeyConfirmationView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(DesignTokens.Colors.surfaceCard)
-                    .cornerRadius(12)
+                    .background(Color.black.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
         }
@@ -122,7 +129,7 @@ struct HostKeyConfirmationView: View {
         }
         .padding(DesignTokens.Spacing.md)
         .background(DesignTokens.Colors.statusConnecting.opacity(0.1))
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
     }
 
     /// 主机信息
@@ -138,8 +145,13 @@ struct HostKeyConfirmationView: View {
                 infoRow(label: "密钥类型", value: fingerprint.keyType.displayName)
             }
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(Color.white.opacity(0.80))
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            )
         }
     }
 
@@ -180,8 +192,12 @@ struct HostKeyConfirmationView: View {
                 .help("复制指纹")
             }
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceWindow)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(Color.black.opacity(0.04))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+            )
         }
     }
 

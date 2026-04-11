@@ -249,7 +249,7 @@ struct ToolbarButton: View {
                 .foregroundColor(buttonColor)
                 .frame(width: 26, height: 26, alignment: .center)
                 .background(backgroundColor)
-                .cornerRadius(5)
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
@@ -360,7 +360,7 @@ struct TerminalSearchBar: View {
                     .foregroundColor(caseSensitive ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(caseSensitive ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
-                    .cornerRadius(4)
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
             .buttonStyle(.plain)
             .help("区分大小写")
@@ -372,7 +372,7 @@ struct TerminalSearchBar: View {
                     .foregroundColor(useRegex ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(useRegex ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
-                    .cornerRadius(4)
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
             .buttonStyle(.plain)
             .help("正则表达式")
@@ -415,9 +415,9 @@ struct TerminalSearchBar: View {
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
         .glassPanel(radius: DesignTokens.Sizes.cornerRadiusSmall)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                 .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
         .onAppear {

@@ -17,11 +17,14 @@ struct SwiftTermViewRepresentable: NSViewRepresentable {
     var fontFamily: String
     /// 当前主题 ID（从 AppStorage 传入，变化时触发 updateNSView）
     var themeId: String
+    /// Option 键作为 Meta 键（对齐 terminal.optionAsMeta AppStorage）
+    var optionAsMeta: Bool
 
     func makeNSView(context: Context) -> SwiftTerm.TerminalView {
         let view = SwiftTerm.TerminalView(frame: .zero)
         view.terminalDelegate = controller
         view.font = resolvedFont()
+        view.optionAsMetaKey = optionAsMeta
         applyTheme(themeId, to: view)
         // 延迟赋值避免 SwiftUI 状态更新循环
         DispatchQueue.main.async { viewRef = view }
@@ -32,6 +35,9 @@ struct SwiftTermViewRepresentable: NSViewRepresentable {
         let resolved = resolvedFont()
         if nsView.font.fontName != resolved.fontName || nsView.font.pointSize != resolved.pointSize {
             nsView.font = resolved
+        }
+        if nsView.optionAsMetaKey != optionAsMeta {
+            nsView.optionAsMetaKey = optionAsMeta
         }
         applyTheme(themeId, to: nsView)
     }
@@ -46,16 +52,27 @@ struct SwiftTermViewRepresentable: NSViewRepresentable {
     // MARK: - 主题应用
 
     private func applyTheme(_ id: String, to view: SwiftTerm.TerminalView) {
-        guard let theme = AppTheme.builtins.first(where: { $0.id == id })
-                       ?? AppTheme.builtins.first else { return }
-        let bg = NSColor(theme.background)
-        let fg = NSColor(theme.outputColor)
-        if view.nativeBackgroundColor != bg {
-            view.nativeBackgroundColor = bg
+        let theme = AppTheme.allThemes.first(where: { $0.id == id }) ?? AppTheme.builtins[0]
+        // 设置背景色和前景色
+        view.nativeBackgroundColor = NSColor(theme.background)
+        view.nativeForegroundColor = NSColor(theme.outputColor)
+        // 安装完整的 16 色 ANSI 调色板
+        if theme.ansiColors.count == 16 {
+            let palette = theme.ansiColors.map { hexToSwiftTermColor($0) }
+            view.installColors(palette)
         }
-        if view.nativeForegroundColor != fg {
-            view.nativeForegroundColor = fg
-        }
+    }
+
+    /// 将十六进制颜色字符串转换为 SwiftTerm.Color（8 位值扩展为 16 位）
+    private func hexToSwiftTermColor(_ hex: String) -> SwiftTerm.Color {
+        let stripped = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: stripped).scanHexInt64(&int)
+        let r = UInt16((int >> 16) & 0xFF)
+        let g = UInt16((int >> 8)  & 0xFF)
+        let b = UInt16(int         & 0xFF)
+        // 8 位 → 16 位：r8 * 257 = r8 << 8 | r8（保证 0 → 0，255 → 65535 线性映射）
+        return SwiftTerm.Color(red: r << 8 | r, green: g << 8 | g, blue: b << 8 | b)
     }
 }
 
@@ -79,6 +96,8 @@ struct TerminalView: View {
     @AppStorage("appearance.themeId") private var globalThemeId: String = "shellmate-dark"
     /// 全局字号（只读，用于无会话覆盖时回退）
     @AppStorage("appearance.fontSize") private var globalFontSize: Double = 13
+    /// Option 键是否作为 Meta 键（terminal.optionAsMeta）
+    @AppStorage("terminal.optionAsMeta") private var optionAsMeta: Bool = false
     /// 会话级别工作字号：初始化自有效值，工具栏 ±1 只修改此值，不写回 AppStorage
     @State private var sessionFontSize: Double = 13
 
@@ -110,6 +129,8 @@ struct TerminalView: View {
     @State private var showPrivateKeyMissing: Bool = false
     /// W12.6：同步输入确认弹窗
     @State private var showSyncConfirm: Bool = false
+    /// 服务器监控面板
+    @State private var showMonitorPanel: Bool = false
     /// W12.6：观察同步状态
     @ObservedObject private var syncStore = SyncInputStore.shared
 
@@ -122,11 +143,11 @@ struct TerminalView: View {
     /// AI 设置观察（用于工具栏按钮显示）
     @ObservedObject private var aiSettings = AISettingsStore.shared
 
-    private let minFontSize: Double = 9
-    private let maxFontSize: Double = 24
+    private let minFontSize: Double = Double(DesignTokens.Sizes.terminalFontSizeMin)
+    private let maxFontSize: Double = Double(DesignTokens.Sizes.terminalFontSizeMax)
 
-    /// SFTP 面板宽度（Figma 规范默认 290pt，可拖拽调整）
-    @State private var sftpPanelWidth: CGFloat = 290
+    /// SFTP 双栏面板宽度（使用设计令牌 sftpPanelWidth）
+    @State private var sftpPanelWidth: CGFloat = DesignTokens.Sizes.sftpPanelWidth
 
     // MARK: - 初始化
 
@@ -149,7 +170,7 @@ struct TerminalView: View {
             // 终端主区域（含 Compose Pane 纵向布局）
             terminalAndComposeView
 
-            // 底部状态栏（连接状态 + 主机指标）
+            // 底部状态栏（连接状态 + 主机指标，点击指标打开监控面板）
             TerminalStatusBarView(
                 connectionState: controller.state.stateColor,
                 session: session,
@@ -157,7 +178,10 @@ struct TerminalView: View {
                 columns: controller.terminalSize.columns,
                 rows: controller.terminalSize.rows,
                 encoding: session.encoding,
-                connectedAt: controller.connectedAt
+                connectedAt: controller.connectedAt,
+                tmuxAttachedSession: controller.tmuxStore.attachedSessionName,
+                tmuxSessionCount: controller.tmuxStore.sessions.count,
+                onMetricsTap: controller.serverMetrics != nil ? { showMonitorPanel = true } : nil
             )
 
             // 隧道管理器浮动面板（⌘⇧U）
@@ -172,6 +196,9 @@ struct TerminalView: View {
                     )
                     .allowsHitTesting(true)
             }
+
+            // tmux 会话管理器浮动面板（⌘⇧T）
+            tmuxManagerOverlay
 
             // W11：快捷命令管理器浮动面板（⌘⇧K）
             if isQuickCommandOpen {
@@ -228,28 +255,39 @@ struct TerminalView: View {
                 showConnectionError = true
             }
         }
-        .alert("连接错误", isPresented: $showConnectionError) {
-            Button("重试") { connect() }
-            Button("取消", role: .cancel) {}
-        } message: {
-            Text(connectionErrorMessage)
+        .sheet(isPresented: $showConnectionError) {
+            ConnectionErrorView(
+                session: session,
+                errorMessage: connectionErrorMessage,
+                onRetry: {
+                    showConnectionError = false
+                    connect()
+                },
+                onDismiss: { showConnectionError = false }
+            )
         }
-        .alert("SFTP 连接失败", isPresented: $showSFTPError) {
-            Button("确定", role: .cancel) {}
-        } message: {
-            Text(sftpErrorMessage)
+        .sheet(isPresented: $showMonitorPanel) {
+            ServerMonitorPanelView(
+                session: session,
+                metrics: Binding(
+                    get: { controller.serverMetrics },
+                    set: { _ in }
+                ),
+                onClose: { showMonitorPanel = false }
+            )
         }
-        .alert("隧道启动失败", isPresented: $showTunnelError) {
-            Button("确定", role: .cancel) {}
-        } message: {
-            Text(tunnelErrorMessage)
-        }
+        .modifier(TerminalViewAlertModifier(
+            showSFTPError: $showSFTPError, sftpErrorMessage: sftpErrorMessage,
+            showTunnelError: $showTunnelError, tunnelErrorMessage: tunnelErrorMessage
+        ))
         .modifier(TerminalViewNotificationModifier(
             sessionId: session.id,
             controller: controller,
             showSearch: $showSearch,
             fontSize: $sessionFontSize,
             isQuickCommandOpen: $isQuickCommandOpen,
+            isAIPanelOpen: $isAIPanelOpen,
+            aiInitialError: $aiInitialError,
             minFontSize: minFontSize,
             maxFontSize: maxFontSize,
             onToggleSFTP: toggleSFTPPanel
@@ -382,11 +420,13 @@ struct TerminalView: View {
                     SFTPPanelView(
                         sftpSession: sftpSess,
                         transferQueue: transferQueue,
+                        sessionName: session.name,
                         onClose: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 _ = Task { await controller.closeSFTPPanel() }
                             }
-                        }
+                        },
+                        syncDirectory: controller.currentRemoteDirectory
                     )
                     .frame(width: sftpPanelWidth)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -404,7 +444,7 @@ struct TerminalView: View {
                         },
                         initialError: aiInitialError
                     )
-                    .frame(width: 340)
+                    .frame(width: DesignTokens.Sizes.aiPanelWidth)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
@@ -412,10 +452,31 @@ struct TerminalView: View {
             if controller.isComposePaneOpen {
                 ComposePaneView(
                     onSend: { text in controller.sendComposeContent(text) },
-                    onClose: { controller.isComposePaneOpen = false }
+                    onClose: { controller.isComposePaneOpen = false },
+                    contextProvider: { controller.recentTerminalOutput() }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+        }
+    }
+
+    @ViewBuilder
+    private var tmuxManagerOverlay: some View {
+        if controller.tmuxStore.isManagerOpen {
+            Color.clear
+                .overlay(
+                    TmuxManagerView(
+                        store: controller.tmuxStore,
+                        serverLabel: "\(session.username)@\(session.host)",
+                        onClose: {
+                            withAnimation(DesignTokens.Animation.fast) {
+                                controller.tmuxStore.isManagerOpen = false
+                            }
+                        }
+                    )
+                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
+                )
+                .allowsHitTesting(true)
         }
     }
 
@@ -491,6 +552,20 @@ struct TerminalView: View {
                 }
             }
 
+            // tmux 会话管理器按钮（⌘⇧T）
+            if case .available = controller.tmuxStore.availability {
+                ToolbarButton(
+                    icon: "rectangle.3.group",
+                    tooltip: "tmux 会话管理器 (⌘⇧T)",
+                    isActive: controller.tmuxStore.isManagerOpen,
+                    tintColor: controller.tmuxStore.isManagerOpen ? DesignTokens.Colors.accentPrimary : nil
+                ) {
+                    withAnimation(DesignTokens.Animation.fast) {
+                        controller.tmuxStore.isManagerOpen.toggle()
+                    }
+                }
+            }
+
             // Compose Pane 按钮
             ToolbarButton(
                 icon: "text.alignleft",
@@ -517,7 +592,7 @@ struct TerminalView: View {
                 tooltip: syncStore.isSynced(session.id) ? "关闭同步输入" : "同步输入",
                 isEnabled: controller.state == .connected,
                 isActive: syncStore.isSynced(session.id),
-                tintColor: syncStore.isSynced(session.id) ? .orange : nil
+                tintColor: syncStore.isSynced(session.id) ? DesignTokens.Colors.statusConnecting : nil
             ) {
                 if syncStore.isSynced(session.id) {
                     syncStore.deactivate()
@@ -542,8 +617,6 @@ struct TerminalView: View {
                     }
                 }
             }
-
-            connectionButton
         }
     }
 
@@ -576,33 +649,6 @@ struct TerminalView: View {
                 isEnabled: sessionFontSize < maxFontSize
             ) {
                 sessionFontSize = min(maxFontSize, sessionFontSize + 1)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var connectionButton: some View {
-        switch controller.state {
-        case .connected:
-            ToolbarButton(
-                icon: "xmark.circle",
-                tooltip: "断开连接",
-                tintColor: DesignTokens.Colors.statusError
-            ) {
-                Task { await controller.disconnect() }
-            }
-        case .disconnected, .failed:
-            ToolbarButton(
-                icon: "bolt.fill",
-                tooltip: "连接",
-                tintColor: DesignTokens.Colors.statusConnected
-            ) {
-                connect()
-            }
-        case .connecting, .reconnecting:
-            ToolbarButton(icon: "xmark.circle", tooltip: "取消") {
-                controller.cancelReconnect()
-                Task { await controller.disconnect() }
             }
         }
     }
@@ -698,7 +744,8 @@ struct TerminalView: View {
                 controller: controller,
                 fontSize: CGFloat(sessionFontSize),
                 fontFamily: fontFamily,
-                themeId: effectiveThemeId
+                themeId: effectiveThemeId,
+                optionAsMeta: optionAsMeta
             )
 
             stateOverlay
@@ -706,7 +753,7 @@ struct TerminalView: View {
             // W12.6：同步输入激活时橙色边框指示
             if syncStore.isSynced(session.id) {
                 Rectangle()
-                    .stroke(Color.orange, lineWidth: 2)
+                    .stroke(DesignTokens.Colors.statusConnecting, lineWidth: 2)
                     .allowsHitTesting(false)
             }
         }
@@ -747,7 +794,7 @@ struct TerminalView: View {
                 .padding(.horizontal, DesignTokens.Spacing.xxl)
                 .padding(.vertical, DesignTokens.Spacing.md)
                 .background(DesignTokens.Colors.accentPrimary)
-                .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             }
             .buttonStyle(.plain)
             .padding(.top, DesignTokens.Spacing.md)
@@ -837,7 +884,7 @@ struct TerminalView: View {
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
                         .background(DesignTokens.Colors.surfaceCard)
-                        .cornerRadius(12)
+                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
@@ -861,16 +908,20 @@ struct TerminalView: View {
                     Text("密码")
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
-                    SecureField("请输入密码", text: $wizardPassword)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "请输入密码", text: $wizardPassword, isSecure: true)
                         .onSubmit { confirmCredentialWizard() }
                 }
 
                 // 记住密码选项
-                Toggle("记住密码（保存到本设备凭据金库）", isOn: $wizardSaveCredential)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .toggleStyle(.checkbox)
+                HStack {
+                    Text("记住密码（保存到本设备凭据金库）")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Spacer()
+                    Toggle("", isOn: $wizardSaveCredential)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
             }
             .padding(DesignTokens.Spacing.lg)
 
@@ -902,6 +953,8 @@ struct TerminalView: View {
         guard !wizardPassword.isEmpty else { return }
         let pwd = wizardPassword
         let save = wizardSaveCredential
+        // 立即清零内存中的明文密码，避免残留
+        wizardPassword.removeAll(keepingCapacity: false)
         showCredentialWizard = false
         Task {
             do {
@@ -973,6 +1026,8 @@ private struct TerminalViewNotificationModifier: ViewModifier {
     @Binding var showSearch: Bool
     @Binding var fontSize: Double
     @Binding var isQuickCommandOpen: Bool
+    @Binding var isAIPanelOpen: Bool
+    @Binding var aiInitialError: String?
     let minFontSize: Double
     let maxFontSize: Double
     let onToggleSFTP: () -> Void
@@ -989,6 +1044,12 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
                 onToggleSFTP()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .aiPanelRequested)) { _ in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isAIPanelOpen.toggle()
+                    if !isAIPanelOpen { aiInitialError = nil }
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .tunnelManagerRequested)) { _ in
                 if controller.isTunnelManagerOpen { controller.closeTunnelManager() }
                 else { controller.openTunnelManager() }
@@ -998,6 +1059,9 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
                 withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .tmuxManagerRequested)) { _ in
+                withAnimation { controller.tmuxStore.isManagerOpen.toggle() }
             }
             // 终端控制
             .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in
@@ -1014,6 +1078,20 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .resetFontRequested)) { _ in
                 fontSize = 13
+            }
+            // 脚本库：将脚本内容逐行发送到终端
+            .onReceive(NotificationCenter.default.publisher(for: .runScriptRequested)) { notification in
+                guard let content = notification.userInfo?["scriptContent"] as? String else { return }
+                Task {
+                    let lines = content.components(separatedBy: "\n")
+                    for line in lines {
+                        guard !line.hasPrefix("#") else { continue } // 跳过注释行
+                        let trimmed = line.trimmingCharacters(in: .whitespaces)
+                        if trimmed.isEmpty { continue }
+                        try? await controller.send(trimmed + "\r")
+                        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms 行间延迟
+                    }
+                }
             }
     }
 }
@@ -1035,5 +1113,29 @@ struct MultiTerminalView: View {
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+}
+
+
+// MARK: - 连接相关 Alert 修饰符（拆分以避免类型检查超时）
+
+private struct TerminalViewAlertModifier: ViewModifier {
+    @Binding var showSFTPError: Bool
+    let sftpErrorMessage: String
+    @Binding var showTunnelError: Bool
+    let tunnelErrorMessage: String
+
+    func body(content: Content) -> some View {
+        content
+            .alert("SFTP 连接失败", isPresented: $showSFTPError) {
+                Button("确定", role: .cancel) {}
+            } message: {
+                Text(sftpErrorMessage)
+            }
+            .alert("隧道启动失败", isPresented: $showTunnelError) {
+                Button("确定", role: .cancel) {}
+            } message: {
+                Text(tunnelErrorMessage)
+            }
     }
 }

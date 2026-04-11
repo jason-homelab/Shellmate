@@ -5,6 +5,7 @@ import AppKit
 
 /// Compose Pane — 停靠于终端底部的多行命令编辑区
 /// 规格：与 TerminalPane 同宽，默认高度 120pt（60–200pt 可拖拽调整）
+/// 任务 14.8：集成 AI 命令补全，输入暂停后自动建议
 struct ComposePaneView: View {
 
     /// 发送命令回调
@@ -12,6 +13,16 @@ struct ComposePaneView: View {
 
     /// 关闭面板回调
     var onClose: () -> Void
+
+    /// 获取最近终端输出（AI 补全上下文），由 TerminalController 注入（任务 14.8）
+    var contextProvider: (() -> String)? = nil
+
+    // MARK: - AI 补全状态（任务 14.8）
+
+    @StateObject private var aiSettings = AISettingsStore.shared
+    @State private var aiSuggestion: String? = nil
+    @State private var isLoadingAI: Bool = false
+    @State private var aiDebounceTask: Task<Void, Never>? = nil
 
     // MARK: - 状态
 
@@ -35,11 +46,19 @@ struct ComposePaneView: View {
             // 代码编辑区
             codeEditorArea
 
+            // AI 建议条（任务 14.8，仅 AI 启用时显示）
+            if aiSettings.isEnabled {
+                aiSuggestionBar
+            }
+
             // 操作栏
             actionBar
         }
-        .frame(height: paneHeight)
+        .frame(height: paneHeight + (aiSettings.isEnabled && (aiSuggestion != nil || isLoadingAI) ? 32 : 0))
         .background(DesignTokens.Colors.terminalBackground)
+        .onChange(of: content) { _ in
+            scheduleAICompletion()
+        }
     }
 
     // MARK: - 子视图
@@ -153,8 +172,15 @@ struct ComposePaneView: View {
                         .font(.system(size: 10))
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                     TextField("50", value: $lineDelay, format: .number)
-                        .textFieldStyle(.roundedBorder)
+                        .textFieldStyle(.plain)
                         .font(DesignTokens.Typography.codeSmall)
+                        .padding(6)
+                        .background(DesignTokens.Colors.surfaceInput)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                        )
                         .frame(width: 44)
                     Text("ms")
                         .font(.system(size: 10))
@@ -195,6 +221,131 @@ struct ComposePaneView: View {
                 .foregroundColor(DesignTokens.Colors.borderFaint),
             alignment: .top
         )
+    }
+
+    // MARK: - AI 建议条（任务 14.8）
+
+    @ViewBuilder
+    private var aiSuggestionBar: some View {
+        if isLoadingAI {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.mini)
+                Text("AI 补全中…")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 26)
+            .background(DesignTokens.Colors.accentPrimary.opacity(0.04))
+            .overlay(Rectangle().frame(height: 1).foregroundColor(DesignTokens.Colors.borderFaint), alignment: .top)
+        } else if let suggestion = aiSuggestion {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+
+                Text(suggestion)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Spacer()
+
+                // Tab 接受
+                Button("Tab 接受") {
+                    acceptSuggestion(suggestion)
+                }
+                .font(.system(size: 10))
+                .buttonStyle(.plain)
+                .foregroundColor(DesignTokens.Colors.accentPrimary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+                // 关闭
+                Button {
+                    aiSuggestion = nil
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9))
+                        .foregroundColor(DesignTokens.Colors.textDisabled)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 26)
+            .background(DesignTokens.Colors.accentPrimary.opacity(0.04))
+            .overlay(Rectangle().frame(height: 1).foregroundColor(DesignTokens.Colors.borderFaint), alignment: .top)
+        }
+    }
+
+    // MARK: - AI 补全逻辑
+
+    /// 防抖调度：用户停止输入 600ms 后触发 AI 建议
+    private func scheduleAICompletion() {
+        aiDebounceTask?.cancel()
+        aiSuggestion = nil
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 3, aiSettings.isEnabled else { return }
+
+        aiDebounceTask = Task {
+            try? await Task.sleep(nanoseconds: 600_000_000) // 600ms
+            guard !Task.isCancelled else { return }
+            await fetchAISuggestion(for: trimmed)
+        }
+    }
+
+    @MainActor
+    private func fetchAISuggestion(for input: String) async {
+        guard aiSettings.isEnabled, !input.isEmpty else { return }
+        isLoadingAI = true
+        defer { isLoadingAI = false }
+
+        let context = contextProvider?() ?? ""
+        let contextSnippet = context.isEmpty ? "" : "\n\n最近终端输出（最后 50 行）：\n```\n\(context.suffix(2000))\n```"
+
+        let systemPrompt = """
+        你是一个 SSH 终端命令补全助手。根据用户当前输入和终端上下文，建议最可能的完整命令或下一步补全。
+        规则：
+        1. 只返回一行完整的 shell 命令，不加任何解释
+        2. 若输入已完整，返回空字符串
+        3. 不要返回 markdown，不要加代码块
+        """
+        let userMessage = "当前输入：\(input)\(contextSnippet)\n\n建议完整命令："
+
+        let service = AIServiceFactory.make(for: aiSettings.provider)
+        let model = aiSettings.currentModel.id
+        let apiKey = aiSettings.loadAPIKey(for: aiSettings.provider)
+        let baseURL = aiSettings.baseURL
+
+        var result = ""
+        do {
+            let stream = service.stream(
+                messages: [.user(userMessage)],
+                systemPrompt: systemPrompt,
+                model: model,
+                apiKey: apiKey,
+                baseURL: baseURL
+            )
+            for try await chunk in stream {
+                result += chunk
+                if Task.isCancelled { return }
+            }
+            let cleaned = result.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleaned.isEmpty && cleaned != input {
+                aiSuggestion = cleaned
+            }
+        } catch {
+            // 静默失败：AI 建议是辅助功能，不影响主流程
+        }
+    }
+
+    private func acceptSuggestion(_ suggestion: String) {
+        content = suggestion
+        aiSuggestion = nil
     }
 
     // MARK: - 操作

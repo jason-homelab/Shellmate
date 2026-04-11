@@ -73,7 +73,14 @@ struct HostKeyChangedWarningView: View {
             footerView
         }
         .frame(width: 560, height: 620)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(Color.white.opacity(0.95))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
 
     // MARK: - 子视图
@@ -129,7 +136,7 @@ struct HostKeyChangedWarningView: View {
             .padding(DesignTokens.Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(DesignTokens.Colors.statusError.opacity(0.15))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         }
     }
 
@@ -213,8 +220,13 @@ struct HostKeyChangedWarningView: View {
                 )
             }
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(Color.white.opacity(0.80))
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            )
 
             if showDetails {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -242,8 +254,13 @@ struct HostKeyChangedWarningView: View {
                 actionRow(number: 4, text: "如果无法确认，请勿继续连接")
             }
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(Color.white.opacity(0.80))
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            )
         }
     }
 
@@ -255,23 +272,29 @@ struct HostKeyChangedWarningView: View {
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                Toggle(isOn: $understandRisk) {
+                HStack {
                     Text("我理解继续连接可能导致凭据泄露")
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $understandRisk)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
-                .toggleStyle(.checkbox)
 
-                Toggle(isOn: $verifiedNewKey) {
+                HStack {
                     Text("我已通过其他渠道验证了新的主机密钥")
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $verifiedNewKey)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
-                .toggleStyle(.checkbox)
             }
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.statusError.opacity(0.05))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
                     .stroke(DesignTokens.Colors.statusError.opacity(0.3), lineWidth: 1)
