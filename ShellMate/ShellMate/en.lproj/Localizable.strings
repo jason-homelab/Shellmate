@@ -1,0 +1,487 @@
+/* ShellMate — English (en) Localizable.strings
+   Development region: zh-Hans (Chinese is source language)
+   This file provides English translations for all UI strings.
+*/
+
+// MARK: - 通用操作
+"取消" = "Cancel";
+"确定" = "OK";
+"保存" = "Save";
+"创建" = "Create";
+"确认" = "Confirm";
+"删除" = "Delete";
+"编辑" = "Edit";
+"关闭" = "Close";
+"重试" = "Retry";
+"应用" = "Apply";
+"修改" = "Change";
+"设置" = "Set";
+"查看" = "View";
+"复制" = "Copy";
+"导出" = "Export";
+"选择…" = "Choose...";
+"好" = "OK";
+"退出" = "Quit";
+
+// MARK: - 侧边栏
+"会话" = "Sessions";
+"新建会话 (⌘N)" = "New Session (⌘N)";
+"新建分组 (⌘⇧N)" = "New Group (⌘⇧N)";
+"偏好设置" = "Preferences";
+"加载中..." = "Loading...";
+"全部展开" = "Expand All";
+"全部折叠" = "Collapse All";
+"按名称排序" = "Sort by Name";
+"按最近连接排序" = "Sort by Recently Connected";
+"按创建时间排序" = "Sort by Created Time";
+
+// MARK: - 会话列表
+"未分组" = "Ungrouped";
+"编辑分组" = "Edit Group";
+"新建子分组" = "New Subgroup";
+"折叠" = "Collapse";
+"展开" = "Expand";
+"全部展开子项" = "Expand All Items";
+"移动到分组" = "Move to Group";
+"顶级分组" = "Top Level";
+"删除分组" = "Delete Group";
+"连接" = "Connect";
+"副本" = "Copy";
+
+// MARK: - 会话表单
+"编辑会话" = "Edit Session";
+"新建会话" = "New Session";
+"基本" = "Basic";
+"认证" = "Authentication";
+"高级" = "Advanced";
+"外观" = "Appearance";
+"请输入会话名称" = "Please enter session name";
+"请输入主机地址" = "Please enter host address";
+"请输入用户名" = "Please enter username";
+"请输入有效的端口号 (1-65535)" = "Please enter valid port number (1-65535)";
+
+// MARK: - 会话基本标签
+"连接协议" = "Protocol";
+"会话名称" = "Session Name";
+"输入会话名称" = "Enter session name";
+"主机地址" = "Host Address";
+"例如: 192.168.1.100 或 example.com" = "e.g.: 192.168.1.100 or example.com";
+"端口" = "Port";
+"用户名" = "Username";
+"分组" = "Group";
+"选择分组" = "Select Group";
+"我的服务器" = "My Server";
+
+// MARK: - 会话认证标签
+"SSH 密码" = "SSH Password";
+"输入密码（可选，连接时输入）" = "Enter password (optional, enter when connecting)";
+"记住密码（加密存储到本地）" = "Remember password (encrypted local storage)";
+"私钥文件路径" = "Private Key File Path";
+"浏览…" = "Browse...";
+"支持 Ed25519、RSA、ECDSA 格式" = "Supports Ed25519, RSA, ECDSA formats";
+"私钥密码（Passphrase）" = "Key Passphrase";
+"留空表示无 Passphrase" = "Leave empty if no passphrase";
+"SSH Agent 已连接（SSH_AUTH_SOCK）" = "SSH Agent connected (SSH_AUTH_SOCK)";
+"未检测到 SSH Agent，请确认 ssh-agent 正在运行" = "SSH Agent not detected, please ensure ssh-agent is running";
+"Direct 版支持 SSH Agent，App Store 版受沙盒限制" = "Direct version supports SSH Agent; App Store version is sandboxed";
+"请先在终端运行 eval \"$(ssh-agent -s)\" 并用 ssh-add 添加密钥" = "First run eval \"$(ssh-agent -s)\" in terminal and add keys with ssh-add";
+"服务器会在连接时逐步提示输入认证信息（如一次性密码、验证码等）。" = "Server will prompt for authentication step-by-step when connecting (e.g., OTP, verification codes).";
+"选择私钥文件" = "Select Private Key File";
+
+// MARK: - 设置面板导航
+"通用" = "General";
+"终端" = "Terminal";
+"AI 助手" = "AI Assistant";
+"关键词高亮" = "Keyword Highlight";
+"安全" = "Security";
+"iCloud 同步" = "iCloud Sync";
+
+// MARK: - 外观设置
+"颜色主题" = "Color Theme";
+"导入 .itermcolors" = "Import .itermcolors";
+"导出主题" = "Export Theme";
+"选择 .itermcolors 主题文件" = "Select .itermcolors Theme File";
+"自定义" = "Custom";
+"创建自定义颜色主题" = "Create Custom Color Theme";
+"字体" = "Font";
+"字体族" = "Font Family";
+"字号" = "Font Size";
+"行间距" = "Line Spacing";
+"启用字体连字（Ligatures）" = "Enable Font Ligatures";
+"⚠ 需字体支持（Fira Code, JetBrains Mono）" = "⚠ Requires font support (Fira Code, JetBrains Mono)";
+"非 ASCII 字体" = "Non-ASCII Font";
+"光标" = "Cursor";
+"块状" = "Block";
+"竖线" = "I-Beam";
+"下划线" = "Underline";
+"光标闪烁" = "Cursor Blink";
+"仅空闲时闪烁" = "Blink only when idle";
+"窗口" = "Window";
+"背景透明度" = "Background Opacity";
+"创建自定义主题" = "Create Custom Theme";
+"主题名称" = "Theme Name";
+"输入主题名称" = "Enter theme name";
+"背景色" = "Background Color";
+"提示符色" = "Prompt Color";
+"文字色" = "Text Color";
+"取消主题编辑" = "Cancel Theme";
+"保存主题" = "Save Theme";
+
+// MARK: - 安全设置
+"主密码" = "Master Password";
+"启用主密码（应用启动时要求验证）" = "Enable master password (require authentication at launch)";
+"自动锁定" = "Auto Lock";
+"不锁定" = "Never";
+"1 分钟" = "1 Minute";
+"5 分钟" = "5 Minutes";
+"15 分钟" = "15 Minutes";
+"30 分钟" = "30 Minutes";
+"1 小时" = "1 Hour";
+"修改主密码…" = "Change Master Password...";
+"Known Hosts（已信任服务器指纹）" = "Known Hosts (Trusted Fingerprints)";
+"全部清除" = "Clear All";
+"主机名 / IP" = "Hostname / IP";
+"密钥类型" = "Key Type";
+"添加日期" = "Date Added";
+"状态" = "Status";
+"操作" = "Action";
+"尚无已记录的服务器指纹" = "No recorded server fingerprints";
+"清除所有已信任指纹" = "Clear all trusted fingerprints";
+"此操作将删除所有已记录的服务器指纹，下次连接时需要重新确认。" = "This will delete all recorded fingerprints. You will need to re-verify on next connection.";
+"SSH 密钥管理" = "SSH Key Management";
+"生成新密钥对…" = "Generate New Key Pair...";
+"导入私钥…" = "Import Private Key...";
+"私钥标识符" = "Key Identifier";
+"类型" = "Type";
+"关联会话" = "Associated Sessions";
+"尚无已存储的 SSH 私钥" = "No stored SSH private keys";
+"用于 %lld 个会话" = "Used by %lld sessions";
+"生成新的 SSH 密钥对" = "Generate New SSH Key Pair";
+"算法" = "Algorithm";
+"Ed25519（推荐）" = "Ed25519 (Recommended)";
+"用途注释，如 work-laptop-2026" = "Purpose note, e.g. work-laptop-2026";
+"留空表示不设置 Passphrase" = "Leave empty if no passphrase";
+"确认 Passphrase" = "Confirm Passphrase";
+"生成密钥对" = "Generate Key Pair";
+"所选文件不是有效的 PEM 格式私钥，请重新选择。" = "The selected file is not a valid PEM private key. Please select another file.";
+"设置主密码" = "Set Master Password";
+"修改主密码" = "Change Master Password";
+"当前密码" = "Current Password";
+"请输入当前主密码" = "Enter current master password";
+"新密码" = "New Password";
+"至少 8 位，建议包含大小写字母+数字" = "At least 8 characters, mix of uppercase, lowercase and numbers";
+"确认新密码" = "Confirm New Password";
+"再次输入新密码" = "Enter new password again";
+"两次输入不一致" = "Passwords do not match";
+"当前密码错误" = "Current password is incorrect";
+"新密码至少需要 8 位" = "New password must be at least 8 characters";
+"新密码必须包含至少一个字母" = "New password must contain at least one letter";
+"新密码必须包含至少一个数字" = "New password must contain at least one number";
+"两次输入的新密码不一致" = "New passwords do not match";
+"主密码写入失败（错误码：%lld）" = "Failed to write master password (error code: %lld)";
+"弱" = "Weak";
+"一般" = "Fair";
+"较强" = "Strong";
+"主密码存储于本设备 Keychain，用于应用启动时身份验证。SSH 凭据使用 AES-256-GCM 加密存储于本地数据库，不参与 iCloud 同步。忘记主密码后需重置应用数据。" = "The master password is stored in the device Keychain for app launch authentication. SSH credentials are encrypted with AES-256-GCM and stored locally, not synced to iCloud. Resetting app data is required if the master password is forgotten.";
+"导入失败" = "Import Failed";
+
+// MARK: - AI 设置
+"在终端工具栏启用 AI 辅助功能，支持命令解释、错误分析和自然语言指令" = "Enable AI assistance in the terminal toolbar for command explanation, error analysis and natural language commands";
+"AI 提供商" = "AI Provider";
+"无需 API Key" = "No API Key required";
+"Anthropic Claude — 优秀的代码与指令理解能力" = "Anthropic Claude — Excellent code and instruction comprehension";
+"OpenAI GPT — 最广泛使用的 AI 平台" = "OpenAI GPT — Most widely used AI platform";
+"本地运行 — 数据不出境，适合隐私敏感场景" = "Local — Data stays on device, ideal for privacy-sensitive use";
+"API Key" = "API Key";
+"隐藏 API Key" = "Hide API Key";
+"显示 API Key" = "Show API Key";
+"API Key 已安全存入 Keychain" = "API Key securely stored in Keychain";
+"API Key 为空，已清除" = "API Key is empty, cleared";
+"在 console.anthropic.com 获取 API Key" = "Get your API Key at console.anthropic.com";
+"在 platform.openai.com/api-keys 获取 API Key" = "Get your API Key at platform.openai.com/api-keys";
+"Ollama 服务地址" = "Ollama Service URL";
+"请确保 Ollama 已启动（ollama serve）" = "Make sure Ollama is running (ollama serve)";
+"模型选择" = "Model";
+"功能开关" = "Features";
+"错误侦探" = "Error Detective";
+"自动检测终端错误并显示 AI 分析入口" = "Auto-detect terminal errors and show AI analysis entry";
+
+// MARK: - AI 助手面板
+"新对话" = "New Chat";
+"关闭 AI 助手" = "Close AI Assistant";
+"有什么可以帮助你？" = "How can I help you?";
+"查找大于 100MB 的文件" = "Find files larger than 100MB";
+"分析 CPU 与内存占用" = "Analyze CPU and memory usage";
+"生成日志自动归档脚本" = "Generate log auto-archive script";
+"检查端口占用情况" = "Check port usage";
+"修复 Permission denied 错误" = "Fix Permission denied error";
+"问我任何关于终端命令的问题…" = "Ask me anything about terminal commands...";
+"停止生成" = "Stop";
+"发送（Return）" = "Send (Return)";
+"已复制" = "Copied";
+"请帮我分析以下终端错误并给出修复建议：" = "Please analyze this terminal error and suggest a fix:";
+"AI 分析" = "AI Analysis";
+
+// MARK: - 终端工具栏提示
+"清屏 (⌘K)" = "Clear (⌘K)";
+"搜索 (⌘F)" = "Search (⌘F)";
+"SFTP 文件管理器" = "SFTP File Manager";
+"隐藏 SFTP 面板" = "Hide SFTP Panel";
+"隧道管理器 (⌘⇧U)" = "Tunnel Manager (⌘⇧U)";
+"命令编辑区" = "Compose Pane";
+"快捷命令 (⌘⇧K)" = "Quick Commands (⌘⇧K)";
+"关闭同步输入" = "Disable Sync Input";
+"同步输入" = "Sync Input";
+"AI 助手 (⌘⇧A)" = "AI Assistant (⌘⇧A)";
+"减小字号 (⌘-)" = "Decrease Font Size (⌘-)";
+"增大字号 (⌘+)" = "Increase Font Size (⌘+)";
+
+// MARK: - 终端状态覆层
+"未连接" = "Not Connected";
+"连接失败" = "Connection Failed";
+"正在连接..." = "Connecting...";
+"正在重连..." = "Reconnecting...";
+"第 %lld 次尝试，共 %lld 次" = "Attempt %lld of %lld";
+"连接错误" = "Connection Error";
+"SFTP 连接失败" = "SFTP Connection Failed";
+"隧道启动失败" = "Tunnel Startup Failed";
+"私钥路径未配置" = "Private Key Path Not Set";
+"此会话使用私钥认证，但未设置私钥文件路径。请在「编辑会话 → 认证」中选择私钥文件后再连接。" = "This session uses private key authentication but no key file path is set. Please select a private key file in 'Edit Session → Authentication' before connecting.";
+"键盘交互认证" = "Keyboard Interactive";
+"密码认证" = "Password";
+"输入连接凭据" = "Enter Connection Credentials";
+"密码" = "Password";
+
+// MARK: - 状态栏
+"正在建立 SSH 连接..." = "Establishing SSH connection...";
+"已成功连接到远程服务器" = "Connected to remote server";
+"连接出错，请检查网络或服务器状态" = "Connection error, please check network or server status";
+"正在断开连接..." = "Disconnecting...";
+"未连接到远程服务器" = "Not connected to remote server";
+
+// MARK: - 标签栏
+"新建标签页" = "New Tab";
+"关闭连接中的标签页？" = "Close tab that is still connecting?";
+"关闭标签页" = "Close Tab";
+"关闭其他标签页" = "Close Other Tabs";
+"关闭右侧标签页" = "Close Tabs to the Right";
+"关闭左侧标签页" = "Close Tabs to the Left";
+"复制终端会话" = "Duplicate Terminal Session";
+
+// MARK: - SFTP 面板
+"文件传输" = "File Transfer";
+"文件传输 — %@" = "File Transfer — %@";
+"上传" = "Upload";
+"将选中的本地文件上传到远程目录" = "Upload selected local files to remote directory";
+"下载" = "Download";
+"将选中的远程文件下载到本地目录" = "Download selected remote files to local directory";
+"本地" = "Local";
+"远程" = "Remote";
+"新建文件夹" = "New Folder";
+"删除选中项" = "Delete Selected";
+"刷新" = "Refresh";
+"本地：%lld/%lld 个文件" = "Local: %lld/%lld files";
+"远程：%lld/%lld 个文件" = "Remote: %lld/%lld files";
+"此目录为空" = "This directory is empty";
+"正在加载..." = "Loading...";
+"拖放文件上传到此目录" = "Drop files here to upload";
+"当前路径：%@" = "Current path: %@";
+"上传到远程" = "Upload to Remote";
+"进入目录" = "Open Directory";
+"复制路径" = "Copy Path";
+"新建文件夹…" = "New Folder...";
+"下载到本地" = "Download to Local";
+"重命名…" = "Rename...";
+"属性" = "Properties";
+"新建本地文件夹" = "New Local Folder";
+"文件夹名称" = "Folder Name";
+"新建远程文件夹" = "New Remote Folder";
+"重命名" = "Rename";
+"新名称" = "New Name";
+"修改权限" = "Change Permissions";
+"八进制权限：" = "Octal Permissions:";
+"保存文件" = "Save File";
+"传输队列" = "Transfer Queue";
+"%lld 传输中" = "%lld transferring";
+"清除已完成" = "Clear Completed";
+"无传输任务" = "No transfers";
+
+// MARK: - ContentView 主界面
+"暂无活跃会话" = "No Active Sessions";
+"从左侧选择一个会话，或创建新会话开始连接" = "Select a session from the sidebar or create a new one to get started";
+"断开" = "Disconnect";
+"脚本自动化" = "Script Automation";
+"文件传输 (SFTP)" = "File Transfer (SFTP)";
+"终端内搜索 (⌘F)" = "Search in Terminal (⌘F)";
+"导入 / 导出会话" = "Import / Export Sessions";
+"外观模式" = "Appearance";
+"切换语言 / Switch Language" = "Switch Language / 切换语言";
+"会话配置" = "Session Configuration";
+"导出会话配置…" = "Export Session Configuration...";
+"导入会话配置…" = "Import Session Configuration...";
+"密码与私钥不会包含在导出文件中" = "Passwords and private keys are not included in exports";
+"选择分屏会话" = "Select Split-Screen Session";
+"没有匹配的会话" = "No matching sessions";
+"连接选中会话 (⌘↩)" = "Connect Selected Session (⌘↩)";
+"断开当前会话" = "Disconnect Current Session";
+"请从侧边栏选择会话" = "Select a session from the sidebar";
+"错误" = "Error";
+"数据库错误" = "Database Error";
+"本地数据库初始化失败，应用无法继续运行。\n\n%@" = "Failed to initialize local database. The app cannot continue.\n\n%@";
+
+// MARK: - EmptyStateView
+"暂无会话" = "No Sessions";
+"点击下方按钮创建你的第一个 SSH 会话" = "Click the button below to create your first SSH session";
+"未找到结果" = "No Results Found";
+"没有找到与「%@」匹配的会话" = "No sessions matching \"%@\"";
+"暂无分组" = "No Groups";
+"创建分组来整理你的会话" = "Create groups to organize your sessions";
+"新建分组" = "New Group";
+"出错了" = "An Error Occurred";
+
+// MARK: - SidebarSearchView
+"搜索会话..." = "Search sessions...";
+"清除搜索" = "Clear Search";
+"搜索会话" = "Search Sessions";
+"输入名称、主机地址或标签进行过滤" = "Filter by name, host address, or tag";
+
+// MARK: - TerminalTabBarView
+"\"%@\" 当前正在连接中，关闭后连接将断开。" = "\"%@\" is still connecting. Closing will disconnect it.";
+
+// MARK: - 通用设置（GeneralSettingsView）
+"语言" = "Language";
+"跟随系统" = "Follow System";
+"简体中文" = "中文";
+"启动时自动重连" = "Auto-reconnect on Launch";
+"应用重启后自动建立上次活动会话" = "Automatically restore last active session on restart";
+"关闭标签时需确认" = "Confirm Before Closing Tab";
+"防止误关闭正在运行的会话" = "Prevent accidentally closing running sessions";
+"保存会话日志" = "Save Session Log";
+"将终端输出保存至本地文件" = "Save terminal output to a local file";
+"默认连接协议" = "Default Protocol";
+
+// MARK: - 终端设置（TerminalSettingsView）
+"滚动缓冲区" = "Scrollback";
+"编码与输入" = "Encoding & Input";
+"会话日志" = "Session Log";
+"缓冲行数" = "Scrollback Lines";
+"行" = "lines";
+"较大值占用更多内存" = "Larger values use more memory";
+"滚动时跳转到底部（新内容时自动回底部）" = "Scroll to bottom on new output";
+"无限滚动缓冲区" = "Unlimited Scrollback";
+"开启后忽略上方行数限制，注意内存占用" = "Ignores the line limit above — watch memory usage";
+"字符编码" = "Character Encoding";
+"LANG 变量" = "LANG Variable";
+"退格键映射" = "Backspace Key";
+"Option 键作为 Meta 键（Alt）" = "Use Option as Meta Key (Alt)";
+"关闭后 Option 用于输入特殊字符（如 ™ © 等）" = "When disabled, Option inputs special characters (™ © etc.)";
+"启用会话日志记录" = "Enable Session Logging";
+"日志目录" = "Log Directory";
+"文件名格式" = "Filename Format";
+"日志中记录时间戳" = "Include Timestamps in Log";
+"TERM 变量" = "TERM Variable";
+"响铃（Bell）" = "Bell";
+"接收到 BEL 字符时播放系统提示音" = "Play system alert sound on BEL character";
+"窗口闪烁提醒（Visual Bell）" = "Visual Bell";
+"多行粘贴时弹出确认框" = "Confirm Multiline Paste";
+"防止误粘贴包含换行的命令直接执行" = "Prevents accidentally running pasted multiline commands";
+"右键弹出上下文菜单（而非粘贴）" = "Right-click shows context menu (not paste)";
+"选择日志保存目录" = "Select Log Directory";
+"系统默认" = "System Default";
+
+// MARK: - iCloud 同步设置（CloudSyncSettingsView）
+"已同步" = "Synced";
+"同步中…" = "Syncing…";
+"同步失败" = "Sync Failed";
+"iCloud 同步未启用" = "iCloud Sync Disabled";
+"以 iCloud 版本为准（最新修改优先）" = "iCloud Version (Latest Edit Wins)";
+"以本机版本为准" = "Local Version Wins";
+"每次冲突时手动选择" = "Ask Each Time";
+"多台设备同时修改时，取最后编辑时间较晚的版本" = "When multiple devices edit simultaneously, the latest modification wins";
+"同步时始终以本设备数据覆盖 iCloud" = "Always override iCloud with local data";
+"出现版本冲突时弹出对话框让用户选择" = "Show a dialog when version conflict occurs";
+"已登录 iCloud" = "Signed in to iCloud";
+"未登录 Apple ID" = "Not signed in to Apple ID";
+"同步范围" = "Sync Scope";
+"同步状态" = "Sync Status";
+"冲突解决策略" = "Conflict Resolution";
+"通过 iCloud 同步会话配置" = "Sync session configuration via iCloud";
+"会话名称、主机地址、端口、用户名、分组等配置将加密同步至 iCloud。SSH 密码和私钥不参与同步，始终以 AES-256-GCM 加密存储于本设备本地数据库。" = "Session names, hosts, ports, usernames, and group configs are encrypted and synced to iCloud. SSH passwords and private keys are not synced — they remain locally encrypted with AES-256-GCM.";
+"会话与分组" = "Sessions & Groups";
+"快捷命令" = "Quick Commands";
+"关键词高亮规则" = "Keyword Highlight Rules";
+"终端外观设置" = "Terminal Appearance";
+"隧道规则" = "Tunnel Rules";
+"所有已保存的 SSH 会话和分组结构" = "All saved SSH sessions and group structure";
+"快捷命令集及命令内容" = "Quick command sets and content";
+"所有高亮规则集配置" = "All highlight rule set configurations";
+"颜色主题、字体大小等外观偏好（不含字体文件本身）" = "Color theme, font size and appearance preferences (excludes font files)";
+"端口转发规则（不含绑定的会话密码）" = "Port forwarding rules (excludes session passwords)";
+"立即同步" = "Sync Now";
+"上次同步：%@" = "Last synced: %@";
+"刚刚" = "just now";
+"%lld 分钟前" = "%lld min ago";
+"%lld 小时前" = "%lld hr ago";
+
+// MARK: - 关键词高亮设置（HighlightSettingsView）
+"启用关键词高亮" = "Enable Keyword Highlighting";
+"对终端输出中的关键词注入 ANSI 颜色序列" = "Inject ANSI color codes for matching keywords in terminal output";
+"规则集" = "Rule Set";
+"恢复默认" = "Restore Defaults";
+"添加规则" = "Add Rule";
+"关键词" = "Keyword";
+"匹配模式" = "Match Mode";
+"颜色" = "Color";
+"尚无高亮规则" = "No highlight rules";
+"正则" = "Regex";
+"字面量" = "Literal";
+"大小写敏感" = "Case Sensitive";
+"颜色：" = "Color:";
+"删除规则" = "Delete Rule";
+"添加" = "Add";
+
+// MARK: - 高亮颜色名称（HighlightColor.displayName）
+"红色" = "Red";
+"黄色" = "Yellow";
+"绿色" = "Green";
+"青色" = "Cyan";
+"洋红" = "Magenta";
+"蓝色" = "Blue";
+"白色" = "White";
+
+// MARK: - 外观设置 - 非 ASCII 字体名称
+"冬青黑体" = "Hiragino Sans GB";
+"华文细黑" = "STHeiti Light";
+"苹方" = "PingFang SC";
+"中文等宽字符" = "Chinese Monospaced";
+
+// MARK: - 菜单栏（CommandMenu / CommandGroup / Dock）
+"视图" = "View";
+"新建窗口" = "New Window";
+"连接选中会话" = "Connect Selected Session";
+"断开当前连接" = "Disconnect Current";
+"断开所有连接" = "Disconnect All";
+"浅色模式" = "Light Mode";
+"深色模式" = "Dark Mode";
+"切换侧边栏" = "Toggle Sidebar";
+"聚焦搜索" = "Focus Search";
+"下一个标签页" = "Next Tab";
+"上一个标签页" = "Previous Tab";
+"标签页 %d" = "Tab %d";
+"清屏" = "Clear Screen";
+"增大字体" = "Increase Font";
+"减小字体" = "Decrease Font";
+"重置字体大小" = "Reset Font Size";
+"隧道管理器" = "Tunnel Manager";
+"快捷命令" = "Quick Commands";
+"ShellMate 帮助" = "ShellMate Help";
+"访问官网" = "Visit Website";
+"反馈问题" = "Report Issue";
+"检查更新..." = "Check for Updates...";
+
+// MARK: - 语言切换
+"需重启以应用语言更改" = "Restart Required";
+"语言更改将在重启应用后完全生效。菜单栏将立即更新。" = "The language change will fully take effect after restarting the app. The menu bar will update immediately.";
+"稍后重启" = "Later";
+"立即退出" = "Quit Now";
+

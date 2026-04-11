@@ -10,13 +10,13 @@ struct EmptyStateView: View {
     let iconName: String
 
     /// 标题
-    let title: String
+    let title: LocalizedStringKey
 
     /// 描述文本
-    var description: String?
+    var description: LocalizedStringKey?
 
     /// 按钮标题（可选）
-    var buttonTitle: String?
+    var buttonTitle: LocalizedStringKey?
 
     /// 按钮点击回调
     var onButtonTap: (() -> Void)?
@@ -55,7 +55,7 @@ struct EmptyStateView: View {
                         .padding(.horizontal, DesignTokens.Spacing.lg)
                         .padding(.vertical, DesignTokens.Spacing.sm)
                         .background(DesignTokens.Colors.accentPrimary)
-                        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
@@ -109,7 +109,7 @@ extension EmptyStateView {
     }
 
     /// 错误状态
-    static func error(message: String, onRetry: @escaping () -> Void) -> EmptyStateView {
+    static func error(message: LocalizedStringKey, onRetry: @escaping () -> Void) -> EmptyStateView {
         EmptyStateView(
             iconName: "exclamationmark.triangle",
             title: "出错了",
@@ -124,7 +124,7 @@ extension EmptyStateView {
 
 #Preview("空状态 - 无会话") {
     EmptyStateView.noSessions {
-        print("新建会话")
+        AppLogger.general.debug("新建会话")
     }
     .background(DesignTokens.Colors.surfaceWindow)
 }
@@ -136,7 +136,7 @@ extension EmptyStateView {
 
 #Preview("空状态 - 错误") {
     EmptyStateView.error(message: "网络连接失败，请检查网络设置") {
-        print("重试")
+        AppLogger.general.debug("重试")
     }
     .background(DesignTokens.Colors.surfaceWindow)
 }

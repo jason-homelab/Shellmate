@@ -1,8 +1,8 @@
 import SwiftUI
 import AppKit
 
-/// 设计令牌 v2.0 — 液态玻璃（Liquid Glass）设计语言
-/// 玻璃拟态 + 拟物化 + 现代极简的融合体系
+/// 设计令牌 v3.0 — macOS Native First 设计语言
+/// Apple HIG 标准色系 + 玻璃拟态 + 自适应 Light/Dark 双模式
 enum DesignTokens {
 
     // MARK: - 颜色
@@ -22,17 +22,17 @@ enum DesignTokens {
 
         /// 应用最深背景
         static let surfaceWindow = adaptive(
-            light: NSColor(srgbRed: 0.961, green: 0.965, blue: 0.980, alpha: 1), // #F5F6FA
+            light: NSColor(srgbRed: 0.961, green: 0.961, blue: 0.969, alpha: 1), // #F5F5F7（Apple 标准）
             dark:  NSColor(srgbRed: 0.027, green: 0.035, blue: 0.059, alpha: 1)  // #07090F
         )
         /// 次级面板背景
         static let surfacePanel = adaptive(
-            light: NSColor(srgbRed: 0.914, green: 0.922, blue: 0.957, alpha: 1), // #E9EBF4
+            light: NSColor(srgbRed: 0.961, green: 0.961, blue: 0.969, alpha: 1), // #F5F5F7
             dark:  NSColor(srgbRed: 0.047, green: 0.063, blue: 0.094, alpha: 1)  // #0C1018
         )
         /// 卡片背景
         static let surfaceCard = adaptive(
-            light: NSColor(srgbRed: 0.976, green: 0.976, blue: 0.988, alpha: 1), // #F9F9FC
+            light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 1), // #FFFFFF
             dark:  NSColor(srgbRed: 0.063, green: 0.082, blue: 0.125, alpha: 1)  // #101520
         )
         /// 覆层背景
@@ -53,61 +53,78 @@ enum DesignTokens {
         static let glassMedium      = Color.primary.opacity(0.09)
         static let glassHoverColor  = Color.primary.opacity(0.08)
         static let glassPress       = Color.primary.opacity(0.12)
-        static let glassSelected    = Color(hex: "#2C7EF8").opacity(0.14)
+        static let glassSelected    = Color(hex: "#007AFF").opacity(0.14)
 
         // ── 玻璃边框（光线折射效果）─────────────────────────────────
 
         static let glassBorderTop    = Color.primary.opacity(0.18)
         static let glassBorderSide   = Color.primary.opacity(0.07)
         static let glassBorderBottom = Color.primary.opacity(0.04)
-        static let glassBorderAccent = Color(hex: "#2C7EF8").opacity(0.40)
+        static let glassBorderAccent = Color(hex: "#007AFF").opacity(0.40)
 
         // ── 强调色（电光蓝）─────────────────────────────────────────
 
-        static let accentPrimary    = Color(hex: "#2C7EF8")
+        static let accentPrimary    = Color(hex: "#007AFF")
         static let accentSecondary  = Color(hex: "#38BDF8")
         static let accentTertiary   = Color(hex: "#1A65D6")
-        static let accentGlow       = Color(hex: "#2C7EF8").opacity(0.20)
-        static let accentGlowStrong = Color(hex: "#2C7EF8").opacity(0.38)
+        static let accentGlow       = Color(hex: "#007AFF").opacity(0.20)
+        static let accentGlowStrong = Color(hex: "#007AFF").opacity(0.38)
+
+        // ── 辅助强调色（紫色系）──────────────────────────────────────
+
+        /// 紫蓝色强调（内存指标、AI 渐变等辅助场景）
+        static let accentIndigo     = Color(hex: "#5856D6")
 
         // ── 文字色（自适应）──────────────────────────────────────
 
         static let textPrimary = adaptive(
-            light: NSColor(srgbRed: 0.102, green: 0.114, blue: 0.180, alpha: 1), // #1A1D2E
+            light: NSColor(srgbRed: 0.114, green: 0.114, blue: 0.122, alpha: 1), // #1D1D1F（Apple 标准）
             dark:  NSColor(srgbRed: 0.929, green: 0.941, blue: 1.000, alpha: 1)  // #EDF0FF
         )
         static let textSecondary = adaptive(
-            light: NSColor(srgbRed: 0.294, green: 0.322, blue: 0.439, alpha: 1), // #4B5270
+            light: NSColor(srgbRed: 0.525, green: 0.525, blue: 0.545, alpha: 1), // #86868B（Apple 标准）
             dark:  NSColor(srgbRed: 0.533, green: 0.573, blue: 0.667, alpha: 1)  // #8892AA
         )
         static let textTertiary = adaptive(
-            light: NSColor(srgbRed: 0.478, green: 0.510, blue: 0.627, alpha: 1), // #7A82A0
+            light: NSColor(srgbRed: 0.682, green: 0.682, blue: 0.698, alpha: 1), // #AEAEB2（Apple 标准）
             dark:  NSColor(srgbRed: 0.322, green: 0.365, blue: 0.471, alpha: 1)  // #525D78
         )
         static let textDisabled = adaptive(
-            light: NSColor(srgbRed: 0.690, green: 0.718, blue: 0.816, alpha: 1), // #B0B7D0
+            light: NSColor(srgbRed: 0.780, green: 0.780, blue: 0.800, alpha: 1), // #C7C7CC（Apple 标准）
             dark:  NSColor(srgbRed: 0.196, green: 0.227, blue: 0.322, alpha: 1)  // #323A52
         )
 
-        // ── 状态色（更鲜亮、更精致）────────────────────────────────
+        // ── 状态色（自适应：Light = Apple HIG / Dark = 宝石色调）──────
 
-        static let statusConnected  = Color(hex: "#34D399")
-        static let statusConnecting = Color(hex: "#FBBF24")
-        static let statusError      = Color(hex: "#FB7185")
-        static let statusOffline    = Color(hex: "#475569")
+        static let statusConnected = adaptive(
+            light: NSColor(srgbRed: 0.204, green: 0.780, blue: 0.349, alpha: 1), // #34C759（Apple 绿）
+            dark:  NSColor(srgbRed: 0.204, green: 0.831, blue: 0.600, alpha: 1)  // #34D399
+        )
+        static let statusConnecting = adaptive(
+            light: NSColor(srgbRed: 1.000, green: 0.584, blue: 0.000, alpha: 1), // #FF9500（Apple 橙）
+            dark:  NSColor(srgbRed: 0.984, green: 0.749, blue: 0.141, alpha: 1)  // #FBBF24
+        )
+        static let statusError = adaptive(
+            light: NSColor(srgbRed: 1.000, green: 0.231, blue: 0.188, alpha: 1), // #FF3B30（Apple 红）
+            dark:  NSColor(srgbRed: 0.984, green: 0.443, blue: 0.522, alpha: 1)  // #FB7185
+        )
+        static let statusOffline = adaptive(
+            light: NSColor(srgbRed: 0.557, green: 0.557, blue: 0.576, alpha: 1), // #8E8E93（Apple 灰）
+            dark:  NSColor(srgbRed: 0.278, green: 0.337, blue: 0.412, alpha: 1)  // #475769
+        )
 
         // ── 边框（自适应透明度）──────────────────────────────────
 
         static let borderPrimary   = Color.primary.opacity(0.10)
         static let borderSecondary = Color.primary.opacity(0.06)
-        static let borderFocus     = Color(hex: "#2C7EF8").opacity(0.65)
+        static let borderFocus     = Color(hex: "#007AFF").opacity(0.65)
         static let borderSubtle    = Color.primary.opacity(0.04)
 
         // ── 背景交互状态 ──────────────────────────────────────────
 
         static let backgroundHover    = Color.primary.opacity(0.06)
-        static let backgroundSelected = Color(hex: "#2C7EF8").opacity(0.14)
-        static let backgroundPressed  = Color(hex: "#2C7EF8").opacity(0.22)
+        static let backgroundSelected = Color(hex: "#007AFF").opacity(0.14)
+        static let backgroundPressed  = Color(hex: "#007AFF").opacity(0.22)
 
         // ── 扩展令牌（兼容旧调用）──────────────────────────────────
 
@@ -115,8 +132,12 @@ enum DesignTokens {
         static let surfaceToolbar     = surfacePanel
         static let borderDefault      = borderPrimary
         static let borderFaint        = borderSecondary
-        static let terminalBackground = surfaceWindow
-        static let terminalText       = textPrimary
+        static let terminalBackground    = surfaceWindow
+        static let terminalText          = textPrimary
+        /// 终端字体预览区背景（纯黑，模拟真实终端）
+        static let terminalPreviewBg     = Color(hex: "#0C0C0E")
+        /// 终端字体预览区 Prompt 颜色（默认绿色）
+        static let terminalPromptDefault = Color(hex: "#4CAF7D")
     }
 
     // MARK: - 间距
@@ -136,7 +157,7 @@ enum DesignTokens {
     // MARK: - 尺寸
 
     enum Sizes {
-        static let sidebarWidth:    CGFloat = 224
+        static let sidebarWidth:    CGFloat = 256  // v3.0: 224 → 256
         static let sidebarMinWidth: CGFloat = 180
         static let sidebarMaxWidth: CGFloat = 320
 
@@ -154,21 +175,35 @@ enum DesignTokens {
         static let avatarSizeMedium: CGFloat = 34
         static let avatarSizeLarge:  CGFloat = 52
 
-        // 圆角（更慷慨的圆角半径）
-        static let cornerRadiusXSmall: CGFloat = 5
-        static let cornerRadiusSmall:  CGFloat = 8
-        static let cornerRadiusMedium: CGFloat = 12
-        static let cornerRadiusLarge:  CGFloat = 16
-        static let cornerRadiusXLarge: CGFloat = 20
-        static let cornerRadiusPanel:  CGFloat = 24
+        // 圆角（对齐 Figma-Spec-v2 §00 圆角令牌）
+        // radius-sm:6  radius-md:8  radius-xl:12  radius-2xl:16  radius-3xl:24
+        static let cornerRadiusXSmall: CGFloat = 6   // radius-sm：图标徽章、工具提示
+        static let cornerRadiusSmall:  CGFloat = 8   // radius-md：按钮、输入框
+        static let cornerRadiusMedium: CGFloat = 12  // radius-xl：会话行、标签触发器
+        static let cornerRadiusLarge:  CGFloat = 16  // radius-2xl：弹窗容器
+        static let cornerRadiusXLarge: CGFloat = 16  // 与 Large 对齐（原 20 无对应规范值）
+        static let cornerRadiusPanel:  CGFloat = 24  // radius-3xl：欢迎界面英雄图标容器
 
         static let sheetWidth:    CGFloat = 540
         static let sheetMinHeight: CGFloat = 420
 
-        static let tabBarHeight:       CGFloat = 38
+        static let toolbarHeight:      CGFloat = 48  // v3.0 新增
+        static let tabBarHeight:       CGFloat = 40  // v3.0: 38 → 40
         static let tabMinWidth:        CGFloat = 100
         static let tabMaxWidth:        CGFloat = 200
         static let tabCloseButtonSize: CGFloat = 16
+
+        static let statusBarHeight:    CGFloat = 32  // v3.0: 24 → 32
+
+        static let aiPanelWidth:   CGFloat = 400  // v3.0 新增
+        static let sftpPanelWidth: CGFloat = 500  // v3.0 新增
+
+        // 终端字号界限
+        static let terminalFontSizeMin: CGFloat = 9
+        static let terminalFontSizeMax: CGFloat = 24
+
+        // 会话行图标容器
+        static let sessionIconSize: CGFloat = 32
     }
 
     // MARK: - 字体
@@ -194,31 +229,36 @@ enum DesignTokens {
     // MARK: - 动画
 
     enum Animation {
-        static let springResponse: Double = 0.36
-        static let springDamping:  Double = 0.72
+        static let springResponse: Double = 0.35  // v3.0: 0.36 → 0.35
+        static let springDamping:  Double = 0.75  // v3.0: 0.72 → 0.75
 
-        static let standard = SwiftUI.Animation.easeInOut(duration: 0.20)
-        static let fast     = SwiftUI.Animation.easeInOut(duration: 0.14)
-        static let slow     = SwiftUI.Animation.easeInOut(duration: 0.30)
+        static let standard = SwiftUI.Animation.easeInOut(duration: 0.20) // 标准 hover/press 过渡
+        static let fast     = SwiftUI.Animation.easeInOut(duration: 0.10) // v3.0: 0.14 → 0.10（按钮按下）
+        static let medium   = SwiftUI.Animation.easeInOut(duration: 0.30) // 面板展开/折叠
+        static let slow     = SwiftUI.Animation.easeInOut(duration: 0.50) // 进度条/数值更新
         static let spring   = SwiftUI.Animation.spring(response: springResponse, dampingFraction: springDamping)
-        static let glass    = SwiftUI.Animation.spring(response: 0.42, dampingFraction: 0.76)
+        static let glass    = SwiftUI.Animation.spring(response: 0.40, dampingFraction: 0.80) // 弹窗进入
         static let hover    = SwiftUI.Animation.easeOut(duration: 0.12)
     }
 
-    // MARK: - 阴影（分层阴影系统）
+    // MARK: - 阴影（分层阴影系统，对齐 Figma-Spec-v2 §00）
 
     enum Shadow {
-        static let small  = ShadowStyle(color: .black.opacity(0.28), radius: 6,  x: 0, y: 3)
-        static let medium = ShadowStyle(color: .black.opacity(0.40), radius: 16, x: 0, y: 7)
-        static let large  = ShadowStyle(color: .black.opacity(0.52), radius: 32, x: 0, y: 14)
-        static let xlarge = ShadowStyle(color: .black.opacity(0.65), radius: 56, x: 0, y: 24)
+        // shadow-sm: 0 1px 2px rgba(0,0,0,0.06)
+        static let small  = ShadowStyle(color: .black.opacity(0.06), radius: 2,  x: 0, y: 1)
+        // shadow-md: 0 4px 6px rgba(0,0,0,0.07)
+        static let medium = ShadowStyle(color: .black.opacity(0.07), radius: 6,  x: 0, y: 4)
+        // shadow-lg: 0 10px 15px rgba(0,0,0,0.10)
+        static let large  = ShadowStyle(color: .black.opacity(0.10), radius: 15, x: 0, y: 10)
+        // shadow-2xl: 0 25px 50px rgba(0,0,0,0.25)
+        static let xlarge = ShadowStyle(color: .black.opacity(0.25), radius: 50, x: 0, y: 25)
 
-        static let accentGlow       = ShadowStyle(color: Color(hex: "#2C7EF8").opacity(0.22), radius: 18, x: 0, y: 0)
-        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#2C7EF8").opacity(0.38), radius: 28, x: 0, y: 0)
+        static let accentGlow       = ShadowStyle(color: Color(hex: "#007AFF").opacity(0.22), radius: 18, x: 0, y: 0)
+        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#007AFF").opacity(0.38), radius: 28, x: 0, y: 0)
 
-        static let connectedGlow  = ShadowStyle(color: Color(hex: "#34D399").opacity(0.32), radius: 8, x: 0, y: 0)
-        static let connectingGlow = ShadowStyle(color: Color(hex: "#FBBF24").opacity(0.32), radius: 8, x: 0, y: 0)
-        static let errorGlow      = ShadowStyle(color: Color(hex: "#FB7185").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let connectedGlow  = ShadowStyle(color: Color(hex: "#34C759").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let connectingGlow = ShadowStyle(color: Color(hex: "#FF9500").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let errorGlow      = ShadowStyle(color: Color(hex: "#FF3B30").opacity(0.32), radius: 8, x: 0, y: 0)
     }
 
     // MARK: - 渐变
@@ -241,17 +281,17 @@ enum DesignTokens {
         /// 选中状态玻璃边框渐变（蓝色光晕）
         static let glassAccentBorder = LinearGradient(
             stops: [
-                .init(color: Color(hex: "#2C7EF8").opacity(0.55), location: 0.0),
+                .init(color: Color(hex: "#007AFF").opacity(0.55), location: 0.0),
                 .init(color: Color(hex: "#38BDF8").opacity(0.28), location: 0.5),
-                .init(color: Color(hex: "#2C7EF8").opacity(0.15), location: 1.0),
+                .init(color: Color(hex: "#007AFF").opacity(0.15), location: 1.0),
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
 
-        /// 强调按钮渐变（蓝色 → 深蓝）
+        /// 强调按钮渐变（蓝色 → 深蓝，对应 Apple HIG #007AFF → #0051D5）
         static let accentButton = LinearGradient(
-            colors: [Color(hex: "#3D8EFF"), Color(hex: "#1E5CD0")],
+            colors: [Color(hex: "#007AFF"), Color(hex: "#0051D5")],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

@@ -23,9 +23,12 @@ struct FormField<Content: View>: View {
                     Text("*")
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.statusError)
+                        .accessibilityLabel("必填")
                 }
             }
+            .accessibilityHidden(true)          // 标签文字由 content 的 accessibilityLabel 统一承担
             content()
+                .accessibilityLabel(isRequired ? "\(label)，必填" : label)
         }
     }
 }
@@ -273,8 +276,10 @@ struct CustomTextField: View {
                 }
                 .foregroundColor(DesignTokens.Colors.statusError)
                 .padding(.horizontal, 2)
+                .accessibilityLabel("错误：\(error)")
             }
         }
+        .accessibilityValue(isError ? (errorMessage ?? "输入有误") : "")
     }
 
     private var borderGradient: LinearGradient {

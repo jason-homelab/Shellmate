@@ -44,7 +44,7 @@ struct TagBadgeView: View {
         .padding(.horizontal, DesignTokens.Spacing.xs)
         .padding(.vertical, DesignTokens.Spacing.xxxs)
         .background(backgroundColor)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
     }
 }
 
@@ -144,7 +144,7 @@ extension TagBadgeView {
         // 带删除按钮
         HStack {
             TagBadgeView(text: "可删除", isDeletable: true) {
-                print("删除标签")
+                AppLogger.general.debug("删除标签")
             }
         }
 
