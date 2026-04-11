@@ -52,14 +52,19 @@ final class TmuxSessionStore: ObservableObject {
         self.sendTarget = sendTarget
     }
 
+    // MARK: - tmux 版本警告
+
+    /// tmux 版本低于最低支持时设为 true，供 UI 展示警告（24.4）
+    @Published private(set) var isVersionTooOld: Bool = false
+
     // MARK: - tmux 检测
 
-    /// 连接成功后触发：静默检测远程 tmux 可用性
-    /// 检测命令通过标记前缀区分，TerminalController 会过滤标记行，不显示在终端
+    /// 连接成功后触发：静默检测远程 tmux 可用性，并捕获版本号（24.4）
     func detectTmux() {
         guard availability == .unknown || availability == .unavailable else { return }
         availability = .checking
-        let cmd = "tmux -V >/dev/null 2>&1 && echo '\(TmuxOutputMarker.checkOK)' || echo '\(TmuxOutputMarker.checkNA)'\n"
+        // 捕获版本输出：成功时打印 __SM_TMUX_VER__<version>，失败时打印 __SM_TMUX_NA__
+        let cmd = "V=$(tmux -V 2>/dev/null) && echo '\(TmuxOutputMarker.versionPrefix)'\"$V\" || echo '\(TmuxOutputMarker.checkNA)'\n"
         sendTarget?.sendTmuxCommand(cmd)
     }
 
@@ -110,8 +115,21 @@ final class TmuxSessionStore: ObservableObject {
             return
         }
 
+        // --- 版本解析（24.4）---
+        if line.contains(TmuxOutputMarker.versionPrefix) {
+            // 提取版本字符串，格式：__SM_TMUX_VER__tmux 3.4
+            let versionStr = line.components(separatedBy: TmuxOutputMarker.versionPrefix).last ?? "tmux"
+            let trimmed = versionStr.trimmingCharacters(in: .whitespacesAndNewlines)
+            isVersionTooOld = !TmuxOutputMarker.isVersionSupported(trimmed)
+            if case .available = availability { } else {
+                availability = .available(version: trimmed.isEmpty ? "tmux" : trimmed)
+            }
+            refreshSessions()
+            return
+        }
+
         if line.contains(TmuxOutputMarker.checkOK) {
-            // tmux -V 输出已被重定向至 /dev/null，此处直接标记可用并刷新会话列表
+            // 兼容旧标记（不应出现，但保留防御）
             if case .available = availability { } else {
                 availability = .available(version: "tmux")
             }

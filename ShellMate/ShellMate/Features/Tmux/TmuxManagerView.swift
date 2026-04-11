@@ -34,6 +34,10 @@ struct TmuxManagerView: View {
     var body: some View {
         VStack(spacing: 0) {
             panelHeader
+            // 24.4：版本过旧警告横幅
+            if store.isVersionTooOld {
+                versionWarningBanner
+            }
             tabSelectorRow
             tabContentView
             statusFooter
@@ -123,6 +127,26 @@ struct TmuxManagerView: View {
         .overlay(alignment: .bottom) {
             Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)
         }
+    }
+
+    // MARK: - 版本警告横幅（24.4）
+
+    private var versionWarningBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11))
+                .foregroundColor(Color(hex: "#ff9500"))
+            Text("当前服务器的 tmux 版本低于 2.0，部分功能可能不兼容，建议升级至 tmux 2.0 或更高版本")
+                .font(.system(size: 11))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(hex: "#ff9500").opacity(0.10))
+        .overlay(Divider(), alignment: .bottom)
     }
 
     // MARK: - Tab 选择器

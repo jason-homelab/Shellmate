@@ -89,8 +89,10 @@ enum TmuxAvailability: Equatable {
 
 /// TerminalController 数据管道用于过滤 tmux 检测输出的标记前缀
 enum TmuxOutputMarker {
-    static let checkOK         = "__SM_TMUX_OK__"
-    static let checkNA         = "__SM_TMUX_NA__"
+    static let checkOK          = "__SM_TMUX_OK__"
+    static let checkNA          = "__SM_TMUX_NA__"
+    /// 版本标记前缀：__SM_TMUX_VER__<version>（如 __SM_TMUX_VER__tmux 3.4）
+    static let versionPrefix    = "__SM_TMUX_VER__"
     static let sessionListStart = "__SM_TMUX_LS_START__"
     static let sessionListEnd   = "__SM_TMUX_LS_END__"
     static let windowListStart  = "__SM_TMUX_WL_START__"
@@ -100,5 +102,21 @@ enum TmuxOutputMarker {
     /// 判断一行文本是否包含任一 tmux 标记
     static func containsMarker(_ line: String) -> Bool {
         line.contains("__SM_TMUX_")
+    }
+
+    /// 最低支持版本（Major.Minor）
+    static let minimumVersion: (Int, Int) = (2, 0)
+
+    /// 解析 "tmux X.Y" 格式的版本字符串，判断是否满足最低版本
+    static func isVersionSupported(_ raw: String) -> Bool {
+        // 格式如 "tmux 3.4" 或 "tmux 2.9a"
+        let parts = raw.trimmingCharacters(in: .whitespaces)
+                       .components(separatedBy: " ")
+        guard parts.count >= 2 else { return true } // 无法解析时放行
+        let verStr = parts[1].trimmingCharacters(in: .letters) // 去除 "a"/"b" 后缀
+        let nums = verStr.components(separatedBy: ".")
+        let major = Int(nums.first ?? "") ?? 0
+        let minor = nums.count >= 2 ? (Int(nums[1]) ?? 0) : 0
+        return (major, minor) >= minimumVersion
     }
 }

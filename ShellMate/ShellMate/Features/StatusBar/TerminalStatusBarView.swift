@@ -21,6 +21,10 @@ struct TerminalStatusBarView: View {
     var tmuxAttachedSession: String? = nil
     /// tmux 状态：已知会话总数（0 表示无会话或 tmux 不可用）
     var tmuxSessionCount: Int = 0
+    /// 23.5：当前会话的窗口列表（供 Popover 快切）
+    var tmuxWindows: [TmuxWindow] = []
+    /// 23.5：切换 tmux 窗口回调
+    var onSelectTmuxWindow: ((Int) -> Void)? = nil
 
     /// 点击指标区域的回调（打开服务器监控面板）
     var onMetricsTap: (() -> Void)? = nil
@@ -30,6 +34,8 @@ struct TerminalStatusBarView: View {
 
     /// CPU 历史读数（最近 8 次，用于 sparkline 柱状图）
     @State private var cpuHistory: [Double] = []
+    /// 23.5：窗口快切 Popover 是否显示
+    @State private var showWindowPopover: Bool = false
 
     // MARK: - 视图
 
@@ -108,9 +114,16 @@ struct TerminalStatusBarView: View {
                         .monospacedDigit()
                 }
 
-                // tmux 状态指示器
+                // tmux 状态指示器（23.5：点击展开窗口快切 Popover）
                 if let sessionName = tmuxAttachedSession {
                     tmuxBadge(sessionName: sessionName)
+                        .onTapGesture {
+                            if !tmuxWindows.isEmpty { showWindowPopover.toggle() }
+                        }
+                        .popover(isPresented: $showWindowPopover, arrowEdge: .top) {
+                            tmuxWindowPopover
+                        }
+                        .help(tmuxWindows.isEmpty ? "已附加 tmux 会话" : "点击切换 tmux 窗口")
                 } else if tmuxSessionCount > 0 {
                     tmuxIdleBadge(count: tmuxSessionCount)
                 }
@@ -393,6 +406,79 @@ struct TerminalStatusBarView: View {
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
+    }
+
+    // MARK: - 23.5 窗口快切 Popover
+
+    /// 点击已附加 tmux 徽章时弹出的窗口列表 Popover
+    private var tmuxWindowPopover: some View {
+        VStack(spacing: 0) {
+            // 标题行
+            HStack(spacing: 6) {
+                Image(systemName: "macwindow")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+                Text("切换 tmux 窗口")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            .padding(.bottom, 8)
+
+            Divider()
+
+            // 窗口列表
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 2) {
+                    ForEach(tmuxWindows, id: \.index) { window in
+                        Button {
+                            onSelectTmuxWindow?(window.index)
+                            showWindowPopover = false
+                        } label: {
+                            HStack(spacing: 8) {
+                                // 窗口序号徽章
+                                Text("\(window.index)")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .foregroundColor(window.isActive
+                                        ? DesignTokens.Colors.accentPrimary
+                                        : DesignTokens.Colors.textTertiary)
+                                    .frame(width: 20, height: 20)
+                                    .background(window.isActive
+                                        ? DesignTokens.Colors.accentPrimary.opacity(0.12)
+                                        : Color.black.opacity(0.05))
+                                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+                                Text(window.name)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                if window.isActive {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(window.isActive
+                                ? DesignTokens.Colors.accentPrimary.opacity(0.06)
+                                : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6)
+            }
+            .frame(maxHeight: 200)
+        }
+        .frame(width: 200)
     }
 }
 

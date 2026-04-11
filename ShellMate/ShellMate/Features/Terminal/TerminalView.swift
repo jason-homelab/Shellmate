@@ -185,6 +185,12 @@ struct TerminalView: View {
                 connectedAt: controller.connectedAt,
                 tmuxAttachedSession: controller.tmuxStore.attachedSessionName,
                 tmuxSessionCount: controller.tmuxStore.sessions.count,
+                // 23.5：传入已附加会话的窗口列表供 Popover 快切
+                tmuxWindows: {
+                    guard let name = controller.tmuxStore.attachedSessionName else { return [] }
+                    return controller.tmuxStore.sessions.first(where: { $0.name == name })?.windows ?? []
+                }(),
+                onSelectTmuxWindow: { index in controller.tmuxStore.selectWindow(index: index) },
                 onMetricsTap: controller.serverMetrics != nil ? { showMonitorPanel = true } : nil
             )
 
