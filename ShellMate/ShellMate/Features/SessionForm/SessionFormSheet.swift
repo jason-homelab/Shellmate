@@ -9,6 +9,9 @@ struct SessionFormSheet: View {
     /// 正在编辑的会话（nil 表示新建）
     var editingSession: Session?
 
+    /// 新建会话时预设的分组 ID
+    var defaultGroupId: UUID? = nil
+
     /// 可选分组列表
     var groups: [SessionGroup] = []
 
@@ -102,7 +105,7 @@ struct SessionFormSheet: View {
                 VStack(spacing: 16) {
                     // 1. 名称
                     fieldGroup(label: "名称") {
-                        styledTextField("输入会话名称", text: $name)
+                        CustomTextField(placeholder: "输入会话名称", text: $name)
                     }
 
                     // 2. 协议
@@ -117,9 +120,9 @@ struct SessionFormSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .background(fieldBackground)
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .strokeBorder(borderColor, lineWidth: 1)
                         )
                     }
@@ -130,28 +133,30 @@ struct SessionFormSheet: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(labelColor)
                         HStack(spacing: 16) {
-                            styledTextField("主机地址或 IP", text: $host)
+                            CustomTextField(placeholder: "主机地址或 IP", text: $host)
                                 .frame(maxWidth: .infinity)
-                            styledTextField("22", text: $port)
+                            CustomTextField(placeholder: "22", text: $port)
                                 .frame(width: 80)
                         }
                     }
 
                     // 4. 用户名
                     fieldGroup(label: "用户名") {
-                        styledTextField("登录用户名", text: $username)
+                        CustomTextField(placeholder: "登录用户名", text: $username)
                     }
 
                     // 5. 密码 + 保存密码
                     fieldGroup(label: "密码") {
                         VStack(spacing: 8) {
-                            styledSecureField("输入密码（可选）", text: $password)
-                            HStack(spacing: 8) {
-                                Toggle("保存密码到 Keychain", isOn: $saveCredential)
-                                    .toggleStyle(.checkbox)
+                            CustomTextField(placeholder: "输入密码（可选）", text: $password, isSecure: true)
+                            HStack {
+                                Text("保存密码到 Keychain")
                                     .font(.system(size: 12))
                                     .foregroundColor(Color(hex: "#6e6e73"))
                                 Spacer()
+                                Toggle("", isOn: $saveCredential)
+                                    .toggleStyle(.switch)
+                                    .labelsHidden()
                             }
                         }
                     }
@@ -169,9 +174,9 @@ struct SessionFormSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .background(fieldBackground)
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .strokeBorder(borderColor, lineWidth: 1)
                         )
                     }
@@ -193,7 +198,7 @@ struct SessionFormSheet: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 7)
                                     .background(fieldBackground)
-                                    .cornerRadius(8)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .strokeBorder(borderColor, lineWidth: 1)
@@ -202,16 +207,16 @@ struct SessionFormSheet: View {
 
                                 if authMethod == .privateKey {
                                     fieldGroup(label: "私钥路径") {
-                                        styledTextField("~/.ssh/id_rsa", text: $privateKeyPath)
+                                        CustomTextField(placeholder: "~/.ssh/id_rsa", text: $privateKeyPath)
                                     }
                                     fieldGroup(label: "私钥密码短语") {
-                                        styledSecureField("Passphrase（可选）", text: $passphrase)
+                                        CustomTextField(placeholder: "Passphrase（可选）", text: $passphrase, isSecure: true)
                                     }
                                 }
 
                                 // 代理跳转
                                 fieldGroup(label: "代理跳转 (ProxyJump)") {
-                                    styledTextField("user@jump-host:22", text: $proxyJump)
+                                    CustomTextField(placeholder: "user@jump-host:22", text: $proxyJump)
                                 }
 
                                 // 连接超时 + Keep-Alive
@@ -220,7 +225,7 @@ struct SessionFormSheet: View {
                                         Text("连接超时 (秒)")
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(labelColor)
-                                        styledTextField("30", text: Binding(
+                                        CustomTextField(placeholder: "30", text: Binding(
                                             get: { String(connectTimeout) },
                                             set: { connectTimeout = Int32($0) ?? 30 }
                                         ))
@@ -229,7 +234,7 @@ struct SessionFormSheet: View {
                                         Text("Keep-Alive (秒)")
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(labelColor)
-                                        styledTextField("60", text: Binding(
+                                        CustomTextField(placeholder: "60", text: Binding(
                                             get: { String(keepAliveInterval) },
                                             set: { keepAliveInterval = Int32($0) ?? 60 }
                                         ))
@@ -238,11 +243,13 @@ struct SessionFormSheet: View {
 
                                 // 自动重连
                                 HStack {
-                                    Toggle("自动重连", isOn: $autoReconnect)
-                                        .toggleStyle(.checkbox)
+                                    Text("自动重连")
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundColor(labelColor)
                                     Spacer()
+                                    Toggle("", isOn: $autoReconnect)
+                                        .toggleStyle(.switch)
+                                        .labelsHidden()
                                 }
 
                                 if autoReconnect {
@@ -251,7 +258,7 @@ struct SessionFormSheet: View {
                                             Text("最大重试次数")
                                                 .font(.system(size: 13, weight: .medium))
                                                 .foregroundColor(labelColor)
-                                            styledTextField("3", text: Binding(
+                                            CustomTextField(placeholder: "3", text: Binding(
                                                 get: { String(maxReconnectRetries) },
                                                 set: { maxReconnectRetries = Int32($0) ?? 3 }
                                             ))
@@ -260,7 +267,7 @@ struct SessionFormSheet: View {
                                             Text("重连间隔 (秒)")
                                                 .font(.system(size: 13, weight: .medium))
                                                 .foregroundColor(labelColor)
-                                            styledTextField("5", text: Binding(
+                                            CustomTextField(placeholder: "5", text: Binding(
                                                 get: { String(reconnectInterval) },
                                                 set: { reconnectInterval = Int32($0) ?? 5 }
                                             ))
@@ -281,16 +288,37 @@ struct SessionFormSheet: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 7)
                                     .background(fieldBackground)
-                                    .cornerRadius(8)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .strokeBorder(borderColor, lineWidth: 1)
                                     )
                                 }
 
-                                // 启动命令
-                                fieldGroup(label: "启动命令") {
-                                    styledTextField("连接后自动执行的命令（可选）", text: $startupCommand)
+                                // Login Script（连接后自动执行）
+                                fieldGroup(label: "Login Script") {
+                                    ZStack(alignment: .topLeading) {
+                                        if startupCommand.isEmpty {
+                                            Text("连接成功后自动执行的命令（支持多行，每行独立执行）")
+                                                .font(.system(size: 13))
+                                                .foregroundColor(Color.secondary.opacity(0.6))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 8)
+                                                .allowsHitTesting(false)
+                                        }
+                                        TextEditor(text: $startupCommand)
+                                            .font(.system(size: 13, design: .monospaced))
+                                            .frame(minHeight: 72, maxHeight: 120)
+                                            .scrollContentBackground(.hidden)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 4)
+                                    }
+                                    .background(fieldBackground)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .strokeBorder(borderColor, lineWidth: 1)
+                                    )
                                 }
                             }
                             .padding(.top, 12)
@@ -304,7 +332,7 @@ struct SessionFormSheet: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .background(Color.white.opacity(0.5))
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .strokeBorder(borderColor, lineWidth: 1)
@@ -335,6 +363,10 @@ struct SessionFormSheet: View {
             // 新建会话时，协议默认跟随通用设置里的"默认连接协议"
             if editingSession == nil {
                 connectionProtocol = defaultProtocol
+                // 从分组右键菜单"新建会话"传入的预设分组
+                if let gid = defaultGroupId {
+                    selectedGroupId = gid
+                }
             }
         }
     }
@@ -395,7 +427,7 @@ struct SessionFormSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Color.clear)
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: [])
 
@@ -408,7 +440,7 @@ struct SessionFormSheet: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Color(hex: "#007aff"))
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 12, x: 0, y: 4)
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)
@@ -429,40 +461,6 @@ struct SessionFormSheet: View {
                 .foregroundColor(labelColor)
             content()
         }
-    }
-
-    // MARK: - 通用样式 TextField
-
-    @ViewBuilder
-    private func styledTextField(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 13))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(fieldBackground)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(borderColor, lineWidth: 1)
-            )
-    }
-
-    // MARK: - 通用样式 SecureField
-
-    @ViewBuilder
-    private func styledSecureField(_ placeholder: String, text: Binding<String>) -> some View {
-        SecureField(placeholder, text: text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 13))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(fieldBackground)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(borderColor, lineWidth: 1)
-            )
     }
 
     // MARK: - 数据加载
@@ -610,7 +608,7 @@ struct SessionFormSheet: View {
                 }
             } catch {
                 // 凭据保存失败时记录错误，不静默吞掉
-                print("[SessionFormSheet] 凭据保存失败: \(error.localizedDescription)")
+                AppLogger.ui.debug("[SessionFormSheet] 凭据保存失败: \(error.localizedDescription)")
             }
         }
     }
@@ -621,8 +619,8 @@ struct SessionFormSheet: View {
 #Preview("新建会话") {
     SessionFormSheet(
         groups: SessionGroup.previewList,
-        onSave: { session in print("保存: \(session.name)") },
-        onCancel: { print("取消") }
+        onSave: { session in AppLogger.ui.debug("保存: \(session.name)") },
+        onCancel: { AppLogger.ui.debug("取消") }
     )
 }
 
@@ -630,7 +628,7 @@ struct SessionFormSheet: View {
     SessionFormSheet(
         editingSession: Session.preview,
         groups: SessionGroup.previewList,
-        onSave: { session in print("保存: \(session.name)") },
-        onCancel: { print("取消") }
+        onSave: { session in AppLogger.ui.debug("保存: \(session.name)") },
+        onCancel: { AppLogger.ui.debug("取消") }
     )
 }

@@ -167,7 +167,7 @@ struct AIAssistantPanelView: View {
         HStack(spacing: 10) {
             // Figma: w-10 h-10 rounded-xl bg-gradient from-[#007aff] to-[#5856d6] shadow-lg
             ZStack {
-                Circle()
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
@@ -319,20 +319,20 @@ struct AIAssistantPanelView: View {
     // MARK: - 快速建议（Figma §7：胶囊按钮 2 列网格）
 
     private let quickSuggestions = [
-        "How do I find large files?",
-        "Check disk space",
-        "Monitor CPU usage",
-        "Create a backup script"
+        "如何查找占用磁盘空间最大的文件？",
+        "检查当前磁盘使用情况",
+        "实时监控 CPU 占用率",
+        "帮我写一个数据备份脚本"
     ]
 
     private var quickSuggestionsView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // 标题行：💡 Quick suggestions
+            // 标题行：💡 快速建议
             HStack(spacing: 6) {
                 Image(systemName: "lightbulb")
                     .font(.system(size: 11))
                     .foregroundColor(Color(hex: "#ff9500"))
-                Text("Quick suggestions")
+                Text("快速建议")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(Color(hex: "#86868b"))
             }
@@ -418,7 +418,7 @@ struct AIAssistantPanelView: View {
                             vm.send(text: vm.inputText)
                         }
                 }
-                .frame(minHeight: 38)
+                .frame(minHeight: 44)   // min-h-[44px]（Figma-Spec-v2 §09）
                 .background(Color.white.opacity(0.80))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
@@ -434,9 +434,9 @@ struct AIAssistantPanelView: View {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(DesignTokens.Colors.statusError)
-                            .frame(width: 38, height: 38)
+                            .frame(width: 44, height: 44)   // h-11（Figma-Spec-v2 §09）
                             .background(DesignTokens.Colors.statusError.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .help("停止生成")
@@ -447,9 +447,9 @@ struct AIAssistantPanelView: View {
                         Image(systemName: "paperplane.fill")
                             .font(.system(size: 13))
                             .foregroundColor(.white)
-                            .frame(width: 38, height: 38)
+                            .frame(width: 44, height: 44)   // h-11（Figma-Spec-v2 §09）
                             .background(Color(hex: "#007aff"))
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                             .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 6, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)

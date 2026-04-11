@@ -22,6 +22,9 @@ struct TerminalStatusBarView: View {
     /// tmux 状态：已知会话总数（0 表示无会话或 tmux 不可用）
     var tmuxSessionCount: Int = 0
 
+    /// 点击指标区域的回调（打开服务器监控面板）
+    var onMetricsTap: (() -> Void)? = nil
+
     /// W12.6：观察同步输入状态
     @ObservedObject private var syncStore = SyncInputStore.shared
 
@@ -60,7 +63,7 @@ struct TerminalStatusBarView: View {
 
     private var disconnectedContent: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
-            GlowingStatusDot(color: connectionState.dotColor, size: 5)
+            GlowingStatusDot(color: connectionState.dotColor, size: 2)
             Text(connectionState == .connecting ? "Connecting..." : "Not Connected")
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
@@ -80,7 +83,7 @@ struct TerminalStatusBarView: View {
         HStack(spacing: 0) {
             // 左侧：状态点 + 主机信息
             HStack(spacing: DesignTokens.Spacing.xs) {
-                GlowingStatusDot(color: connectionState.dotColor, size: 5)
+                GlowingStatusDot(color: connectionState.dotColor, size: 2)
 
                 if let session {
                     Text(session.name)
@@ -121,10 +124,20 @@ struct TerminalStatusBarView: View {
 
             Spacer(minLength: DesignTokens.Spacing.sm)
 
-            // 右侧：指标
+            // 右侧：指标（可点击打开监控面板）
             if let metrics = serverMetrics {
-                metricsView(metrics)
-                    .padding(.trailing, DesignTokens.Spacing.md)
+                Group {
+                    if let tap = onMetricsTap {
+                        Button(action: tap) {
+                            metricsView(metrics)
+                        }
+                        .buttonStyle(.plain)
+                        .help("点击查看服务器监控详情")
+                    } else {
+                        metricsView(metrics)
+                    }
+                }
+                .padding(.trailing, DesignTokens.Spacing.md)
             } else {
                 // 等待首次采集
                 HStack(spacing: DesignTokens.Spacing.xs) {

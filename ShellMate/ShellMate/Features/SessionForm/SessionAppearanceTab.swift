@@ -114,9 +114,8 @@ struct SessionAppearanceTab: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("启动命令（可选）")
 
-            TextField("如: screen -r main 或 tmux attach -t main",
-                      text: $startupCommand)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "如: screen -r main 或 tmux attach -t main",
+                            text: $startupCommand)
                 .font(.system(size: 11, design: .monospaced))
 
             Text("连接成功后自动发送此命令")

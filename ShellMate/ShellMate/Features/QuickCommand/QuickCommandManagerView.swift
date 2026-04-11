@@ -30,8 +30,9 @@ struct QuickCommandManagerView: View {
             commandSetBar
             contentArea
         }
-        // 对齐规范 §12：max-w-[700px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
-        .frame(width: 560, height: 460)
+        // 对齐规范 §12：sm:max-w-[700px] max-h-[80vh]，bg-white/95 backdrop-blur-2xl，rounded-2xl
+        .frame(width: 700)
+        .frame(minHeight: 360, maxHeight: 560)
         .background(Color.white.opacity(0.95))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -194,13 +195,34 @@ struct QuickCommandManagerView: View {
     }
 
     private var emptySetState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "list.bullet")
-                .font(.system(size: 24))
+        VStack(spacing: DesignTokens.Spacing.md) {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 36, weight: .light))
                 .foregroundColor(DesignTokens.Colors.textDisabled)
-            Text("选择或新建命令集")
+                .padding(.bottom, 4)
+            Text("暂无命令集")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+            Text("将常用命令保存为命令集，一键发送到终端，告别重复输入。")
                 .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textDisabled)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 260)
+            Button(action: { showNewSetAlert = true }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("新建命令集")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -304,8 +326,7 @@ private struct QuickCommandEditPanel: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("名称")
                     .fieldLabel()
-                TextField("查看系统状态", text: $command.name)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "查看系统状态", text: $command.name)
                     .font(DesignTokens.Typography.bodySmall)
             }
 
@@ -325,22 +346,32 @@ private struct QuickCommandEditPanel: View {
                     .frame(minHeight: 80)
                     .background(DesignTokens.Colors.surfaceWindow)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 5)
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
                             .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                     )
             }
 
             // 选项
             HStack(spacing: 16) {
-                Toggle("末尾自动追加回车", isOn: $command.appendNewline)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .toggleStyle(.checkbox)
+                HStack(spacing: 4) {
+                    Toggle("", isOn: $command.appendNewline)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                    Text("末尾自动追加回车")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
 
-                Toggle("逐行发送", isOn: $command.sendLineByLine)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .toggleStyle(.checkbox)
+                HStack(spacing: 4) {
+                    Toggle("", isOn: $command.sendLineByLine)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                    Text("逐行发送")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
 
                 if command.sendLineByLine {
                     HStack(spacing: 4) {
@@ -348,8 +379,15 @@ private struct QuickCommandEditPanel: View {
                             .font(.system(size: 10))
                             .foregroundColor(DesignTokens.Colors.textDisabled)
                         TextField("50", value: $command.lineDelay, format: .number)
-                            .textFieldStyle(.roundedBorder)
+                            .textFieldStyle(.plain)
                             .font(DesignTokens.Typography.codeSmall)
+                            .padding(6)
+                            .background(DesignTokens.Colors.surfaceInput)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                            )
                             .frame(width: 44)
                         Text("ms")
                             .font(.system(size: 10))

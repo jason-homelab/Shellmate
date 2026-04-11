@@ -12,6 +12,9 @@ struct SFTPPanelView: View {
     @ObservedObject var transferQueue: SFTPTransferQueue
     var sessionName: String = ""
     var onClose: () -> Void
+    /// 终端 PWD 同步目录（来自 TerminalController.currentRemoteDirectory）
+    /// 变化时自动将远程面板导航到该路径
+    var syncDirectory: String? = nil
 
     // MARK: - 本地文件状态
 
@@ -72,6 +75,12 @@ struct SFTPPanelView: View {
         .onAppear {
             loadLocalDirectory(path: localPath)
             loadRemoteDirectory(path: remotePath)
+        }
+        // PWD 同步：终端 cd 后自动导航远程面板
+        .onChange(of: syncDirectory) { newDir in
+            guard let dir = newDir, !dir.isEmpty, dir != remotePath else { return }
+            remotePath = dir
+            loadRemoteDirectory(path: dir)
         }
         .sheet(isPresented: $showNewLocalFolderDialog) { newLocalFolderSheet }
         .sheet(isPresented: $showNewRemoteFolderDialog) { newRemoteFolderSheet }
@@ -298,6 +307,14 @@ struct SFTPPanelView: View {
                 .truncationMode(.middle)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            // PWD 同步指示器：终端 cd 后路径匹配时显示绿色链接图标
+            if let synced = syncDirectory, synced == remotePath {
+                Image(systemName: "link")
+                    .font(.system(size: 10))
+                    .foregroundColor(Color(hex: "#34c759"))
+                    .help("已与终端工作目录同步")
+            }
+
             // 返回上一级
             Button(action: {
                 let parent = (remotePath as NSString).deletingLastPathComponent
@@ -433,14 +450,16 @@ struct SFTPPanelView: View {
     // MARK: - 辅助视图
 
     private var emptyFolderView: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "folder")
-                .font(.system(size: 28))
+        VStack(spacing: DesignTokens.Spacing.sm) {
+            Image(systemName: "folder.badge.plus")
+                .font(.system(size: 32, weight: .light))
                 .foregroundColor(DesignTokens.Colors.textDisabled)
-                .opacity(0.4)
             Text("此目录为空")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+            Text("可将文件从本地拖入此处上传")
                 .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textDisabled)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.vertical, DesignTokens.Spacing.xxxl)
@@ -580,8 +599,7 @@ struct SFTPPanelView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Text("新建本地文件夹")
                 .font(DesignTokens.Typography.titleMedium)
-            TextField("文件夹名称", text: $newLocalFolderName)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "文件夹名称", text: $newLocalFolderName)
                 .frame(width: 280)
             HStack(spacing: DesignTokens.Spacing.md) {
                 Button("取消") {
@@ -605,8 +623,7 @@ struct SFTPPanelView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Text("新建远程文件夹")
                 .font(DesignTokens.Typography.titleMedium)
-            TextField("文件夹名称", text: $newRemoteFolderName)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "文件夹名称", text: $newRemoteFolderName)
                 .frame(width: 280)
             HStack(spacing: DesignTokens.Spacing.md) {
                 Button("取消") {
@@ -630,8 +647,7 @@ struct SFTPPanelView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Text("重命名")
                 .font(DesignTokens.Typography.titleMedium)
-            TextField("新名称", text: $renameName)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "新名称", text: $renameName)
                 .frame(width: 280)
             HStack(spacing: DesignTokens.Spacing.md) {
                 Button("取消") { showRemoteRenameDialog = false }
@@ -659,8 +675,7 @@ struct SFTPPanelView: View {
                 HStack(spacing: DesignTokens.Spacing.md) {
                     Text("八进制权限：")
                         .font(DesignTokens.Typography.bodySmall)
-                    TextField("755", text: $permissionsInput)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "755", text: $permissionsInput)
                         .frame(width: 80)
                         .font(DesignTokens.Typography.codeMedium)
                 }

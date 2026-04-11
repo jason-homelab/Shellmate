@@ -77,16 +77,18 @@ struct SessionAuthTab: View {
     private var passwordAuthSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             FormField(label: "SSH 密码") {
-                SecureField("输入密码（可选，连接时输入）", text: $password)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "输入密码（可选，连接时输入）", text: $password, isSecure: true)
             }
 
-            Toggle(isOn: $saveCredential) {
+            HStack {
                 Text("记住密码（加密存储到本地）")
                     .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
+                Spacer()
+                Toggle("", isOn: $saveCredential)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
             }
-            .toggleStyle(.checkbox)
         }
     }
 
@@ -96,9 +98,7 @@ struct SessionAuthTab: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             FormField(label: "私钥文件路径") {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    TextField("~/.ssh/id_ed25519", text: $privateKeyPath)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 11, design: .monospaced))
+                    CustomTextField(placeholder: "~/.ssh/id_ed25519", text: $privateKeyPath)
 
                     Button("浏览…") {
                         browsePrivateKey()
@@ -112,16 +112,18 @@ struct SessionAuthTab: View {
                 .foregroundColor(DesignTokens.Colors.textDisabled)
 
             FormField(label: "私钥密码（Passphrase）") {
-                SecureField("留空表示无 Passphrase", text: $passphrase)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "留空表示无 Passphrase", text: $passphrase, isSecure: true)
             }
 
-            Toggle(isOn: $saveCredential) {
+            HStack {
                 Text("记住密码（加密存储到本地）")
                     .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.textSecondary)
+                Spacer()
+                Toggle("", isOn: $saveCredential)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
             }
-            .toggleStyle(.checkbox)
         }
         // fileImporter 不支持显示隐藏文件夹，已改用 browsePrivateKey() 调用 NSOpenPanel
     }
@@ -157,21 +159,21 @@ struct SessionAuthTab: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(hex: "#F5A623"))
+                        .foregroundColor(DesignTokens.Colors.statusConnecting)
 
                     Text(AppVariant.isAppStoreBuild
                          ? "Direct 版支持 SSH Agent，App Store 版受沙盒限制"
                          : "请先在终端运行 eval \"$(ssh-agent -s)\" 并用 ssh-add 添加密钥")
                         .font(.system(size: 11))
-                        .foregroundColor(Color(hex: "#F5A623"))
+                        .foregroundColor(DesignTokens.Colors.statusConnecting)
                 }
                 .padding(DesignTokens.Spacing.md)
-                .background(Color(hex: "#F5A623").opacity(0.08))
+                .background(DesignTokens.Colors.statusConnecting.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
-                        .stroke(Color(hex: "#F5A623").opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                        .stroke(DesignTokens.Colors.statusConnecting.opacity(0.2), lineWidth: 1)
                 )
-                .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
             }
         }
     }
@@ -190,10 +192,13 @@ struct SessionAuthTab: View {
         }
         .padding(DesignTokens.Spacing.md)
         .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
     }
 
     // MARK: - 私钥文件选择（NSOpenPanel，支持显示隐藏文件夹）
+
+    /// 私钥文件最大允许大小（64 KB）；超出说明所选文件不是私钥
+    private static let maxPrivateKeySizeBytes: Int = 64 * 1024
 
     private func browsePrivateKey() {
         let panel = NSOpenPanel()
@@ -205,6 +210,13 @@ struct SessionAuthTab: View {
             .appendingPathComponent(".ssh")
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
+            // 校验文件大小，防止意外选择超大文件导致 OOM
+            let fileSize = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+            guard fileSize <= Self.maxPrivateKeySizeBytes else {
+                // 文件过大，不是合法私钥，忽略选择
+                AppLogger.ui.debug("[SessionAuthTab] 所选文件超过 64 KB（\(fileSize) 字节），已忽略")
+                return
+            }
             privateKeyPath = url.path
         }
     }
@@ -261,9 +273,9 @@ struct AuthMethodCard: View {
             .background(isSelected
                 ? DesignTokens.Colors.accentPrimary.opacity(0.08)
                 : DesignTokens.Colors.surfacePanel)
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .stroke(
                         isSelected ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.borderSubtle,
                         lineWidth: isSelected ? 2 : 1

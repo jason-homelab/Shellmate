@@ -2,35 +2,45 @@ import SwiftUI
 
 // MARK: - O04 tmux 会话管理覆层
 
+// MARK: - Tab 枚举
+
+private enum TmuxTab: String, CaseIterable {
+    case sessions     = "会话"
+    case windows      = "窗口"
+    case quickActions = "快捷操作"
+}
+
 /// tmux 会话管理器浮动面板（覆层 O04）
-/// 420×360pt 可调整大小的面板，支持附加/分离/新建/终止 tmux 会话
+/// 对齐 Figma-Spec-v2 §10：三 Tab 结构（Sessions / Windows / Quick Actions），640pt 宽
 struct TmuxManagerView: View {
 
     // MARK: - 属性
 
     @ObservedObject var store: TmuxSessionStore
-    var serverLabel: String         // "ubuntu@192.168.100.167"
+    var serverLabel: String
     var onClose: () -> Void
 
     // MARK: - 私有状态
 
+    @State private var activeTab: TmuxTab = .sessions
     @State private var selectedSessionName: String? = nil
     @State private var showNewSessionSheet: Bool = false
     @State private var confirmKillSession: TmuxSession? = nil
     @State private var isRefreshing: Bool = false
+    @State private var windowsSessionName: String? = nil
 
     // MARK: - 视图
 
     var body: some View {
         VStack(spacing: 0) {
             panelHeader
-            toolbarRow
-            sessionList
+            tabSelectorRow
+            tabContentView
             statusFooter
         }
-        // 对齐规范 §10：max-w-[900px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
-        .frame(width: 420)
-        .frame(minHeight: 280, maxHeight: 480)
+        // 对齐规范 §10：sm:max-w-[900px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
+        .frame(width: 900)
+        .frame(minHeight: 420, maxHeight: 660)
         .background {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(.ultraThinMaterial)
@@ -74,12 +84,17 @@ struct TmuxManagerView: View {
         HStack(spacing: 0) {
             Image(systemName: "rectangle.3.group")
                 .font(.system(size: 13))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .foregroundColor(Color(hex: "#34c759"))
                 .padding(.trailing, 8)
 
-            Text("tmux 会话")
-                .font(DesignTokens.Typography.titleSmall)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("tmux 会话管理器")
+                    .font(DesignTokens.Typography.titleSmall)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("管理并监控服务器上的 tmux 会话")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
 
             Spacer()
 
@@ -103,158 +118,160 @@ struct TmuxManagerView: View {
             .help("关闭")
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .frame(height: 44)
+        .frame(height: 52)
         .background(DesignTokens.Colors.surfaceOverlay)
         .overlay(alignment: .bottom) {
             Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)
         }
     }
 
-    // MARK: - 工具栏行
+    // MARK: - Tab 选择器
 
-    private var toolbarRow: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            // 新建
-            Button {
-                withAnimation(DesignTokens.Animation.spring) { showNewSessionSheet = true }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus").font(.system(size: 10, weight: .semibold))
-                    Text("新建").font(DesignTokens.Typography.labelSmall)
+    private var tabSelectorRow: some View {
+        HStack(spacing: 0) {
+            ForEach(TmuxTab.allCases, id: \.self) { tab in
+                Button(action: {
+                    withAnimation(.easeOut(duration: 0.15)) { activeTab = tab }
+                }) {
+                    Text(tab.rawValue)
+                        .font(.system(size: 12, weight: activeTab == tab ? .semibold : .regular))
+                        .foregroundColor(activeTab == tab
+                            ? DesignTokens.Colors.accentPrimary
+                            : DesignTokens.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background(
+                            activeTab == tab
+                                ? DesignTokens.Colors.accentPrimary.opacity(0.10)
+                                : Color.clear
+                        )
                 }
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .padding(.vertical, 4)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.4), lineWidth: 1)
-                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .help("新建 tmux 会话")
-
-            // 附加
-            Button {
-                guard let name = selectedSessionName,
-                      let session = store.sessions.first(where: { $0.name == name }) else { return }
-                store.attach(to: session)
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.right.to.line").font(.system(size: 10))
-                    Text("附加").font(DesignTokens.Typography.labelSmall)
-                }
-                .foregroundColor(selectedSessionName != nil ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
-            }
-            .buttonStyle(.plain)
-            .disabled(selectedSessionName == nil)
-            .help("附加选中的 tmux 会话（↵）")
-
-            // 分离
-            Button { store.detach() } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.left.and.line.vertical.and.arrow.right").font(.system(size: 10))
-                    Text("分离").font(DesignTokens.Typography.labelSmall)
-                }
-                .foregroundColor(store.attachedSessionName != nil ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
-            }
-            .buttonStyle(.plain)
-            .disabled(store.attachedSessionName == nil)
-            .help("分离当前附加的 tmux 会话")
-
-            tmuxToolbarDivider
-
-            // 终止
-            Button {
-                if let name = selectedSessionName,
-                   let session = store.sessions.first(where: { $0.name == name }) {
-                    confirmKillSession = session
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "trash").font(.system(size: 10))
-                    Text("终止").font(DesignTokens.Typography.labelSmall)
-                }
-                .foregroundColor(selectedSessionName != nil ? DesignTokens.Colors.statusError : DesignTokens.Colors.textDisabled)
-            }
-            .buttonStyle(.plain)
-            .disabled(selectedSessionName == nil)
-            .help("终止选中的 tmux 会话（不可撤销）")
-
-            Spacer()
-
-            // 刷新
-            Button {
-                isRefreshing = true
-                store.refreshSessions()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) { isRefreshing = false }
-            } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .rotationEffect(.degrees(isRefreshing ? 360 : 0))
-                    .animation(isRefreshing ? .linear(duration: 0.6).repeatForever(autoreverses: false) : .default, value: isRefreshing)
-            }
-            .buttonStyle(.plain)
-            .help("刷新会话列表")
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .frame(height: 36)
         .background(DesignTokens.Colors.surfaceCard)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)
+        .overlay(Divider(), alignment: .bottom)
+    }
+
+    // MARK: - Tab 内容区
+
+    @ViewBuilder
+    private var tabContentView: some View {
+        switch activeTab {
+        case .sessions:
+            sessionsTabContent
+        case .windows:
+            windowsTabContent
+        case .quickActions:
+            quickActionsTabContent
         }
     }
 
-    // MARK: - 会话列表
+    // MARK: - Sessions Tab
+
+    private var sessionsTabContent: some View {
+        VStack(spacing: 0) {
+            // 操作行
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Button {
+                    isRefreshing = true
+                    store.refreshSessions()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { isRefreshing = false }
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 10))
+                            .rotationEffect(.degrees(isRefreshing ? 360 : 0))
+                            .animation(isRefreshing ? .linear(duration: 0.6).repeatForever(autoreverses: false) : .default, value: isRefreshing)
+                        Text("刷新")
+                            .font(.system(size: 11))
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                let total = store.sessions.count
+                Text(total == 0 ? "暂无会话" : "\(total) 个会话")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textDisabled)
+
+                Spacer()
+
+                Button {
+                    withAnimation(DesignTokens.Animation.spring) { showNewSessionSheet = true }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus").font(.system(size: 10, weight: .semibold))
+                        Text("新建会话").font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: "#34c759"))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .frame(height: 40)
+            .background(DesignTokens.Colors.surfaceCard)
+            .overlay(Divider(), alignment: .bottom)
+
+            // 会话卡片列表
+            sessionListContent
+        }
+    }
 
     @ViewBuilder
-    private var sessionList: some View {
+    private var sessionListContent: some View {
         switch store.availability {
         case .unknown, .checking:
             checkingView
-
         case .unavailable:
             unavailableView
-
         case .available:
             if store.sessions.isEmpty {
                 emptySessionsView
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: 8) {
                         ForEach(store.sessions) { session in
-                            sessionRow(session)
-                                .padding(.horizontal, DesignTokens.Spacing.xs)
+                            sessionCard(session)
+                                .padding(.horizontal, DesignTokens.Spacing.md)
                         }
                     }
-                    .padding(.vertical, DesignTokens.Spacing.xs)
+                    .padding(.vertical, DesignTokens.Spacing.sm)
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func sessionRow(_ session: TmuxSession) -> some View {
-        let isSelected = selectedSessionName == session.name
+    private func sessionCard(_ session: TmuxSession) -> some View {
+        let isAttached = session.isAttached
         let isCurrentlyAttached = store.attachedSessionName == session.name
 
         HStack(spacing: DesignTokens.Spacing.sm) {
-            // 状态指示点
-            GlowingStatusDot(
-                color: session.isAttached ? DesignTokens.Colors.statusConnected : DesignTokens.Colors.statusConnecting,
-                size: 6
-            )
-
             // 主信息
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(session.name)
-                        .font(DesignTokens.Typography.labelMedium)
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .lineLimit(1)
 
+                    if isAttached {
+                        Text("已附加")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: "#34c759"))
+                            .clipShape(Capsule())
+                    }
+
                     if isCurrentlyAttached {
-                        Text("← 当前")
+                        Text("当前")
                             .font(.system(size: 9, weight: .medium))
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                             .padding(.horizontal, 6)
@@ -265,7 +282,7 @@ struct TmuxManagerView: View {
                 }
 
                 HStack(spacing: 8) {
-                    Label("\(session.windowCount) 窗口", systemImage: "macwindow")
+                    Label("\(session.windowCount) 个窗口", systemImage: "macwindow")
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
 
@@ -285,51 +302,312 @@ struct TmuxManagerView: View {
 
             Spacer()
 
-            // 快捷操作按钮（选中时可见）
-            if isSelected {
-                if !session.isAttached {
+            // 操作按钮
+            HStack(spacing: 4) {
+                if !isAttached {
                     Button {
                         store.attach(to: session)
                     } label: {
-                        Image(systemName: "arrow.right.to.line")
+                        Image(systemName: "play.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(DesignTokens.Colors.accentPrimary)
-                            .frame(width: 24, height: 24)
-                            .background(DesignTokens.Colors.accentPrimary.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .foregroundColor(Color(hex: "#34c759"))
+                            .frame(width: 28, height: 28)
+                            .background(Color(hex: "#34c759").opacity(0.10))
+                            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .help("附加此会话")
                 } else {
                     Button { store.detach() } label: {
-                        Image(systemName: "arrow.left.and.line.vertical.and.arrow.right")
+                        Image(systemName: "stop.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(DesignTokens.Colors.statusConnecting)
-                            .frame(width: 24, height: 24)
-                            .background(DesignTokens.Colors.statusConnecting.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .foregroundColor(Color.orange)
+                            .frame(width: 28, height: 28)
+                            .background(Color.orange.opacity(0.10))
+                            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .help("分离此会话")
                 }
+
+                Button {
+                    if let name = selectedSessionName, name == session.name {
+                        confirmKillSession = session
+                    } else {
+                        selectedSessionName = session.name
+                        confirmKillSession = session
+                    }
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .help("终止此会话")
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.sm)
-        .frame(height: 56)
+        .padding(12)
         .background {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected
-                      ? DesignTokens.Colors.accentPrimary.opacity(0.12)
-                      : Color.clear)
+            if isAttached {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#34c759").opacity(0.10),
+                        Color(hex: "#30d158").opacity(0.08)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            } else {
+                Color.white.opacity(0.80)
+            }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(
+                    isAttached
+                        ? Color(hex: "#34c759").opacity(0.30)
+                        : Color(hex: "#d2d2d7").opacity(0.50),
+                    lineWidth: 0.5
+                )
+        )
+        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .contentShape(Rectangle())
+        .onTapGesture { selectedSessionName = session.name }
+    }
+
+    // MARK: - Windows Tab
+
+    private var windowsTabContent: some View {
+        VStack(spacing: 0) {
+            // 会话选择器
+            HStack(spacing: 8) {
+                Text("选择会话：")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                Picker("", selection: $windowsSessionName) {
+                    Text("请选择").tag(String?.none)
+                    ForEach(store.sessions, id: \.name) { s in
+                        Text(s.name).tag(Optional(s.name))
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: 220)
+                .onChange(of: windowsSessionName) { name in
+                    if let name { store.refreshWindows(for: name) }
+                }
+                Spacer()
+            }
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .frame(height: 44)
+            .background(DesignTokens.Colors.surfaceCard)
+            .overlay(Divider(), alignment: .bottom)
+
+            // 窗口卡片列表
+            if let name = windowsSessionName,
+               let session = store.sessions.first(where: { $0.name == name }) {
+                if session.windows.isEmpty {
+                    emptyWindowsView
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(session.windows, id: \.index) { window in
+                                windowCard(window)
+                                    .padding(.horizontal, DesignTokens.Spacing.md)
+                            }
+                        }
+                        .padding(.vertical, DesignTokens.Spacing.sm)
+                    }
+                }
+            } else {
+                emptyWindowsView
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func windowCard(_ window: TmuxWindow) -> some View {
+        let isActive = window.isActive
+
+        HStack(spacing: 10) {
+            // 索引徽章
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.black.opacity(0.05))
+                    .frame(width: 32, height: 32)
+                Text("\(window.index)")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(window.name)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                    .lineLimit(1)
+                if isActive {
+                    Text("活跃窗口")
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                }
+            }
+
+            Spacer()
+
+            if isActive {
+                Text("Active")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(DesignTokens.Colors.accentPrimary)
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(10)
+        .background {
+            if isActive {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#007aff").opacity(0.10),
+                        Color(hex: "#5856d6").opacity(0.08)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            } else {
+                Color.white.opacity(0.80)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(
+                    isActive
+                        ? Color(hex: "#007aff").opacity(0.30)
+                        : Color(hex: "#d2d2d7").opacity(0.50),
+                    lineWidth: 0.5
+                )
+        )
         .contentShape(Rectangle())
         .onTapGesture {
-            selectedSessionName = session.name
+            store.selectWindow(index: window.index)
         }
-        .simultaneousGesture(
-            TapGesture(count: 2).onEnded {
-                store.attach(to: session)
+    }
+
+    // MARK: - Quick Actions Tab
+
+    private var quickActionsTabContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // 2×2 操作卡片
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    ForEach(quickActionItems, id: \.title) { item in
+                        quickActionCard(item)
+                    }
+                }
+
+                // 常用命令列表
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("常用命令")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    ForEach(commonCommands, id: \.command) { entry in
+                        commonCommandRow(entry)
+                    }
+                }
             }
+            .padding(DesignTokens.Spacing.md)
+        }
+    }
+
+    private let quickActionItems: [(title: String, subtitle: String, icon: String, command: String, color: Color)] = [
+        ("水平分割", "Ctrl+B then \"",  "rectangle.split.1x2",                    "tmux split-window -h",      Color(hex: "#007aff")),
+        ("垂直分割", "Ctrl+B then %",   "rectangle.split.2x1",                    "tmux split-window -v",      Color(hex: "#34c759")),
+        ("新建窗口", "Ctrl+B then C",   "plus.rectangle",                          "tmux new-window",           Color(hex: "#ff9500")),
+        ("缩放窗格", "Ctrl+B then Z",   "arrow.up.left.and.arrow.down.right",      "tmux resize-pane -Z",       Color(hex: "#5856d6"))
+    ]
+
+    private let commonCommands: [(command: String, description: String)] = [
+        ("tmux ls",                               "列出所有会话"),
+        ("tmux attach -t <session>",              "附加到指定会话"),
+        ("tmux kill-session -t <session>",        "终止指定会话"),
+        ("tmux rename-session -t <old> <new>",    "重命名会话")
+    ]
+
+    @ViewBuilder
+    private func quickActionCard(_ item: (title: String, subtitle: String, icon: String, command: String, color: Color)) -> some View {
+        Button(action: { store.sendQuickCommand(item.command) }) {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [item.color.opacity(0.15), item.color.opacity(0.08)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+                    Image(systemName: item.icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(item.color)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Text(item.subtitle)
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color.white.opacity(0.80))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func commonCommandRow(_ entry: (command: String, description: String)) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.command)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text(entry.description)
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            Spacer()
+            Button(action: {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(entry.command, forType: .string)
+            }) {
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .help("复制到剪贴板")
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.80))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
     }
 
@@ -373,9 +651,22 @@ struct TmuxManagerView: View {
             Text("没有活跃的 tmux 会话")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-            Text("点击「新建」创建一个会话")
+            Text("点击「新建会话」创建一个会话")
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    private var emptyWindowsView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "macwindow")
+                .font(.system(size: 32))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+            Text("请先选择一个会话")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -459,21 +750,12 @@ struct TmuxManagerView: View {
             Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)
         }
     }
-
-    // MARK: - 辅助
-
-    private var tmuxToolbarDivider: some View {
-        Rectangle()
-            .fill(DesignTokens.Colors.borderSecondary)
-            .frame(width: 1, height: 14)
-    }
 }
 
 // MARK: - 预览
 
-#Preview("tmux 管理器 - 有会话") {
+#Preview("tmux 管理器 - 会话列表") {
     let store = TmuxSessionStore(sessionId: UUID(), sendTarget: PreviewTmuxTarget())
-    // 模拟数据
     ZStack {
         Color.black.opacity(0.85)
         TmuxManagerView(
@@ -483,7 +765,7 @@ struct TmuxManagerView: View {
         )
         .padding()
     }
-    .frame(width: 500, height: 480)
+    .frame(width: 700, height: 600)
 }
 
 // MARK: - 预览用占位 Target

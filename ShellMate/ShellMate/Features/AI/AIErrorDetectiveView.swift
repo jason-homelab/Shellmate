@@ -24,12 +24,12 @@ struct AIErrorDetectiveView: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
-            // 错误摘要文本
+            // 错误摘要文本（最多 2 行，避免过长截断丢失关键信息）
             Text(errorText)
                 .font(DesignTokens.Typography.codeSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
-                .lineLimit(1)
-                .frame(maxWidth: 200)
+                .lineLimit(2)
+                .frame(maxWidth: 280)
 
             Divider()
                 .frame(height: 12)
@@ -47,7 +47,7 @@ struct AIErrorDetectiveView: View {
                 }
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Color(hex: "#60A5FA"), Color(hex: "#A78BFA")],
+                        colors: [DesignTokens.Colors.accentSecondary, DesignTokens.Colors.accentIndigo],
                         startPoint: .leading, endPoint: .trailing
                     )
                 )
@@ -64,11 +64,10 @@ struct AIErrorDetectiveView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background(.ultraThinMaterial)
-        .overlay(DesignTokens.Colors.glassUltraLight)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                 .strokeBorder(
                     DesignTokens.Colors.statusConnecting.opacity(isHovering ? 0.5 : 0.25),
                     lineWidth: 0.75

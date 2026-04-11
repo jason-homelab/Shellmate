@@ -125,16 +125,16 @@ struct WelcomeScreenView: View {
             }
             .animation(.easeInOut(duration: 0.5), value: currentStep)
 
-            // 标题（text-5xl font-bold text-[#1d1d1f]）
+            // 标题（text-5xl font-bold text-[#1d1d1f]，48px = text-5xl）
             Text(step.title)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.system(size: 48, weight: .bold, design: .rounded))
                 .foregroundColor(Color(hex: "#1d1d1f"))
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
 
-            // 描述（text-xl text-[#86868b]）
+            // 描述（text-xl text-[#86868b]，20px = text-xl）
             Text(step.description)
-                .font(.system(size: 17))
+                .font(.system(size: 20))
                 .foregroundColor(Color(hex: "#86868b"))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 560)
@@ -313,13 +313,13 @@ struct WelcomeScreenView: View {
         action: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            // 图标容器（w-14 h-14 rounded-2xl）
+            // 图标容器（w-14 h-14 = 56pt，rounded-2xl = 16pt）
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(iconBg)
-                    .frame(width: 52, height: 52)
+                    .frame(width: 56, height: 56)
                 Image(systemName: iconName)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundColor(iconFg)
             }
 
@@ -376,9 +376,9 @@ struct WelcomeScreenView: View {
 
 #Preview("欢迎界面 - 步骤 0") {
     WelcomeScreenView(
-        onDismiss: { print("关闭") },
-        onCreateSession: { print("创建会话") },
-        onImportConfiguration: { print("导入配置") }
+        onDismiss: { AppLogger.ui.debug("关闭") },
+        onCreateSession: { AppLogger.ui.debug("创建会话") },
+        onImportConfiguration: { AppLogger.ui.debug("导入配置") }
     )
     .frame(width: 960, height: 720)
 }

@@ -24,6 +24,7 @@ struct SessionAdvancedTab: View {
     @Binding var keepAliveInterval: Int32
     @Binding var connectTimeout: Int32
     @Binding var envVarEntries: [EnvVarEntry]
+    @Binding var tmuxConfig: TmuxConfig
 
     // MARK: - 私有状态
 
@@ -62,6 +63,11 @@ struct SessionAdvancedTab: View {
                 Divider().padding(.bottom, 14)
 
                 envVarsSection
+                    .padding(.bottom, 14)
+
+                Divider().padding(.bottom, 14)
+
+                tmuxSection
             }
             .padding(18)
         }
@@ -73,9 +79,7 @@ struct SessionAdvancedTab: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("跳板机（ProxyJump）")
 
-            TextField("user@jump-host.example.com:22", text: $proxyJump)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 11, design: .monospaced))
+            CustomTextField(placeholder: "user@jump-host.example.com:22", text: $proxyJump)
 
             Text("多跳板机用英文逗号分隔，如 user@host1,user@host2")
                 .font(.system(size: 9.5))
@@ -182,18 +186,14 @@ struct SessionAdvancedTab: View {
                 VStack(spacing: 4) {
                     ForEach($envVarEntries) { $entry in
                         HStack(spacing: 6) {
-                            TextField("KEY", text: $entry.key)
-                                .textFieldStyle(.roundedBorder)
-                                .font(.system(size: 11, design: .monospaced))
+                            CustomTextField(placeholder: "KEY", text: $entry.key)
                                 .frame(maxWidth: .infinity)
 
                             Text("=")
                                 .font(.system(size: 10))
                                 .foregroundColor(DesignTokens.Colors.textDisabled)
 
-                            TextField("value", text: $entry.value)
-                                .textFieldStyle(.roundedBorder)
-                                .font(.system(size: 11, design: .monospaced))
+                            CustomTextField(placeholder: "value", text: $entry.value)
                                 .frame(maxWidth: .infinity)
 
                             Button(action: {
@@ -212,6 +212,103 @@ struct SessionAdvancedTab: View {
                 }
             }
         }
+    }
+
+    // MARK: - tmux 集成
+
+    private var tmuxSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "rectangle.3.group")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                sectionLabel("tmux 集成")
+            }
+
+            Toggle(isOn: $tmuxConfig.enabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("连接后自动检测 tmux")
+                        .font(.system(size: 12))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text("SSH 连接建立后自动检查 tmux 可用性及已有会话列表")
+                        .font(.system(size: 9.5))
+                        .foregroundColor(DesignTokens.Colors.textDisabled)
+                }
+            }
+            .toggleStyle(.switch)
+
+            if tmuxConfig.enabled {
+                VStack(alignment: .leading, spacing: 8) {
+                    // 自动附加策略
+                    HStack(spacing: 10) {
+                        Text("自动附加")
+                            .frame(width: 80, alignment: .leading)
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+
+                        Picker("", selection: $tmuxConfig.autoAttach) {
+                            ForEach(TmuxAutoAttach.allCases, id: \.self) { option in
+                                Text(option.rawValue).tag(option)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: 240)
+                    }
+
+                    // 指定会话名（.named 策略时显示）
+                    if tmuxConfig.autoAttach == .named {
+                        HStack(spacing: 10) {
+                            Text("会话名")
+                                .frame(width: 80, alignment: .leading)
+                                .font(.system(size: 11))
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                            CustomTextField(placeholder: "例如: dev", text: $tmuxConfig.sessionName)
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    // 新建会话名（.create 策略时显示）
+                    if tmuxConfig.autoAttach == .create {
+                        HStack(spacing: 10) {
+                            Text("新会话名")
+                                .frame(width: 80, alignment: .leading)
+                                .font(.system(size: 11))
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                            CustomTextField(placeholder: "留空则使用默认编号", text: $tmuxConfig.newSessionName)
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    // 断开时行为
+                    HStack(spacing: 10) {
+                        Text("SSH 断开时")
+                            .frame(width: 80, alignment: .leading)
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+
+                        Picker("", selection: $tmuxConfig.disconnectBehavior) {
+                            ForEach(TmuxDisconnectBehavior.allCases, id: \.self) { option in
+                                Text(option.rawValue).tag(option)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: 240)
+                    }
+
+                    // 有会话时自动弹出管理器
+                    Toggle(isOn: $tmuxConfig.autoShowManager) {
+                        Text("有会话时自动显示管理器")
+                            .font(.system(size: 11))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                    .toggleStyle(.switch)
+                }
+                .padding(.leading, 14)
+                .animation(DesignTokens.Animation.fast, value: tmuxConfig.autoAttach)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .animation(DesignTokens.Animation.fast, value: tmuxConfig.enabled)
     }
 
     // MARK: - 辅助组件
@@ -267,10 +364,17 @@ struct SessionAdvancedTab: View {
                     }
                 }
             ))
-            .textFieldStyle(.roundedBorder)
+            .textFieldStyle(.plain)
             .frame(width: 52)
             .multilineTextAlignment(.center)
             .font(.system(size: 11, design: .monospaced))
+            .padding(.vertical, 6)
+            .background(DesignTokens.Colors.surfaceInput)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
 
             Stepper("", value: intBinding, in: intRange, step: intStep)
                 .labelsHidden()
@@ -291,7 +395,8 @@ struct SessionAdvancedTab: View {
         envVarEntries: .constant([
             EnvVarEntry(key: "TERM", value: "xterm-256color"),
             EnvVarEntry(key: "LANG", value: "en_US.UTF-8")
-        ])
+        ]),
+        tmuxConfig: .constant(TmuxConfig())
     )
     .frame(width: 504, height: 460)
     .background(DesignTokens.Colors.surfacePanel)
