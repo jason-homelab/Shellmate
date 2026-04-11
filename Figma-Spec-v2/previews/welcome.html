@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>ShellMate Welcome Screen</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; }
+
+.welcome {
+  width: 1100px;
+  height: 700px;
+  background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 50%, #e8e8ed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #86868b;
+}
+
+.content { width: 900px; }
+
+.hero { text-align: center; margin-bottom: 48px; }
+.hero-icon {
+  width: 120px; height: 120px;
+  border-radius: 36px;
+  background: linear-gradient(135deg, rgba(255,149,0,0.15), rgba(255,59,48,0.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  margin: 0 auto 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+.hero-title { font-size: 48px; font-weight: 700; color: #1d1d1f; margin-bottom: 16px; }
+.hero-desc { font-size: 18px; color: #86868b; max-width: 560px; margin: 0 auto; }
+
+.dots { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; }
+.dot { height: 8px; border-radius: 4px; }
+.dot.active { width: 28px; background: #007aff; }
+.dot.inactive { width: 8px; background: #d2d2d7; }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.card {
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  border: 1px solid rgba(210,210,215,0.5);
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+.card-icon {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+.card-icon.blue { background: linear-gradient(135deg, rgba(0,122,255,0.1), rgba(88,86,214,0.1)); }
+.card-icon.green { background: linear-gradient(135deg, rgba(52,199,89,0.1), rgba(48,209,88,0.1)); }
+.card-icon.gray { background: linear-gradient(135deg, rgba(134,134,139,0.1), rgba(99,99,102,0.1)); }
+.card-title { font-size: 16px; font-weight: 500; color: #1d1d1f; margin-bottom: 8px; }
+.card-desc { font-size: 13px; color: #86868b; line-height: 1.5; margin-bottom: 20px; }
+.card-btn {
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.card-btn.primary { background: #007aff; color: white; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+.card-btn.success { background: transparent; color: #34c759; border: 1.5px solid #34c759; }
+.card-btn.ghost { background: transparent; color: #86868b; }
+</style>
+</head>
+<body>
+<div class="welcome">
+  <button class="close-btn">✕</button>
+  <div class="content">
+    <div class="hero">
+      <div class="hero-icon">⚡</div>
+      <div class="hero-title">You're Ready to Get Started!</div>
+      <div class="hero-desc">Set up your first connection to begin working with your servers.</div>
+      <div class="dots">
+        <div class="dot inactive"></div>
+        <div class="dot inactive"></div>
+        <div class="dot active"></div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon blue">＋</div>
+        <div class="card-title">Create First Connection</div>
+        <div class="card-desc">Add your first SSH server and start working immediately.</div>
+        <button class="card-btn primary">Create Connection →</button>
+      </div>
+      <div class="card">
+        <div class="card-icon green">⬇</div>
+        <div class="card-title">Import Configuration</div>
+        <div class="card-desc">Import existing SSH configurations from other tools.</div>
+        <button class="card-btn success">Import Config →</button>
+      </div>
+      <div class="card">
+        <div class="card-icon gray">✨</div>
+        <div class="card-title">Explore the App</div>
+        <div class="card-desc">Look around and set up your sessions later.</div>
+        <button class="card-btn ghost">Skip for Now →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

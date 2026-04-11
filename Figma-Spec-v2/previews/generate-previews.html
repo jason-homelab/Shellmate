@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>ShellMate UI Previews</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; background: #f0f0f5; padding: 40px; }
+  .preview-section { margin-bottom: 60px; }
+  .preview-title { font-size: 13px; font-weight: 600; color: #86868b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  /* ===== 主界面 ===== */
+  .app-window {
+    width: 1100px;
+    height: 700px;
+    background: linear-gradient(135deg, #f5f5f7, #e8e8ed);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* 标题栏 */
+  .titlebar {
+    height: 40px;
+    background: rgba(245,245,247,0.9);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    flex-shrink: 0;
+  }
+  .traffic-lights { display: flex; gap: 8px; }
+  .tl { width: 12px; height: 12px; border-radius: 50%; }
+  .tl-red { background: #ff5f57; }
+  .tl-yellow { background: #febc2e; }
+  .tl-green { background: #28c840; }
+  .titlebar-title { flex: 1; text-align: center; font-size: 13px; font-weight: 500; color: #1d1d1f; }
+
+  /* 工具栏 */
+  .toolbar {
+    height: 48px;
+    background: rgba(245,245,247,0.8);
+    border-bottom: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .toolbar-btn {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #1d1d1f;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .toolbar-btn:hover { background: rgba(0,0,0,0.05); }
+  .toolbar-icon-btn {
+    height: 28px; width: 28px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #1d1d1f;
+  }
+  .toolbar-sep { width: 1px; height: 20px; background: rgba(210,210,215,0.5); margin: 0 4px; }
+  .session-badge {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .session-badge-inner {
+    background: rgba(0,0,0,0.05);
+    padding: 2px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #1d1d1f;
+  }
+
+  /* 主内容区 */
+  .main-content { flex: 1; display: flex; overflow: hidden; }
+
+  /* 侧边栏 */
+  .sidebar {
+    width: 220px;
+    background: rgba(245,245,247,0.95);
+    border-right: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.4);
+  }
+  .sidebar-title { font-size: 12px; font-weight: 500; color: #1d1d1f; }
+  .sidebar-actions { display: flex; gap: 2px; }
+  .sidebar-action-btn {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #1d1d1f;
+  }
+  .session-list { padding: 8px; flex: 1; overflow: auto; }
+  .session-row {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .session-row.selected {
+    background: #007aff;
+    box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+  }
+  .session-row:not(.selected) { }
+  .session-row:not(.selected):hover { background: rgba(0,0,0,0.05); }
+  .session-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .session-row.selected .session-icon { background: rgba(255,255,255,0.2); }
+  .session-row:not(.selected) .session-icon { background: rgba(0,122,255,0.1); }
+  .session-info { flex: 1; min-width: 0; }
+  .session-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .session-row.selected .session-name { color: white; }
+  .session-row:not(.selected) .session-name { color: #1d1d1f; }
+  .session-host { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .session-row.selected .session-host { color: rgba(255,255,255,0.8); }
+  .session-row:not(.selected) .session-host { color: #86868b; }
+  .folder-row {
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #1d1d1f;
+  }
+  .folder-badge {
+    margin-left: auto;
+    font-size: 9px;
+    color: #86868b;
+    background: rgba(0,0,0,0.05);
+    padding: 1px 6px;
+    border-radius: 100px;
+  }
+
+  /* 终端区 */
+  .terminal-area { flex: 1; display: flex; flex-direction: column; background: rgba(255,255,255,0.5); }
+  .tabbar {
+    height: 40px;
+    background: rgba(245,245,247,0.8);
+    border-bottom: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    align-items: flex-end;
+  }
+  .tab {
+    height: 40px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    border-right: 1px solid rgba(210,210,215,0.5);
+    cursor: pointer;
+  }
+  .tab.active { background: rgba(255,255,255,0.9); color: #1d1d1f; }
+  .tab:not(.active) { color: #86868b; }
+  .tab-close {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    color: #86868b;
+  }
+  .terminal-body {
+    flex: 1;
+    background: #1e1e1e;
+    padding: 16px;
+    font-family: 'Menlo', 'Monaco', monospace;
+    font-size: 12px;
+    overflow: auto;
+  }
+  .term-line { line-height: 1.6; }
+  .term-prompt { color: #4ec9b0; }
+  .term-cmd { color: #cccccc; }
+  .term-output { color: #cccccc; }
+  .term-error { color: #f48771; }
+  .term-cursor { display: inline-block; width: 8px; height: 13px; background: #cccccc; vertical-align: text-bottom; animation: blink 1s infinite; }
+  @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+  .ai-suggestion {
+    margin: 4px 0;
+    background: rgba(255,149,0,0.1);
+    border-left: 3px solid #ff9500;
+    padding: 6px 10px;
+    border-radius: 0 6px 6px 0;
+  }
+  .ai-suggestion-title { font-size: 10px; font-weight: 600; color: #ff9500; margin-bottom: 2px; }
+  .ai-suggestion-text { font-size: 10px; color: #cccccc; }
+
+  /* 状态栏 */
+  .statusbar {
+    height: 32px;
+    background: rgba(245,245,247,0.9);
+    border-top: 1px solid rgba(210,210,215,0.5);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; flex-shrink: 0; }
+  .status-name { font-weight: 500; color: #1d1d1f; }
+  .status-host { color: #86868b; }
+  .status-sep { width: 1px; height: 16px; background: rgba(210,210,215,0.5); }
+  .status-metric { display: flex; align-items: center; gap: 4px; }
+  .metric-icon { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+  .metric-cpu-icon { background: rgba(0,122,255,0.1); color: #007aff; }
+  .metric-mem-icon { background: rgba(88,86,214,0.1); color: #5856d6; }
+  .metric-disk-icon { background: rgba(255,149,0,0.1); color: #ff9500; }
+  .metric-net-icon { background: rgba(52,199,89,0.1); color: #34c759; }
+  .metric-label { color: #86868b; }
+  .metric-value { font-weight: 600; }
+  .metric-value.green { color: #34c759; }
+  .metric-value.blue { color: #007aff; }
+  .metric-value.primary { color: #1d1d1f; }
+  .spacer { flex: 1; }
+  .status-right { color: #86868b; display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<div class="preview-section">
+  <div class="preview-title">主界面 — 连接状态（含 AI 助手面板关闭）</div>
+  <div class="app-window">
+    <!-- 标题栏 -->
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-red"></div>
+        <div class="tl tl-yellow"></div>
+        <div class="tl tl-green"></div>
+      </div>
+      <div class="titlebar-title">ShellMate</div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <button class="toolbar-btn">🖥 连接</button>
+      <button class="toolbar-btn" style="opacity:0.4">断开</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-icon-btn">✨</button>
+      <button class="toolbar-icon-btn">&lt;/&gt;</button>
+      <button class="toolbar-icon-btn">📁</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-icon-btn">⊡</button>
+      <button class="toolbar-icon-btn">📄</button>
+      <button class="toolbar-icon-btn">⚡</button>
+      <button class="toolbar-icon-btn">🌐</button>
+      <button class="toolbar-icon-btn">■</button>
+      <div class="session-badge">
+        <div class="session-badge-inner">Production Server</div>
+      </div>
+      <button class="toolbar-icon-btn">📦</button>
+      <button class="toolbar-icon-btn">🔍</button>
+      <button class="toolbar-icon-btn">ⓘ</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-icon-btn">⚙</button>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+      <!-- 侧边栏 -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">Sessions</span>
+          <div class="sidebar-actions">
+            <button class="sidebar-action-btn">+</button>
+            <button class="sidebar-action-btn">📂</button>
+            <button class="sidebar-action-btn">🔑</button>
+            <button class="sidebar-action-btn">⚙</button>
+          </div>
+        </div>
+        <div class="session-list">
+          <div class="session-row selected">
+            <div class="session-icon">🖥</div>
+            <div class="session-info">
+              <div class="session-name">Production Server</div>
+              <div class="session-host">admin@192.168.1.100</div>
+            </div>
+          </div>
+          <div class="session-row">
+            <div class="session-icon">🖥</div>
+            <div class="session-info">
+              <div class="session-name">Dev Server</div>
+              <div class="session-host">ubuntu@10.0.0.5</div>
+            </div>
+          </div>
+          <div class="folder-row">
+            <span style="font-size:9px;color:#86868b">▼</span>
+            <span style="font-size:11px">📁</span>
+            <span>Development</span>
+            <span class="folder-badge">2</span>
+          </div>
+          <div style="padding-left:16px">
+            <div class="session-row">
+              <div class="session-icon">🖥</div>
+              <div class="session-info">
+                <div class="session-name">Jenkins Agent</div>
+                <div class="session-host">ubuntu@10.0.1.20</div>
+              </div>
+            </div>
+          </div>
+          <div class="folder-row">
+            <span style="font-size:9px;color:#86868b">▶</span>
+            <span style="font-size:11px">📁</span>
+            <span>Testing</span>
+            <span class="folder-badge">1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 终端区 -->
+      <div class="terminal-area">
+        <div class="tabbar">
+          <div class="tab active">
+            Production Server
+            <div class="tab-close">×</div>
+          </div>
+          <div class="tab">
+            Dev Server
+            <div class="tab-close">×</div>
+          </div>
+        </div>
+        <div class="terminal-body">
+          <div class="term-line"><span class="term-output">Connecting to 192.168.1.100...</span></div>
+          <div class="term-line"><span class="term-output">Connected to admin@192.168.1.100</span></div>
+          <div class="term-line"><span class="term-output">Last login: Wed Apr 2 09:14:33 2026 from 192.168.1.5</span></div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="term-prompt">admin@192.168.1.100:~$</span> <span class="term-cmd">ls -la</span></div>
+          <div class="term-line"><span class="term-output">total 48</span></div>
+          <div class="term-line"><span class="term-output">drwxr-xr-x  8 admin admin 4096 Apr  2 09:10 .</span></div>
+          <div class="term-line"><span class="term-output">drwxr-xr-x  3 root  root  4096 Jan 15 08:22 ..</span></div>
+          <div class="term-line"><span class="term-output">drwxr-xr-x  2 admin admin 4096 Mar 28 14:55 .ssh</span></div>
+          <div class="term-line"><span class="term-output">-rw-r--r--  1 admin admin  220 Jan 15 08:22 .bash_logout</span></div>
+          <div class="term-line"><span class="term-output">drwxr-xr-x  5 admin admin 4096 Apr  1 17:32 projects</span></div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="term-prompt">admin@192.168.1.100:~$</span> <span class="term-cmd">git status</span></div>
+          <div class="term-line"><span class="term-error">⚠ fatal: not a git repository (or any of the parent directories): .git</span></div>
+          <div class="ai-suggestion">
+            <div class="ai-suggestion-title">💡 AI Suggestion</div>
+            <div class="ai-suggestion-text">Run "git init" to initialize a new repository, or clone an existing one with "git clone &lt;url&gt;"</div>
+          </div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="term-prompt">admin@192.168.1.100:~$</span> <span class="term-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="statusbar">
+      <div class="status-dot"></div>
+      <span class="status-name">Production Server</span>
+      <span class="status-host">•  admin@192.168.1.100</span>
+      <div class="status-sep"></div>
+      <div class="status-metric">
+        <div class="metric-icon metric-cpu-icon">CPU</div>
+        <span class="metric-label">CPU</span>
+        <span class="metric-value green">32.1%</span>
+      </div>
+      <div class="status-metric">
+        <div class="metric-icon metric-mem-icon">MEM</div>
+        <span class="metric-label">Memory</span>
+        <span class="metric-value" style="color:#34c759">6.2 / 16 GB</span>
+      </div>
+      <div class="status-metric">
+        <div class="metric-icon metric-disk-icon">DSK</div>
+        <span class="metric-label">Disk</span>
+        <span class="metric-value primary">245 / 500 GB</span>
+      </div>
+      <div class="status-metric">
+        <div class="metric-icon metric-net-icon">NET</div>
+        <span class="metric-label">↓</span>
+        <span class="metric-value green">45.2 KB/s</span>
+        <span class="metric-label">↑</span>
+        <span class="metric-value blue">12.1 KB/s</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="status-right">⚡ SSH Port 22</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,191 +1,145 @@
-# ShellMate — SF Symbols 图标使用规范
+# 02 — SF Symbols 图标使用规范 v3.0
 
-> **文档版本：** v1.0
-> **创建日期：** 2026-03-18
-> **工具：** SF Symbols 5 App（[下载地址](https://developer.apple.com/sf-symbols/)）
-
----
-
-## 一、SF Symbols 使用原则
-
-### 1.1 为什么必须用 SF Symbols
-
-- **自动对齐**：SF Symbols 与 SF Pro 字体共享同一基线和光学度量，与文字混排时完美对齐，无需手动调整
-- **多权重支持**：同一图标支持 9 种字重（Ultralight 到 Black），与文字字重保持视觉一致性
-- **自动深色模式**：SF Symbols 本身就是矢量，配合系统颜色自动在 Light/Dark 模式下显示正确
-- **可访问性**：Screen Reader 等辅助功能能够识别并朗读 SF Symbol 的语义
-- **App Store 要求**：工具栏图标使用非 SF Symbols 的自定义图标，可能导致视觉风格不一致被拒审
-
-### 1.2 Figma 中使用 SF Symbols
-
-1. 安装 SF Symbols 5 应用（macOS 专用，需要 Apple 开发者账号）
-2. 在 Figma 中可以通过导出 SVG 后导入使用
-3. **推荐插件**：`SF Symbols` Figma 插件（可直接搜索并插入）
-4. 插入后将 SF Symbol SVG 转换为 Figma Component，统一管理
+> **文档版本：** v3.0（对齐 Figma Make Shell 原型，完整图标清单）
+> **更新日期：** 2026-03-30
+> **工具：** SF Symbols 5 App
 
 ---
 
-## 二、完整图标清单
+## 一、图标使用原则
 
-### 2.1 工具栏图标（Toolbar Icons）
-
-| 功能 | SF Symbol 名称 | 尺寸 | 字重 | 颜色 |
-|------|--------------|------|------|------|
-| 端口转发 | `arrow.left.arrow.right` | 14pt | Regular | Text/Tertiary |
-| 命令片段 | `list.bullet.rectangle` | 14pt | Regular | Text/Tertiary |
-| 同步输入 | `square.grid.2x2` | 14pt | Regular | Text/Tertiary |
-| 同步输入（激活） | `square.grid.2x2.fill` | 14pt | Regular | Accent/Default |
-| 设置 | `gear` | 14pt | Regular | Text/Tertiary |
-| 水平分屏 | `rectangle.split.2x1` | 13pt | Regular | Text/Tertiary |
-| 垂直分屏 | `rectangle.split.1x2` | 13pt | Regular | Text/Tertiary |
-| 终端搜索 | `magnifyingglass` | 13pt | Regular | Text/Tertiary |
-| Compose Pane | `text.alignleft` | 13pt | Regular | Text/Tertiary |
-| SFTP 面板 | `folder.fill` | 13pt | Regular | Text/Tertiary |
-| 录制（停止中）| `record.circle` | 13pt | Regular | Text/Tertiary |
-| 录制（进行中）| `stop.circle.fill` | 13pt | Regular | Status/Error |
-
-### 2.2 侧边栏图标（Sidebar Icons）
-
-| 功能 | SF Symbol 名称 | 尺寸 | 字重 | 颜色 |
-|------|--------------|------|------|------|
-| 折叠全部 | `minus.square` | 11pt | Regular | Text/Disabled |
-| 展开全部 | `plus.square` | 11pt | Regular | Text/Disabled |
-| 导入 | `arrow.down.to.line` | 11pt | Regular | Text/Disabled |
-| 导出 | `arrow.up.to.line` | 11pt | Regular | Text/Disabled |
-| 分组展开箭头 | `chevron.down` | 8pt | Medium | Text/Disabled |
-| 分组折叠箭头 | `chevron.right` | 8pt | Medium | Text/Disabled |
-| 新增到分组 | `plus` | 12pt | Regular | Text/Disabled |
-
-### 2.3 SFTP 图标（SFTP Icons）
-
-| 功能 | SF Symbol 名称 | 尺寸 | 颜色 |
-|------|--------------|------|------|
-| 返回 | `chevron.left` | 12pt | Text/Tertiary |
-| 前进 | `chevron.right` | 12pt | Text/Tertiary |
-| 上级目录 | `chevron.up` | 12pt | Text/Tertiary |
-| 刷新 | `arrow.clockwise` | 10pt | Text/Disabled |
-| 上传 | `arrow.up.to.line` | 11pt | Text/Secondary |
-| 下载 | `arrow.down.to.line` | 11pt | Text/Secondary |
-| 新建目录 | `folder.badge.plus` | 11pt | Text/Secondary |
-| 显示/隐藏 | `eye` / `eye.slash` | 11pt | Text/Secondary |
-| **SFTP 面板头部图标** | **`folder.fill.badge.wifi`** | **13pt** | **Text/Tertiary** |
-| **SFTP 面板折叠按钮** | **`sidebar.right`** | **13pt** | **Text/Tertiary** |
-| **拖拽上传提示** | **`arrow.up.doc.fill`** | **28pt** | **Accent/Default** |
-
-### 2.4 文件类型图标（File Type Icons）
-
-| 文件类型 | SF Symbol 名称 | 颜色 |
-|---------|--------------|------|
-| 目录（文件夹）| `folder.fill` | Terminal/Cyan |
-| 上级目录 `..` | `arrow.up.left.square` | Text/Disabled |
-| `.js` `.ts` | `doc.text.fill` | Terminal/Yellow |
-| `.json` `.yaml` `.toml` | `doc.badge.gearshape.fill` | Terminal/Green |
-| `.py` | `doc.richtext.fill` | Terminal/Blue |
-| `.sh` `.bash` | `terminal.fill` | Terminal/Purple |
-| `.md` `.txt` | `doc.plaintext.fill` | Terminal/Blue |
-| `.zip` `.gz` `.tar` | `archivebox.fill` | Amber/400 |
-| `.png` `.jpg` `.svg` | `photo.fill` | Terminal/Purple |
-| `.pdf` | `doc.fill` | Red/400 |
-| `.env`（隐藏）| `lock.doc.fill` | Text/Disabled |
-| `.gitignore`（隐藏）| `doc.fill` | Text/Disabled |
-| 其他文件 | `doc.fill` | Text/Tertiary |
-
-### 2.5 弹窗与状态图标
-
-| 用途 | SF Symbol 名称 | 尺寸 | 颜色 |
-|------|--------------|------|------|
-| 警告（Amber）| `exclamationmark.triangle.fill` | 16pt | Amber/400 |
-| 危险（Red）| `exclamationmark.octagon.fill` | 16pt | Status/Error |
-| 成功 | `checkmark.circle.fill` | 16pt | Status/Connected |
-| 信息 | `info.circle.fill` | 16pt | Accent/Default |
-| SSH Key | `key.fill` | 18pt | Text/Secondary |
-| 密码 | `lock.fill` | 18pt | Text/Secondary |
-| SSH Agent | `person.badge.shield.checkmark.fill` | 18pt | Text/Secondary |
-| 指纹 | `touchid` | 16pt | Accent/Default |
-| Keychain | `key.horizontal.fill` | 14pt | Text/Secondary |
-| CloudKit/iCloud | `icloud.fill` | 14pt | Accent/Default |
-| 同步成功 | `checkmark.icloud.fill` | 14pt | Status/Connected |
-| 同步中 | `arrow.clockwise.icloud` | 14pt | Accent/Default |
-| 同步失败 | `exclamationmark.icloud.fill` | 14pt | Status/Error |
-
-### 2.6 设置导航图标
-
-| 设置页 | SF Symbol 名称 | 尺寸 |
-|--------|--------------|------|
-| 外观 | `paintbrush.fill` | 14pt |
-| 关键词高亮 | `highlighter` | 14pt |
-| 安全 | `lock.shield.fill` | 14pt |
-| 终端 | `terminal.fill` | 14pt |
-| iCloud 同步 | `icloud.fill` | 14pt |
+1. **优先使用 SF Symbols**，不自定义图标，确保 macOS 原生感
+2. 图标尺寸跟随容器：工具栏 `h-3.5 w-3.5`（14pt），侧边栏 `h-3.5 w-3.5`，状态栏 `h-3 w-3`（12pt）
+3. 填充类图标（`.fill`）用于状态指示，线条类用于操作按钮
+4. 工具栏图标颜色默认 `textSecondary`（`#86868b` Light / `#8892AA` Dark），激活态 `accentPrimary`
 
 ---
 
-## 三、图标尺寸与对齐规范
+## 二、Toolbar（工具栏）图标
 
-### 3.1 图标与文字混排
-
-SF Symbols 在与文字混排时，图标尺寸应等于文字字号：
-
-```
-图标 14pt + 文字 14pt → 使用 14pt SF Symbol
-图标 12pt + 文字 12pt → 使用 12pt SF Symbol
-
-⚠️ 注意：SF Symbol 的视觉尺寸比字号略大
-对于正方形图标，使用 Image(systemName:).imageScale(.small/.medium/.large) 调整
-```
-
-### 3.2 独立图标按钮
-
-```
-工具栏图标按钮（Icon-only Button）:
-  点击区域: 22 × 22pt（标准），18 × 18pt（紧凑）
-  图标尺寸: 13–14pt
-  视觉留白: 图标在点击区域内居中，留白约 4pt
-
-图标颜色:
-  静止: Text/Tertiary（略暗，避免视觉噪音）
-  悬停: Text/Primary
-  激活: Accent/Default
-  禁用: Text/Disabled
-```
+| 位置 | 图标名（SF Symbols） | 对应 Lucide（原型） | 功能 | 禁用条件 |
+|------|-------------------|-------------------|------|----------|
+| 左 | `desktopcomputer` / `display` | `monitor` | Connect 按钮图标 | 无 |
+| 左 | — （文字按钮）| — | Disconnect | 无活动会话 |
+| 左 | `sparkles` | `sparkles` | AI 助手开关 | 无活动会话 |
+| 左 | `chevron.left.forwardslash.chevron.right` | `code2` | 脚本自动化 | 无 |
+| 左 | `folder.badge.gearshape` | `FolderSync` | 文件传输（SFTP）| 无活动会话 |
+| 左 | `rectangle.split.2x1` | `SplitSquareVertical` | 分屏 | 无 |
+| 左 | `doc.text` | `FileText` | 日志查看 | 无 |
+| 右 | `square.and.arrow.up.on.square` | `Package` | 导入/导出 | 无 |
+| 右 | `magnifyingglass` | `Search` | 全局搜索 | 无 |
+| 右 | `info.circle` | `Info` | 关于/帮助 | 无 |
+| 右 | `gearshape` | `Settings` | 设置 | 无 |
 
 ---
 
-## 四、自定义图标规范（仅内容区域使用）
+## 三、Sidebar（侧边栏）图标
 
-以下场景可以使用自定义 SVG 图标（不在工具栏）：
-
-### 4.1 状态指示灯（已在 Design Tokens 中定义）
-
-不使用图标，使用纯色圆点 + CSS/SwiftUI 动画实现。
-
-### 4.2 标签徽章（PROD / DEV / JUMP）
-
-纯文字，不使用图标。
-
-### 4.3 应用图标设计建议
-
-```
-应用图标不使用 SF Symbols，需要独立设计。
-参考设计方向：
-  形状: 正方形，圆角由系统自动处理（不要自己画圆角）
-  核心元素: 闪电符号（SSH 快速连接的隐喻）或 > 终端光标符号
-  色彩: 深蓝色调为主（与 Accent 对应），避免彩虹色
-  风格: 参考 iTerm2、Termius、TablePlus 的图标设计语言
-  参考工具: [macOS App Icon Template](https://developer.apple.com/design/resources/)
-```
+| 位置 | SF Symbol | Lucide 原型 | 功能 |
+|------|-----------|-------------|------|
+| Header | `plus` | `Plus` | 新建会话 |
+| Header | `folder.badge.gear` | `FolderCog` | 分组管理 |
+| Header | `key.horizontal` | `KeyRound` | 密码管理 |
+| Header | `gearshape` | `Settings` | 设置 |
+| 会话行 | `display` / `server.rack` | `Server` | 会话图标 |
+| 文件夹行 | `folder` | `Folder` | 分组图标 |
+| 文件夹行 | `chevron.right` | `ChevronRight` | 折叠/展开指示 |
 
 ---
 
-## 五、图标禁止事项
+## 四、StatusBar（状态栏）图标
 
-- ❌ 不使用 Emoji 作为工具栏或菜单图标
-- ❌ 不对 SF Symbol 进行拉伸或变形
-- ❌ 工具栏图标不使用多色（Multicolor）SF Symbol，统一使用单色
-- ❌ 不将应用内自定义 SVG 用于菜单栏 NSMenuItem 图标
-- ❌ 不使用 SF Symbols 5 中标注为「Restricted」的图标（Apple 产品专属）
+| 位置 | SF Symbol | Lucide 原型 | 语义 | 颜色 |
+|------|-----------|-------------|------|------|
+| 连接状态 | `wifi.slash` | `WifiOff` | 未连接 | `textSecondary` |
+| CPU | `cpu` | `Cpu` | CPU 监控 | `#007aff` |
+| 内存 | `memorychip` | `MemoryStick` | 内存监控 | `#5856d6` |
+| 磁盘 | `externaldrive` | `HardDrive` | 磁盘监控 | `#ff9500` |
+| 网络 | `wifi` | `Wifi` | 网络监控 | `#34c759` |
+| 活动 | `waveform.path.ecg` | `Activity` | 连接活动 | `textSecondary` |
 
 ---
 
-*文档版本：v1.0 · 2026-03-18*
-*工具参考：SF Symbols 5 App · [Apple SF Symbols 官方文档](https://developer.apple.com/design/human-interface-guidelines/sf-symbols)*
+## 五、弹窗 / 面板图标
+
+### 5.1 新建会话弹窗（Session Form）
+
+| 字段 | SF Symbol | 说明 |
+|------|-----------|------|
+| 认证-密码 | `lock.fill` | 密码认证方式 |
+| 认证-私钥 | `key.fill` | 私钥认证方式 |
+| 认证-Agent | `person.badge.key.fill` | SSH Agent 认证 |
+| 认证-键盘 | `keyboard` | 键盘交互认证 |
+| Agent 可用 | `checkmark.circle.fill` | 绿色 statusConnected |
+| Agent 不可用 | `xmark.circle.fill` | 红色 statusError |
+| 沙盒提示 | `exclamationmark.triangle.fill` | 橙色 statusConnecting |
+
+### 5.2 AI 助手面板
+
+| 元素 | SF Symbol | Lucide 原型 | 说明 |
+|------|-----------|-------------|------|
+| 面板图标 | `sparkles` | `Sparkles` | AI 渐变图标（blue→indigo）|
+| 发送按钮 | `arrow.up.circle.fill` | `Send` | 发送消息 |
+| 复制命令 | `doc.on.doc` | `Copy` | 复制命令 |
+| 已复制 | `checkmark` | `Check` | 复制成功（绿色）|
+| 执行命令 | `terminal` | `Terminal` | 执行命令（蓝色）|
+| 快速建议 | `lightbulb` | `Lightbulb` | 橙色 #ff9500 |
+
+### 5.3 SFTP 文件传输面板
+
+| 元素 | SF Symbol | Lucide 原型 |
+|------|-----------|-------------|
+| 本地 | `internaldrive` | `HardDrive` |
+| 远程 | `server.rack` | `Server` |
+| 文件夹 | `folder` | `FolderOpen` |
+| 文件 | `doc` | `File` |
+| 新建文件夹 | `folder.badge.plus` | `FolderPlus` |
+| 删除 | `trash` | `Trash2` |
+| 刷新 | `arrow.clockwise` | `RefreshCw` |
+| 路径 | `house` | `Home` |
+| 上传 | `arrow.up.to.line` | `Upload` |
+| 下载 | `arrow.down.to.line` | `Download` |
+| 进入目录 | `chevron.right` | `ChevronRight` |
+
+### 5.4 设置面板
+
+| 设置项 | SF Symbol |
+|--------|-----------|
+| AI 助手 | `sparkles` |
+| 提供商-Claude | `sparkles` |
+| 提供商-OpenAI | `circle.hexagongrid` |
+| 提供商-Ollama | `desktopcomputer` |
+| API Key | `key.fill` |
+| 模型选择 | `cpu` |
+| 功能开关 | `slider.horizontal.3` |
+| 错误侦探 | `exclamationmark.triangle` |
+| 安全 | `lock.shield.fill` |
+| iCloud | `icloud` |
+
+---
+
+## 六、状态徽章图标
+
+| 图标 | SF Symbol | 场景 |
+|------|-----------|------|
+| 成功 | `checkmark.circle.fill` | 操作成功（绿色）|
+| 错误 | `xmark.circle.fill` | 操作失败（红色）|
+| 警告 | `exclamationmark.triangle.fill` | 警告提示（橙色）|
+| 信息 | `info.circle.fill` | 说明信息（蓝色）|
+
+---
+
+## 七、图标尺寸规范对照
+
+| 位置 | SF Symbol font-size | SwiftUI | Lucide（原型 h-X w-X） |
+|------|--------------------|---------|-----------------------|
+| 工具栏图标按钮内 | system(size: 14) | `.font(.system(size: 14))` | `h-3.5 w-3.5`（14px）|
+| 侧边栏行图标 | system(size: 14) | `.font(.system(size: 14))` | `h-3.5 w-3.5` |
+| 状态栏图标 | system(size: 12) | `.font(.system(size: 12))` | `h-3 w-3`（12px）|
+| 面板标题图标 | system(size: 16) | `.font(.system(size: 16))` | `h-4 w-4`（16px）|
+| AI 面板大图标 | system(size: 20) | `.font(.system(size: 20))` | `h-5 w-5`（20px）|
+| 弹窗图标 | system(size: 14) | `.font(.system(size: 14))` | `h-4 w-4` |
+
+---
+
+*文档版本：v3.0 · 2026-03-30*
