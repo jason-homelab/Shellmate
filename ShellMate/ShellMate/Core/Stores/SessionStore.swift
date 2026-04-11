@@ -30,6 +30,9 @@ final class SessionStore: ObservableObject {
     /// 是否显示新建/编辑弹窗
     @Published var isShowingSessionForm: Bool = false
 
+    /// 新建会话时预设的分组 ID（来自右键"新建会话"）
+    @Published var defaultGroupId: UUID? = nil
+
     /// 是否正在加载
     @Published private(set) var isLoading: Bool = false
 
@@ -64,6 +67,7 @@ final class SessionStore: ObservableObject {
 
         do {
             sessions = try await repository.fetchAll()
+                .sorted { $0.sortOrder < $1.sortOrder }
             await performSearch()
         } catch {
             errorMessage = "加载会话失败: \(error.localizedDescription)"
@@ -156,8 +160,8 @@ final class SessionStore: ObservableObject {
         }
     }
 
-    /// 更新会话排序
-    func updateSortOrder(from source: IndexSet, to destination: Int, in groupId: UUID?) async {
+    /// 仅在内存中重排会话顺序（拖拽悬停时调用，不触发持久化）
+    func reorderLocally(from source: IndexSet, to destination: Int, in groupId: UUID?) {
         var groupSessions = sessions.filter { $0.groupId == groupId }
 
         groupSessions.move(fromOffsets: source, toOffset: destination)
@@ -167,19 +171,45 @@ final class SessionStore: ObservableObject {
             groupSessions[index] = session
         }
 
+        let updatedIds = Dictionary(uniqueKeysWithValues: groupSessions.map { ($0.id, $0) })
+        sessions = sessions.map { updatedIds[$0.id] ?? $0 }
+        filteredSessions = filteredSessions.map { updatedIds[$0.id] ?? $0 }
+    }
+
+    /// 将当前内存中的排序持久化到 Core Data（拖拽结束时调用）
+    func persistSortOrder(in groupId: UUID?) async {
+        let groupSessions = sessions.filter { $0.groupId == groupId }
+            .sorted { $0.sortOrder < $1.sortOrder }
+
         do {
+            try await repository.updateSortOrder(sessions: groupSessions)
+        } catch {
+            errorMessage = "更新排序失败: \(error.localizedDescription)"
+            await loadSessions()
+        }
+    }
+
+    /// 更新会话排序（完整流程：本地重排 + 持久化）
+    func updateSortOrder(from source: IndexSet, to destination: Int, in groupId: UUID?) async {
+        reorderLocally(from: source, to: destination, in: groupId)
+
+        do {
+            let groupSessions = sessions.filter { $0.groupId == groupId }
             try await repository.updateSortOrder(sessions: groupSessions)
             await loadSessions()
         } catch {
             errorMessage = "更新排序失败: \(error.localizedDescription)"
+            await loadSessions()
         }
     }
 
     // MARK: - 弹窗方法
 
     /// 显示新建会话弹窗
-    func showNewSessionForm() {
+    /// - Parameter groupId: 可选，预设分组（来自分组右键菜单"新建会话"）
+    func showNewSessionForm(groupId: UUID? = nil) {
         editingSession = nil
+        defaultGroupId = groupId
         isShowingSessionForm = true
     }
 

@@ -96,12 +96,58 @@ struct SFTPFileItem: Identifiable, Equatable {
         return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
     }
 
-    /// 格式化修改时间（紧凑格式，适合窄列）
+    /// 格式化修改时间
     var formattedDate: String {
         guard let date = modifiedAt else { return "—" }
         let formatter = DateFormatter()
-        formatter.dateFormat = "M/d HH:mm"
+        formatter.dateFormat = "M/d/yy h:mm a"
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - 本地文件条目
+
+/// 本地文件/目录条目（用于 SFTP 双栏面板本地侧浏览）
+struct LocalFileItem: Identifiable {
+
+    let id: UUID
+    /// 文件名（不含路径）
+    let name: String
+    /// 完整本地路径
+    let path: String
+    /// 是否为目录
+    let isDirectory: Bool
+    /// 文件大小（字节，目录为 0）
+    let size: UInt64
+    /// 修改时间
+    let modifiedAt: Date?
+
+    init(name: String, path: String, isDirectory: Bool, size: UInt64 = 0, modifiedAt: Date? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.path = path
+        self.isDirectory = isDirectory
+        self.size = size
+        self.modifiedAt = modifiedAt
+    }
+
+    /// 格式化文件大小（目录显示 —）
+    var formattedSize: String {
+        guard !isDirectory else { return "—" }
+        return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
+    }
+
+    /// 格式化修改时间
+    var formattedDate: String {
+        guard let date = modifiedAt else { return "—" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d/yy h:mm a"
+        return formatter.string(from: date)
+    }
+
+    /// SF Symbols 图标名
+    var sfSymbolName: String {
+        isDirectory ? "folder.fill" : "doc.fill"
     }
 }
 

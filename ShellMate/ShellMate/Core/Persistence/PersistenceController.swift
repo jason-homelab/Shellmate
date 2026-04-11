@@ -1,4 +1,10 @@
 import CoreData
+import Foundation
+
+extension Notification.Name {
+    /// 持久化保存失败时发出，userInfo["error"] 为 NSError
+    static let persistenceSaveFailed = Notification.Name("app.shellmate.persistenceSaveFailed")
+}
 
 /// Core Data 持久化控制器
 /// 负责管理 Core Data 栈（CloudKit 同步暂时禁用，待后续配置）
@@ -83,7 +89,7 @@ final class PersistenceController {
         var storeLoadError: Error?
         container.loadPersistentStores { [weak container] storeDescription, error in
             if let error = error as NSError? {
-                print("❌ 持久化存储加载失败: \(error), \(error.userInfo)")
+                AppLogger.db.debug("❌ 持久化存储加载失败: \(error), \(error.userInfo)")
 
                 // 兜底：迁移不可挽救时删除旧库重建（开发阶段可接受数据丢失）
                 if let storeURL = storeDescription.url {
@@ -95,9 +101,9 @@ final class PersistenceController {
                             ofType: NSSQLiteStoreType, configurationName: nil,
                             at: storeURL, options: nil
                         )
-                        print("⚠️ 旧数据库已删除并重建")
+                        AppLogger.db.debug("⚠️ 旧数据库已删除并重建")
                     } catch {
-                        print("❌ 重建数据库也失败: \(error)")
+                        AppLogger.db.debug("❌ 重建数据库也失败: \(error)")
                         storeLoadError = error
                     }
                 } else {
@@ -126,7 +132,13 @@ final class PersistenceController {
             try context.save()
         } catch {
             let nsError = error as NSError
-            print("保存上下文失败: \(nsError), \(nsError.userInfo)")
+            AppLogger.db.debug("[PersistenceController] 保存上下文失败: \(nsError), \(nsError.userInfo)")
+            // 通过 NotificationCenter 将保存失败事件上报到 UI 层，避免用户无感知地丢失数据
+            NotificationCenter.default.post(
+                name: .persistenceSaveFailed,
+                object: self,
+                userInfo: ["error": nsError]
+            )
         }
     }
 
