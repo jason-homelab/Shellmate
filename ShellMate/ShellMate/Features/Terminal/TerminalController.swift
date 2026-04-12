@@ -94,8 +94,8 @@ final class TerminalController: ObservableObject {
 
     // MARK: - 属性
 
-    /// 会话配置
-    private let session: Session
+    /// 会话配置（internal：RecordingDialogView 通过 activeController.session.name 访问）
+    let session: Session
 
     /// 会话 ID 缓存（供 deinit 安全访问，避免在任意线程访问 Core Data 对象）
     private let sessionId: UUID
@@ -151,6 +151,14 @@ final class TerminalController: ObservableObject {
 
     /// Compose Pane 是否显示
     @Published var isComposePaneOpen: Bool = false
+
+    // MARK: - 终端录制（W13）
+
+    /// 当前会话的录制器（每个 Tab 独立实例，RecordingDialogView 通过此引用控制录制）
+    let recorder = SessionRecorder()
+
+    /// 录制对话框是否显示
+    @Published var isRecordingDialogOpen: Bool = false
 
     /// AI 命令补全上下文缓冲（最近 N 行终端输出，任务 14.8）
     private var _outputBuffer: String = ""
@@ -474,6 +482,7 @@ final class TerminalController: ObservableObject {
                         let decoded = String(bytes: terminalBytes, encoding: .utf8) ?? ""
                         self.appendToOutputBuffer(decoded)
                         self.logOutputLines(decoded)
+                        Task { await self.recorder.appendOutput(decoded) }
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
                             self.detectErrors(in: decoded)
                         }
@@ -486,6 +495,7 @@ final class TerminalController: ObservableObject {
                         let decoded2 = String(bytes: flushed, encoding: .utf8) ?? ""
                         self.appendToOutputBuffer(decoded2)
                         self.logOutputLines(decoded2)
+                        Task { await self.recorder.appendOutput(decoded2) }
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
                             self.detectErrors(in: decoded2)
                         }
@@ -952,7 +962,10 @@ final class TerminalController: ObservableObject {
     /// 发送 Compose Pane 中的命令内容到当前终端
     func sendComposeContent(_ text: String) {
         logInputEntry(text)
-        Task { try? await send(text) }
+        Task {
+            await recorder.appendInput(text)
+            try? await send(text)
+        }
     }
 
     /// 发送快捷命令到当前终端（支持逐行模式）

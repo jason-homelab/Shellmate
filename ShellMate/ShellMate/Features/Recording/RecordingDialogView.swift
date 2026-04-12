@@ -3,18 +3,19 @@ import SwiftUI
 // MARK: - 录制对话框（Figma-Spec-v2 §14 §6）
 
 /// 终端会话录制对话框
-/// 支持启动/停止录制、查看历史录制文件、在 Finder 中打开、删除
+/// recorder 由 TerminalController 持有并传入，确保数据管道正确连接。
 struct RecordingDialogView: View {
 
     // MARK: - 属性
 
     /// 当前活跃的会话名称（由调用方传入）
     let sessionName: String
+    /// 由 TerminalController 提供的录制器（每个 Tab 独立实例）
+    let recorder: SessionRecorder
     var onClose: () -> Void
 
     // MARK: - 录制状态
 
-    @State private var recorder = SessionRecorder()
     @State private var isRecording = false
     @State private var elapsedSeconds: TimeInterval = 0
     @State private var elapsedTimer: Timer?
@@ -64,7 +65,19 @@ struct RecordingDialogView: View {
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
-        .onAppear { loadRecordings() }
+        .onAppear {
+            loadRecordings()
+            // 同步录制器当前状态（面板打开时可能已在录制）
+            Task {
+                let recording = await recorder.isRecording
+                await MainActor.run {
+                    if recording && !isRecording {
+                        isRecording = true
+                        startTimer()
+                    }
+                }
+            }
+        }
         .onDisappear { stopTimer() }
         .confirmationDialog("删除录制", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button("删除", role: .destructive) {
@@ -134,7 +147,6 @@ struct RecordingDialogView: View {
                     .fill(isRecording ? Color(hex: "#ff3b30") : Color(hex: "#c7c7cc"))
                     .frame(width: 10, height: 10)
                     .overlay(
-                        // 录制中的脉冲动画
                         isRecording ?
                         Circle()
                             .stroke(Color(hex: "#ff3b30").opacity(0.4), lineWidth: 2)
@@ -257,6 +269,11 @@ struct RecordingDialogView: View {
                             .font(.system(size: 10, design: .monospaced))
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
+                    if recording.duration > 0 {
+                        Text(durationFormatted(recording.duration))
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundColor(DesignTokens.Colors.textTertiary)
+                    }
                 }
             }
 
@@ -306,7 +323,6 @@ struct RecordingDialogView: View {
 
     private var footerView: some View {
         HStack {
-            // 存储位置提示
             HStack(spacing: 4) {
                 Image(systemName: "folder")
                     .font(.system(size: 10))
@@ -329,7 +345,7 @@ struct RecordingDialogView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - 操作
+    // MARK: - 录制操作
 
     private func startRecording() {
         Task {
@@ -337,12 +353,6 @@ struct RecordingDialogView: View {
             await MainActor.run {
                 isRecording = true
                 startTimer()
-                // 发送通知，让 TerminalView 开始向 recorder 推送数据
-                NotificationCenter.default.post(
-                    name: .recordingStarted,
-                    object: nil,
-                    userInfo: ["sessionName": sessionName]
-                )
             }
         }
     }
@@ -368,7 +378,6 @@ struct RecordingDialogView: View {
                 await MainActor.run {
                     isSaving = false
                     recordings.insert(file, at: 0)
-                    NotificationCenter.default.post(name: .recordingStopped, object: nil)
                 }
             } catch {
                 await MainActor.run {
@@ -403,6 +412,12 @@ struct RecordingDialogView: View {
         if bytes < 1024 * 1024 { return String(format: "%.1f KB", Double(bytes) / 1024) }
         return String(format: "%.1f MB", Double(bytes) / (1024 * 1024))
     }
+
+    private func durationFormatted(_ seconds: TimeInterval) -> String {
+        let m = Int(seconds) / 60
+        let s = Int(seconds) % 60
+        return m > 0 ? "\(m)m\(s)s" : "\(s)s"
+    }
 }
 
 // MARK: - 通知名称
@@ -410,11 +425,4 @@ struct RecordingDialogView: View {
 extension Notification.Name {
     static let recordingStarted = Notification.Name("app.shellmate.recordingStarted")
     static let recordingStopped = Notification.Name("app.shellmate.recordingStopped")
-}
-
-// MARK: - 预览
-
-#Preview("录制对话框") {
-    RecordingDialogView(sessionName: "ubuntu@192.168.1.1", onClose: {})
-        .padding()
 }

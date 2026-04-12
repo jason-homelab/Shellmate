@@ -53,6 +53,12 @@ struct ContentView: View {
         return sessionStore.sessions.first(where: { $0.id == tab.sessionId })
     }
 
+    /// 当前活跃 Tab 对应的 TerminalController（通过注册表查找）
+    var activeController: TerminalController? {
+        guard let tab = tabBarStore.selectedTab, !tab.isLocalTerminal else { return nil }
+        return TerminalControllerRegistry.shared.controller(for: tab.sessionId)
+    }
+
     // MARK: - 视图
 
     var body: some View {
@@ -84,10 +90,20 @@ struct ContentView: View {
             sshConfigImportSheet
         }
         .sheet(isPresented: $showRecordingDialog) {
-            RecordingDialogView(
-                sessionName: activeSession?.name ?? "",
-                onClose: { showRecordingDialog = false }
-            )
+            if let ctrl = activeController {
+                RecordingDialogView(
+                    sessionName: ctrl.session.name,
+                    recorder: ctrl.recorder,
+                    onClose: { showRecordingDialog = false }
+                )
+            } else {
+                // 无活跃 SSH 会话（本地 Shell 或无连接），仅展示历史录制列表
+                RecordingDialogView(
+                    sessionName: activeSession?.name ?? "",
+                    recorder: SessionRecorder(),
+                    onClose: { showRecordingDialog = false }
+                )
+            }
         }
         .sheet(isPresented: $showLogPanel) {
             LogPanelView(onClose: { showLogPanel = false })

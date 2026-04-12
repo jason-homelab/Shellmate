@@ -150,6 +150,7 @@
 		MON010001 /* ServerMonitorPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MON020001 /* ServerMonitorPanelView.swift */; };
 		CE010001 /* ConnectionErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE020001 /* ConnectionErrorView.swift */; };
 		HW010001 /* HotkeyWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = HW020001 /* HotkeyWindowManager.swift */; };
+		TCR010001 /* TerminalControllerRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = TCR020001 /* TerminalControllerRegistry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -323,6 +324,7 @@
 		MON020001 /* ServerMonitorPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMonitorPanelView.swift; sourceTree = "<group>"; };
 		CE020001 /* ConnectionErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionErrorView.swift; sourceTree = "<group>"; };
 		HW020001 /* HotkeyWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyWindowManager.swift; sourceTree = "<group>"; };
+		TCR020001 /* TerminalControllerRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalControllerRegistry.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXVariantGroup section */
@@ -607,6 +609,7 @@
 				SM020002 /* ServerMetricsMonitor.swift */,
 				CS020002 /* CommandSafetyChecker.swift */,
 				NM020001 /* NetworkMonitor.swift */,
+				TCR020001 /* TerminalControllerRegistry.swift */,
 				SFP020001 /* SessionFormatParser.swift */,
 				AI030003 /* AI */,
 				0004000400040017 /* SSH */,
@@ -1083,6 +1086,7 @@
 				MON010001 /* ServerMonitorPanelView.swift in Sources */,
 				CE010001 /* ConnectionErrorView.swift in Sources */,
 				HW010001 /* HotkeyWindowManager.swift in Sources */,
+				TCR010001 /* TerminalControllerRegistry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -246,9 +246,14 @@ struct TerminalView: View {
             sessionFontSize = session.overrideFontSize > 0
                 ? Double(session.overrideFontSize)
                 : globalFontSize
+            // 注册至全局注册表，供 ContentView 查找 recorder 等
+            TerminalControllerRegistry.shared.register(controller, for: session.id)
             Task { @MainActor in
                 connect()
             }
+        }
+        .onDisappear {
+            TerminalControllerRegistry.shared.unregister(sessionId: session.id)
         }
         .onChange(of: globalFontSize) { newVal in
             // 无会话覆盖时同步全局变化，不覆盖有独立字号的会话
