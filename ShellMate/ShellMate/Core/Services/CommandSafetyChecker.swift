@@ -160,7 +160,7 @@ enum CommandSafetyChecker {
 
     // MARK: - ANSI 剥离
 
-    private static func stripANSI(_ text: String) -> String {
+    static func stripANSI(_ text: String) -> String {
         let pattern = #"\x1B\[[0-9;]*[A-Za-z]|\x1B\][^\x07]*\x07"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
         return regex.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "")

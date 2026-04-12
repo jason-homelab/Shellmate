@@ -146,6 +146,7 @@
 		REC010001 /* SessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = REC020001 /* SessionRecorder.swift */; };
 		REC010002 /* RecordingDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = REC020002 /* RecordingDialogView.swift */; };
 		LOG010001 /* LogPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG020001 /* LogPanelView.swift */; };
+		SLS010001 /* SessionLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SLS020001 /* SessionLogStore.swift */; };
 		MON010001 /* ServerMonitorPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MON020001 /* ServerMonitorPanelView.swift */; };
 		CE010001 /* ConnectionErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE020001 /* ConnectionErrorView.swift */; };
 		HW010001 /* HotkeyWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = HW020001 /* HotkeyWindowManager.swift */; };
@@ -318,6 +319,7 @@
 		REC020001 /* SessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecorder.swift; sourceTree = "<group>"; };
 		REC020002 /* RecordingDialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingDialogView.swift; sourceTree = "<group>"; };
 		LOG020001 /* LogPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogPanelView.swift; sourceTree = "<group>"; };
+		SLS020001 /* SessionLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStore.swift; sourceTree = "<group>"; };
 		MON020001 /* ServerMonitorPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMonitorPanelView.swift; sourceTree = "<group>"; };
 		CE020001 /* ConnectionErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionErrorView.swift; sourceTree = "<group>"; };
 		HW020001 /* HotkeyWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyWindowManager.swift; sourceTree = "<group>"; };
@@ -494,6 +496,7 @@
 				F203BE9FA85F4C38915F48CF /* SyncInputStore.swift */,
 				TM020002 /* TmuxConfigStore.swift */,
 				TM020003 /* TmuxSessionStore.swift */,
+				SLS020001 /* SessionLogStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -1076,6 +1079,7 @@
 				REC010001 /* SessionRecorder.swift in Sources */,
 				REC010002 /* RecordingDialogView.swift in Sources */,
 				LOG010001 /* LogPanelView.swift in Sources */,
+				SLS010001 /* SessionLogStore.swift in Sources */,
 				MON010001 /* ServerMonitorPanelView.swift in Sources */,
 				CE010001 /* ConnectionErrorView.swift in Sources */,
 				HW010001 /* HotkeyWindowManager.swift in Sources */,

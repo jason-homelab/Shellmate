@@ -251,6 +251,48 @@ final class TerminalController: ObservableObject {
         }
     }
 
+    // MARK: - 日志面板集成（任务 W14）
+
+    /// 将终端输出按行写入 SessionLogStore（去除 ANSI 转义码）
+    private func logOutputLines(_ raw: String) {
+        let clean = stripANSI(raw)
+        let lines = clean.components(separatedBy: "\n")
+        let now = Date()
+        let name = session.name
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .controlCharacters)
+            guard !trimmed.isEmpty else { continue }
+            SessionLogStore.shared.append(SessionLogEntry(
+                timestamp: now,
+                sessionName: name,
+                type: .output,
+                content: trimmed
+            ))
+        }
+    }
+
+    /// 写入用户输入日志（来自 Compose Pane 或快捷命令）
+    private func logInputEntry(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        SessionLogStore.shared.append(SessionLogEntry(
+            timestamp: Date(),
+            sessionName: session.name,
+            type: .input,
+            content: trimmed
+        ))
+    }
+
+    /// 写入系统事件日志
+    private func logSystemEvent(_ message: String) {
+        SessionLogStore.shared.append(SessionLogEntry(
+            timestamp: Date(),
+            sessionName: session.name,
+            type: .system,
+            content: message
+        ))
+    }
+
     private func detectErrors(in text: String) {
         errorOutputBuffer += text
         if errorOutputBuffer.count > 1024 {
@@ -431,6 +473,7 @@ final class TerminalController: ObservableObject {
                         self.appendToSessionLog(terminalBytes)
                         let decoded = String(bytes: terminalBytes, encoding: .utf8) ?? ""
                         self.appendToOutputBuffer(decoded)
+                        self.logOutputLines(decoded)
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
                             self.detectErrors(in: decoded)
                         }
@@ -442,6 +485,7 @@ final class TerminalController: ObservableObject {
                         self.appendToSessionLog(flushed)
                         let decoded2 = String(bytes: flushed, encoding: .utf8) ?? ""
                         self.appendToOutputBuffer(decoded2)
+                        self.logOutputLines(decoded2)
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
                             self.detectErrors(in: decoded2)
                         }
@@ -524,6 +568,7 @@ final class TerminalController: ObservableObject {
             state = .connected
             connectedAt = Date()
             delegate?.terminalController(self, didChangeState: state)
+            logSystemEvent("已连接至 \(session.host):\(session.port)（用户：\(session.username)）")
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
             tunnelManager.handleSSHConnected(config: sessionConfig, sessionID: session.id)
             // 启动性能指标轮询
@@ -605,6 +650,7 @@ final class TerminalController: ObservableObject {
         try? sessionLogHandle?.close()
         sessionLogHandle = nil
         sessionLogOpened = false
+        logSystemEvent("连接已正常断开")
         state = .disconnected
         connectedAt = nil
         delegate?.terminalController(self, didChangeState: state)
@@ -905,11 +951,13 @@ final class TerminalController: ObservableObject {
 
     /// 发送 Compose Pane 中的命令内容到当前终端
     func sendComposeContent(_ text: String) {
+        logInputEntry(text)
         Task { try? await send(text) }
     }
 
     /// 发送快捷命令到当前终端（支持逐行模式）
     func sendQuickCommand(_ command: QuickCommand) {
+        logInputEntry(command.content)
         let lines = command.content.components(separatedBy: "\n")
         if command.sendLineByLine && lines.count > 1 {
             Task { [weak self] in
@@ -1012,6 +1060,7 @@ final class TerminalController: ObservableObject {
     private func handleConnectionLost() {
         guard state == .connected else { return }
         tmuxStore.handleSSHDisconnected()
+        logSystemEvent("连接意外断开")
         state = .failed("连接已断开")
         delegate?.terminalController(self, didChangeState: state)
         if reconnectConfig.enabled && !userDisconnected { scheduleReconnect() }
