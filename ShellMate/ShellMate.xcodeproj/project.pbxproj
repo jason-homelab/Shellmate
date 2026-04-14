@@ -70,7 +70,7 @@
 		A1010006 /* CloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010006 /* CloudSyncSettingsView.swift */; };
 		A1010007 /* PasswordManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* PasswordManagerView.swift */; };
 		GS010001 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GS020001 /* GeneralSettingsView.swift */; };
-		A1010007 /* CredentialVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* CredentialVault.swift */; };
+		CRV010001 /* CredentialVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = CRV020001 /* CredentialVault.swift */; };
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
 		CS010002 /* CommandSafetyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS020002 /* CommandSafetyChecker.swift */; };
@@ -92,8 +92,6 @@
 		BB010003 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = BB010002 /* SwiftTerm */; };
 		BB020002 /* TerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020001 /* TerminalController.swift */; };
 		BB020004 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020003 /* TerminalView.swift */; };
-		LT010001 /* LocalTerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LT020001 /* LocalTerminalController.swift */; };
-		LT010002 /* LocalTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LT020002 /* LocalTerminalView.swift */; };
 		SP010001 /* SplitSessionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SP020001 /* SplitSessionPickerView.swift */; };
 		TP010001 /* TerminalPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TP020001 /* TerminalPlaceholderView.swift */; };
 		TV010001 /* TerminalTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV020001 /* TerminalTextView.swift */; };
@@ -245,7 +243,7 @@
 		A2010006 /* CloudSyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncSettingsView.swift; sourceTree = "<group>"; };
 		A2010007 /* PasswordManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordManagerView.swift; sourceTree = "<group>"; };
 		GS020001 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
-		A2010007 /* CredentialVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVault.swift; sourceTree = "<group>"; };
+		CRV020001 /* CredentialVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVault.swift; sourceTree = "<group>"; };
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
 		CS020002 /* CommandSafetyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandSafetyChecker.swift; sourceTree = "<group>"; };
@@ -266,8 +264,6 @@
 		SL020004 /* ScriptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditorSheet.swift; sourceTree = "<group>"; };
 		BB020001 /* TerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalController.swift; sourceTree = "<group>"; };
 		BB020003 /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
-		LT020001 /* LocalTerminalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTerminalController.swift; sourceTree = "<group>"; };
-		LT020002 /* LocalTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTerminalView.swift; sourceTree = "<group>"; };
 		SP020001 /* SplitSessionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitSessionPickerView.swift; sourceTree = "<group>"; };
 		TP020001 /* TerminalPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPlaceholderView.swift; sourceTree = "<group>"; };
 		TV020001 /* TerminalTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTextView.swift; sourceTree = "<group>"; };
@@ -448,6 +444,7 @@
 		0004000400040007 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				AC020001 /* AppConstants.swift */,
 				000400040004000F /* Components */,
 				0004000400040010 /* Extensions */,
 				0004000400040011 /* Utilities */,
@@ -537,8 +534,6 @@
 			children = (
 				BB020001 /* TerminalController.swift */,
 				BB020003 /* TerminalView.swift */,
-				LT020001 /* LocalTerminalController.swift */,
-				LT020002 /* LocalTerminalView.swift */,
 				SP020001 /* SplitSessionPickerView.swift */,
 				TP020001 /* TerminalPlaceholderView.swift */,
 				TV020001 /* TerminalTextView.swift */,
@@ -568,7 +563,6 @@
 			children = (
 				0002000200020012 /* Color+Hex.swift */,
 				CX020001 /* Collection+SafeSubscript.swift */,
-				AC020001 /* AppConstants.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -604,7 +598,7 @@
 			isa = PBXGroup;
 			children = (
 				0002000200020025 /* KeychainService.swift */,
-				A2010007 /* CredentialVault.swift */,
+				CRV020001 /* CredentialVault.swift */,
 				72E81447E44D4107AD35C4B6 /* HighlightEngine.swift */,
 				SM020002 /* ServerMetricsMonitor.swift */,
 				CS020002 /* CommandSafetyChecker.swift */,
@@ -999,13 +993,11 @@
 				BB020002 /* TerminalController.swift in Sources */,
 				BB020004 /* TerminalView.swift in Sources */,
 				BB020006 /* TerminalToolbarView.swift in Sources */,
-				LT010001 /* LocalTerminalController.swift in Sources */,
-				LT010002 /* LocalTerminalView.swift in Sources */,
 				SP010001 /* SplitSessionPickerView.swift in Sources */,
 				TP010001 /* TerminalPlaceholderView.swift in Sources */,
 				TV010001 /* TerminalTextView.swift in Sources */,
 				0001000100010021 /* KeychainService.swift in Sources */,
-				A1010007 /* CredentialVault.swift in Sources */,
+				CRV010001 /* CredentialVault.swift in Sources */,
 				SM010001 /* ServerMetrics.swift in Sources */,
 				SM010002 /* ServerMetricsMonitor.swift in Sources */,
 				CS010002 /* CommandSafetyChecker.swift in Sources */,

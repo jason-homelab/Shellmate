@@ -1,4 +1,4 @@
-# ShellMate Figma Spec v2
+# Terminal Pro Figma Spec v2
 
 > 基于 Figma Make 原型（`upl5OBUkpLGnOe1u5aQRZ5`）完全复刻生成的 UI 设计规范  
 > 生成日期：2026-04-02
@@ -18,7 +18,7 @@ Figma-Spec-v2/
 ├── 04-终端区域规范.md               Tab 标签栏、终端视图、AI 提示组件、主题色
 ├── 05-状态栏规范.md                 连接指示、CPU/内存/磁盘/网络指标、刷新频率
 ├── 06-新建会话弹窗规范.md           NewSessionDialog 字段、验证、保存行为
-├── 07-设置面板规范.md               SettingsDialog 三 Tab、Switch 组件规范
+├── 07-设置面板规范.md               SettingsDialog 五 Tab、Switch 组件规范
 ├── 08-文件传输面板规范.md           FileTransferPanel 双面板、文件列表、传输进度
 ├── 09-AI助手面板规范.md             AIAssistantPanel 消息气泡、命令块、输入区
 ├── 10-tmux管理器规范.md             TmuxManager 三 Tab、会话卡、窗口卡、快捷操作

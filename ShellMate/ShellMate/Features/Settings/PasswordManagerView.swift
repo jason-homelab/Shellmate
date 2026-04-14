@@ -142,7 +142,7 @@ struct PasswordManagerView: View {
             Text("暂无已保存的密码")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("在新建会话时勾选"记住密码"，密码将安全加密存储在本机")
+            Text("在新建会话时勾选\"记住密码\"，密码将安全加密存储在本机")
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .multilineTextAlignment(.center)

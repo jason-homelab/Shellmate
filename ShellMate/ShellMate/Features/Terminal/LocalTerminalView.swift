@@ -8,6 +8,13 @@ import AppKit
 /// 无需 SSH 连接，通过 POSIX PTY 运行本地 Shell（对标 iTerm2 本地标签）
 struct LocalTerminalView: View {
 
+    // MARK: - 外部依赖（可选：TabBarStore 集成，PRD §3.4.0）
+
+    /// 对应标签页 ID（用于同步标题 / 状态至 TabBarStore）
+    var tabId: UUID? = nil
+    /// TabBarStore 引用（用于同步标题 / 状态）
+    var tabBarStore: TabBarStore? = nil
+
     // MARK: - 控制器
 
     @StateObject private var controller = LocalTerminalController()
@@ -65,6 +72,23 @@ struct LocalTerminalView: View {
         }
         .onDisappear {
             controller.terminate()
+        }
+        // 标题同步：Shell OSC 2 更新标题 → TerminalTab.title（PRD §3.4.0）
+        .onChange(of: controller.terminalTitle) { newTitle in
+            guard let id = tabId, let store = tabBarStore else { return }
+            store.updateTitle(for: id, title: newTitle)
+        }
+        // 状态同步：Shell 进程运行 → .connected（绿），退出 → .offline（灰）（PRD §3.4.0）
+        .onChange(of: controller.state) { newState in
+            guard let id = tabId, let store = tabBarStore else { return }
+            switch newState {
+            case .running:
+                store.updateConnectionState(for: id, state: .connected)
+            case .terminated:
+                store.updateConnectionState(for: id, state: .offline)
+            case .idle:
+                break
+            }
         }
     }
 

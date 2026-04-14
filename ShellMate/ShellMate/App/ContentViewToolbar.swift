@@ -166,17 +166,6 @@ extension ContentView {
             .disabled(tabBarStore.selectedTab == nil)
             .help("tmux 管理器")
 
-            Divider()
-
-            // 13.7：本地 Shell 标签页（无需 SSH，直接运行本地 Shell）
-            Button {
-                tabBarStore.addLocalTerminalTab()
-            } label: {
-                Label("本地 Shell", systemImage: "desktopcomputer")
-                    .font(.system(size: 12))
-            }
-            .help("新建本地 Shell 标签页 (⌘⇧L)")
-            .keyboardShortcut("l", modifiers: [.command, .shift])
         }
 
         // ── 中间：当前会话名 pill ─────────────────────────────

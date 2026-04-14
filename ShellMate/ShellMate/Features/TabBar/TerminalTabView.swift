@@ -74,15 +74,7 @@ struct TerminalTabView: View {
     /// 状态指示器
     @ViewBuilder
     private var statusIndicator: some View {
-        if tab.isLocalTerminal {
-            // 本地 Shell：desktopcomputer 图标（任务 13.7-B，对标 MobaXterm）
-            Image(systemName: "desktopcomputer")
-                .font(.system(size: 9, weight: .medium))
-                .foregroundColor(isSelected
-                    ? DesignTokens.Colors.accentPrimary
-                    : DesignTokens.Colors.textTertiary)
-                .frame(width: 12, height: 12)
-        } else if tab.isLoading {
+        if tab.isLoading {
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle())
                 .scaleEffect(0.5)

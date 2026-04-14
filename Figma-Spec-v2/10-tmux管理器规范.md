@@ -1,4 +1,4 @@
-# ShellMate UI 设计规范 v2 — Tmux 管理器（TmuxManager）
+# Terminal Pro UI 设计规范 v2 — Tmux 管理器（TmuxManager）
 
 ---
 

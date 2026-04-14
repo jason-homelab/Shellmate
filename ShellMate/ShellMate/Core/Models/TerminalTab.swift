@@ -27,9 +27,6 @@ struct TerminalTab: Identifiable, Equatable, Hashable {
     /// 是否可关闭
     var isClosable: Bool
 
-    /// 是否为本地终端模式（无需 SSH 连接，直接运行本地 Shell）
-    var isLocalTerminal: Bool
-
     // MARK: - 初始化
 
     init(
@@ -39,8 +36,7 @@ struct TerminalTab: Identifiable, Equatable, Hashable {
         connectionState: ConnectionState = .offline,
         isLoading: Bool = false,
         createdAt: Date = Date(),
-        isClosable: Bool = true,
-        isLocalTerminal: Bool = false
+        isClosable: Bool = true
     ) {
         self.id = id
         self.sessionId = sessionId
@@ -49,7 +45,6 @@ struct TerminalTab: Identifiable, Equatable, Hashable {
         self.isLoading = isLoading
         self.createdAt = createdAt
         self.isClosable = isClosable
-        self.isLocalTerminal = isLocalTerminal
     }
 
     // MARK: - 便捷初始化
@@ -63,17 +58,6 @@ struct TerminalTab: Identifiable, Equatable, Hashable {
         self.isLoading = false
         self.createdAt = Date()
         self.isClosable = true
-        self.isLocalTerminal = false
-    }
-
-    /// 创建本地终端标签页
-    static func localTerminal() -> TerminalTab {
-        TerminalTab(
-            sessionId: UUID(),    // 占位 UUID，不对应任何 Session
-            title: "本地 Shell",
-            connectionState: .connected,
-            isLocalTerminal: true
-        )
     }
 }
 

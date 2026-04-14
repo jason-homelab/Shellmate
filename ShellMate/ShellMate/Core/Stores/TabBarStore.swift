@@ -46,12 +46,7 @@ final class TabBarStore: ObservableObject {
 
     // MARK: - 初始化
 
-    init() {
-        // 冷启动：自动打开本地 Shell（任务 13.7-B，对标 MobaXterm）
-        let localTab = TerminalTab.localTerminal()
-        tabs = [localTab]
-        selectedTabId = localTab.id
-    }
+    init() {}
 
     // MARK: - 标签页管理
 
@@ -73,16 +68,6 @@ final class TabBarStore: ObservableObject {
         selectedTabId = tab.id
     }
 
-    /// 添加本地终端标签页（任务 13.7）
-    /// - Returns: 新创建的本地终端标签页
-    @discardableResult
-    func addLocalTerminalTab() -> TerminalTab {
-        let tab = TerminalTab.localTerminal()
-        tabs.append(tab)
-        selectedTabId = tab.id
-        return tab
-    }
-
     /// 关闭标签页
     /// - Parameter tab: 要关闭的标签页
     func closeTab(_ tab: TerminalTab) {
@@ -101,13 +86,6 @@ final class TabBarStore: ObservableObject {
         }
 
         tabs.remove(at: index)
-
-        // 最后一个标签关闭后自动补开本地 Shell（任务 13.7-B）
-        if tabs.isEmpty {
-            let localTab = TerminalTab.localTerminal()
-            tabs.append(localTab)
-            selectedTabId = localTab.id
-        }
     }
 
     /// 请求关闭标签页（带确认）
@@ -137,14 +115,10 @@ final class TabBarStore: ObservableObject {
         isShowingCloseConfirmation = false
     }
 
-    /// 关闭所有标签页（随后自动补开本地 Shell）
+    /// 关闭所有标签页
     func closeAllTabs() {
         tabs.removeAll()
         selectedTabId = nil
-        // 自动补开本地 Shell（任务 13.7-B）
-        let localTab = TerminalTab.localTerminal()
-        tabs.append(localTab)
-        selectedTabId = localTab.id
     }
 
     /// 关闭其他标签页

@@ -55,7 +55,7 @@ struct ContentView: View {
 
     /// 当前活跃 Tab 对应的 TerminalController（通过注册表查找）
     var activeController: TerminalController? {
-        guard let tab = tabBarStore.selectedTab, !tab.isLocalTerminal else { return nil }
+        guard let tab = tabBarStore.selectedTab else { return nil }
         return TerminalControllerRegistry.shared.controller(for: tab.sessionId)
     }
 
@@ -303,31 +303,32 @@ struct ContentView: View {
         }
     }
 
-    /// 四格分屏中单个额外格子：有会话则显示 TerminalView，否则显示本地 Shell
+    /// 四格分屏中单个额外格子：有会话则显示 TerminalView，否则显示占位视图
     @ViewBuilder
     private func gridPanel(session: Session?) -> some View {
         if let session {
             TerminalView(session: session)
         } else {
-            LocalTerminalView()
+            TerminalPlaceholderView(onNewSession: { sessionStore.showNewSessionForm() })
         }
     }
 
     /// 主终端标签栈（ZStack + opacity 保持多标签连接存活，TC-004）
     private var mainTerminalStack: some View {
         ZStack {
-            ForEach(tabBarStore.tabs) { tab in
-                Group {
-                    if tab.isLocalTerminal {
-                        // 13.7：本地终端标签页（无需 SSH）
-                        LocalTerminalView()
-                    } else if let session = sessionStore.sessions.first(where: { $0.id == tab.sessionId }) {
-                        TerminalView(session: session)
+            if tabBarStore.tabs.isEmpty {
+                TerminalPlaceholderView(onNewSession: { sessionStore.showNewSessionForm() })
+            } else {
+                ForEach(tabBarStore.tabs) { tab in
+                    Group {
+                        if let session = sessionStore.sessions.first(where: { $0.id == tab.sessionId }) {
+                            TerminalView(session: session)
+                        }
                     }
+                    .opacity(tabBarStore.selectedTabId == tab.id ? 1 : 0)
+                    .zIndex(tabBarStore.selectedTabId == tab.id ? 1 : 0)
+                    .allowsHitTesting(tabBarStore.selectedTabId == tab.id)
                 }
-                .opacity(tabBarStore.selectedTabId == tab.id ? 1 : 0)
-                .zIndex(tabBarStore.selectedTabId == tab.id ? 1 : 0)
-                .allowsHitTesting(tabBarStore.selectedTabId == tab.id)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

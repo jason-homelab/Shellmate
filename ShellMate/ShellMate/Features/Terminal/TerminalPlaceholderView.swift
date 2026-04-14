@@ -16,6 +16,9 @@ struct TerminalPlaceholderView: View {
     /// 连接回调
     var onConnect: (() -> Void)?
 
+    /// 新建会话回调（空状态按钮触发）
+    var onNewSession: (() -> Void)?
+
     /// SSH 连接桥接（系统 ssh 命令）
     @State private var sshBridge: SSHProcessBridge?
 
@@ -139,68 +142,108 @@ struct TerminalPlaceholderView: View {
         .frame(width: 320, height: 200)
     }
 
-    // MARK: - 会话信息视图
+    // MARK: - 会话信息视图（高保真连接卡片）
 
     @ViewBuilder
     private func sessionInfoView(_ session: Session) -> some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            // 状态图标
-            ZStack {
-                Circle()
-                    .fill(DesignTokens.Colors.surfaceCard)
-                    .frame(width: 80, height: 80)
+        VStack(spacing: 0) {
+            Spacer()
 
-                Image(systemName: "terminal.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
-            }
+            VStack(spacing: 24) {
+                // 会话图标卡片（渐变圆角，与 Figma SessionRow icon 保持视觉延续）
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(hex: "#007aff").opacity(0.12),
+                                    Color(hex: "#5856d6").opacity(0.12)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .strokeBorder(Color(hex: "#007aff").opacity(0.18), lineWidth: 1)
+                        )
 
-            // 会话名称
-            Text(session.name)
-                .font(DesignTokens.Typography.titleLarge)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
-
-            // 连接信息
-            Text("\(session.username)@\(session.host):\(session.port)")
-                .font(DesignTokens.Typography.codeMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            // 连接状态
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                StatusDotView(state: session.connectionState)
-
-                Text(session.connectionState.displayName)
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(session.connectionState.dotColor)
-            }
-            .padding(.top, DesignTokens.Spacing.sm)
-
-            // 连接按钮
-            if connectionState == .offline {
-                Button(action: {
-                    initiateConnect()
-                }) {
-                    HStack(spacing: DesignTokens.Spacing.sm) {
-                        Image(systemName: "bolt.fill")
-                        Text("连接")
-                    }
-                    .font(DesignTokens.Typography.labelLarge)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, DesignTokens.Spacing.xxl)
-                    .padding(.vertical, DesignTokens.Spacing.md)
-                    .background(DesignTokens.Colors.accentPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                    Image(systemName: "terminal.fill")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
-                .buttonStyle(.plain)
-                .padding(.top, DesignTokens.Spacing.lg)
-            } else if connectionState == .connecting {
-                ProgressView()
-                    .padding(.top, DesignTokens.Spacing.lg)
-                Text("正在连接...")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+
+                // 会话信息文字组
+                VStack(spacing: 6) {
+                    Text(session.name)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color(hex: "#1d1d1f"))
+
+                    Text("\(session.username)@\(session.host):\(session.port)")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(Color(hex: "#86868b"))
+                }
+
+                // 连接状态 Pill
+                HStack(spacing: 6) {
+                    StatusDotView(state: session.connectionState)
+                    Text(session.connectionState.displayName)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(session.connectionState.dotColor)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(session.connectionState.dotColor.opacity(0.08))
+                .clipShape(Capsule())
+
+                // 操作区
+                if connectionState == .offline {
+                    Button(action: { initiateConnect() }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("连接")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Color(hex: "#007aff"))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 8, x: 0, y: 3)
+                    }
+                    .buttonStyle(.plain)
+                } else if connectionState == .connecting {
+                    VStack(spacing: 8) {
+                        ProgressView()
+                        Text("正在连接...")
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "#86868b"))
+                    }
+                }
             }
+            .padding(40)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.80))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.75)
+                    )
+            )
+            .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 6)
+            .frame(maxWidth: 320)
+
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - 连接方法
@@ -407,24 +450,65 @@ struct TerminalPlaceholderView: View {
     }
 
 
-    // MARK: - 空状态视图
+    // MARK: - 空状态视图（Figma-Spec-v2 §01 §4）
 
     private var emptyStateView: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "terminal")
-                .font(.system(size: 64, weight: .light))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+        VStack(spacing: 20) {
+            // 渐变圆角图标容器：96×96px，from-[#007aff]/10 to-[#5856d6]/10
+            ZStack {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(hex: "#007aff").opacity(0.10),
+                                Color(hex: "#5856d6").opacity(0.10)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 96, height: 96)
+                Image(systemName: "desktopcomputer")
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
 
-            Text("选择一个会话开始")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+            // 主标题：text-xl semibold #1d1d1f
+            Text("暂无活跃会话")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(Color(hex: "#1d1d1f"))
 
-            Text("从左侧边栏选择一个会话，或双击会话以连接")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+            // 副文字：text-sm #86868b
+            Text("在侧边栏选择或新建一个会话开始")
+                .font(.system(size: 14))
+                .foregroundColor(Color(hex: "#86868b"))
                 .multilineTextAlignment(.center)
+
+            // 新建会话按钮：bg-primary rounded-xl
+            Button(action: { onNewSession?() }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("新建会话")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Color(hex: "#007aff"))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 8, x: 0, y: 3)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
         }
-        .padding(DesignTokens.Spacing.xxxl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

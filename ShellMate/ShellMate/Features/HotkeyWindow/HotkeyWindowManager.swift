@@ -166,8 +166,8 @@ final class HotkeyWindowManager {
 
 // MARK: - Hotkey 终端内容视图
 
-/// Hotkey Window 内部的本地终端视图
-/// 上方紧凑标题条 + 下方全屏 LocalTerminalView
+/// Hotkey Window 内部的终端视图
+/// 上方紧凑标题条 + 下方占位区域（本地Shell功能已移除）
 struct HotkeyTerminalContentView: View {
 
     var onClose: () -> Void
@@ -175,15 +175,20 @@ struct HotkeyTerminalContentView: View {
     // MARK: - 视图
 
     var body: some View {
-        VStack(spacing: 0) {
+        let base = VStack(spacing: 0) {
             titleBar
-            LocalTerminalView()
+            TerminalPlaceholderView()
         }
         .background(Color.black)
-        // ⎋ 关闭面板
-        .onKeyPress(.escape) {
-            onClose()
-            return .handled
+
+        // ⎋ 关闭面板（onKeyPress 需 macOS 14+，低版本忽略，ESC 通过 NSPanel responder chain 处理）
+        if #available(macOS 14.0, *) {
+            base.onKeyPress(.escape) {
+                onClose()
+                return .handled
+            }
+        } else {
+            base
         }
     }
 

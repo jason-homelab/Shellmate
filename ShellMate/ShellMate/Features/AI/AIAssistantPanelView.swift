@@ -991,7 +991,7 @@ struct AIPrivacyConsentView: View {
                     icon: "text.alignleft",
                     color: Color(hex: "#007aff"),
                     title: "会发送的数据",
-                    body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击"发送给 AI"时的终端输出片段（最近 50 行）"
+                    body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击\"发送给 AI\"时的终端输出片段（最近 50 行）"
                 )
                 privacyItem(
                     icon: "lock.slash",

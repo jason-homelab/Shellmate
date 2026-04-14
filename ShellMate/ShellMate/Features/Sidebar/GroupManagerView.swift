@@ -53,7 +53,7 @@ struct GroupManagerView: View {
             }
         } message: {
             if let group = pendingDeleteGroup {
-                Text("将删除分组「\(group.name)」，该分组下的会话将归入"无分组"。")
+                Text("将删除分组「\(group.name)」，该分组下的会话将归入\"无分组\"。")
             }
         }
     }
