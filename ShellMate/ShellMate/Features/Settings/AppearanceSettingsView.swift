@@ -618,7 +618,7 @@ private struct ThemeCardView: View {
                             .foregroundColor(theme.outputColor)
                     }
                     .font(.system(size: 8, design: .monospaced))
-                    .padding(7)
+                    .padding(DesignTokens.Spacing.xs)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
@@ -730,7 +730,7 @@ private struct CustomThemeEditorSheet: View {
                         .foregroundColor(outputColor.opacity(0.45))
                 }
                 .font(.system(size: 11, design: .monospaced))
-                .padding(12)
+                .padding(DesignTokens.Spacing.md)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(bgColor)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))

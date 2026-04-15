@@ -96,7 +96,7 @@ struct TerminalPlaceholderView: View {
                 .buttonStyle(.bordered)
             }
             .padding(DesignTokens.Spacing.md)
-            .background(Color(hex: "#f5f5f7").opacity(0.90))
+            .background(DesignTokens.Colors.surfaceWindow.opacity(0.90))
             .background(.ultraThinMaterial)
 
             // 终端区域：使用 ShellMateTerminalView 处理 ANSI 序列
@@ -156,8 +156,8 @@ struct TerminalPlaceholderView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(hex: "#007aff").opacity(0.12),
-                                    Color(hex: "#5856d6").opacity(0.12)
+                                    DesignTokens.Colors.accentPrimary.opacity(0.12),
+                                    DesignTokens.Colors.accentIndigo.opacity(0.12)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -166,14 +166,14 @@ struct TerminalPlaceholderView: View {
                         .frame(width: 80, height: 80)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .strokeBorder(Color(hex: "#007aff").opacity(0.18), lineWidth: 1)
+                                .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 1)
                         )
 
                     Image(systemName: "terminal.fill")
                         .font(.system(size: 32, weight: .light))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                                colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -184,11 +184,11 @@ struct TerminalPlaceholderView: View {
                 VStack(spacing: 6) {
                     Text(session.name)
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(Color(hex: "#1d1d1f"))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
 
                     Text("\(session.username)@\(session.host):\(session.port)")
                         .font(.system(size: 13, design: .monospaced))
-                        .foregroundColor(Color(hex: "#86868b"))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
 
                 // 连接状态 Pill
@@ -213,11 +213,11 @@ struct TerminalPlaceholderView: View {
                                 .font(.system(size: 14, weight: .semibold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 10)
-                        .background(Color(hex: "#007aff"))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 8, x: 0, y: 3)
+                        .padding(.horizontal, DesignTokens.Spacing.xxl)
+                        .padding(.vertical, DesignTokens.Spacing.sm)
+                        .background(DesignTokens.Colors.accentPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                        .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 8, x: 0, y: 3)
                     }
                     .buttonStyle(.plain)
                 } else if connectionState == .connecting {
@@ -225,17 +225,17 @@ struct TerminalPlaceholderView: View {
                         ProgressView()
                         Text("正在连接...")
                             .font(.system(size: 13))
-                            .foregroundColor(Color(hex: "#86868b"))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
                     }
                 }
             }
-            .padding(40)
+            .padding(DesignTokens.Spacing.xxxl)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                     .fill(Color.white.opacity(0.80))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.75)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
                     )
             )
             .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 6)
@@ -460,8 +460,8 @@ struct TerminalPlaceholderView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(hex: "#007aff").opacity(0.10),
-                                Color(hex: "#5856d6").opacity(0.10)
+                                DesignTokens.Colors.accentPrimary.opacity(0.10),
+                                DesignTokens.Colors.accentIndigo.opacity(0.10)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -472,7 +472,7 @@ struct TerminalPlaceholderView: View {
                     .font(.system(size: 40, weight: .light))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+                            colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -480,30 +480,26 @@ struct TerminalPlaceholderView: View {
             }
 
             // 主标题：text-xl semibold #1d1d1f
-            Text("暂无活跃会话")
+            Text("No Active Sessions")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             // 副文字：text-sm #86868b
-            Text("在侧边栏选择或新建一个会话开始")
+            Text("Select a session from the sidebar to get started")
                 .font(.system(size: 14))
-                .foregroundColor(Color(hex: "#86868b"))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)
 
             // 新建会话按钮：bg-primary rounded-xl
             Button(action: { onNewSession?() }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text("新建会话")
-                        .font(.system(size: 14, weight: .semibold))
-                }
+                Text("Create New Session")
+                    .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(Color(hex: "#007aff"))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 8, x: 0, y: 3)
+                .padding(.horizontal, DesignTokens.Spacing.xl)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 8, x: 0, y: 3)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)

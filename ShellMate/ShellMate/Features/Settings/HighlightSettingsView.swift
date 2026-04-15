@@ -313,7 +313,7 @@ struct HighlightSettingsView: View {
                 .disabled(newPattern.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         .overlay(

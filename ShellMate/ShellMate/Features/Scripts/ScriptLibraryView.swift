@@ -21,6 +21,8 @@ struct ScriptLibraryView: View {
     @State private var isRunning: Bool = false
     @State private var showScheduleAlert: Bool = false
     @State private var scheduleInput: String = ""
+    /// 已折叠的分类名集合
+    @State private var collapsedCategories: Set<String> = []
 
     private var selectedScript: Script? {
         guard let id = selectedScriptId else { return nil }
@@ -127,12 +129,12 @@ struct ScriptLibraryView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Record Session
+                // Record Session（Video 图标，variant=outline）
                 Button {
                     // TODO: 录制会话功能（后续迭代实现）
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: "record.circle")
+                        Image(systemName: "video")
                             .font(.system(size: 12, weight: .semibold))
                         Text("Record Session")
                             .font(.system(size: 13, weight: .medium))
@@ -153,16 +155,25 @@ struct ScriptLibraryView: View {
 
             Divider()
 
-            // 脚本列表
+            // 脚本列表（可折叠分类）
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
                     ForEach(store.groupedScripts, id: \.category) { group in
+                        let isCollapsed = collapsedCategories.contains(group.category)
                         Section {
-                            ForEach(group.scripts) { script in
-                                scriptRow(script)
+                            if !isCollapsed {
+                                ForEach(group.scripts) { script in
+                                    scriptRow(script)
+                                }
                             }
                         } header: {
-                            categoryHeader(group.category)
+                            categoryHeader(group.category, isCollapsed: isCollapsed) {
+                                if isCollapsed {
+                                    collapsedCategories.remove(group.category)
+                                } else {
+                                    collapsedCategories.insert(group.category)
+                                }
+                            }
                         }
                     }
                 }
@@ -177,7 +188,8 @@ struct ScriptLibraryView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.orange)
                     .frame(width: 28, height: 28)
-                Image(systemName: "chevron.left.forwardslash.chevron.right")
+                // FileCode 图标（对齐 Figma-Spec-v2 §14 更新：Code2 → FileCode）
+                Image(systemName: "doc.text.fill")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -199,18 +211,25 @@ struct ScriptLibraryView: View {
         .padding(.vertical, 10)
     }
 
-    private func categoryHeader(_ category: String) -> some View {
-        HStack {
-            Text(category.uppercased())
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .tracking(0.8)
-            Spacer()
+    private func categoryHeader(_ category: String, isCollapsed: Bool, onToggle: @escaping () -> Void) -> some View {
+        Button(action: onToggle) {
+            HStack {
+                Text(category.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .tracking(0.8)
+                Spacer()
+                Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+            .background(Color(NSColor.controlBackgroundColor))
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
-        .background(Color(NSColor.controlBackgroundColor))
+        .buttonStyle(.plain)
     }
 
     private func scriptRow(_ script: Script) -> some View {
@@ -448,7 +467,7 @@ struct ScriptLibraryView: View {
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(Color(hex: "#D4D4D4"))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
+                    .padding(DesignTokens.Spacing.lg)
                     .textSelection(.enabled)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -494,7 +513,7 @@ struct ScriptLibraryView: View {
                                 logLine(entry)
                             }
                         }
-                        .padding(12)
+                        .padding(DesignTokens.Spacing.md)
                     }
                     .onChange(of: executionLogs.count) { _ in
                         if let last = executionLogs.last {
@@ -506,7 +525,7 @@ struct ScriptLibraryView: View {
         }
         .background(Color(hex: "#1E1E1E"))
         .frame(maxHeight: .infinity)
-        .frame(width: 320)
+        .frame(width: 384)  // w-96 对齐 Figma-Spec-v2 §14 更新
     }
 
     private func logLine(_ entry: ScriptLogEntry) -> some View {

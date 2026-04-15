@@ -58,7 +58,7 @@ struct SessionSidebarView: View {
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
         // Figma: bg-[#f5f5f7]/95 backdrop-blur-xl border-r border-[#d2d2d7]/50
         .background(.ultraThinMaterial)
-        .background(Color(hex: "#f5f5f7").opacity(0.95))
+        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
         .task {
             await loadData()
         }
@@ -86,7 +86,7 @@ struct SessionSidebarView: View {
             // Figma: text-sm font-medium text-[#1d1d1f]
             Text("会话")
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 
@@ -96,8 +96,8 @@ struct SessionSidebarView: View {
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            // 分组管理（任务 13.17）
-            sidebarIconButton(systemImage: "folder.badge.plus", tooltip: "分组管理 (⌘⇧N)") {
+            // 分组管理（FolderCog，对齐 Figma-Spec-v2 §02）
+            sidebarIconButton(systemImage: "folder.badge.gearshape", tooltip: "分组管理 (⌘⇧N)") {
                 showGroupManager = true
             }
             .sheet(isPresented: $showGroupManager) {
@@ -125,6 +125,7 @@ struct SessionSidebarView: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -143,22 +144,15 @@ struct SessionSidebarView: View {
                 .fill(Color.white.opacity(0.40))
                 .overlay(alignment: .bottom) {
                     Rectangle()
-                        .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                        .fill(DesignTokens.Colors.borderPrimary)
                         .frame(height: 0.5)
                 }
         }
     }
 
     private func sidebarIconButton(systemImage: String, tooltip: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(tooltip)
+        HoverIconButton(systemImage: systemImage, size: DesignTokens.Sizes.iconButtonSize, action: action)
+            .help(tooltip)
     }
 
     // MARK: - 加载中视图
@@ -249,6 +243,32 @@ struct SidebarToolbarView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+}
+
+// MARK: - 悬停图标按钮（对齐 Figma h-7 w-7 rounded-lg hover:bg-black/5）
+
+/// 带悬停背景的小图标按钮，用于侧边栏/工具栏
+struct HoverIconButton: View {
+    let systemImage: String
+    var size: CGFloat = 28
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .frame(width: size, height: size)
+                .background(isHovering ? Color.black.opacity(0.05) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }
+        }
     }
 }
 

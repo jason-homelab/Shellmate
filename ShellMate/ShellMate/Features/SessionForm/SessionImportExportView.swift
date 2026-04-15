@@ -3,6 +3,10 @@ import UniformTypeIdentifiers
 
 // MARK: - 导入/导出弹窗（Figma-Spec-v2 §14 §3）
 
+/// 对齐 Figma-Spec-v2 §14 更新：
+///   导出 Tab → 只读 JSON Textarea + 复制/下载按钮
+///   导入 Tab → 可编辑粘贴区 + 选择文件按钮
+///   弹窗宽度 600pt
 struct SessionImportExportView: View {
 
     // MARK: - 属性
@@ -11,27 +15,19 @@ struct SessionImportExportView: View {
     var onImport: ([Session]) -> Void
     var onClose: () -> Void
 
-    // MARK: - 导出状态
+    // MARK: - 状态
 
     @State private var activeTab: ExportTab = .export
-    @State private var selectedSessionIds: Set<UUID> = []
-    @State private var exportFormat: ExportFormat = .json
 
-    // MARK: - 导入状态
-
-    @State private var isDraggingOver = false
+    /// 导出 Tab：生成好的 JSON 预览文本（只读）
+    @State private var exportJSONPreview: String = ""
+    /// 导入 Tab：用户粘贴的文本内容
+    @State private var importPasteText: String = ""
     @State private var importError: String?
-    @State private var importPreview: [Session] = []
-    @State private var showImportPreview = false
 
     enum ExportTab: String, CaseIterable {
         case export = "导出"
         case `import` = "导入"
-    }
-
-    enum ExportFormat: String, CaseIterable {
-        case json = "JSON"
-        case csv  = "CSV"
     }
 
     // MARK: - 视图
@@ -46,19 +42,18 @@ struct SessionImportExportView: View {
             Divider()
             footerView
         }
-        .frame(width: 500)
+        .frame(width: 600)
         .frame(minHeight: 380, maxHeight: 560)
         .background(Color.white.opacity(0.95))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .onAppear {
-            // 默认全选
-            selectedSessionIds = Set(sessions.map(\.id))
+            generateExportPreview()
         }
     }
 
@@ -97,7 +92,7 @@ struct SessionImportExportView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 14)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
     // MARK: - Tab 选择器
@@ -109,8 +104,8 @@ struct SessionImportExportView: View {
                     Text(tab.rawValue)
                         .font(.system(size: 12, weight: activeTab == tab ? .semibold : .regular))
                         .foregroundColor(activeTab == tab
-                            ? Color(hex: "#1d1d1f")
-                            : Color(hex: "#6e6e73"))
+                            ? DesignTokens.Colors.textPrimary
+                            : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
                         .background(activeTab == tab
@@ -123,11 +118,11 @@ struct SessionImportExportView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(4)
+        .padding(DesignTokens.Spacing.xxs)
         .background(Color.black.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 10)
+        .padding(.vertical, DesignTokens.Spacing.sm)
     }
 
     // MARK: - 内容区
@@ -142,243 +137,135 @@ struct SessionImportExportView: View {
         }
     }
 
-    // MARK: - 导出 Tab
+    // MARK: - 导出 Tab（只读 JSON Textarea + 复制 + 下载）
 
     private var exportTabContent: some View {
-        VStack(spacing: 0) {
-            // 格式选择 + 全选
-            HStack {
-                // 格式选择
-                HStack(spacing: 6) {
-                    Text("格式：")
-                        .font(.system(size: 12))
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                    ForEach(ExportFormat.allCases, id: \.rawValue) { fmt in
-                        Button(action: { exportFormat = fmt }) {
-                            Text(fmt.rawValue)
-                                .font(.system(size: 11, weight: exportFormat == fmt ? .semibold : .regular))
-                                .foregroundColor(exportFormat == fmt
-                                    ? DesignTokens.Colors.accentPrimary
-                                    : DesignTokens.Colors.textSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(exportFormat == fmt
-                                    ? DesignTokens.Colors.accentPrimary.opacity(0.10)
-                                    : Color.clear)
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                Spacer()
-
-                Button(allExportSelected ? "取消全选" : "全选") {
-                    if allExportSelected {
-                        selectedSessionIds.removeAll()
-                    } else {
-                        selectedSessionIds = Set(sessions.map(\.id))
-                    }
-                }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
-                .buttonStyle(.plain)
-
-                Text("\(selectedSessionIds.count)/\(sessions.count)")
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-            .padding(.horizontal, DesignTokens.Spacing.lg)
-            .padding(.vertical, 8)
-            .background(DesignTokens.Colors.surfaceCard)
-            .overlay(Divider(), alignment: .bottom)
-
-            // 会话复选框列表
+        VStack(spacing: DesignTokens.Spacing.md) {
+            // 只读 JSON 预览区
             ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(sessions) { session in
-                        sessionExportRow(session)
-                    }
+                Text(exportJSONPreview.isEmpty ? "（无会话可导出）" : exportJSONPreview)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(exportJSONPreview.isEmpty
+                        ? DesignTokens.Colors.textTertiary
+                        : DesignTokens.Colors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(DesignTokens.Spacing.sm)
+            }
+            .frame(height: 220)
+            .background(DesignTokens.Colors.surfaceWindow.opacity(0.80))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+            )
+
+            // 操作按钮行
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(exportJSONPreview, forType: .string)
+                } label: {
+                    Label("复制", systemImage: "doc.on.doc")
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, DesignTokens.Spacing.lg)
-                .padding(.vertical, 8)
+                .buttonStyle(.bordered)
+                .disabled(exportJSONPreview.isEmpty)
+
+                Button {
+                    exportAsJSON(sessions)
+                } label: {
+                    Label("下载文件", systemImage: "arrow.down.circle")
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(sessions.isEmpty)
             }
         }
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
-    private var allExportSelected: Bool {
-        !sessions.isEmpty && sessions.allSatisfy { selectedSessionIds.contains($0.id) }
-    }
-
-    private func sessionExportRow(_ session: Session) -> some View {
-        let isSelected = selectedSessionIds.contains(session.id)
-        return HStack(spacing: 10) {
-            Button {
-                if isSelected { selectedSessionIds.remove(session.id) }
-                else { selectedSessionIds.insert(session.id) }
-            } label: {
-                Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 15))
-                    .foregroundColor(isSelected
-                        ? DesignTokens.Colors.accentPrimary
-                        : DesignTokens.Colors.textTertiary)
-            }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(session.name)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("\(session.username)@\(session.host):\(session.port)")
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(isSelected
-            ? DesignTokens.Colors.accentPrimary.opacity(0.04)
-            : Color.white.opacity(0.70))
-        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .strokeBorder(isSelected
-                    ? DesignTokens.Colors.accentPrimary.opacity(0.20)
-                    : Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isSelected { selectedSessionIds.remove(session.id) }
-            else { selectedSessionIds.insert(session.id) }
-        }
-    }
-
-    // MARK: - 导入 Tab
+    // MARK: - 导入 Tab（粘贴文本区 + 文件选择按钮）
 
     private var importTabContent: some View {
-        VStack(spacing: 12) {
-            // 拖拽区域
-            dropZoneView
-                .padding(.horizontal, DesignTokens.Spacing.lg)
-                .padding(.top, DesignTokens.Spacing.md)
+        VStack(spacing: DesignTokens.Spacing.md) {
+            // 可编辑粘贴区
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $importPasteText)
+                    .font(.system(size: 11, design: .monospaced))
+                    .frame(height: 180)
+                    .scrollContentBackground(.hidden)
+                    .background(DesignTokens.Colors.surfaceWindow.opacity(0.80))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                    )
 
-            // 格式说明
-            formatHintView
-
-            // 或提示
-            HStack {
-                VStack { Divider() }
-                Text("或")
-                    .font(.system(size: 11))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                    .padding(.horizontal, 8)
-                VStack { Divider() }
-            }
-            .padding(.horizontal, DesignTokens.Spacing.lg)
-
-            // 手动选择文件按钮
-            Button {
-                pickImportFile()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "folder")
-                        .font(.system(size: 13))
-                    Text("选择文件…")
-                        .font(.system(size: 13, weight: .medium))
+                if importPasteText.isEmpty {
+                    Text("在此粘贴 JSON 内容…")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 9)
+                        .allowsHitTesting(false)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 36)
             }
-            .buttonStyle(.bordered)
-            .padding(.horizontal, DesignTokens.Spacing.lg)
+
+            // 按钮行
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Button {
+                    let trimmed = importPasteText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty,
+                          let data = trimmed.data(using: .utf8) else {
+                        importError = "请先粘贴有效的 JSON 内容"
+                        return
+                    }
+                    importError = nil
+                    processImportData(data, fileExtension: "json")
+                } label: {
+                    Label("导入粘贴内容", systemImage: "arrow.down.doc")
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(importPasteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                Button {
+                    pickImportFile()
+                } label: {
+                    Label("选择文件…", systemImage: "folder")
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+
+            // 支持格式提示
+            HStack(spacing: 6) {
+                ForEach([".json", ".xsh", ".ini", ".reg"], id: \.self) { fmt in
+                    Text(fmt)
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(DesignTokens.Colors.surfaceCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                }
+                Spacer()
+            }
 
             if let error = importError {
                 Text(error)
                     .font(.system(size: 11))
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, DesignTokens.Spacing.lg)
-            }
-
-            Spacer()
-        }
-    }
-
-    private var dropZoneView: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(
-                    isDraggingOver
-                        ? DesignTokens.Colors.accentPrimary
-                        : Color(hex: "#d2d2d7").opacity(0.60),
-                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
-                )
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(isDraggingOver
-                            ? DesignTokens.Colors.accentPrimary.opacity(0.05)
-                            : Color.clear)
-                )
-
-            VStack(spacing: 8) {
-                Image(systemName: "arrow.down.doc")
-                    .font(.system(size: 28))
-                    .foregroundColor(isDraggingOver
-                        ? DesignTokens.Colors.accentPrimary
-                        : DesignTokens.Colors.textTertiary)
-                Text("将会话文件拖到这里")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                // 支持格式 badge 列表
-                HStack(spacing: 6) {
-                    ForEach(["JSON", "XSH", "INI", "REG"], id: \.self) { fmt in
-                        Text(fmt)
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                            .foregroundColor(DesignTokens.Colors.textSecondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(DesignTokens.Colors.surfaceCard)
-                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                    }
-                }
-            }
-            .padding(24)
-        }
-        .frame(height: 140)
-        .onDrop(of: [UTType.json, UTType.fileURL, UTType.data], isTargeted: $isDraggingOver) { providers in
-            handleDrop(providers: providers)
-            return true
-        }
-    }
-
-    // MARK: - 支持格式说明
-
-    private var formatHintView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("支持格式")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            VStack(alignment: .leading, spacing: 2) {
-                ForEach([
-                    ("JSON", "ShellMate 导出格式"),
-                    ("XSH",  "Xshell 5/6/7 会话文件"),
-                    ("INI",  "SecureCRT 会话文件"),
-                    ("REG",  "PuTTY 注册表导出")
-                ], id: \.0) { fmt, desc in
-                    HStack(spacing: 6) {
-                        Text(".\(fmt.lowercased())")
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundColor(DesignTokens.Colors.accentPrimary)
-                            .frame(width: 36, alignment: .leading)
-                        Text(desc)
-                            .font(.system(size: 10))
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
-                    }
-                }
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
     // MARK: - 底部
@@ -388,30 +275,54 @@ struct SessionImportExportView: View {
             Spacer()
             Button("关闭", action: onClose)
                 .buttonStyle(.bordered)
-
-            if activeTab == .export {
-                Button {
-                    performExport()
-                } label: {
-                    Label("导出", systemImage: "arrow.up.doc")
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(selectedSessionIds.isEmpty)
-            }
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
         .padding(.vertical, DesignTokens.Spacing.md)
     }
 
-    // MARK: - 导出逻辑
+    // MARK: - 导出预览生成
 
-    private func performExport() {
-        let toExport = sessions.filter { selectedSessionIds.contains($0.id) }
-        switch exportFormat {
-        case .json: exportAsJSON(toExport)
-        case .csv:  exportAsCSV(toExport)
+    /// 将所有会话序列化为 JSON 字符串，显示在只读预览区
+    private func generateExportPreview() {
+        struct SessionExport: Encodable {
+            let version: Int
+            let exportedAt: String
+            let sessions: [SessionRecord]
+        }
+        struct SessionRecord: Encodable {
+            let name, host, username, encoding: String
+            let port: Int32
+            let authMethodRaw: Int16
+            let keepAliveInterval, connectTimeout: Int32
+            let autoReconnect: Bool
+            let tags: [String]
+            let proxyJumpString: String?
+            let startupCommand: String?
+        }
+
+        let records = sessions.map { s in
+            SessionRecord(
+                name: s.name, host: s.host, username: s.username, encoding: s.encoding,
+                port: s.port, authMethodRaw: s.authMethod.rawValue,
+                keepAliveInterval: s.keepAliveInterval, connectTimeout: s.connectTimeout,
+                autoReconnect: s.autoReconnect, tags: s.tags,
+                proxyJumpString: s.proxyJumpString, startupCommand: s.startupCommand
+            )
+        }
+        let export = SessionExport(
+            version: 1,
+            exportedAt: ISO8601DateFormatter().string(from: Date()),
+            sessions: records
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        if let data = try? encoder.encode(export),
+           let text = String(data: data, encoding: .utf8) {
+            exportJSONPreview = text
         }
     }
+
+    // MARK: - 导出逻辑（NSSavePanel）
 
     private func exportAsJSON(_ sessions: [Session]) {
         struct SessionExport: Encodable {
@@ -443,7 +354,9 @@ struct SessionImportExportView: View {
             exportedAt: ISO8601DateFormatter().string(from: Date()),
             sessions: records
         )
-        guard let data = try? JSONEncoder().encode(export) else { return }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(export) else { return }
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
@@ -454,69 +367,11 @@ struct SessionImportExportView: View {
         }
     }
 
-    private func exportAsCSV(_ sessions: [Session]) {
-        var lines = ["名称,主机,端口,用户名,认证方式,标签,跳板机,启动命令"]
-        for s in sessions {
-            let cols = [
-                csvEscape(s.name), csvEscape(s.host),
-                "\(s.port)", csvEscape(s.username),
-                s.authMethod == .password ? "密码" : "私钥",
-                csvEscape(s.tags.joined(separator: ";")),
-                csvEscape(s.proxyJumpString ?? ""),
-                csvEscape(s.startupCommand ?? "")
-            ]
-            lines.append(cols.joined(separator: ","))
-        }
-        let csvText = lines.joined(separator: "\n")
-        guard let data = csvText.data(using: .utf8) else { return }
-
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [UTType(filenameExtension: "csv") ?? .commaSeparatedText]
-        panel.nameFieldStringValue = "shellmate-sessions-\(datePrefix()).csv"
-        panel.prompt = "导出"
-        if panel.runModal() == .OK, let url = panel.url {
-            try? data.write(to: url, options: .atomic)
-        }
-    }
-
-    // MARK: - 导入逻辑
-
-    private func handleDrop(providers: [NSItemProvider]) {
-        importError = nil
-        for provider in providers {
-            // 优先尝试 fileURL（以获取扩展名）
-            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
-                provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, _ in
-                    guard let data = item as? Data,
-                          let url = URL(dataRepresentation: data, relativeTo: nil)
-                    else { return }
-                    DispatchQueue.main.async {
-                        if let fileData = try? Data(contentsOf: url) {
-                            processImportData(fileData, fileExtension: url.pathExtension)
-                        } else {
-                            self.importError = "无法读取文件内容"
-                        }
-                    }
-                }
-                return
-            }
-            if provider.hasItemConformingToTypeIdentifier(UTType.json.identifier) {
-                provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { data, _ in
-                    DispatchQueue.main.async {
-                        if let data { self.processImportData(data, fileExtension: "json") }
-                        else { self.importError = "无法读取文件内容" }
-                    }
-                }
-                return
-            }
-        }
-        importError = "请拖入支持的会话文件（.json / .xsh / .ini / .reg）"
-    }
+    // MARK: - 导入逻辑（NSOpenPanel / 粘贴解析）
 
     private func pickImportFile() {
         importError = nil
         let panel = NSOpenPanel()
-        // 同时支持 JSON / XSH / INI / REG
         let xsh = UTType(filenameExtension: "xsh") ?? .data
         let ini = UTType(filenameExtension: "ini") ?? .data
         let reg = UTType(filenameExtension: "reg") ?? .data
@@ -554,7 +409,7 @@ struct SessionImportExportView: View {
                 return
             }
 
-            let sessions = export.sessions.map { record -> Session in
+            let imported = export.sessions.map { record -> Session in
                 let authMethod = AuthMethod(rawValue: record.authMethodRaw) ?? .password
                 return Session(
                     name: record.name, host: record.host, port: record.port,
@@ -565,15 +420,15 @@ struct SessionImportExportView: View {
                     startupCommand: record.startupCommand
                 )
             }
-            onImport(sessions)
+            onImport(imported)
             onClose()
             return
         }
 
-        // 竞品格式：Xshell / SecureCRT / PuTTY（任务 15.7）
+        // 竞品格式：Xshell / SecureCRT / PuTTY
         do {
-            let sessions = try SessionFormatParser.parse(data: data, fileExtension: ext)
-            onImport(sessions)
+            let imported = try SessionFormatParser.parse(data: data, fileExtension: ext)
+            onImport(imported)
             onClose()
         } catch {
             importError = error.localizedDescription
@@ -584,13 +439,6 @@ struct SessionImportExportView: View {
 
     private func datePrefix() -> String {
         String(ISO8601DateFormatter().string(from: Date()).prefix(10))
-    }
-
-    private func csvEscape(_ s: String) -> String {
-        if s.contains(",") || s.contains("\"") || s.contains("\n") {
-            return "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\""
-        }
-        return s
     }
 }
 

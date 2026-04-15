@@ -382,7 +382,7 @@ struct CustomSegmentedPicker<T: Hashable>: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(3)
+        .padding(DesignTokens.Spacing.xxs)
         .background {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.surfaceInput)

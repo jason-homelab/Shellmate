@@ -50,7 +50,7 @@ struct AppearanceModePickerView: View {
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
-        .padding(14)
+        .padding(DesignTokens.Spacing.md)
         .frame(width: 260)
     }
 

@@ -371,7 +371,7 @@ struct TmuxManagerView: View {
                 .help("终止此会话")
             }
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background {
             if isAttached {
                 LinearGradient(
@@ -489,7 +489,7 @@ struct TmuxManagerView: View {
                     .clipShape(Capsule())
             }
         }
-        .padding(10)
+        .padding(DesignTokens.Spacing.sm)
         .background {
             if isActive {
                 LinearGradient(
@@ -590,7 +590,7 @@ struct TmuxManagerView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(12)
+            .padding(DesignTokens.Spacing.md)
             .background(Color.white.opacity(0.80))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
@@ -626,7 +626,7 @@ struct TmuxManagerView: View {
             .buttonStyle(.plain)
             .help("复制到剪贴板")
         }
-        .padding(10)
+        .padding(DesignTokens.Spacing.sm)
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(

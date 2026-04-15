@@ -338,7 +338,7 @@ struct SessionFormSheet: View {
                             .strokeBorder(borderColor, lineWidth: 1)
                     )
                 }
-                .padding(20)
+                .padding(DesignTokens.Spacing.xl)
             }
 
             Divider()

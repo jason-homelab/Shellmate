@@ -3,12 +3,33 @@ import SwiftUI
 // MARK: - 颜色扩展（日志类型）
 
 extension SessionLogEntry.LogType {
+    /// 类型标签颜色
     var color: Color {
         switch self {
-        case .output: return Color(hex: "#34c759")
-        case .input:  return Color(hex: "#007aff")
-        case .error:  return Color(hex: "#ff3b30")
-        case .system: return Color(hex: "#ff9500")
+        case .info:    return DesignTokens.Colors.statusConnected
+        case .warning: return DesignTokens.Colors.statusConnecting
+        case .error:   return DesignTokens.Colors.statusError
+        case .command: return DesignTokens.Colors.accentPrimary
+        }
+    }
+
+    /// 行背景色（对齐 Figma bg-*-50）
+    var rowBackground: Color {
+        switch self {
+        case .info:    return Color.white.opacity(0.80)
+        case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.08)
+        case .error:   return DesignTokens.Colors.statusError.opacity(0.08)
+        case .command: return DesignTokens.Colors.accentPrimary.opacity(0.07)
+        }
+    }
+
+    /// 行边框色（对齐 Figma border-*-200）
+    var borderColor: Color {
+        switch self {
+        case .info:    return DesignTokens.Colors.borderPrimary
+        case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.30)
+        case .error:   return DesignTokens.Colors.statusError.opacity(0.30)
+        case .command: return DesignTokens.Colors.accentPrimary.opacity(0.25)
         }
     }
 }
@@ -59,10 +80,17 @@ struct LogPanelView: View {
             Divider()
             logListView
         }
-        .frame(width: 880)
+        // 对齐 Figma §14：sm:max-w-[900px] rounded-2xl shadow-2xl border border-[#d2d2d7]/50
+        .frame(width: 900)
         .frame(minHeight: 400, maxHeight: 640)
         .background(Color.white.opacity(0.95))
         .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
     }
 
     // MARK: - 头部
@@ -142,13 +170,17 @@ struct LogPanelView: View {
 
     private var filterBarView: some View {
         HStack(spacing: 8) {
-            // 类型过滤
-            HStack(spacing: 4) {
-                filterTypeButton(label: "全部", type: nil)
+            // 类型过滤 Select 下拉
+            Picker("日志类型", selection: $selectedType) {
+                Text("全部").tag(SessionLogEntry.LogType?.none)
                 ForEach(SessionLogEntry.LogType.allCases, id: \.rawValue) { type in
-                    filterTypeButton(label: type.label, type: type)
+                    Text(type.label).tag(Optional(type))
                 }
             }
+            .labelsHidden()
+            .frame(maxWidth: 100)
+            .font(.system(size: 12))
+            .pickerStyle(.menu)
 
             Spacer()
 
@@ -197,28 +229,6 @@ struct LogPanelView: View {
         .background(DesignTokens.Colors.surfaceCard)
     }
 
-    private func filterTypeButton(label: String, type: SessionLogEntry.LogType?) -> some View {
-        let isActive = selectedType == type
-        return Button(action: { selectedType = type }) {
-            Text(label)
-                .font(.system(size: 11, weight: isActive ? .semibold : .regular))
-                .foregroundColor(isActive ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(isActive
-                    ? DesignTokens.Colors.accentPrimary.opacity(0.10)
-                    : Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(isActive
-                            ? DesignTokens.Colors.accentPrimary.opacity(0.30)
-                            : Color.clear, lineWidth: 0.5)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
     // MARK: - 日志列表
 
     private var logListView: some View {
@@ -228,12 +238,15 @@ struct LogPanelView: View {
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 0) {
+                        // 对齐 Figma §14：卡片间距 space-y-2 = 8pt
+                        LazyVStack(spacing: 6) {
                             ForEach(filteredEntries) { entry in
                                 logRowView(entry)
                                     .id(entry.id)
                             }
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                     }
                     .onChange(of: logStore.entries.count) { _ in
                         if !isPaused, let last = filteredEntries.last {
@@ -267,45 +280,47 @@ struct LogPanelView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
 
-        return HStack(alignment: .firstTextBaseline, spacing: 0) {
-            // 时间戳（固定宽度）
-            Text(formatter.string(from: entry.timestamp))
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Color(hex: "#86868b"))
-                .frame(width: 68, alignment: .leading)
+        // 对齐 Figma §14：backdrop-blur-sm rounded-lg border p-3
+        return VStack(alignment: .leading, spacing: 4) {
+            // 顶部行：类型标签 + 时间戳 + 会话名
+            HStack(spacing: 6) {
+                // 类型徽章（text-xs font-semibold uppercase）
+                Text(entry.type.label.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(entry.type.color)
 
-            // 会话名（仅在"全部会话"模式下显示）
-            if selectedSession == nil {
+                Text(formatter.string(from: entry.timestamp))
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(Color(hex: "#86868b"))
+
+                Spacer()
+
+                // 会话名徽章（text-xs bg-white/60 px-2 py-0.5 rounded-full）
                 Text(entry.sessionName)
                     .font(.system(size: 10))
-                    .foregroundColor(Color(hex: "#86868b"))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
                     .lineLimit(1)
-                    .frame(width: 110, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Color.white.opacity(0.60))
+                    .clipShape(Capsule())
             }
 
-            // 类型徽章
-            Text(entry.type.label)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(entry.type.color)
-                .padding(.horizontal, 5)
-                .padding(.vertical, 1)
-                .background(entry.type.color.opacity(0.10))
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .frame(width: 40)
-
-            // 内容
+            // 内容（text-sm text-[#1d1d1f] font-mono）
             Text(entry.content)
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundColor(Color(hex: "#1d1d1f"))
                 .lineLimit(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 8)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 5)
-        .background(Color.clear)
+        .padding(DesignTokens.Spacing.md)
+        .background(entry.type.rowBackground)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(entry.type.borderColor, lineWidth: 0.5)
+        )
         .contentShape(Rectangle())
-        .overlay(Divider().opacity(0.5), alignment: .bottom)
     }
 
     // MARK: - 导出

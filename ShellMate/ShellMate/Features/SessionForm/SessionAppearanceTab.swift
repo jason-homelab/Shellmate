@@ -37,7 +37,7 @@ struct SessionAppearanceTab: View {
                 startupCommandSection
                     .padding(.bottom, 14)
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
     }
 

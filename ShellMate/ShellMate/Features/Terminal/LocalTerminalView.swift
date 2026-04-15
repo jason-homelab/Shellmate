@@ -118,7 +118,7 @@ struct LocalTerminalView: View {
             .buttonStyle(PrimaryButtonStyle())
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial)
+        .background(DesignTokens.Colors.terminalBackground)
     }
 }
 

@@ -174,7 +174,7 @@ struct ComposePaneView: View {
                     TextField("50", value: $lineDelay, format: .number)
                         .textFieldStyle(.plain)
                         .font(DesignTokens.Typography.codeSmall)
-                        .padding(6)
+                        .padding(DesignTokens.Spacing.xs)
                         .background(DesignTokens.Colors.surfaceInput)
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(

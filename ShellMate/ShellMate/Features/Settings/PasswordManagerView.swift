@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - 密码管理弹窗（任务 13.16）
 
 /// 列出所有已在金库中保存密码凭据的会话，支持逐条删除
-/// 对齐 Figma-Spec-v2 §14-§2：500px 宽，orange key 图标，圆角卡片行
+/// 对齐 Figma-Spec-v2 §14-§2：600px 宽，orange key 图标，圆角卡片行，Eye/EyeOff 密码切换
 struct PasswordManagerView: View {
 
     // MARK: - 属性
@@ -20,6 +20,10 @@ struct PasswordManagerView: View {
     @State private var pendingDeleteSession: Session? = nil
     @State private var isDeleting: Bool = false
     @State private var errorMessage: String? = nil
+    /// 当前已展开显示明文密码的会话 ID 集合
+    @State private var visiblePasswordIds: Set<UUID> = []
+    /// 已从 Keychain 读取的明文密码缓存（仅内存，不持久化）
+    @State private var revealedPasswords: [UUID: String] = [:]
 
     // MARK: - 计算属性
 
@@ -35,7 +39,7 @@ struct PasswordManagerView: View {
             Divider()
             contentArea
         }
-        .frame(width: 500)
+        .frame(width: 600)
         .background(DesignTokens.Colors.surfacePanel)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .task {
@@ -65,11 +69,11 @@ struct PasswordManagerView: View {
             // orange key 图标
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(hex: "#ff9500").opacity(0.10))
+                    .fill(DesignTokens.Colors.statusConnecting.opacity(0.10))
                     .frame(width: 36, height: 36)
                 Image(systemName: "key.fill")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(Color(hex: "#ff9500"))
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -169,7 +173,8 @@ struct PasswordManagerView: View {
     // MARK: - 单行
 
     private func sessionRow(_ session: Session) -> some View {
-        HStack(spacing: DesignTokens.Spacing.md) {
+        let isVisible = visiblePasswordIds.contains(session.id)
+        return HStack(spacing: DesignTokens.Spacing.md) {
             // 会话信息
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.name)
@@ -184,14 +189,30 @@ struct PasswordManagerView: View {
 
             Spacer()
 
-            // 掩码密码
-            Text("••••••••")
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(DesignTokens.Colors.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            // 掩码 / 明文密码 + Eye 切换按钮
+            HStack(spacing: 4) {
+                Text(isVisible
+                     ? (revealedPasswords[session.id] ?? String(repeating: "•", count: 12))
+                     : String(repeating: "•", count: 12))
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(DesignTokens.Colors.surfaceCard)
+                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+
+                Button {
+                    togglePasswordVisibility(session)
+                } label: {
+                    Image(systemName: isVisible ? "eye.slash" : "eye")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .help(isVisible ? "隐藏密码" : "显示密码")
+            }
 
             // 删除按钮
             Button {
@@ -208,13 +229,29 @@ struct PasswordManagerView: View {
             .disabled(isDeleting)
         }
         .padding(DesignTokens.Spacing.md)
-        // bg-white/80 rounded-xl border border-[#d2d2d7]/50
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
+    }
+
+    // MARK: - 密码可见性切换
+
+    /// 尝试从 Keychain 读取密码并切换显示状态
+    private func togglePasswordVisibility(_ session: Session) {
+        if visiblePasswordIds.contains(session.id) {
+            visiblePasswordIds.remove(session.id)
+            revealedPasswords.removeValue(forKey: session.id)
+        } else {
+            if let password = try? KeychainService.shared.getPassword(for: session.id, type: .password) {
+                revealedPasswords[session.id] = password
+                visiblePasswordIds.insert(session.id)
+            } else {
+                errorMessage = "无法从安全存储中读取密码"
+            }
+        }
     }
 
     // MARK: - 数据操作

@@ -97,24 +97,24 @@ struct SessionRowView: View {
 
     private var serverIcon: some View {
         ZStack(alignment: .bottomTrailing) {
-            // 图标背景圆角框（选中时使用白色半透明背景）
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+            // 图标背景圆角框（对齐 Figma p-1.5 rounded-md ≈ 26×26pt, radius 6pt）
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isSelected
                     ? Color.white.opacity(0.20)
                     : DesignTokens.Colors.accentPrimary.opacity(0.10))
                 .overlay {
                     if !isSelected {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
                     }
                 }
-                .frame(width: DesignTokens.Sizes.sessionIconSize, height: DesignTokens.Sizes.sessionIconSize)
+                .frame(width: 26, height: 26)
 
-            // 服务器图标
+            // 服务器图标（h-3.5 w-3.5 ≈ 14pt）
             Image(systemName: "server.rack")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(isSelected ? .white : DesignTokens.Colors.accentPrimary.opacity(0.75))
-                .frame(width: DesignTokens.Sizes.sessionIconSize, height: DesignTokens.Sizes.sessionIconSize)
+                .frame(width: 26, height: 26)
 
             // 连接状态角标（仅非离线时显示）
             if session.connectionState != .offline {
@@ -159,7 +159,7 @@ struct SessionRowView: View {
             var s = Session.preview; s.connectionState = .offline; return s
         }())
     }
-    .padding(8)
+    .padding(DesignTokens.Spacing.sm)
     .background(DesignTokens.Colors.surfaceWindow)
     .frame(width: 224)
 }

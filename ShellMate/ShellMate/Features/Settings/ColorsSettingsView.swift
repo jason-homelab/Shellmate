@@ -81,7 +81,7 @@ struct ColorsSettingsView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
         .onAppear { loadANSI() }
     }
@@ -128,7 +128,7 @@ struct ColorsSettingsView: View {
                 .background(Color.black.opacity(0.04))
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(Color.white.opacity(0.80))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

@@ -88,7 +88,7 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(4)
+        .padding(DesignTokens.Spacing.xxs)
         .background(Color.black.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal, 20)

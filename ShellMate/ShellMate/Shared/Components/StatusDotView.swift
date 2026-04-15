@@ -99,7 +99,7 @@ struct StatusDotView: View {
                 .font(DesignTokens.Typography.labelSmall)
         }
     }
-    .padding(24)
+    .padding(DesignTokens.Spacing.xxl)
     .background(DesignTokens.Colors.surfaceWindow)
     .foregroundColor(DesignTokens.Colors.textSecondary)
 }
@@ -111,6 +111,6 @@ struct StatusDotView: View {
         StatusDotView(state: .connected, size: 8)
         StatusDotView(state: .connected, size: 10)
     }
-    .padding(24)
+    .padding(DesignTokens.Spacing.xxl)
     .background(DesignTokens.Colors.surfaceWindow)
 }

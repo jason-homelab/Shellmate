@@ -32,7 +32,7 @@ struct ServerMonitorPanelView: View {
                     metricsGrid
                     networkCard
                 }
-                .padding(16)
+                .padding(DesignTokens.Spacing.lg)
             }
         }
         .frame(width: 420)
@@ -180,7 +180,7 @@ struct ServerMonitorPanelView: View {
                     .frame(height: 24)
             }
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
@@ -231,7 +231,7 @@ struct ServerMonitorPanelView: View {
                 .font(.system(size: 10))
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
@@ -263,7 +263,7 @@ struct ServerMonitorPanelView: View {
                 .font(.system(size: 11))
                 .foregroundColor(DesignTokens.Colors.textSecondary)
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
@@ -327,7 +327,7 @@ struct ServerMonitorPanelView: View {
                 .frame(height: 36)
             }
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(

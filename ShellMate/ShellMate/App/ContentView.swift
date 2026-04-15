@@ -230,6 +230,12 @@ struct ContentView: View {
         .task {
             await checkPendingAutoConnect()
         }
+        // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）
+        .onChange(of: tabBarStore.selectedTabId) { newId in
+            guard let newId,
+                  let tab = tabBarStore.tabs.first(where: { $0.id == newId }) else { return }
+            sessionStore.selectedSessionId = tab.sessionId
+        }
         // 数据加载 + 菜单栏通知处理（拆分以规避 Swift 类型检查超时）
         .modifier(ContentViewLifecycleModifier(
             sessionStore: sessionStore,
@@ -241,22 +247,16 @@ struct ContentView: View {
 
     // MARK: - 终端内容区域
 
-    /// 主区域：标签栏 + 终端内容 + 全局状态栏（拆分以规避编译器类型推断超时）
+    /// 主区域：标签栏 + 终端内容（对齐 Figma-Spec-v2 §04 Tab 标签栏设计）
     private var detailArea: some View {
         VStack(spacing: 0) {
-            // 标签栏（任务 13.7-B：始终显示，冷启动即有本地 Shell 标签）
+            // 标签栏：会话 Tab 切换（始终显示，Figma §04）
             TerminalTabBarView(store: tabBarStore, onNewTab: {
                 sessionStore.showNewSessionForm()
             })
             terminalContentArea
         }
-        .background(
-            LinearGradient(
-                colors: [Color(hex: "#f5f5f7"), Color(hex: "#e8e8ed")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(DesignTokens.Colors.terminalBackground)
     }
 
     @ViewBuilder
@@ -332,9 +332,8 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Figma: bg-white/50 backdrop-blur-sm
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.50))
+        // 终端区域使用纯色背景，零毛玻璃，降低 GPU 渲染压力（W27 Sprint-01 §修改意见3）
+        .background(DesignTokens.Colors.terminalBackground)
     }
 }
 

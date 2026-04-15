@@ -91,7 +91,7 @@ struct CommandSafetyAlertView: View {
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(riskColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
+                    .padding(DesignTokens.Spacing.sm)
                     .background(riskColor.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                     .textSelection(.enabled)

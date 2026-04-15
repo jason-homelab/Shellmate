@@ -158,6 +158,6 @@ extension TagBadgeView {
         // 标签列表
         TagListView(tags: ["Linux", "Ubuntu", "AWS", "生产", "重要"])
     }
-    .padding(24)
+    .padding(DesignTokens.Spacing.xxl)
     .background(DesignTokens.Colors.surfaceWindow)
 }

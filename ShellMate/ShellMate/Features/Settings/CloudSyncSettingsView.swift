@@ -130,7 +130,7 @@ struct CloudSyncSettingsView: View {
                 .disabled(!syncEnabled)
                 .opacity(syncEnabled ? 1 : 0.4)
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
     }
 
@@ -168,7 +168,7 @@ struct CloudSyncSettingsView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineSpacing(2)
             }
-            .padding(12)
+            .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surfaceWindow)
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
@@ -260,7 +260,7 @@ struct CloudSyncSettingsView: View {
 
                 Spacer()
             }
-            .padding(12)
+            .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surfaceWindow)
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
 

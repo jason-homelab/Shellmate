@@ -69,7 +69,7 @@ struct SessionAdvancedTab: View {
 
                 tmuxSection
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
     }
 

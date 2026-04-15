@@ -27,20 +27,20 @@ struct WelcomeScreenView: View {
         StepData(
             emoji: "👋",
             gradientColors: [Color.blue.opacity(0.10), Color.purple.opacity(0.10)],
-            title: "欢迎使用 ShellMate",
-            description: "专为开发者和运维工程师打造的 macOS 原生 SSH 会话管理工具"
+            title: "Welcome to ShellMate",
+            description: "A professional SSH terminal application with macOS design."
         ),
         StepData(
             emoji: "🚀",
             gradientColors: [Color.green.opacity(0.10), Color.blue.opacity(0.10)],
-            title: "强大的功能，极致的体验",
-            description: "多标签管理、分屏模式、AI 智能助手、SFTP 文件传输，一切尽在掌控"
+            title: "Powerful Features",
+            description: "Multi-tab management, split screen, AI assistant, SFTP."
         ),
         StepData(
             emoji: "⚡",
             gradientColors: [Color.orange.opacity(0.10), Color.red.opacity(0.10)],
-            title: "准备好了，开始使用！",
-            description: "创建您的第一个连接，或导入已有配置，立即开始工作"
+            title: "Ready to Get Started?",
+            description: "Create your first connection or import configurations."
         )
     ]
 
@@ -49,12 +49,8 @@ struct WelcomeScreenView: View {
     var body: some View {
         ZStack {
             // bg-gradient-to-br from-[#f5f5f7] via-white to-[#e8e8ed]
-            LinearGradient(
-                colors: [Color(hex: "#f5f5f7"), .white, Color(hex: "#e8e8ed")],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            DesignTokens.Colors.surfaceWindow
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // 关闭按钮 — absolute top-4 right-4
@@ -63,7 +59,7 @@ struct WelcomeScreenView: View {
                     Button(action: { onDismiss?() }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(Color(hex: "#1d1d1f"))
+                            .foregroundColor(DesignTokens.Colors.textPrimary)
                             .frame(width: 28, height: 28)
                             .background(Color.black.opacity(0.06))
                             .clipShape(Circle())
@@ -128,14 +124,14 @@ struct WelcomeScreenView: View {
             // 标题（text-5xl font-bold text-[#1d1d1f]，48px = text-5xl）
             Text(step.title)
                 .font(.system(size: 48, weight: .bold, design: .rounded))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
 
             // 描述（text-xl text-[#86868b]，20px = text-xl）
             Text(step.description)
                 .font(.system(size: 20))
-                .foregroundColor(Color(hex: "#86868b"))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 560)
                 .animation(.easeInOut(duration: 0.3), value: currentStep)
@@ -156,12 +152,12 @@ struct WelcomeScreenView: View {
                     if index == currentStep {
                         // w-8 h-2 rounded-full bg-[#007aff]
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(hex: "#007aff"))
+                            .fill(DesignTokens.Colors.accentPrimary)
                             .frame(width: 32, height: 8)
                     } else {
                         // w-2 h-2 rounded-full bg-[#d2d2d7]
                         Circle()
-                            .fill(Color(hex: "#d2d2d7"))
+                            .fill(DesignTokens.Colors.borderPrimary)
                             .frame(width: 8, height: 8)
                     }
                 }
@@ -178,13 +174,13 @@ struct WelcomeScreenView: View {
         HStack(spacing: 16) {
             // 跳过按钮（variant="ghost"）
             Button(action: { onDismiss?() }) {
-                Text("跳过")
+                Text("Skip")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "#86868b"))
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .padding(.horizontal, DesignTokens.Spacing.xxl)
+                    .padding(.vertical, DesignTokens.Spacing.sm)
                     .background(Color.black.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -193,29 +189,29 @@ struct WelcomeScreenView: View {
                 withAnimation(.easeInOut(duration: 0.3)) { currentStep += 1 }
             }) {
                 HStack(spacing: 6) {
-                    Text("下一步")
+                    Text("Next")
                         .font(.system(size: 14, weight: .semibold))
                     Image(systemName: "arrow.right")
                         .font(.system(size: 12, weight: .semibold))
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 10)
+                .padding(.horizontal, DesignTokens.Spacing.xxl)
+                .padding(.vertical, DesignTokens.Spacing.sm)
             }
             .buttonStyle(.plain)
-            .background(Color(hex: "#007aff"))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .shadow(color: Color(hex: "#007aff").opacity(0.30), radius: 12, x: 0, y: 4)
+            .background(DesignTokens.Colors.accentPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 12, x: 0, y: 4)
         }
     }
 
     // MARK: - 步骤 1 特性展示（grid-cols-4，对齐 Figma WelcomeScreen.tsx currentStep===1）
 
     private let features: [(emoji: String, label: String)] = [
-        ("🔐", "安全加密"),
-        ("📁", "SFTP 传输"),
-        ("🤖", "AI 助手"),
-        ("📜", "脚本自动化")
+        ("🔐", "Secure Authentication"),
+        ("📁", "SFTP Transfer"),
+        ("🤖", "AI Assistant"),
+        ("📜", "Script Automation")
     ]
 
     private var featuresGrid: some View {
@@ -226,15 +222,15 @@ struct WelcomeScreenView: View {
                         .font(.system(size: 36))
                     Text(feature.label)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Color(hex: "#1d1d1f"))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(16)
+                .padding(DesignTokens.Spacing.lg)
                 .background(Color.white.opacity(0.60))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 1)
                 )
             }
         }
@@ -247,49 +243,49 @@ struct WelcomeScreenView: View {
             // 创建第一个连接
             actionCard(
                 iconName: "plus",
-                iconFg: Color(hex: "#007aff"),
+                iconFg: DesignTokens.Colors.accentPrimary,
                 iconBg: LinearGradient(
-                    colors: [Color(hex: "#007aff").opacity(0.10), Color(hex: "#5856d6").opacity(0.10)],
+                    colors: [DesignTokens.Colors.accentPrimary.opacity(0.10), DesignTokens.Colors.accentIndigo.opacity(0.10)],
                     startPoint: .topLeading, endPoint: .bottomTrailing),
-                cardHoverBorder: Color(hex: "#007aff").opacity(0.50),
-                title: "创建第一个连接",
-                description: "填写服务器信息，快速开始工作",
-                buttonTitle: "立即创建",
+                cardHoverBorder: DesignTokens.Colors.accentPrimary.opacity(0.50),
+                title: "Create First Connection",
+                description: "Fill in server info to get started",
+                buttonTitle: "Create Now",
                 buttonFg: .white,
-                buttonBg: AnyShapeStyle(Color(hex: "#007aff")),
+                buttonBg: AnyShapeStyle(DesignTokens.Colors.accentPrimary),
                 action: { onCreateSession?() }
             )
 
             // 导入配置
             actionCard(
                 iconName: "arrow.down.doc",
-                iconFg: Color(hex: "#34c759"),
+                iconFg: DesignTokens.Colors.statusConnected,
                 iconBg: LinearGradient(
-                    colors: [Color(hex: "#34c759").opacity(0.10), Color(hex: "#30d158").opacity(0.10)],
+                    colors: [DesignTokens.Colors.statusConnected.opacity(0.10), DesignTokens.Colors.statusConnected.opacity(0.06)],
                     startPoint: .topLeading, endPoint: .bottomTrailing),
-                cardHoverBorder: Color(hex: "#34c759").opacity(0.50),
-                title: "导入配置",
-                description: "从文件导入已有的会话配置",
-                buttonTitle: "导入配置",
-                buttonFg: Color(hex: "#34c759"),
+                cardHoverBorder: DesignTokens.Colors.statusConnected.opacity(0.50),
+                title: "Import Configuration",
+                description: "Import from existing files",
+                buttonTitle: "Import",
+                buttonFg: DesignTokens.Colors.statusConnected,
                 buttonBg: AnyShapeStyle(Color.clear),
                 isOutline: true,
-                outlineColor: Color(hex: "#34c759"),
+                outlineColor: DesignTokens.Colors.statusConnected,
                 action: { onImportConfiguration?() }
             )
 
             // 跳过设置
             actionCard(
                 iconName: "sparkles",
-                iconFg: Color(hex: "#86868b"),
+                iconFg: DesignTokens.Colors.textSecondary,
                 iconBg: LinearGradient(
-                    colors: [Color(hex: "#86868b").opacity(0.10), Color(hex: "#636366").opacity(0.10)],
+                    colors: [DesignTokens.Colors.textSecondary.opacity(0.10), DesignTokens.Colors.textTertiary.opacity(0.10)],
                     startPoint: .topLeading, endPoint: .bottomTrailing),
-                cardHoverBorder: Color(hex: "#86868b").opacity(0.50),
-                title: "探索应用",
-                description: "先熟悉界面，稍后再添加连接",
-                buttonTitle: "直接进入",
-                buttonFg: Color(hex: "#86868b"),
+                cardHoverBorder: DesignTokens.Colors.textSecondary.opacity(0.50),
+                title: "Explore Interface",
+                description: "Explore the interface first",
+                buttonTitle: "Directly Enter",
+                buttonFg: DesignTokens.Colors.textSecondary,
                 buttonBg: AnyShapeStyle(Color.black.opacity(0.05)),
                 action: { onDismiss?() }
             )
@@ -326,10 +322,10 @@ struct WelcomeScreenView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color(hex: "#1d1d1f"))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(description)
                     .font(.system(size: 13))
-                    .foregroundColor(Color(hex: "#86868b"))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -359,13 +355,13 @@ struct WelcomeScreenView: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
-        .padding(20)
+        .padding(DesignTokens.Spacing.xl)
         .frame(maxWidth: .infinity, minHeight: 220)
         .background(Color.white.opacity(0.80))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.05), radius: 12, x: 0, y: 4)
         .onTapGesture { action() }

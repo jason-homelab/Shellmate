@@ -202,7 +202,7 @@ struct ConnectionErrorView: View {
                         .textSelection(.enabled)
                 }
                 .frame(maxHeight: 60)
-                .padding(8)
+                .padding(DesignTokens.Spacing.sm)
                 .background(Color.black.opacity(0.04))
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             }

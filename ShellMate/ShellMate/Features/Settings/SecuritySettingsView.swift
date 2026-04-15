@@ -630,7 +630,7 @@ struct KeyGenSheet: View {
                 .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(18)
+        .padding(DesignTokens.Spacing.lg)
         .frame(width: 440)
     }
 
@@ -692,7 +692,7 @@ struct MasterPasswordSheet: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
 
             Divider()
 
@@ -707,7 +707,7 @@ struct MasterPasswordSheet: View {
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(10)
+                .padding(DesignTokens.Spacing.sm)
                 .background(DesignTokens.Colors.surfaceWindow)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
 
@@ -762,7 +762,7 @@ struct MasterPasswordSheet: View {
                     .foregroundColor(DesignTokens.Colors.statusError)
                 }
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
 
             Divider()
 
@@ -780,7 +780,7 @@ struct MasterPasswordSheet: View {
                 .keyboardShortcut(.return, modifiers: .command)
                 .disabled(newPassword.count < 8 || confirmPassword.isEmpty)
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
         .frame(width: 400)
         .background(DesignTokens.Colors.surfacePanel)

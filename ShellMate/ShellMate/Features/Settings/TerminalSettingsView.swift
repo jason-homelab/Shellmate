@@ -71,7 +71,7 @@ struct TerminalSettingsView: View {
                     advancedSection
                 }
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
     }
 
@@ -90,7 +90,7 @@ struct TerminalSettingsView: View {
                     .textFieldStyle(.plain)
                     .frame(width: 80)
                     .font(.system(size: 11, design: .monospaced))
-                    .padding(6)
+                    .padding(DesignTokens.Spacing.xs)
                     .background(DesignTokens.Colors.surfaceInput)
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)

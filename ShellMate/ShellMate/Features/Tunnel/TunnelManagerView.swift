@@ -139,7 +139,7 @@ struct TunnelManagerView: View {
                         )
                     }
                 }
-                .padding(12)
+                .padding(DesignTokens.Spacing.md)
             }
         }
         .frame(maxHeight: 300)
@@ -230,7 +230,7 @@ struct TunnelManagerView: View {
                     TextField("8080", value: $editDraft.localPort, format: .number)
                         .textFieldStyle(.plain)
                         .font(DesignTokens.Typography.codeSmall)
-                        .padding(6)
+                        .padding(DesignTokens.Spacing.xs)
                         .background(DesignTokens.Colors.surfaceInput)
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
@@ -248,7 +248,7 @@ struct TunnelManagerView: View {
                         TextField("3306", value: $editDraft.remotePort, format: .number)
                             .textFieldStyle(.plain)
                             .font(DesignTokens.Typography.codeSmall)
-                            .padding(6)
+                            .padding(DesignTokens.Spacing.xs)
                             .background(DesignTokens.Colors.surfaceInput)
                             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
@@ -270,7 +270,7 @@ struct TunnelManagerView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
         }
-        .padding(16)
+        .padding(DesignTokens.Spacing.lg)
         .background(DesignTokens.Colors.surfaceWindow)
     }
 
@@ -386,7 +386,7 @@ private struct TunnelCardView: View {
             // 第三行：类型徽章
             TunnelTypeBadgeView(type: rule.type)
         }
-        .padding(12)
+        .padding(DesignTokens.Spacing.md)
         .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.06) : Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(

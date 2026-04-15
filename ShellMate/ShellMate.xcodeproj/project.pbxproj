@@ -132,6 +132,10 @@
 		FF060005 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050005 /* SessionStoreTests.swift */; };
 		FF060006 /* GroupStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050006 /* GroupStoreTests.swift */; };
 		FF060099 /* FeatureIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050099 /* FeatureIntegrationTests.swift */; };
+		FF060101 /* TabBarStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050101 /* TabBarStoreTests.swift */; };
+		FF060102 /* SessionLogStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050102 /* SessionLogStoreTests.swift */; };
+		FF060103 /* HighlightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050103 /* HighlightEngineTests.swift */; };
+		FF060104 /* SessionFormatParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050104 /* SessionFormatParserTests.swift */; };
 		L0010001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = L0020001 /* Localizable.strings */; };
 		TM010001 /* TmuxModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020001 /* TmuxModels.swift */; };
 		TM010002 /* TmuxConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = TM020002 /* TmuxConfigStore.swift */; };
@@ -145,6 +149,9 @@
 		REC010002 /* RecordingDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = REC020002 /* RecordingDialogView.swift */; };
 		LOG010001 /* LogPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LOG020001 /* LogPanelView.swift */; };
 		SLS010001 /* SessionLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SLS020001 /* SessionLogStore.swift */; };
+		W2701_BUILD /* BaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = W2701_REF /* BaseViewModel.swift */; };
+		W2702_BUILD /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = W2702_REF /* ServiceProtocols.swift */; };
+		W2703_BUILD /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = W2703_REF /* AppEnvironment.swift */; };
 		MON010001 /* ServerMonitorPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MON020001 /* ServerMonitorPanelView.swift */; };
 		CE010001 /* ConnectionErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE020001 /* ConnectionErrorView.swift */; };
 		HW010001 /* HotkeyWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = HW020001 /* HotkeyWindowManager.swift */; };
@@ -304,6 +311,10 @@
 		FF050005 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		FF050006 /* GroupStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoreTests.swift; sourceTree = "<group>"; };
 		FF050099 /* FeatureIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureIntegrationTests.swift; sourceTree = "<group>"; };
+		FF050101 /* TabBarStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarStoreTests.swift; sourceTree = "<group>"; };
+		FF050102 /* SessionLogStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStoreTests.swift; sourceTree = "<group>"; };
+		FF050103 /* HighlightEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightEngineTests.swift; sourceTree = "<group>"; };
+		FF050104 /* SessionFormatParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormatParserTests.swift; sourceTree = "<group>"; };
 		L0020002 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		TM020001 /* TmuxModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxModels.swift; sourceTree = "<group>"; };
 		TM020002 /* TmuxConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmuxConfigStore.swift; sourceTree = "<group>"; };
@@ -317,6 +328,9 @@
 		REC020002 /* RecordingDialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingDialogView.swift; sourceTree = "<group>"; };
 		LOG020001 /* LogPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogPanelView.swift; sourceTree = "<group>"; };
 		SLS020001 /* SessionLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStore.swift; sourceTree = "<group>"; };
+		W2701_REF /* BaseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewModel.swift; sourceTree = "<group>"; };
+		W2702_REF /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
+		W2703_REF /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		MON020001 /* ServerMonitorPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMonitorPanelView.swift; sourceTree = "<group>"; };
 		CE020001 /* ConnectionErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionErrorView.swift; sourceTree = "<group>"; };
 		HW020001 /* HotkeyWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyWindowManager.swift; sourceTree = "<group>"; };
@@ -413,8 +427,35 @@
 				000400040004000A /* Persistence */,
 				0004000400040014 /* Services */,
 				000400040004000B /* Stores */,
+				W2704_GRP /* ViewModels */,
+				W2705_GRP /* Protocols */,
+				W2706_GRP /* DI */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		W2704_GRP /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				W2701_REF /* BaseViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		W2705_GRP /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				W2702_REF /* ServiceProtocols.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		W2706_GRP /* DI */ = {
+			isa = PBXGroup;
+			children = (
+				W2703_REF /* AppEnvironment.swift */,
+			);
+			path = DI;
 			sourceTree = "<group>";
 		};
 		0004000400040006 /* Features */ = {
@@ -827,6 +868,7 @@
 				FF050001 /* SSHConnectionIntegrationTests.swift */,
 				FF050002 /* MemoryLeakTests.swift */,
 				FF050099 /* FeatureIntegrationTests.swift */,
+				FF050104 /* SessionFormatParserTests.swift */,
 			);
 			path = IntegrationTests;
 			sourceTree = "<group>";
@@ -845,6 +887,9 @@
 			children = (
 				FF050005 /* SessionStoreTests.swift */,
 				FF050006 /* GroupStoreTests.swift */,
+				FF050101 /* TabBarStoreTests.swift */,
+				FF050102 /* SessionLogStoreTests.swift */,
+				FF050103 /* HighlightEngineTests.swift */,
 			);
 			path = StoreTests;
 			sourceTree = "<group>";
@@ -1075,6 +1120,9 @@
 				REC010002 /* RecordingDialogView.swift in Sources */,
 				LOG010001 /* LogPanelView.swift in Sources */,
 				SLS010001 /* SessionLogStore.swift in Sources */,
+				W2701_BUILD /* BaseViewModel.swift in Sources */,
+				W2702_BUILD /* ServiceProtocols.swift in Sources */,
+				W2703_BUILD /* AppEnvironment.swift in Sources */,
 				MON010001 /* ServerMonitorPanelView.swift in Sources */,
 				CE010001 /* ConnectionErrorView.swift in Sources */,
 				HW010001 /* HotkeyWindowManager.swift in Sources */,
@@ -1093,6 +1141,10 @@
 				FF060004 /* GroupRepositoryTests.swift in Sources */,
 				FF060005 /* SessionStoreTests.swift in Sources */,
 				FF060006 /* GroupStoreTests.swift in Sources */,
+				FF060101 /* TabBarStoreTests.swift in Sources */,
+				FF060102 /* SessionLogStoreTests.swift in Sources */,
+				FF060103 /* HighlightEngineTests.swift in Sources */,
+				FF060104 /* SessionFormatParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -248,7 +248,8 @@ struct AIAssistantPanelView: View {
 
     private var headerView: some View {
         HStack(spacing: 10) {
-            // Figma: w-10 h-10 rounded-xl bg-gradient from-[#007aff] to-[#5856d6] shadow-lg
+            // Figma: p-2 rounded-xl bg-gradient from-[#007aff] to-[#5856d6] shadow-lg
+            // p-2=8pt padding + h-5 w-5=20pt icon = 36pt 容器，rounded-xl=12pt
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                     .fill(
@@ -258,10 +259,10 @@ struct AIAssistantPanelView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 40, height: 40)
+                    .frame(width: 36, height: 36)
                     .shadow(color: Color(hex: "#007aff").opacity(0.40), radius: 8, x: 0, y: 3)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
             }
 
@@ -387,7 +388,7 @@ struct AIAssistantPanelView: View {
                     }
                     Color.clear.frame(height: 8)
                 }
-                .padding(14)
+                .padding(DesignTokens.Spacing.md)
             }
             .onChange(of: vm.streamingContent) { _ in
                 withAnimation(.easeOut(duration: 0.1)) {
@@ -671,6 +672,9 @@ struct AIMessageBubbleView: View {
 
     private var isUser: Bool { message.role == .user }
 
+    /// Typing 指示器弹跳状态
+    @State private var bounce: Bool = false
+
     var body: some View {
         Group {
             if isUser {
@@ -678,21 +682,22 @@ struct AIMessageBubbleView: View {
                 HStack(alignment: .bottom, spacing: 8) {
                     Spacer(minLength: 32)
                     // 气泡（bg-[#007aff] text-white shadow-lg shadow-[#007aff]/30）
+                    // rounded-2xl=16pt, px-4=16pt, py-3=12pt（Figma-Spec-v2 §09）
                     Text(message.content)
                         .font(.system(size: 12))
                         .foregroundColor(.white)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                         .background(Color(hex: "#007aff"))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 8, x: 0, y: 3)
-                    // 头像（bg-[#86868b] text-white "U"）
+                    // 头像（w-8 h-8 = 32pt rounded-full bg-[#86868b] text-white "U"）
                     ZStack {
                         Circle()
                             .fill(Color(hex: "#86868b"))
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                         Text("U")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.white)
@@ -702,7 +707,7 @@ struct AIMessageBubbleView: View {
             } else {
                 // AI 消息：左对齐（flex gap-3 justify-start）
                 HStack(alignment: .top, spacing: 8) {
-                    // 头像（渐变圆形 from-[#007aff] to-[#5856d6]）
+                    // 头像（w-8 h-8 = 32pt 渐变圆形 from-[#007aff] to-[#5856d6]）
                     ZStack {
                         Circle()
                             .fill(
@@ -712,28 +717,29 @@ struct AIMessageBubbleView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
                         Image(systemName: "sparkles")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white)
                     }
                     // 气泡（bg-white/80 border border-[#d2d2d7]/50 shadow-sm）
+                    // rounded-2xl=16pt, px-4=16pt, py-3=12pt（Figma-Spec-v2 §09）
                     VStack(alignment: .leading, spacing: 0) {
                         if isStreaming && message.content.isEmpty {
                             typingIndicator
-                                .padding(.horizontal, 14)
+                                .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                         } else {
                             aiBubbleContent
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 10)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
                         }
                     }
                     .background(Color.white.opacity(0.80))
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 0.75)
                     )
                     .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
@@ -773,21 +779,25 @@ struct AIMessageBubbleView: View {
     }
 
     // Typing 指示器（三点弹跳，对齐规范 §09 §06）
+    // w-2 h-2 = 8pt（Figma-Spec-v2 §09 Typing 指示器）
     private var typingIndicator: some View {
         HStack(spacing: 4) {
             ForEach(0..<3, id: \.self) { i in
                 Circle()
                     .fill(Color(hex: "#86868b"))
-                    .frame(width: 6, height: 6)
-                    // 错开弹跳延迟
+                    .frame(width: 8, height: 8)
+                    // 错开 Y 轴偏移产生弹跳效果
+                    .offset(y: bounce ? -4 : 0)
                     .animation(
                         .easeInOut(duration: 0.5)
                             .repeatForever(autoreverses: true)
-                            .delay(Double(i) * 0.15),
-                        value: isStreaming
+                            .delay(Double(i) * 0.16),
+                        value: bounce
                     )
             }
         }
+        .onAppear { bounce = true }
+        .onDisappear { bounce = false }
     }
 }
 
@@ -885,7 +895,7 @@ struct AICodeBlockView: View {
                     .foregroundColor(DesignTokens.Colors.accentPrimary.opacity(0.9))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
+                    .padding(DesignTokens.Spacing.sm)
             }
         }
         .background(DesignTokens.Colors.surfaceWindow)
