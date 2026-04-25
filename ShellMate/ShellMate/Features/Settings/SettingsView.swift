@@ -47,8 +47,7 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(width: 600, height: 520)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
+        .background(DesignTokens.Colors.surfaceOverlay)
     }
 
     // MARK: - 顶部选择器
@@ -69,32 +68,33 @@ struct SettingsView: View {
                     }
                     .foregroundColor(
                         selectedTab == tab
-                            ? Color(hex: "#1d1d1f")
-                            : Color(hex: "#6e6e73")
+                            ? DesignTokens.Colors.accentPrimary
+                            : DesignTokens.Colors.textSecondary
                     )
                     .frame(maxWidth: .infinity)
                     .frame(height: 30)
                     .background(
                         selectedTab == tab
-                            ? Color.white.opacity(0.95)
+                            ? DesignTokens.Colors.surfaceActive
                             : Color.clear
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .shadow(
-                        color: selectedTab == tab ? Color.black.opacity(0.06) : .clear,
-                        radius: 2, x: 0, y: 1
-                    )
+                    .shadow(color: selectedTab == tab ? Color.black.opacity(0.08) : Color.clear, radius: 3, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(DesignTokens.Spacing.xxs)
-        .background(Color.black.opacity(0.05))
+        .background(DesignTokens.Colors.surfaceCard)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+        )
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .background(DesignTokens.Colors.surfaceOverlay)
     }
 
     // MARK: - 内容区

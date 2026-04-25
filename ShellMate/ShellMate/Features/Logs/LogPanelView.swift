@@ -16,7 +16,7 @@ extension SessionLogEntry.LogType {
     /// 行背景色（对齐 Figma bg-*-50）
     var rowBackground: Color {
         switch self {
-        case .info:    return Color.white.opacity(0.80)
+        case .info:    return DesignTokens.Colors.surfaceCard.opacity(0.80)
         case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.08)
         case .error:   return DesignTokens.Colors.statusError.opacity(0.08)
         case .command: return DesignTokens.Colors.accentPrimary.opacity(0.07)
@@ -83,14 +83,13 @@ struct LogPanelView: View {
         // 对齐 Figma §14：sm:max-w-[900px] rounded-2xl shadow-2xl border border-[#d2d2d7]/50
         .frame(width: 900)
         .frame(minHeight: 400, maxHeight: 640)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
+        .background(DesignTokens.Colors.surfaceOverlay)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
         )
-        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
+        .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
     }
 
     // MARK: - 头部
@@ -204,11 +203,11 @@ struct LogPanelView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceInput)
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
 
             // 会话过滤
@@ -258,7 +257,7 @@ struct LogPanelView: View {
                 }
             }
         }
-        .background(Color(hex: "#fafafa"))
+        .background(DesignTokens.Colors.surfacePanel)
     }
 
     private var emptyLogView: some View {
@@ -291,25 +290,25 @@ struct LogPanelView: View {
 
                 Text(formatter.string(from: entry.timestamp))
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(Color(hex: "#86868b"))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
 
                 Spacer()
 
-                // 会话名徽章（text-xs bg-white/60 px-2 py-0.5 rounded-full）
+                // Void: 会话名徽章
                 Text(entry.sessionName)
                     .font(.system(size: 10))
-                    .foregroundColor(Color(hex: "#1d1d1f"))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(Color.white.opacity(0.60))
+                    .background(DesignTokens.Colors.surfaceCard)
                     .clipShape(Capsule())
             }
 
-            // 内容（text-sm text-[#1d1d1f] font-mono）
+            // Void: 内容文字
             Text(entry.content)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

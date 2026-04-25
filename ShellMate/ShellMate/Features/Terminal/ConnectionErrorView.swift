@@ -27,11 +27,11 @@ struct ConnectionErrorAnalysis {
 
         var iconColor: Color {
             switch self {
-            case .authFailed:         return Color(hex: "#ff9500")
-            case .networkUnreachable: return Color(hex: "#ff3b30")
-            case .hostKeyChanged:     return Color(hex: "#ff3b30")
-            case .portBlocked:        return Color(hex: "#ff9500")
-            case .unknown:            return Color(hex: "#86868b")
+            case .authFailed:         return DesignTokens.Colors.statusConnecting
+            case .networkUnreachable: return DesignTokens.Colors.statusError
+            case .hostKeyChanged:     return DesignTokens.Colors.statusError
+            case .portBlocked:        return DesignTokens.Colors.statusConnecting
+            case .unknown:            return DesignTokens.Colors.textSecondary
             }
         }
     }
@@ -136,12 +136,11 @@ struct ConnectionErrorView: View {
             footerView
         }
         .frame(width: 440)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
     }
@@ -203,7 +202,7 @@ struct ConnectionErrorView: View {
                 }
                 .frame(maxHeight: 60)
                 .padding(DesignTokens.Spacing.sm)
-                .background(Color.black.opacity(0.04))
+                .background(DesignTokens.Colors.surfaceHover)
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             }
 

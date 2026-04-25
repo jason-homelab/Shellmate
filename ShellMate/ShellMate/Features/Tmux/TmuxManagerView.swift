@@ -45,19 +45,13 @@ struct TmuxManagerView: View {
         // 对齐规范 §10：sm:max-w-[900px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
         .frame(width: 900)
         .frame(minHeight: 420, maxHeight: 660)
-        .background {
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.95))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 0.75)
-                }
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
         }
-        .shadow(color: .black.opacity(0.25), radius: 24, x: 0, y: 8)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.50), radius: 24, x: 0, y: 8)
         .overlay {
             if showNewSessionSheet {
                 Color.black.opacity(0.3)
@@ -88,7 +82,7 @@ struct TmuxManagerView: View {
         HStack(spacing: 0) {
             Image(systemName: "rectangle.3.group")
                 .font(.system(size: 13))
-                .foregroundColor(Color(hex: "#34c759"))
+                .foregroundColor(DesignTokens.Colors.accentSecondary)
                 .padding(.trailing, 8)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -135,7 +129,7 @@ struct TmuxManagerView: View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 11))
-                .foregroundColor(Color(hex: "#ff9500"))
+                .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("当前服务器的 tmux 版本低于 2.0，部分功能可能不兼容，建议升级至 tmux 2.0 或更高版本")
                 .font(.system(size: 11))
                 .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -145,7 +139,7 @@ struct TmuxManagerView: View {
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: "#ff9500").opacity(0.10))
+        .background(DesignTokens.Colors.statusConnecting.opacity(0.10))
         .overlay(Divider(), alignment: .bottom)
     }
 
@@ -231,7 +225,7 @@ struct TmuxManagerView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color(hex: "#34c759"))
+                    .background(DesignTokens.Colors.accentSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -290,7 +284,7 @@ struct TmuxManagerView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color(hex: "#34c759"))
+                            .background(DesignTokens.Colors.accentSecondary)
                             .clipShape(Capsule())
                     }
 
@@ -334,9 +328,9 @@ struct TmuxManagerView: View {
                     } label: {
                         Image(systemName: "play.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(Color(hex: "#34c759"))
+                            .foregroundColor(DesignTokens.Colors.accentSecondary)
                             .frame(width: 28, height: 28)
-                            .background(Color(hex: "#34c759").opacity(0.10))
+                            .background(DesignTokens.Colors.accentSecondary.opacity(0.10))
                             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -376,14 +370,14 @@ struct TmuxManagerView: View {
             if isAttached {
                 LinearGradient(
                     colors: [
-                        Color(hex: "#34c759").opacity(0.10),
-                        Color(hex: "#30d158").opacity(0.08)
+                        DesignTokens.Colors.accentSecondary.opacity(0.10),
+                        DesignTokens.Colors.statusConnected.opacity(0.08)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             } else {
-                Color.white.opacity(0.80)
+                DesignTokens.Colors.surfaceCard
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -391,8 +385,8 @@ struct TmuxManagerView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(
                     isAttached
-                        ? Color(hex: "#34c759").opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
+                        ? DesignTokens.Colors.accentSecondary.opacity(0.30)
+                        : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.5
                 )
         )
@@ -458,7 +452,7 @@ struct TmuxManagerView: View {
             // 索引徽章
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.black.opacity(0.05))
+                    .fill(DesignTokens.Colors.surfaceHover)
                     .frame(width: 32, height: 32)
                 Text("\(window.index)")
                     .font(.system(size: 13, weight: .bold, design: .monospaced))
@@ -494,14 +488,14 @@ struct TmuxManagerView: View {
             if isActive {
                 LinearGradient(
                     colors: [
-                        Color(hex: "#007aff").opacity(0.10),
-                        Color(hex: "#5856d6").opacity(0.08)
+                        DesignTokens.Colors.accentPrimary.opacity(0.10),
+                        DesignTokens.Colors.accentAI.opacity(0.08)
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             } else {
-                Color.white.opacity(0.80)
+                DesignTokens.Colors.surfaceCard
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -509,8 +503,8 @@ struct TmuxManagerView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .strokeBorder(
                     isActive
-                        ? Color(hex: "#007aff").opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
+                        ? DesignTokens.Colors.accentPrimary.opacity(0.30)
+                        : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.5
                 )
         )
@@ -548,10 +542,10 @@ struct TmuxManagerView: View {
     }
 
     private let quickActionItems: [(title: String, subtitle: String, icon: String, command: String, color: Color)] = [
-        ("水平分割", "Ctrl+B then \"",  "rectangle.split.1x2",                    "tmux split-window -h",      Color(hex: "#007aff")),
-        ("垂直分割", "Ctrl+B then %",   "rectangle.split.2x1",                    "tmux split-window -v",      Color(hex: "#34c759")),
-        ("新建窗口", "Ctrl+B then C",   "plus.rectangle",                          "tmux new-window",           Color(hex: "#ff9500")),
-        ("缩放窗格", "Ctrl+B then Z",   "arrow.up.left.and.arrow.down.right",      "tmux resize-pane -Z",       Color(hex: "#5856d6"))
+        ("水平分割", "Ctrl+B then \"",  "rectangle.split.1x2",                    "tmux split-window -h",      DesignTokens.Colors.accentPrimary),
+        ("垂直分割", "Ctrl+B then %",   "rectangle.split.2x1",                    "tmux split-window -v",      DesignTokens.Colors.accentSecondary),
+        ("新建窗口", "Ctrl+B then C",   "plus.rectangle",                          "tmux new-window",           DesignTokens.Colors.statusConnecting),
+        ("缩放窗格", "Ctrl+B then Z",   "arrow.up.left.and.arrow.down.right",      "tmux resize-pane -Z",       DesignTokens.Colors.accentAI)
     ]
 
     private let commonCommands: [(command: String, description: String)] = [
@@ -591,11 +585,11 @@ struct TmuxManagerView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(DesignTokens.Spacing.md)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
             .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
         }
@@ -627,11 +621,11 @@ struct TmuxManagerView: View {
             .help("复制到剪贴板")
         }
         .padding(DesignTokens.Spacing.sm)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 

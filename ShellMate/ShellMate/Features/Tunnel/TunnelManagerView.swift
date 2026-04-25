@@ -41,12 +41,12 @@ struct TunnelManagerView: View {
         // 对齐规范 §11：sm:max-w-[700px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
         .frame(width: 700)
         .frame(minHeight: 300, maxHeight: 560)
-        .background(Color.white.opacity(0.95))
+        .background(DesignTokens.Colors.surfaceOverlay)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 1)
+                .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
         .alert("启动失败", isPresented: $showStartError) {
@@ -353,10 +353,10 @@ private struct TunnelCardView: View {
                 Button(action: onToggle) {
                     Text(rule.status.isActive ? "停止" : "启动")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(rule.status.isActive ? Color(hex: "#1a6b1a") : DesignTokens.Colors.textSecondary)
+                        .foregroundColor(rule.status.isActive ? DesignTokens.Colors.statusConnected : DesignTokens.Colors.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(rule.status.isActive ? Color(hex: "#34c759").opacity(0.12) : Color.black.opacity(0.05))
+                        .background(rule.status.isActive ? DesignTokens.Colors.accentSecondary.opacity(0.12) : DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -366,7 +366,7 @@ private struct TunnelCardView: View {
                         .font(.system(size: 11))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
-                        .background(Color.black.opacity(0.04))
+                        .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -387,14 +387,14 @@ private struct TunnelCardView: View {
             TunnelTypeBadgeView(type: rule.type)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.06) : Color.white.opacity(0.80))
+        .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.06) : DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(
                     isSelected
                         ? DesignTokens.Colors.accentPrimary.opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
+                        : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.5
                 )
         )

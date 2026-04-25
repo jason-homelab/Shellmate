@@ -86,9 +86,9 @@ struct SessionFormSheet: View {
 
     // MARK: - 颜色常量
 
-    private let labelColor = Color(hex: "#1d1d1f")
-    private let borderColor = Color(hex: "#d2d2d7").opacity(0.5)
-    private let fieldBackground = Color.white.opacity(0.8)
+    private let labelColor = DesignTokens.Colors.textPrimary
+    private let borderColor = DesignTokens.Colors.borderPrimary
+    private let fieldBackground = DesignTokens.Colors.surfaceInput
 
     // MARK: - 视图
 
@@ -152,7 +152,7 @@ struct SessionFormSheet: View {
                             HStack {
                                 Text("保存密码到 Keychain")
                                     .font(.system(size: 12))
-                                    .foregroundColor(Color(hex: "#6e6e73"))
+                                    .foregroundColor(DesignTokens.Colors.textSecondary)
                                 Spacer()
                                 Toggle("", isOn: $saveCredential)
                                     .toggleStyle(.switch)
@@ -326,16 +326,16 @@ struct SessionFormSheet: View {
                         label: {
                             Text("高级设置")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(Color(hex: "#007aff"))
+                                .foregroundColor(DesignTokens.Colors.accentPrimary)
                         }
                     )
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.5))
+                    .background(DesignTokens.Colors.surfaceCard)
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(borderColor, lineWidth: 1)
+                            .strokeBorder(borderColor, lineWidth: 0.75)
                     )
                 }
                 .padding(DesignTokens.Spacing.xl)
@@ -351,12 +351,12 @@ struct SessionFormSheet: View {
         .frame(minHeight: 520)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.95))
+                .fill(DesignTokens.Colors.surfaceOverlay)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.5), lineWidth: 1)
+                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
                 )
-                .shadow(color: Color.black.opacity(0.15), radius: 32, x: 0, y: 8)
+                .shadow(color: Color.black.opacity(0.50), radius: 32, x: 0, y: 8)
         )
         .onAppear {
             loadSessionData()
@@ -381,7 +381,7 @@ struct SessionFormSheet: View {
                     .foregroundColor(labelColor)
                 Text("填写连接信息")
                     .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#6e6e73"))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
             Spacer()
@@ -389,9 +389,9 @@ struct SessionFormSheet: View {
             Button(action: { onCancel?() }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(hex: "#6e6e73"))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
-                    .background(Color(hex: "#f2f2f7"))
+                    .background(DesignTokens.Colors.surfaceHover)
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -409,29 +409,33 @@ struct SessionFormSheet: View {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 12))
-                        .foregroundColor(Color(hex: "#ff3b30"))
+                        .foregroundColor(DesignTokens.Colors.statusError)
                     Text(validationErrors.first ?? "")
                         .font(.system(size: 12))
-                        .foregroundColor(Color(hex: "#ff3b30"))
+                        .foregroundColor(DesignTokens.Colors.statusError)
                 }
             }
 
             Spacer()
 
-            // 取消按钮（对齐规范：ghost，text-[#1d1d1f]，hover:bg-black/5，rounded-lg）
+            // Void: 取消按钮 ghost
             Button("取消") {
                 onCancel?()
             }
             .font(.system(size: 14))
-            .foregroundColor(Color(hex: "#1d1d1f"))
+            .foregroundColor(DesignTokens.Colors.textSecondary)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color.clear)
+            .background(DesignTokens.Colors.surfaceCard)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: [])
 
-            // 保存按钮（对齐规范：bg-[#007aff] hover:bg-[#0051d5] shadow-lg shadow-[#007aff]/30 disabled:opacity-40）
+            // Void: 保存按钮 Apple Blue 主色
             Button(isEditing ? "保存会话" : "保存会话") {
                 saveSession()
             }
@@ -439,9 +443,9 @@ struct SessionFormSheet: View {
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color(hex: "#007aff"))
+            .background(DesignTokens.Colors.accentPrimary)
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .shadow(color: Color(hex: "#007aff").opacity(0.3), radius: 12, x: 0, y: 4)
+            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 12, x: 0, y: 4)
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(!canSave)

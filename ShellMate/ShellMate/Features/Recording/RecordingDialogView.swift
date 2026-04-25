@@ -2,9 +2,17 @@ import SwiftUI
 
 // MARK: - 录制对话框（Figma-Spec-v2 §14 §6）
 
-/// 终端会话录制对话框
-/// recorder 由 TerminalController 持有并传入，确保数据管道正确连接。
+/// 终端会话录制对话框 — 三状态：就绪 / 录制中 / 回顾
+/// sm:max-w-2xl ≈ 672pt，对齐 Figma-Spec-v2 更新后规范
 struct RecordingDialogView: View {
+
+    // MARK: - 录制阶段
+
+    enum RecordingPhase: Equatable {
+        case ready
+        case recording
+        case review
+    }
 
     // MARK: - 属性
 
@@ -14,14 +22,18 @@ struct RecordingDialogView: View {
     let recorder: SessionRecorder
     var onClose: () -> Void
 
-    // MARK: - 录制状态
+    // MARK: - 状态
 
-    @State private var isRecording = false
+    @State private var recordingPhase: RecordingPhase = .ready
     @State private var elapsedSeconds: TimeInterval = 0
     @State private var elapsedTimer: Timer?
 
-    // MARK: - 录制文件列表
+    /// 回顾阶段：上次录制的元数据
+    @State private var reviewDuration: TimeInterval = 0
+    @State private var reviewFilename: String = ""
+    @State private var reviewFileSize: Int64 = 0
 
+    /// 历史录制文件
     @State private var recordings: [RecordingFile] = []
     @State private var isSaving = false
     @State private var saveError: String?
@@ -42,9 +54,18 @@ struct RecordingDialogView: View {
         VStack(spacing: 0) {
             headerView
             Divider()
-            recordingControlSection
-            Divider()
-            recordingsListSection
+            switch recordingPhase {
+            case .ready:
+                readyStateView
+                if !recordings.isEmpty {
+                    Divider()
+                    recordingsListSection
+                }
+            case .recording:
+                recordingStateView
+            case .review:
+                reviewStateView
+            }
             if let error = saveError {
                 Text(error)
                     .font(.system(size: 11))
@@ -55,14 +76,14 @@ struct RecordingDialogView: View {
             Divider()
             footerView
         }
-        .frame(width: 500)
-        .frame(minHeight: 380, maxHeight: 600)
-        .background(Color.white.opacity(0.95))
+        .frame(minWidth: 560, maxWidth: 672)
+        .frame(minHeight: 340, maxHeight: 600)
+        .background(DesignTokens.Colors.surfaceOverlay)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .onAppear {
@@ -71,8 +92,8 @@ struct RecordingDialogView: View {
             Task {
                 let recording = await recorder.isRecording
                 await MainActor.run {
-                    if recording && !isRecording {
-                        isRecording = true
+                    if recording && recordingPhase == .ready {
+                        recordingPhase = .recording
                         startTimer()
                     }
                 }
@@ -97,16 +118,15 @@ struct RecordingDialogView: View {
 
     private var headerView: some View {
         HStack(spacing: 10) {
-            // 录制图标（红色渐变，对齐 Figma §6）
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(LinearGradient(
-                        colors: [Color(hex: "#ff3b30"), Color(hex: "#ff2d55")],
+                        colors: [DesignTokens.Colors.statusError, DesignTokens.Colors.statusError],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))
                     .frame(width: 36, height: 36)
-                    .shadow(color: Color(hex: "#ff3b30").opacity(0.35), radius: 6, x: 0, y: 3)
+                    .shadow(color: DesignTokens.Colors.statusError.opacity(0.35), radius: 6, x: 0, y: 3)
                 Image(systemName: "record.circle")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
@@ -137,70 +157,217 @@ struct RecordingDialogView: View {
         .padding(.vertical, 14)
     }
 
-    // MARK: - 录制控制区
+    // MARK: - 就绪状态
 
-    private var recordingControlSection: some View {
-        HStack(spacing: 16) {
-            // 状态指示灯
+    private var readyStateView: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            ZStack {
+                Circle()
+                    .fill(DesignTokens.Colors.statusError.opacity(0.08))
+                    .frame(width: 64, height: 64)
+                Image(systemName: "record.circle")
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundColor(DesignTokens.Colors.statusError)
+            }
+
+            VStack(spacing: 6) {
+                Text("准备录制")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("将捕获当前终端会话的所有输入输出，保存为 asciinema v2 格式")
+                    .font(.system(size: 12))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 380)
+                if !sessionName.isEmpty {
+                    Text("会话：\(sessionName)")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
+            }
+
+            Button {
+                startRecording()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "record.circle.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("开始录制")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 9)
+                .background(DesignTokens.Colors.statusError)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .shadow(color: DesignTokens.Colors.statusError.opacity(0.30), radius: 6, x: 0, y: 3)
+            }
+            .buttonStyle(.plain)
+            .disabled(sessionName.isEmpty)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DesignTokens.Spacing.xl)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+    }
+
+    // MARK: - 录制中状态
+
+    private var recordingStateView: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            // 录制指示灯
             HStack(spacing: 8) {
                 Circle()
-                    .fill(isRecording ? Color(hex: "#ff3b30") : Color(hex: "#c7c7cc"))
+                    .fill(DesignTokens.Colors.statusError)
                     .frame(width: 10, height: 10)
                     .overlay(
-                        isRecording ?
                         Circle()
-                            .stroke(Color(hex: "#ff3b30").opacity(0.4), lineWidth: 2)
+                            .stroke(DesignTokens.Colors.statusError.opacity(0.35), lineWidth: 2)
                             .scaleEffect(1.6)
-                            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isRecording)
-                        : nil
+                            .animation(
+                                .easeInOut(duration: 0.8).repeatForever(autoreverses: true),
+                                value: recordingPhase
+                            )
                     )
+                Text("录制中")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(DesignTokens.Colors.statusError)
+            }
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(isRecording ? "录制中" : "已就绪")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(isRecording ? Color(hex: "#ff3b30") : DesignTokens.Colors.textPrimary)
-                    if isRecording {
-                        Text(elapsedFormatted)
+            // 大计时器
+            Text(elapsedFormatted)
+                .font(.system(size: 52, weight: .thin, design: .monospaced))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .monospacedDigit()
+
+            if !sessionName.isEmpty {
+                Text("会话：\(sessionName)")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
+
+            Button {
+                stopRecording()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("停止录制")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 9)
+                .background(DesignTokens.Colors.statusError)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DesignTokens.Spacing.xl)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .background(DesignTokens.Colors.statusError.opacity(0.03))
+    }
+
+    // MARK: - 回顾状态
+
+    private var reviewStateView: some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            // 深色预览块（#1e1e1e 背景）
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.statusConnected)
+                    Text("录制完成")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                    Spacer()
+                    if isSaving {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.white)
+                    }
+                }
+
+                Divider()
+                    .background(Color.white.opacity(0.15))
+
+                HStack(spacing: DesignTokens.Spacing.xl) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("时长")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.white.opacity(0.50))
+                        Text(durationFormatted(reviewDuration))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("文件大小")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.white.opacity(0.50))
+                        Text(fileSizeFormatted(reviewFileSize))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("文件名")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.white.opacity(0.50))
+                        Text(reviewFilename.isEmpty ? "—" : reviewFilename)
                             .font(.system(size: 11, design: .monospaced))
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
-                    } else {
-                        Text("会话：\(sessionName.isEmpty ? "未选中" : sessionName)")
-                            .font(.system(size: 11))
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
+                            .foregroundColor(Color.white.opacity(0.80))
                             .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                 }
             }
+            .padding(DesignTokens.Spacing.md)
+            .background(DesignTokens.Colors.terminalPreviewBg)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-            Spacer()
-
-            // 开始/停止按钮
-            Button {
-                isRecording ? stopRecording() : startRecording()
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: isRecording ? "stop.fill" : "record.circle.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text(isRecording ? "停止录制" : "开始录制")
-                        .font(.system(size: 12, weight: .semibold))
+            // 操作按钮行
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                // 重录（outline 按钮）
+                Button {
+                    elapsedSeconds = 0
+                    saveError = nil
+                    recordingPhase = .ready
+                    loadRecordings()
+                } label: {
+                    Text("重录")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .background(DesignTokens.Colors.surfaceCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                        )
                 }
-                .foregroundColor(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(isRecording ? Color(hex: "#ff3b30") : DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .buttonStyle(.plain)
+
+                // 完成（blue 按钮）
+                Button {
+                    onClose()
+                } label: {
+                    Text("完成")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .background(DesignTokens.Colors.accentPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .disabled(sessionName.isEmpty && !isRecording)
         }
+        .padding(.vertical, DesignTokens.Spacing.lg)
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 14)
-        .background(isRecording
-            ? Color(hex: "#ff3b30").opacity(0.04)
-            : DesignTokens.Colors.surfaceCard)
     }
 
-    // MARK: - 录制文件列表
+    // MARK: - 历史录制文件列表
 
     private var recordingsListSection: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -217,42 +384,28 @@ struct RecordingDialogView: View {
             .padding(.top, 10)
             .padding(.bottom, 6)
 
-            if recordings.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "film")
-                        .font(.system(size: 24))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                    Text("暂无录制文件")
-                        .font(.system(size: 12))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 4) {
-                        ForEach(recordings) { recording in
-                            recordingRow(recording)
-                        }
+            ScrollView {
+                LazyVStack(spacing: 4) {
+                    ForEach(recordings) { recording in
+                        recordingRow(recording)
                     }
-                    .padding(.horizontal, DesignTokens.Spacing.lg)
-                    .padding(.bottom, 8)
                 }
-                .frame(maxHeight: 200)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .padding(.bottom, 8)
             }
+            .frame(maxHeight: 200)
         }
     }
 
     private func recordingRow(_ recording: RecordingFile) -> some View {
         HStack(spacing: 10) {
-            // 文件图标
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color(hex: "#ff3b30").opacity(0.08))
+                    .fill(DesignTokens.Colors.statusError.opacity(0.08))
                     .frame(width: 28, height: 28)
                 Image(systemName: "play.rectangle")
                     .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#ff3b30"))
+                    .foregroundColor(DesignTokens.Colors.statusError)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -279,9 +432,7 @@ struct RecordingDialogView: View {
 
             Spacer()
 
-            // 操作按钮
             HStack(spacing: 2) {
-                // Finder 中显示
                 Button {
                     RecordingStorage.revealInFinder(filename: recording.filename)
                 } label: {
@@ -289,13 +440,12 @@ struct RecordingDialogView: View {
                         .font(.system(size: 11))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
-                        .background(Color.black.opacity(0.04))
+                        .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("在 Finder 中显示")
 
-                // 删除
                 Button {
                     pendingDeleteFilename = recording.filename
                     showDeleteConfirm = true
@@ -311,11 +461,11 @@ struct RecordingDialogView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(Color.white.opacity(0.70))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 
@@ -351,7 +501,7 @@ struct RecordingDialogView: View {
         Task {
             await recorder.startRecording(sessionName: sessionName)
             await MainActor.run {
-                isRecording = true
+                recordingPhase = .recording
                 startTimer()
             }
         }
@@ -359,12 +509,14 @@ struct RecordingDialogView: View {
 
     private func stopRecording() {
         stopTimer()
-        isRecording = false
         isSaving = true
 
         Task {
             guard let result = await recorder.stopRecording() else {
-                await MainActor.run { isSaving = false }
+                await MainActor.run {
+                    isSaving = false
+                    recordingPhase = .ready
+                }
                 return
             }
 
@@ -377,12 +529,17 @@ struct RecordingDialogView: View {
                 )
                 await MainActor.run {
                     isSaving = false
+                    reviewDuration = result.duration
+                    reviewFilename = file.filename
+                    reviewFileSize = file.fileSize
                     recordings.insert(file, at: 0)
+                    recordingPhase = .review
                 }
             } catch {
                 await MainActor.run {
                     isSaving = false
                     saveError = "保存失败：\(error.localizedDescription)"
+                    recordingPhase = .ready
                 }
             }
         }

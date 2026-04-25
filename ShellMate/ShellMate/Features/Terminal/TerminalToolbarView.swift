@@ -54,8 +54,7 @@ struct TerminalToolbarView: View {
         .padding(.vertical, DesignTokens.Spacing.sm)
         .background {
             Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay(Rectangle().fill(DesignTokens.Colors.glassUltraLight))
+                .fill(DesignTokens.Colors.surfacePanel)
                 .overlay(alignment: .bottom) {
                     Rectangle()
                         .fill(DesignTokens.Colors.glassBorderSide)
@@ -98,11 +97,21 @@ struct TerminalToolbarView: View {
                 decreaseFontSize()
             }
 
-            // 字号显示
+            // 字号显示（精致芯片样式）
             Text("\(Int(fontSize))pt")
-                .font(DesignTokens.Typography.codeMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: 40)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .frame(width: 36)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(DesignTokens.Colors.glassUltraLight)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .strokeBorder(DesignTokens.Colors.glassBorderBottom, lineWidth: 0.5)
+                        )
+                )
 
             // 字号增大
             ToolbarButton(
@@ -247,9 +256,9 @@ struct ToolbarButton: View {
                 .font(.system(size: 13, weight: .regular))
                 .imageScale(.medium)
                 .foregroundColor(buttonColor)
-                .frame(width: 26, height: 26, alignment: .center)
+                .frame(width: 28, height: 28, alignment: .center)
                 .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())

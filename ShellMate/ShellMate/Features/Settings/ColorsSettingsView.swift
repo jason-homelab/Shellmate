@@ -75,7 +75,7 @@ struct ColorsSettingsView: View {
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.05))
+                            .background(DesignTokens.Colors.surfaceHover)
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -125,16 +125,16 @@ struct ColorsSettingsView: View {
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.black.opacity(0.04))
+                .background(DesignTokens.Colors.surfaceHover)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 

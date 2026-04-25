@@ -41,7 +41,7 @@ struct QuickCommandManagerView: View {
         // 对齐规范 §12：sm:max-w-[700px] max-h-[80vh]，bg-white/95 backdrop-blur-2xl，rounded-2xl
         .frame(width: 700)
         .frame(minHeight: 360, maxHeight: 560)
-        .background(Color.white.opacity(0.95))
+        .background(DesignTokens.Colors.surfaceOverlay)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
@@ -249,7 +249,7 @@ struct QuickCommandManagerView: View {
                         .lineLimit(2)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.05))
+                        .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
             }
@@ -282,7 +282,7 @@ struct QuickCommandManagerView: View {
                         .font(.system(size: 11))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 32, height: 32)
-                        .background(Color.black.opacity(0.04))
+                        .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -303,7 +303,7 @@ struct QuickCommandManagerView: View {
         }
         .padding(DesignTokens.Spacing.md)
         // 对齐规范 §12 §5：bg-white/80 backdrop-blur-sm rounded-xl border border-[#d2d2d7]/50
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
@@ -368,7 +368,7 @@ struct QuickCommandManagerView: View {
                             }
                             TextEditor(text: $formDraft.content)
                                 .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(Color(hex: "#1d1d1f"))
+                                .foregroundColor(DesignTokens.Colors.textPrimary)
                                 .frame(minHeight: 72)
                                 .scrollContentBackground(.hidden)
                                 .background(Color.white)
@@ -377,7 +377,7 @@ struct QuickCommandManagerView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .strokeBorder(Color(hex: "#d2d2d7"), lineWidth: 0.75)
+                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
                         )
                     }
 
@@ -424,7 +424,7 @@ struct QuickCommandManagerView: View {
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.black.opacity(0.04))
+                        .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
 
                         // Add / Update Command（bg-[#007aff]）
@@ -467,7 +467,7 @@ struct QuickCommandManagerView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
             content()
         }
     }

@@ -1,74 +1,95 @@
+// UI 重构 by Frontend Designer Style
 import SwiftUI
 
-/// 分组头部视图
-/// 在侧边栏中显示分组名称，支持展开/折叠
+/// 分组头部视图 — Void 设计语言
+/// 对齐 main-window.html .folder-row 规范，新增 hover 反馈 + 精致图标徽章
 struct GroupHeaderView: View {
 
     // MARK: - 属性
 
-    /// 分组数据
     let group: SessionGroup
-
-    /// 分组下的会话数量
     var sessionCount: Int = 0
-
-    /// 展开/折叠回调
     var onToggle: (() -> Void)?
-
-    /// 双击回调（编辑分组）
     var onDoubleClick: (() -> Void)?
+
+    // MARK: - 状态
+
+    @State private var isHovering = false
 
     // MARK: - 视图
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
-            // 展开/折叠箭头
-            Button(action: {
-                withAnimation(DesignTokens.Animation.fast) {
-                    onToggle?()
-                }
-            }) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                    .rotationEffect(.degrees(group.isExpanded ? 90 : 0))
+
+            // ── 展开/折叠箭头 ──
+            // HTML: .folder-chevron { font-size:9px; color:var(--text-4) }
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundColor(
+                    isHovering
+                        ? DesignTokens.Colors.textSecondary
+                        : DesignTokens.Colors.textDisabled
+                )
+                .frame(width: 12)
+                .rotationEffect(.degrees(group.isExpanded ? 90 : 0))
+                .animation(DesignTokens.Animation.fast, value: group.isExpanded)
+
+            // ── 文件夹图标徽章 ──
+            // HTML: .folder-icon { width:22px; height:22px; bg:rgba(0,212,170,0.06); border:rgba(0,212,170,0.10) }
+            ZStack {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(group.color.opacity(0.10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .strokeBorder(group.color.opacity(0.18), lineWidth: 0.75)
+                    )
+                    .frame(width: 22, height: 22)
+                Image(systemName: group.isExpanded ? "folder.fill" : "folder")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundColor(group.color.opacity(0.75))
             }
-            .buttonStyle(.plain)
-            .frame(width: 16, height: 16)
 
-            // 文件夹图标（颜色取自分组 colorHex）
-            Image(systemName: "folder.fill")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(group.color)
-
-            // 分组名称
+            // ── 分组名称 ──
             Text(group.name)
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(
+                    isHovering
+                        ? DesignTokens.Colors.textPrimary
+                        : DesignTokens.Colors.textSecondary
+                )
                 .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 0)
 
-            // 会话数量角标
+            // ── 会话数徽章 ──
+            // HTML: .folder-badge { font-size:9.5px; bg:rgba(255,255,255,0.04); border:rgba(255,255,255,0.04) }
             Text("\(sessionCount)")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(minWidth: 18)
-                .padding(.horizontal, DesignTokens.Spacing.xs)
-                .padding(.vertical, DesignTokens.Spacing.xxxs)
-                .background(Color.black.opacity(0.05))
-                .clipShape(Capsule())
+                .font(.system(size: 9.5, weight: .regular, design: .monospaced))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(
+                    Capsule()
+                        .fill(DesignTokens.Colors.glassUltraLight)
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(DesignTokens.Colors.glassBorderBottom, lineWidth: 0.5)
+                        )
+                )
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .frame(height: DesignTokens.Sizes.groupRowHeight)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isHovering ? DesignTokens.Colors.surfaceHover : Color.clear)
+        )
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            onDoubleClick?()
+        .onHover { hovering in
+            withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }
         }
+        .onTapGesture(count: 2) { onDoubleClick?() }
         .onTapGesture(count: 1) {
-            withAnimation(DesignTokens.Animation.fast) {
-                onToggle?()
-            }
+            withAnimation(DesignTokens.Animation.fast) { onToggle?() }
         }
     }
 }
@@ -76,22 +97,22 @@ struct GroupHeaderView: View {
 // MARK: - 预览
 
 #Preview("分组头部") {
-    VStack(spacing: 0) {
+    VStack(spacing: 1) {
         GroupHeaderView(
             group: SessionGroup(name: "开发服务器", colorHex: "#4A90D9", isExpanded: true),
             sessionCount: 5
         )
-
         GroupHeaderView(
             group: SessionGroup(name: "生产服务器", colorHex: "#F04060", isExpanded: false),
             sessionCount: 3
         )
-
         GroupHeaderView(
             group: SessionGroup(name: "测试环境", colorHex: "#F0A500", isExpanded: true),
             sessionCount: 8
         )
     }
-    .padding()
-    .background(DesignTokens.Colors.surfaceWindow)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, DesignTokens.Spacing.xs)
+    .frame(width: 240)
+    .background(DesignTokens.Colors.surfacePanel)
 }
