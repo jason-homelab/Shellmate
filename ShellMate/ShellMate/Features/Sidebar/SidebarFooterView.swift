@@ -1,71 +1,58 @@
 import SwiftUI
 
-/// 侧边栏底部视图
-/// 包含新建会话按钮和其他快捷操作
+/// 侧边栏底部统计条 — 1:1 对齐 main-window.html .sidebar-footer
+/// HTML: border-top + padding:8px 12px + flex justify-between
+/// 显示"N connected"和"N total"两个等宽字体极暗色统计标签
 struct SidebarFooterView: View {
 
     // MARK: - 属性
 
-    /// 新建会话回调
-    var onNewSession: (() -> Void)?
+    /// 当前连接数
+    var connectedCount: Int = 0
 
-    /// 新建分组回调
-    var onNewGroup: (() -> Void)?
+    /// 会话总数
+    var totalCount: Int = 0
 
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            // 新建会话按钮
-            Button(action: {
-                onNewSession?()
-            }) {
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .semibold))
-
-                    Text("新建会话")
-                        .font(DesignTokens.Typography.labelMedium)
-                }
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: DesignTokens.Sizes.buttonHeight)
-                .background(DesignTokens.Colors.accentPrimary.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        HStack {
+            // HTML: .sidebar-stat-val { color: rgba(52,211,153,0.75); font-weight:600 }
+            // HTML: "N connected" — N 用绿色加粗，" connected" 用极暗色
+            HStack(spacing: 3) {
+                Text("\(connectedCount)")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.statusConnected.opacity(0.75))
+                Text("connected")
+                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .buttonStyle(.plain)
 
-            // 新建分组按钮
-            Button(action: {
-                onNewGroup?()
-            }) {
-                Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 14))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .frame(width: DesignTokens.Sizes.buttonHeight, height: DesignTokens.Sizes.buttonHeight)
-                    .background(DesignTokens.Colors.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .help("新建分组")
+            Spacer()
+
+            Text("\(totalCount) total")
+                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
         }
-        .padding(.horizontal, DesignTokens.Spacing.sm)
-        .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(Color(hex: "#f5f5f7").opacity(0.90))
-        .background(.ultraThinMaterial)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        // HTML: background: var(--surface)，border-top: 1px solid var(--border)
+        .background(DesignTokens.Colors.surfacePanel)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(DesignTokens.Colors.borderPrimary)
+                .frame(height: 0.5)
+        }
     }
 }
 
 // MARK: - 预览
 
-#Preview("侧边栏底部") {
+#Preview("侧边栏底部统计") {
     VStack {
         Spacer()
-        SidebarFooterView(
-            onNewSession: { AppLogger.general.debug("新建会话") },
-            onNewGroup: { AppLogger.general.debug("新建分组") }
-        )
+        SidebarFooterView(connectedCount: 2, totalCount: 5)
     }
-    .frame(width: 220, height: 400)
-    .background(DesignTokens.Colors.surfaceWindow)
+    .frame(width: 240, height: 400)
+    .background(DesignTokens.Colors.surfacePanel)
 }

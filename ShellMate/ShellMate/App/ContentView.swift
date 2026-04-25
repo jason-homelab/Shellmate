@@ -28,7 +28,7 @@ struct ContentView: View {
     @State var showSplitSessionPicker: Bool = false
 
     // MARK: - 外观状态
-    @AppStorage("appearance.windowMode") var windowMode: String = "auto"
+    @AppStorage("appearance.windowMode") var windowMode: String = "light"
     @AppStorage("appearance.bgOpacity")  private var bgOpacity: Double = 0
     @State var showAppearancePicker: Bool = false
 
@@ -79,7 +79,7 @@ struct ContentView: View {
         } detail: {
             detailArea
         }
-        .navigationTitle("")
+        .navigationTitle("ShellMate")
         .toolbar {
             toolbarContent
         }
@@ -221,7 +221,10 @@ struct ContentView: View {
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
-        .background(WindowTransparencyConfigurator(opacity: bgOpacity))
+        .background(WindowTransparencyConfigurator(opacity: bgOpacity, windowMode: windowMode))
+        // NSToolbar 背景使用 surfacePanel（自适应亮/暗模式）
+        .toolbarBackground(DesignTokens.Colors.surfacePanel, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         // 根据用户选择的外观模式应用 ColorScheme；nil 表示跟随系统
         .preferredColorScheme(preferredColorScheme)
         // 根据用户选择的语言应用 Locale

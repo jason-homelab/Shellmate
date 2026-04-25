@@ -1,8 +1,9 @@
 import SwiftUI
 import AppKit
 
-/// 设计令牌 v3.0 — macOS Native First 设计语言
-/// Apple HIG 标准色系 + 玻璃拟态 + 自适应 Light/Dark 双模式
+/// 设计令牌 v3.2 — Void 设计语言
+/// 深色优先 · Terminal DNA · Apple Blue 品牌色
+/// 参考 Figma-Spec-v2/00-总纲与设计令牌.md（Apple Blue #007aff 权威色）
 enum DesignTokens {
 
     // MARK: - 颜色
@@ -18,113 +19,164 @@ enum DesignTokens {
             })
         }
 
-        // ── 基底色（深空蓝黑 / 浅蓝灰双调色板）─────────────────
+        // ── Void 四层表面系统（深色优先）────────────────────────
 
-        /// 应用最深背景
+        /// Void 最深背景层 #070a11（Operator Dark：更冷调深空蓝黑）
         static let surfaceWindow = adaptive(
-            light: NSColor(srgbRed: 0.961, green: 0.961, blue: 0.969, alpha: 1), // #F5F5F7（Apple 标准）
-            dark:  NSColor(srgbRed: 0.027, green: 0.035, blue: 0.059, alpha: 1)  // #07090F
+            light: NSColor(srgbRed: 0.961, green: 0.961, blue: 0.969, alpha: 1), // #F5F5F7（亮色模式保留）
+            dark:  NSColor(srgbRed: 0.027, green: 0.039, blue: 0.067, alpha: 1)  // #070a11 Operator Dark
         )
-        /// 次级面板背景
+        /// Surface 面板层 #0d1117（Operator Dark：冷调深灰蓝）
         static let surfacePanel = adaptive(
-            light: NSColor(srgbRed: 0.961, green: 0.961, blue: 0.969, alpha: 1), // #F5F5F7
-            dark:  NSColor(srgbRed: 0.047, green: 0.063, blue: 0.094, alpha: 1)  // #0C1018
+            light: NSColor(srgbRed: 0.929, green: 0.933, blue: 0.945, alpha: 1), // #EDEFF1
+            dark:  NSColor(srgbRed: 0.051, green: 0.067, blue: 0.090, alpha: 1)  // #0d1117 Surface
         )
-        /// 卡片背景
+        /// Elevated 卡片层 #131922（Operator Dark：标签/卡片层）
         static let surfaceCard = adaptive(
             light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 1), // #FFFFFF
-            dark:  NSColor(srgbRed: 0.063, green: 0.082, blue: 0.125, alpha: 1)  // #101520
+            dark:  NSColor(srgbRed: 0.075, green: 0.098, blue: 0.133, alpha: 1)  // #131922 Elevated
         )
-        /// 覆层背景
+        /// Overlay 弹窗层 #1a2232（Operator Dark：弹窗层）
         static let surfaceOverlay = adaptive(
-            light: NSColor(srgbRed: 0.878, green: 0.890, blue: 0.937, alpha: 1), // #E0E3EF
-            dark:  NSColor(srgbRed: 0.086, green: 0.114, blue: 0.180, alpha: 1)  // #161D2E
+            light: NSColor(srgbRed: 0.953, green: 0.957, blue: 0.969, alpha: 1), // #F3F4F7
+            dark:  NSColor(srgbRed: 0.102, green: 0.133, blue: 0.196, alpha: 1)  // #1a2232 Overlay
         )
-        /// 输入框背景
+        /// Input 输入框背景 #141826
         static let surfaceInput = adaptive(
             light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 1), // #FFFFFF
-            dark:  NSColor(srgbRed: 0.039, green: 0.055, blue: 0.102, alpha: 1)  // #0A0E1A
+            dark:  NSColor(srgbRed: 0.078, green: 0.094, blue: 0.149, alpha: 1)  // #141826 Input
         )
 
-        // ── 玻璃覆层（叠加在 Material 之上）────────────────────
+        // ── 玻璃覆层（自适应：亮色用黑色叠加，深色用白色叠加）────────
 
-        static let glassUltraLight  = Color.primary.opacity(0.04)
-        static let glassLight       = Color.primary.opacity(0.06)
-        static let glassMedium      = Color.primary.opacity(0.09)
-        static let glassHoverColor  = Color.primary.opacity(0.08)
-        static let glassPress       = Color.primary.opacity(0.12)
-        static let glassSelected    = Color(hex: "#007AFF").opacity(0.14)
+        static let glassUltraLight = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.02),
+            dark:  NSColor(white: 1.0, alpha: 0.03)
+        )
+        static let glassLight = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.03),
+            dark:  NSColor(white: 1.0, alpha: 0.04)
+        )
+        static let glassMedium = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.05),
+            dark:  NSColor(white: 1.0, alpha: 0.06)
+        )
+        static let glassHoverColor = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.03),
+            dark:  NSColor(white: 1.0, alpha: 0.04)
+        )
+        /// 悬停状态背景（行/卡片 hover）— 亮色 black/5，深色 white/5
+        static let surfaceHover = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.05),
+            dark:  NSColor(white: 1.0, alpha: 0.05)
+        )
+        static let glassPress = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.07),
+            dark:  NSColor(white: 1.0, alpha: 0.07)
+        )
+        /// 选中状态 Apple Blue 高亮 rgba(0,122,255,0.12)
+        static let glassSelected    = Color(hex: "#007aff").opacity(0.12)
 
-        // ── 玻璃边框（光线折射效果）─────────────────────────────────
+        // ── 边框（自适应：亮色用 #d2d2d7，深色用白色叠加）──────────
 
-        static let glassBorderTop    = Color.primary.opacity(0.18)
-        static let glassBorderSide   = Color.primary.opacity(0.07)
-        static let glassBorderBottom = Color.primary.opacity(0.04)
-        static let glassBorderAccent = Color(hex: "#007AFF").opacity(0.40)
+        static let glassBorderTop = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.08),
+            dark:  NSColor(white: 1.0, alpha: 0.10)
+        )
+        static let glassBorderSide = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.05),
+            dark:  NSColor(white: 1.0, alpha: 0.07)
+        )
+        static let glassBorderBottom = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.03),
+            dark:  NSColor(white: 1.0, alpha: 0.04)
+        )
+        static let glassBorderAccent = Color(hex: "#007aff").opacity(0.30)
 
-        // ── 强调色（电光蓝）─────────────────────────────────────────
+        // ── 主品牌色：Apple Blue（Figma-Spec-v2 §00 权威色）──────
 
-        static let accentPrimary    = Color(hex: "#007AFF")
-        static let accentSecondary  = Color(hex: "#38BDF8")
-        static let accentTertiary   = Color(hex: "#1A65D6")
-        static let accentGlow       = Color(hex: "#007AFF").opacity(0.20)
-        static let accentGlowStrong = Color(hex: "#007AFF").opacity(0.38)
+        static let accentPrimary    = Color(hex: "#007aff")   // Apple Blue
+        static let accentSecondary  = Color(hex: "#34d399")   // Success Green（NL 命令模式专用）
+        static let accentTertiary   = Color(hex: "#0051d5")   // Apple Blue Dark（Hover 态）
+        static let accentGlow       = Color(hex: "#007aff").opacity(0.20)
+        static let accentGlowStrong = Color(hex: "#007aff").opacity(0.38)
 
-        // ── 辅助强调色（紫色系）──────────────────────────────────────
+        // ── AI 品牌色：Apple Indigo ──────────────────────────────
 
-        /// 紫蓝色强调（内存指标、AI 渐变等辅助场景）
-        static let accentIndigo     = Color(hex: "#5856D6")
+        /// AI 功能专属色 #818cf8（AI 模式切换器 / 设置页专用）
+        static let accentAI         = Color(hex: "#818cf8")
+        static let accentAIGlow     = Color(hex: "#818cf8").opacity(0.25)
+        /// Apple Indigo #5856d6（对齐 Figma AI 头像渐变 to-[#5856d6]）
+        static let accentIndigo     = Color(hex: "#5856d6")
 
-        // ── 文字色（自适应）──────────────────────────────────────
+        // ── 脚本自动化色 ────────────────────────────────────────
+
+        static let accentScript     = Color(hex: "#fb923c")
+
+        // ── 文字色（Void 冷白系）────────────────────────────────
 
         static let textPrimary = adaptive(
-            light: NSColor(srgbRed: 0.114, green: 0.114, blue: 0.122, alpha: 1), // #1D1D1F（Apple 标准）
-            dark:  NSColor(srgbRed: 0.929, green: 0.941, blue: 1.000, alpha: 1)  // #EDF0FF
+            light: NSColor(srgbRed: 0.114, green: 0.114, blue: 0.122, alpha: 1), // #1D1D1F（亮色）
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 1)  // #e2e4f0 Void 冷白
         )
         static let textSecondary = adaptive(
-            light: NSColor(srgbRed: 0.525, green: 0.525, blue: 0.545, alpha: 1), // #86868B（Apple 标准）
-            dark:  NSColor(srgbRed: 0.533, green: 0.573, blue: 0.667, alpha: 1)  // #8892AA
+            light: NSColor(srgbRed: 0.525, green: 0.525, blue: 0.545, alpha: 1), // #86868B
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.52) // rgba(226,228,240,0.52) 对齐 --text-2
         )
         static let textTertiary = adaptive(
-            light: NSColor(srgbRed: 0.682, green: 0.682, blue: 0.698, alpha: 1), // #AEAEB2（Apple 标准）
-            dark:  NSColor(srgbRed: 0.322, green: 0.365, blue: 0.471, alpha: 1)  // #525D78
+            light: NSColor(srgbRed: 0.682, green: 0.682, blue: 0.698, alpha: 1), // #AEAEB2
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.30) // rgba(226,228,240,0.30) 对齐 --text-3
         )
         static let textDisabled = adaptive(
-            light: NSColor(srgbRed: 0.780, green: 0.780, blue: 0.800, alpha: 1), // #C7C7CC（Apple 标准）
-            dark:  NSColor(srgbRed: 0.196, green: 0.227, blue: 0.322, alpha: 1)  // #323A52
+            light: NSColor(srgbRed: 0.780, green: 0.780, blue: 0.800, alpha: 1), // #C7C7CC
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.18) // rgba(226,228,240,0.18)
         )
 
-        // ── 状态色（自适应：Light = Apple HIG / Dark = 宝石色调）──────
+        // ── 状态色（Void 宝石调色板）────────────────────────────
 
         static let statusConnected = adaptive(
             light: NSColor(srgbRed: 0.204, green: 0.780, blue: 0.349, alpha: 1), // #34C759（Apple 绿）
-            dark:  NSColor(srgbRed: 0.204, green: 0.831, blue: 0.600, alpha: 1)  // #34D399
+            dark:  NSColor(srgbRed: 0.204, green: 0.831, blue: 0.600, alpha: 1)  // #34D399 宝石绿
         )
         static let statusConnecting = adaptive(
-            light: NSColor(srgbRed: 1.000, green: 0.584, blue: 0.000, alpha: 1), // #FF9500（Apple 橙）
-            dark:  NSColor(srgbRed: 0.984, green: 0.749, blue: 0.141, alpha: 1)  // #FBBF24
+            light: NSColor(srgbRed: 1.000, green: 0.584, blue: 0.000, alpha: 1), // #FF9500
+            dark:  NSColor(srgbRed: 0.984, green: 0.749, blue: 0.141, alpha: 1)  // #FBBF24 琥珀黄
         )
         static let statusError = adaptive(
-            light: NSColor(srgbRed: 1.000, green: 0.231, blue: 0.188, alpha: 1), // #FF3B30（Apple 红）
-            dark:  NSColor(srgbRed: 0.984, green: 0.443, blue: 0.522, alpha: 1)  // #FB7185
+            light: NSColor(srgbRed: 1.000, green: 0.231, blue: 0.188, alpha: 1), // #FF3B30
+            dark:  NSColor(srgbRed: 0.973, green: 0.443, blue: 0.443, alpha: 1)  // #f87171 玫瑰红
         )
         static let statusOffline = adaptive(
-            light: NSColor(srgbRed: 0.557, green: 0.557, blue: 0.576, alpha: 1), // #8E8E93（Apple 灰）
-            dark:  NSColor(srgbRed: 0.278, green: 0.337, blue: 0.412, alpha: 1)  // #475769
+            light: NSColor(srgbRed: 0.557, green: 0.557, blue: 0.576, alpha: 1), // #8E8E93
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.28) // rgba(226,228,240,0.28)
         )
 
-        // ── 边框（自适应透明度）──────────────────────────────────
+        // ── 边框（自适应：亮色 #d2d2d7/50，深色 white/7）────────────
 
-        static let borderPrimary   = Color.primary.opacity(0.10)
-        static let borderSecondary = Color.primary.opacity(0.06)
-        static let borderFocus     = Color(hex: "#007AFF").opacity(0.65)
-        static let borderSubtle    = Color.primary.opacity(0.04)
+        /// 标准边框：亮色 rgba(210,210,215,0.5)，深色 rgba(255,255,255,0.07)
+        static let borderPrimary = adaptive(
+            light: NSColor(srgbRed: 0.824, green: 0.824, blue: 0.847, alpha: 0.5),
+            dark:  NSColor(white: 1.0, alpha: 0.07)
+        )
+        static let borderSecondary = adaptive(
+            light: NSColor(srgbRed: 0.824, green: 0.824, blue: 0.847, alpha: 0.3),
+            dark:  NSColor(white: 1.0, alpha: 0.05)
+        )
+        /// Focus 边框：Apple Blue rgba(0,122,255,0.35)
+        static let borderFocus     = Color(hex: "#007aff").opacity(0.35)
+        static let borderSubtle = adaptive(
+            light: NSColor(srgbRed: 0.824, green: 0.824, blue: 0.847, alpha: 0.2),
+            dark:  NSColor(white: 1.0, alpha: 0.04)
+        )
 
         // ── 背景交互状态 ──────────────────────────────────────────
 
-        static let backgroundHover    = Color.primary.opacity(0.06)
-        static let backgroundSelected = Color(hex: "#007AFF").opacity(0.14)
-        static let backgroundPressed  = Color(hex: "#007AFF").opacity(0.22)
+        static let backgroundHover = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.04),
+            dark:  NSColor(white: 1.0, alpha: 0.04)
+        )
+        static let backgroundSelected = Color(hex: "#007aff").opacity(0.12)
+        static let backgroundPressed  = Color(hex: "#007aff").opacity(0.18)
 
         // ── 扩展令牌（兼容旧调用）──────────────────────────────────
 
@@ -132,12 +184,40 @@ enum DesignTokens {
         static let surfaceToolbar     = surfacePanel
         static let borderDefault      = borderPrimary
         static let borderFaint        = borderSecondary
+        /// 终端背景 = Void 最深层 #0a0c12
         static let terminalBackground    = surfaceWindow
         static let terminalText          = textPrimary
-        /// 终端字体预览区背景（纯黑，模拟真实终端）
-        static let terminalPreviewBg     = Color(hex: "#0C0C0E")
-        /// 终端字体预览区 Prompt 颜色（默认绿色）
-        static let terminalPromptDefault = Color(hex: "#4CAF7D")
+        /// 终端字体预览区背景（Operator Dark 深空黑）
+        static let terminalPreviewBg     = Color(hex: "#070a11")
+        /// 终端 Prompt 颜色（Electric Teal）
+        static let terminalPromptDefault = Color(hex: "#00d4aa")
+
+        // ── Tab / 选中激活态 ────────────────────────────────────────
+
+        /// 激活 Tab 背景色 rgba(0,122,255,0.07)
+        static let surfaceActive = adaptive(
+            light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 0.92),
+            dark:  NSColor(srgbRed: 0.000, green: 0.478, blue: 1.000, alpha: 0.07)  // rgba(0,122,255,0.07)
+        )
+
+        // ── 图标色 ──────────────────────────────────────────────────
+
+        /// 主图标色
+        static let iconPrimary   = textSecondary
+        /// 次图标色
+        static let iconSecondary = textTertiary
+
+        // ── 代码块专用 ──────────────────────────────────────────────
+
+        /// 代码块背景（Operator Dark 深空黑）
+        static let codeBackground = Color(hex: "#070a11")
+        /// 代码块文字色（teal）
+        static let codeText       = Color(hex: "#00d4aa").opacity(0.75)
+
+        // ── 危险色 ──────────────────────────────────────────────────
+
+        /// 危险操作色（与 statusError 一致，语义化别名）
+        static let danger = statusError
     }
 
     // MARK: - 间距
@@ -157,7 +237,7 @@ enum DesignTokens {
     // MARK: - 尺寸
 
     enum Sizes {
-        static let sidebarWidth:    CGFloat = 256  // v3.0: 224 → 256
+        static let sidebarWidth:    CGFloat = 240  // Void v3.1: 256 → 240
         static let sidebarMinWidth: CGFloat = 180
         static let sidebarMaxWidth: CGFloat = 320
 
@@ -169,7 +249,8 @@ enum DesignTokens {
 
         static let buttonHeight:   CGFloat = 28
         static let buttonMinWidth: CGFloat = 80
-        static let iconButtonSize: CGFloat = 26
+        // h-7 w-7 = 28pt（Figma-Spec-v2 §02 §03 工具栏按钮规范）
+        static let iconButtonSize: CGFloat = 28
 
         static let avatarSizeSmall:  CGFloat = 26
         static let avatarSizeMedium: CGFloat = 34
@@ -181,22 +262,22 @@ enum DesignTokens {
         static let cornerRadiusSmall:  CGFloat = 8   // radius-md：按钮、输入框
         static let cornerRadiusMedium: CGFloat = 12  // radius-xl：会话行、标签触发器
         static let cornerRadiusLarge:  CGFloat = 16  // radius-2xl：弹窗容器
-        static let cornerRadiusXLarge: CGFloat = 16  // 与 Large 对齐（原 20 无对应规范值）
+        static let cornerRadiusXLarge: CGFloat = 16  // 与 Large 对齐
         static let cornerRadiusPanel:  CGFloat = 24  // radius-3xl：欢迎界面英雄图标容器
 
         static let sheetWidth:    CGFloat = 540
         static let sheetMinHeight: CGFloat = 420
 
-        static let toolbarHeight:      CGFloat = 48  // v3.0 新增
-        static let tabBarHeight:       CGFloat = 40  // v3.0: 38 → 40
+        static let toolbarHeight:      CGFloat = 44  // Void v3.1: 48 → 44
+        static let tabBarHeight:       CGFloat = 38  // Void v3.1: 40 → 38
         static let tabMinWidth:        CGFloat = 100
         static let tabMaxWidth:        CGFloat = 200
         static let tabCloseButtonSize: CGFloat = 16
 
-        static let statusBarHeight:    CGFloat = 32  // v3.0: 24 → 32
+        static let statusBarHeight:    CGFloat = 28  // Void v3.1: 32 → 28
 
-        static let aiPanelWidth:   CGFloat = 400  // v3.0 新增
-        static let sftpPanelWidth: CGFloat = 500  // v3.0 新增
+        static let aiPanelWidth:   CGFloat = 380  // Void v3.1: 400 → 380
+        static let sftpPanelWidth: CGFloat = 480  // Void v3.1: 500 → 480
 
         // 终端字号界限
         static let terminalFontSizeMin: CGFloat = 9
@@ -253,12 +334,12 @@ enum DesignTokens {
         // shadow-2xl: 0 25px 50px rgba(0,0,0,0.25)
         static let xlarge = ShadowStyle(color: .black.opacity(0.25), radius: 50, x: 0, y: 25)
 
-        static let accentGlow       = ShadowStyle(color: Color(hex: "#007AFF").opacity(0.22), radius: 18, x: 0, y: 0)
-        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#007AFF").opacity(0.38), radius: 28, x: 0, y: 0)
+        static let accentGlow       = ShadowStyle(color: Color(hex: "#007aff").opacity(0.22), radius: 18, x: 0, y: 0)
+        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#007aff").opacity(0.38), radius: 28, x: 0, y: 0)
 
-        static let connectedGlow  = ShadowStyle(color: Color(hex: "#34C759").opacity(0.32), radius: 8, x: 0, y: 0)
-        static let connectingGlow = ShadowStyle(color: Color(hex: "#FF9500").opacity(0.32), radius: 8, x: 0, y: 0)
-        static let errorGlow      = ShadowStyle(color: Color(hex: "#FF3B30").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let connectedGlow  = ShadowStyle(color: Color(hex: "#34d399").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let connectingGlow = ShadowStyle(color: Color(hex: "#fbbf24").opacity(0.32), radius: 8, x: 0, y: 0)
+        static let errorGlow      = ShadowStyle(color: Color(hex: "#f87171").opacity(0.32), radius: 8, x: 0, y: 0)
     }
 
     // MARK: - 渐变
@@ -278,20 +359,27 @@ enum DesignTokens {
             )
         }
 
-        /// 选中状态玻璃边框渐变（蓝色光晕）
+        /// 选中状态玻璃边框渐变（Apple Blue 光晕）
         static let glassAccentBorder = LinearGradient(
             stops: [
-                .init(color: Color(hex: "#007AFF").opacity(0.55), location: 0.0),
-                .init(color: Color(hex: "#38BDF8").opacity(0.28), location: 0.5),
-                .init(color: Color(hex: "#007AFF").opacity(0.15), location: 1.0),
+                .init(color: Color(hex: "#007aff").opacity(0.45), location: 0.0),
+                .init(color: Color(hex: "#4da3ff").opacity(0.22), location: 0.5),
+                .init(color: Color(hex: "#007aff").opacity(0.12), location: 1.0),
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
 
-        /// 强调按钮渐变（蓝色 → 深蓝，对应 Apple HIG #007AFF → #0051D5）
+        /// 强调按钮渐变（Apple Blue → Deep Blue，对齐 Figma hover:#0051d5）
         static let accentButton = LinearGradient(
-            colors: [Color(hex: "#007AFF"), Color(hex: "#0051D5")],
+            colors: [Color(hex: "#007aff"), Color(hex: "#0051d5")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+
+        /// AI 助手渐变（Apple Blue → Indigo，对齐 Figma from-[#007aff] to-[#5856d6]）
+        static let aiGradient = LinearGradient(
+            colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -385,6 +473,23 @@ extension View {
 
     func shadow(_ style: ShadowStyle) -> some View {
         self.shadow(color: style.color, radius: style.radius, x: style.x, y: style.y)
+    }
+
+    // ── 终端与面板专用 ───────────────────────────────────────────────
+
+    /// 终端专用纯色背景（零 GPU 消耗，替代 .ultraThinMaterial）
+    func terminalBackground() -> some View {
+        self.background(DesignTokens.Colors.terminalBackground)
+    }
+
+    /// 标准面板投影（浮动面板统一阴影）
+    func panelShadow() -> some View {
+        self.shadow(
+            color: Color.black.opacity(0.25),
+            radius: DesignTokens.Shadow.medium.radius,
+            x: 0,
+            y: 4
+        )
     }
 
     // ── 旧接口兼容 ─────────────────────────────────────────────────

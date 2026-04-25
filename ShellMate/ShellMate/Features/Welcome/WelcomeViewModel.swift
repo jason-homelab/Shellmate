@@ -55,14 +55,12 @@ final class WelcomeViewModel: BaseViewModel {
         )
     ]
 
-    // 六张特性卡片（对齐 Figma-Spec-v2 §13 §5.1）
+    // 四张特性卡片（对齐 Figma Make emoji 风格）
     let features: [FeatureData] = [
-        FeatureData(icon: "lock.shield.fill",      label: "安全连接", description: "Keychain 加密，密钥管理"),
-        FeatureData(icon: "bolt.fill",             label: "快速切换", description: "多会话标签，一键切换"),
-        FeatureData(icon: "sparkles",              label: "AI 助手",  description: "Claude 驱动，智能命令建议"),
-        FeatureData(icon: "arrow.up.arrow.down",   label: "文件传输", description: "SFTP 双面板，拖放上传"),
-        FeatureData(icon: "rectangle.split.2x1",  label: "tmux 管理", description: "可视化 session 和 window 管理"),
-        FeatureData(icon: "network",               label: "隧道转发", description: "本地/远程/SOCKS5 端口映射")
+        FeatureData(icon: "🔐", label: "安全连接",   description: "Keychain 加密，密钥管理"),
+        FeatureData(icon: "📁", label: "文件传输",   description: "SFTP 双面板，拖放上传"),
+        FeatureData(icon: "🤖", label: "AI 助手",   description: "Claude 驱动，智能命令建议"),
+        FeatureData(icon: "📜", label: "脚本自动化", description: "录制、回放、参数化执行"),
     ]
 
     // MARK: - 回调

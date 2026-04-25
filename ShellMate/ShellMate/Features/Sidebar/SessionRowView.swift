@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// 会话行视图 — Operator Dark v2 设计
-/// 激活状态：左 2px teal 边栏光晕 + 右侧 0 圆角背景（border-radius: 0 8 8 0）
-/// 图标：会话名文字缩写 Avatar（取前两个单词首字母）
+/// 会话行视图 — 亮色 macOS 风格
+/// 激活状态：全宽 Apple Blue 胶囊背景 + 白色文字（对齐 Figma Make bg-[#007aff]）
+/// 图标：server.rack SF Symbol
 struct SessionRowView: View {
 
     // MARK: - 属性
@@ -37,16 +37,6 @@ struct SessionRowView: View {
         .padding(.trailing, 10)
         .padding(.vertical, 7)
         .background(rowBackground)
-        // 激活状态左边栏指示器（teal 竖条 + 光晕）
-        .overlay(alignment: .leading) {
-            if isSelected {
-                Rectangle()
-                    .fill(DesignTokens.Colors.accentPrimary)
-                    .frame(width: 2)
-                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.55), radius: 5, x: 0, y: 0)
-                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.25), radius: 12, x: 0, y: 0)
-            }
-        }
         .contentShape(Rectangle())
         .opacity(isDragging ? 0.45 : 1.0)
         .scaleEffect(isDragging ? 0.97 : 1.0)
@@ -78,19 +68,11 @@ struct SessionRowView: View {
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
-            // 激活态：右侧有圆角，左侧直角（配合边栏指示器）
-            UnevenRoundedRectangle(
-                topLeadingRadius: 0,
-                bottomLeadingRadius: 0,
-                bottomTrailingRadius: 8,
-                topTrailingRadius: 8,
-                style: .continuous
-            )
-            // Apple Blue 0.12 — 对齐 Figma selected row
-            .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(DesignTokens.Colors.accentPrimary)
         } else if isHovering {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.white.opacity(0.05))
+                .fill(DesignTokens.Colors.surfaceHover)
         } else {
             Color.clear
         }
@@ -107,15 +89,23 @@ struct SessionRowView: View {
     }
 
     private var dotColor: Color {
+        if isSelected {
+            switch session.connectionState {
+            case .connected:    return Color.white
+            case .connecting, .disconnecting: return Color.white.opacity(0.75)
+            case .error:        return Color.white.opacity(0.75)
+            default:            return Color.white.opacity(0.40)
+            }
+        }
         switch session.connectionState {
         case .connected:
-            return DesignTokens.Colors.statusConnected   // #34d399
+            return DesignTokens.Colors.statusConnected
         case .connecting, .disconnecting:
-            return DesignTokens.Colors.statusConnecting  // 琥珀黄
+            return DesignTokens.Colors.statusConnecting
         case .error:
-            return DesignTokens.Colors.statusError       // 玫瑰红
+            return DesignTokens.Colors.statusError
         default:
-            return Color.white.opacity(0.12)             // idle: 很淡的白
+            return DesignTokens.Colors.textDisabled
         }
     }
 
@@ -128,20 +118,20 @@ struct SessionRowView: View {
         }
     }
 
-    // MARK: - 服务器图标容器（Figma-Spec-v2 §02 §4.1：server.rack 14pt）
+    // MARK: - 服务器图标容器
 
     private var sessionAvatar: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isSelected
-                    ? DesignTokens.Colors.accentPrimary.opacity(0.15)
-                    : Color.white.opacity(0.05))
+                    ? Color.white.opacity(0.20)
+                    : DesignTokens.Colors.accentPrimary.opacity(0.10))
                 .overlay {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(
                             isSelected
-                                ? DesignTokens.Colors.accentPrimary.opacity(0.25)
-                                : Color.white.opacity(0.06),
+                                ? Color.white.opacity(0.20)
+                                : DesignTokens.Colors.accentPrimary.opacity(0.15),
                             lineWidth: 0.75
                         )
                 }
@@ -149,8 +139,8 @@ struct SessionRowView: View {
             Image(systemName: "server.rack")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(isSelected
-                    ? DesignTokens.Colors.accentPrimary
-                    : DesignTokens.Colors.textSecondary)
+                    ? Color.white
+                    : DesignTokens.Colors.accentPrimary)
         }
         .frame(width: 26, height: 26)
     }
@@ -162,16 +152,16 @@ struct SessionRowView: View {
             Text(session.name)
                 .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                 .foregroundColor(isSelected
-                    ? DesignTokens.Colors.textPrimary
-                    : DesignTokens.Colors.textPrimary.opacity(0.68))
+                    ? Color.white
+                    : DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
 
             Text("\(session.username)@\(session.host)")
                 .font(.system(size: 10, weight: .regular, design: .monospaced))
                 .foregroundColor(isSelected
-                    ? DesignTokens.Colors.accentPrimary.opacity(0.52)
-                    : Color.white.opacity(0.18))
+                    ? Color.white.opacity(0.70)
+                    : DesignTokens.Colors.textTertiary)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
