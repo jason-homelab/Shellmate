@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 会话行视图（Figma-Spec-v2 §02 扁平风格）
-/// 选中蓝色填充 + 悬停浅灰 + 精致状态点
+/// 会话行视图 — Operator Dark v2 设计
+/// 激活状态：左 2px teal 边栏光晕 + 右侧 0 圆角背景（border-radius: 0 8 8 0）
+/// 图标：会话名文字缩写 Avatar（取前两个单词首字母）
 struct SessionRowView: View {
 
     // MARK: - 属性
@@ -18,61 +19,40 @@ struct SessionRowView: View {
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
+        HStack(spacing: 9) {
 
-            // 服务器图标（含连接状态角标）
-            serverIcon
+            // ── 1. 状态点（6×6）
+            statusDot
 
-            // 会话信息
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text(session.name)
-                    .font(DesignTokens.Typography.bodyMedium)
-                    .foregroundColor(
-                        isSelected ? .white : DesignTokens.Colors.textPrimary
-                    )
-                    .lineLimit(1)
+            // ── 2. 文字缩写 Avatar（26×26）
+            sessionAvatar
 
-                Text("\(session.username)@\(session.host)")
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(
-                        isSelected
-                            ? Color.white.opacity(0.75)
-                            : DesignTokens.Colors.textTertiary
-                    )
-                    .lineLimit(1)
-            }
+            // ── 3. 会话信息
+            sessionInfo
 
-            Spacer()
-
-            // 标签徽章
-            if !session.tags.isEmpty {
-                TagListView(tags: session.tags, maxDisplayCount: 1)
-            }
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)   // py-2 = 8px（Figma-Spec-v2 §02）
-        .frame(height: DesignTokens.Sizes.sessionRowHeight)
-        .background {
+        // HTML: padding: 7px 10px 7px 14px（左侧留给边栏指示器）
+        .padding(.leading, 14)
+        .padding(.trailing, 10)
+        .padding(.vertical, 7)
+        .background(rowBackground)
+        // 激活状态左边栏指示器（teal 竖条 + 光晕）
+        .overlay(alignment: .leading) {
             if isSelected {
-                // 选中：实心蓝色背景 + 下方阴影（对齐 Figma 设计）
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                Rectangle()
                     .fill(DesignTokens.Colors.accentPrimary)
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, 2)
-                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 4, x: 0, y: 2)
-            } else if isHovering {
-                // 悬停：轻灰填充，无边框（Figma-Spec-v2 扁平风格）
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .fill(DesignTokens.Colors.glassHoverColor)
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, 2)
+                    .frame(width: 2)
+                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.55), radius: 5, x: 0, y: 0)
+                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.25), radius: 12, x: 0, y: 0)
             }
         }
         .contentShape(Rectangle())
-        // 拖拽视觉反馈：拖动时降低透明度 + 轻微缩放，提示行正在被移动
         .opacity(isDragging ? 0.45 : 1.0)
         .scaleEffect(isDragging ? 0.97 : 1.0)
         .animation(DesignTokens.Animation.hover, value: isDragging)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isSelected)
         .onDrag {
             withAnimation(DesignTokens.Animation.hover) { isDragging = true }
             return NSItemProvider(object: session.id.uuidString as NSString)
@@ -80,7 +60,7 @@ struct SessionRowView: View {
         .onHover { hovering in
             withAnimation(DesignTokens.Animation.hover) {
                 isHovering = hovering
-                if !hovering { isDragging = false }   // 拖拽结束时恢复
+                if !hovering { isDragging = false }
             }
         }
         .onTapGesture(count: 2) {
@@ -93,62 +73,123 @@ struct SessionRowView: View {
         .accessibilityValue(session.connectionState.displayName)
     }
 
-    // MARK: - 服务器图标
+    // MARK: - 背景
 
-    private var serverIcon: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // 图标背景圆角框（对齐 Figma p-1.5 rounded-md ≈ 26×26pt, radius 6pt）
+    @ViewBuilder
+    private var rowBackground: some View {
+        if isSelected {
+            // 激活态：右侧有圆角，左侧直角（配合边栏指示器）
+            UnevenRoundedRectangle(
+                topLeadingRadius: 0,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 8,
+                topTrailingRadius: 8,
+                style: .continuous
+            )
+            // Apple Blue 0.12 — 对齐 Figma selected row
+            .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
+        } else if isHovering {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        } else {
+            Color.clear
+        }
+    }
+
+    // MARK: - 状态点
+
+    private var statusDot: some View {
+        Circle()
+            .fill(dotColor)
+            .shadow(color: dotGlowColor, radius: 3, x: 0, y: 0)
+            .frame(width: 6, height: 6)
+            .animation(DesignTokens.Animation.slow, value: session.connectionState)
+    }
+
+    private var dotColor: Color {
+        switch session.connectionState {
+        case .connected:
+            return DesignTokens.Colors.statusConnected   // #34d399
+        case .connecting, .disconnecting:
+            return DesignTokens.Colors.statusConnecting  // 琥珀黄
+        case .error:
+            return DesignTokens.Colors.statusError       // 玫瑰红
+        default:
+            return Color.white.opacity(0.12)             // idle: 很淡的白
+        }
+    }
+
+    private var dotGlowColor: Color {
+        switch session.connectionState {
+        case .connected:
+            return DesignTokens.Colors.statusConnected.opacity(0.70)
+        default:
+            return Color.clear
+        }
+    }
+
+    // MARK: - 服务器图标容器（Figma-Spec-v2 §02 §4.1：server.rack 14pt）
+
+    private var sessionAvatar: some View {
+        ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isSelected
-                    ? Color.white.opacity(0.20)
-                    : DesignTokens.Colors.accentPrimary.opacity(0.10))
+                    ? DesignTokens.Colors.accentPrimary.opacity(0.15)
+                    : Color.white.opacity(0.05))
                 .overlay {
-                    if !isSelected {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
-                    }
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(
+                            isSelected
+                                ? DesignTokens.Colors.accentPrimary.opacity(0.25)
+                                : Color.white.opacity(0.06),
+                            lineWidth: 0.75
+                        )
                 }
-                .frame(width: 26, height: 26)
 
-            // 服务器图标（h-3.5 w-3.5 ≈ 14pt）
             Image(systemName: "server.rack")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(isSelected ? .white : DesignTokens.Colors.accentPrimary.opacity(0.75))
-                .frame(width: 26, height: 26)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(isSelected
+                    ? DesignTokens.Colors.accentPrimary
+                    : DesignTokens.Colors.textSecondary)
+        }
+        .frame(width: 26, height: 26)
+    }
 
-            // 连接状态角标（仅非离线时显示）
-            if session.connectionState != .offline {
-                Circle()
-                    .fill(dotColorForState(session.connectionState))
-                    .frame(width: 7, height: 7)
-                    .overlay {
-                        Circle().strokeBorder(DesignTokens.Colors.surfaceWindow, lineWidth: 1.5)
-                    }
-                    .offset(x: 2, y: 2)
-            }
+    // MARK: - 会话信息
+
+    private var sessionInfo: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(session.name)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .foregroundColor(isSelected
+                    ? DesignTokens.Colors.textPrimary
+                    : DesignTokens.Colors.textPrimary.opacity(0.68))
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Text("\(session.username)@\(session.host)")
+                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                .foregroundColor(isSelected
+                    ? DesignTokens.Colors.accentPrimary.opacity(0.52)
+                    : Color.white.opacity(0.18))
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
     }
 
-    private func dotColorForState(_ state: ConnectionState) -> Color {
-        switch state {
-        case .connected:                  return DesignTokens.Colors.statusConnected
-        case .connecting, .disconnecting: return DesignTokens.Colors.statusConnecting
-        case .error:                      return DesignTokens.Colors.statusError
-        default:                          return DesignTokens.Colors.statusOffline
-        }
-    }
 }
+
 
 // MARK: - 预览
 
 #Preview("会话行状态") {
-    VStack(spacing: 2) {
-        SessionRowView(session: {
-            var s = Session.preview; s.connectionState = .connected; return s
-        }())
+    VStack(spacing: 1) {
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connected; return s
         }(), isSelected: true)
+        SessionRowView(session: {
+            var s = Session.preview; s.connectionState = .connected; return s
+        }())
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connecting; return s
         }())
@@ -159,7 +200,8 @@ struct SessionRowView: View {
             var s = Session.preview; s.connectionState = .offline; return s
         }())
     }
-    .padding(DesignTokens.Spacing.sm)
-    .background(DesignTokens.Colors.surfaceWindow)
-    .frame(width: 224)
+    .padding(.horizontal, 6)
+    .padding(.vertical, 6)
+    .background(DesignTokens.Colors.surfacePanel)
+    .frame(width: 240)
 }
