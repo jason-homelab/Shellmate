@@ -4,7 +4,7 @@ import SwiftUI
 
 /// 列出所有已有分组，支持新建、重命名、删除
 /// 删除后分组内会话归入"无分组"
-/// 对齐 Figma-Spec-v2 §14-§1：400px 宽，blue folder 图标，border-b 行分隔
+/// 对齐 Figma-Spec-v2 §14-§1：500px 宽，blue folder 图标，border-b 行分隔
 struct GroupManagerView: View {
 
     // MARK: - 属性
@@ -34,9 +34,17 @@ struct GroupManagerView: View {
             Divider()
             newGroupInputArea
         }
-        .frame(width: 400)
-        .background(DesignTokens.Colors.surfacePanel)
+        .frame(width: 500)
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .task {
             await groupStore.loadGroups()
         }
@@ -64,15 +72,15 @@ struct GroupManagerView: View {
         HStack(spacing: DesignTokens.Spacing.md) {
             // blue folder 图标
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
                     .frame(width: 36, height: 36)
                 Image(systemName: "folder.fill")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(DesignTokens.Typography.labelLargeMid)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("分组管理")
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -85,10 +93,10 @@ struct GroupManagerView: View {
 
             Button(action: { onClose?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -117,7 +125,9 @@ struct GroupManagerView: View {
                     ForEach(groupStore.groups) { group in
                         groupRow(group)
                         if group.id != groupStore.groups.last?.id {
-                            Divider()
+                            Rectangle()
+                                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                                .frame(height: 0.5)
                                 .padding(.leading, 52)
                         }
                     }
@@ -133,11 +143,11 @@ struct GroupManagerView: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 文件夹图标（颜色取分组颜色）
             ZStack {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(group.color.opacity(0.12))
                     .frame(width: 28, height: 28)
                 Image(systemName: "folder.fill")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(group.color)
             }
 
@@ -145,12 +155,12 @@ struct GroupManagerView: View {
             if editingGroupId == group.id {
                 TextField("分组名称", text: $editingName)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .onSubmit { commitRename(group) }
             } else {
                 Text(group.name)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
             }
@@ -163,11 +173,11 @@ struct GroupManagerView: View {
                     commitRename(group)
                 } label: {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.statusConnected)
                         .frame(width: 28, height: 28)
                         .background(DesignTokens.Colors.statusConnected.opacity(0.10))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
 
@@ -176,11 +186,11 @@ struct GroupManagerView: View {
                     editingName = ""
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 28, height: 28)
-                        .background(DesignTokens.Colors.surfaceCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .background(Color.white.opacity(0.80))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
             } else {
@@ -190,11 +200,11 @@ struct GroupManagerView: View {
                     editingName = group.name
                 } label: {
                     Image(systemName: "pencil")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 28, height: 28)
                         .background(Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("重命名")
@@ -204,11 +214,11 @@ struct GroupManagerView: View {
                     pendingDeleteGroup = group
                 } label: {
                     Image(systemName: "trash")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.statusError)
                         .frame(width: 28, height: 28)
                         .background(DesignTokens.Colors.statusError.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("删除分组")
@@ -223,12 +233,12 @@ struct GroupManagerView: View {
     private var newGroupInputArea: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             Image(systemName: "plus.circle.fill")
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 
             TextField("新建分组名称…", text: $newGroupName)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13))
+                .font(DesignTokens.Typography.bodyMedium)
                 .focused($newGroupFieldFocused)
                 .onSubmit { createGroup() }
 
