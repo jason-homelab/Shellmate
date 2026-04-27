@@ -3,7 +3,6 @@ import SwiftUI
 // MARK: - 颜色扩展（日志类型）
 
 extension SessionLogEntry.LogType {
-    /// 类型标签颜色
     var color: Color {
         switch self {
         case .info:    return DesignTokens.Colors.statusConnected
@@ -13,20 +12,18 @@ extension SessionLogEntry.LogType {
         }
     }
 
-    /// 行背景色（对齐 Figma bg-*-50）
     var rowBackground: Color {
         switch self {
-        case .info:    return DesignTokens.Colors.surfaceCard.opacity(0.80)
+        case .info:    return Color.white.opacity(0.80)
         case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.08)
         case .error:   return DesignTokens.Colors.statusError.opacity(0.08)
         case .command: return DesignTokens.Colors.accentPrimary.opacity(0.07)
         }
     }
 
-    /// 行边框色（对齐 Figma border-*-200）
     var borderColor: Color {
         switch self {
-        case .info:    return DesignTokens.Colors.borderPrimary
+        case .info:    return Color(hex: "#d2d2d7").opacity(0.50)
         case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.30)
         case .error:   return DesignTokens.Colors.statusError.opacity(0.30)
         case .command: return DesignTokens.Colors.accentPrimary.opacity(0.25)
@@ -34,9 +31,16 @@ extension SessionLogEntry.LogType {
     }
 }
 
-// MARK: - 日志面板视图（Figma-Spec-v2 §14 §4）
+// MARK: - 日志面板视图（Figma LogViewerDialog.tsx 1:1）
 
 struct LogPanelView: View {
+
+    // MARK: - Tab 枚举
+
+    private enum LogTab: String, CaseIterable {
+        case viewer  = "日志查看"
+        case settings = "设置"
+    }
 
     // MARK: - 属性
 
@@ -46,11 +50,17 @@ struct LogPanelView: View {
 
     @ObservedObject private var logStore = SessionLogStore.shared
 
-    @State private var selectedType: SessionLogEntry.LogType? = nil  // nil = 全部
+    @State private var activeLogTab: LogTab = .viewer
+    @State private var selectedType: SessionLogEntry.LogType? = nil
     @State private var searchText = ""
     @State private var selectedSession: String? = nil
     @State private var isPaused = false
-    @State private var showExportConfirm = false
+
+    // 设置 Tab 状态
+    @State private var autoSave: Bool = true
+    @State private var maxEntries: String = "1000"
+    @State private var logSavePath: String = "~/Documents/TerminalLogs"
+    @State private var includeTimestamps: Bool = true
 
     // MARK: - 过滤
 
@@ -76,18 +86,25 @@ struct LogPanelView: View {
         VStack(spacing: 0) {
             headerView
             Divider()
-            filterBarView
-            Divider()
-            logListView
+            tabSelectorRow
+            if activeLogTab == .viewer {
+                filterBarView
+                Divider()
+                logListView
+            } else {
+                settingsTabView
+            }
         }
-        // 对齐 Figma §14：sm:max-w-[900px] rounded-2xl shadow-2xl border border-[#d2d2d7]/50
         .frame(width: 900)
         .frame(minHeight: 400, maxHeight: 640)
-        .background(DesignTokens.Colors.surfaceOverlay)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
     }
@@ -97,21 +114,20 @@ struct LogPanelView: View {
     private var headerView: some View {
         HStack(spacing: 10) {
             Image(systemName: "doc.text.below.ecg")
-                .font(.system(size: 16, weight: .medium))
+                .font(DesignTokens.Typography.labelXLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text("会话日志")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(selectedSession.map { "· \($0)" } ?? "所有会话")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
             Spacer()
 
-            // 清空
             Button {
                 if let session = selectedSession {
                     logStore.clearSession(session)
@@ -120,30 +136,24 @@ struct LogPanelView: View {
                 }
             } label: {
                 Image(systemName: "trash")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)
             .help("清空日志")
 
-            // 导出
-            Button {
-                exportLogs()
-            } label: {
+            Button { exportLogs() } label: {
                 Image(systemName: "arrow.up.doc")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)
             .help("导出日志")
             .disabled(filteredEntries.isEmpty)
 
-            // 暂停/继续
-            Button {
-                isPaused.toggle()
-            } label: {
+            Button { isPaused.toggle() } label: {
                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(isPaused ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)
@@ -153,23 +163,52 @@ struct LogPanelView: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 12)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
-    // MARK: - 过滤栏
+    // MARK: - Tab 切换栏（Figma grid-cols-2 bg-black/5 rounded-xl p-1）
+
+    private var tabSelectorRow: some View {
+        HStack(spacing: DesignTokens.Spacing.xxxs) {
+            ForEach(LogTab.allCases, id: \.self) { tab in
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.15)) { activeLogTab = tab }
+                }) {
+                    Text(tab.rawValue)
+                        .font(.system(size: 12, weight: activeLogTab == tab ? .medium : .regular))
+                        .foregroundColor(activeLogTab == tab
+                            ? DesignTokens.Colors.textPrimary
+                            : DesignTokens.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 28)
+                        .background(activeLogTab == tab ? Color.white : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                        .shadow(color: activeLogTab == tab ? Color.black.opacity(0.08) : Color.clear,
+                                radius: 3, x: 0, y: 1)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(DesignTokens.Spacing.xxs)
+        .background(Color.black.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    // MARK: - 过滤栏（viewer tab）
 
     private var filterBarView: some View {
-        HStack(spacing: 8) {
-            // 类型过滤 Select 下拉
+        HStack(spacing: DesignTokens.Spacing.sm) {
             Picker("日志类型", selection: $selectedType) {
                 Text("全部").tag(SessionLogEntry.LogType?.none)
                 ForEach(SessionLogEntry.LogType.allCases, id: \.rawValue) { type in
@@ -178,39 +217,37 @@ struct LogPanelView: View {
             }
             .labelsHidden()
             .frame(maxWidth: 100)
-            .font(.system(size: 12))
+            .font(DesignTokens.Typography.bodySmall)
             .pickerStyle(.menu)
 
             Spacer()
 
-            // 搜索框
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 TextField("搜索日志内容…", text: $searchText)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .frame(width: 160)
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 11))
+                            .font(DesignTokens.Typography.captionLarge)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(DesignTokens.Colors.surfaceInput)
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.micro)
+            .background(Color.white.opacity(0.80))
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
             )
 
-            // 会话过滤
             if !sessionNames.isEmpty {
                 Picker("", selection: $selectedSession) {
                     Text("全部会话").tag(String?.none)
@@ -220,15 +257,18 @@ struct LogPanelView: View {
                 }
                 .labelsHidden()
                 .frame(maxWidth: 150)
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 8)
-        .background(DesignTokens.Colors.surfaceCard)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
     }
 
-    // MARK: - 日志列表
+    // MARK: - 日志列表（viewer tab）
 
     private var logListView: some View {
         Group {
@@ -237,15 +277,14 @@ struct LogPanelView: View {
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        // 对齐 Figma §14：卡片间距 space-y-2 = 8pt
-                        LazyVStack(spacing: 6) {
+                        LazyVStack(spacing: DesignTokens.Spacing.xs) {
                             ForEach(filteredEntries) { entry in
                                 logRowView(entry)
                                     .id(entry.id)
                             }
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.sm)
                     }
                     .onChange(of: logStore.entries.count) { _ in
                         if !isPaused, let last = filteredEntries.last {
@@ -257,19 +296,19 @@ struct LogPanelView: View {
                 }
             }
         }
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(Color(hex: "#fafafa"))
     }
 
     private var emptyLogView: some View {
         VStack(spacing: 10) {
             Image(systemName: "doc.text")
-                .font(.system(size: 28))
+                .font(DesignTokens.Typography.displayLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("暂无日志")
-                .font(.system(size: 13))
+                .font(DesignTokens.Typography.bodyMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("建立 SSH 连接后，终端输入/输出将记录在此")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -279,35 +318,30 @@ struct LogPanelView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
 
-        // 对齐 Figma §14：backdrop-blur-sm rounded-lg border p-3
-        return VStack(alignment: .leading, spacing: 4) {
-            // 顶部行：类型标签 + 时间戳 + 会话名
-            HStack(spacing: 6) {
-                // 类型徽章（text-xs font-semibold uppercase）
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Text(entry.type.label.uppercased())
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(entry.type.color)
 
                 Text(formatter.string(from: entry.timestamp))
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
 
                 Spacer()
 
-                // Void: 会话名徽章
                 Text(entry.sessionName)
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, DesignTokens.Spacing.xxxs)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Capsule())
             }
 
-            // Void: 内容文字
             Text(entry.content)
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -316,10 +350,82 @@ struct LogPanelView: View {
         .background(entry.type.rowBackground)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .strokeBorder(entry.type.borderColor, lineWidth: 0.5)
         )
         .contentShape(Rectangle())
+    }
+
+    // MARK: - 设置 Tab（Figma settings TabsContent）
+
+    private var settingsTabView: some View {
+        ScrollView {
+            VStack(spacing: DesignTokens.Spacing.md) {
+                // 自动保存
+                settingsToggleRow(
+                    title: "自动保存日志",
+                    description: "将终端命令和输出自动保存到本地文件",
+                    isOn: $autoSave
+                )
+
+                // 最大条目数
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                    Text("最大日志条目数")
+                        .font(DesignTokens.Typography.labelMedium)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    CustomTextField(placeholder: "例如：1000", text: $maxEntries)
+                        .font(DesignTokens.Typography.bodySmall)
+                    Text("超过上限时自动丢弃最旧的条目")
+                        .font(DesignTokens.Typography.captionLarge)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                .padding(DesignTokens.Spacing.md)
+                .background(Color(hex: "#fafafa"))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+
+                // 保存路径
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                    Text("日志保存路径")
+                        .font(DesignTokens.Typography.labelMedium)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    CustomTextField(placeholder: "~/Documents/TerminalLogs", text: $logSavePath)
+                        .font(DesignTokens.Typography.bodySmall)
+                }
+                .padding(DesignTokens.Spacing.md)
+                .background(Color(hex: "#fafafa"))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+
+                // 记录时间戳
+                settingsToggleRow(
+                    title: "记录时间戳",
+                    description: "在每条日志条目中附加精确时间",
+                    isOn: $includeTimestamps
+                )
+            }
+            .padding(DesignTokens.Spacing.lg)
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func settingsToggleRow(title: String, description: String, isOn: Binding<Bool>) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+                Text(title)
+                    .font(DesignTokens.Typography.labelMedium)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text(description)
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            Spacer()
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .toggleStyle(.switch)
+        }
+        .padding(DesignTokens.Spacing.md)
+        .background(Color(hex: "#fafafa"))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
     }
 
     // MARK: - 导出
@@ -347,7 +453,6 @@ extension Notification.Name {
 // MARK: - 预览
 
 #Preview("日志面板") {
-    // 填充一些测试数据
     let store = SessionLogStore.shared
     let names = ["ubuntu@192.168.1.1", "root@10.0.0.5"]
     let types = SessionLogEntry.LogType.allCases
