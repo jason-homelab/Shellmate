@@ -40,8 +40,16 @@ struct PasswordManagerView: View {
             contentArea
         }
         .frame(width: 600)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .task {
             await loadSavedSessions()
         }
@@ -68,15 +76,15 @@ struct PasswordManagerView: View {
         HStack(spacing: DesignTokens.Spacing.md) {
             // orange key 图标
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(DesignTokens.Colors.statusConnecting.opacity(0.10))
                     .frame(width: 36, height: 36)
                 Image(systemName: "key.fill")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(DesignTokens.Typography.labelXLarge)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("密码管理")
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -89,10 +97,10 @@ struct PasswordManagerView: View {
 
             Button(action: { onClose?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -141,7 +149,7 @@ struct PasswordManagerView: View {
     private var emptyStateView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "key.slash")
-                .font(.system(size: 32, weight: .light))
+                .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无已保存的密码")
                 .font(DesignTokens.Typography.labelMedium)
@@ -176,9 +184,9 @@ struct PasswordManagerView: View {
         let isVisible = visiblePasswordIds.contains(session.id)
         return HStack(spacing: DesignTokens.Spacing.md) {
             // 会话信息
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text(session.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
                 Text("\(session.username)@\(session.host):\(session.port)")
@@ -190,22 +198,22 @@ struct PasswordManagerView: View {
             Spacer()
 
             // 掩码 / 明文密码 + Eye 切换按钮
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Text(isVisible
                      ? (revealedPasswords[session.id] ?? String(repeating: "•", count: 12))
                      : String(repeating: "•", count: 12))
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(DesignTokens.Typography.codeSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, DesignTokens.Spacing.nano)
+                    .background(Color.black.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
 
                 Button {
                     togglePasswordVisibility(session)
                 } label: {
                     Image(systemName: isVisible ? "eye.slash" : "eye")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 28, height: 28)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
@@ -219,11 +227,11 @@ struct PasswordManagerView: View {
                 pendingDeleteSession = session
             } label: {
                 Image(systemName: "trash")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .frame(width: 28, height: 28)
                     .background(DesignTokens.Colors.statusError.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(isDeleting)
@@ -233,7 +241,7 @@ struct PasswordManagerView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
     }
 

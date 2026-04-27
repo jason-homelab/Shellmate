@@ -61,8 +61,9 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 
 * ✅ `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`
 
+* ✅ `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
+
 **待实现组件（优先级顺序）：**
-* `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
 * `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
 
 ---
