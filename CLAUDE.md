@@ -55,8 +55,9 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 * ✅ `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
 * ✅ `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
 
+* ✅ `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
+
 **待实现组件（优先级顺序）：**
-* `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
 * `LogViewerDialog.tsx` → `Features/Logs/LogPanelView.swift`
 * `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`
 * `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`

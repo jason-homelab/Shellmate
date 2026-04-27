@@ -68,22 +68,24 @@ struct RecordingDialogView: View {
             }
             if let error = saveError {
                 Text(error)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .padding(.horizontal, DesignTokens.Spacing.lg)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, DesignTokens.Spacing.xs)
             }
             Divider()
             footerView
         }
         .frame(minWidth: 560, maxWidth: 672)
         .frame(minHeight: 340, maxHeight: 600)
-        .background(DesignTokens.Colors.surfaceOverlay)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .onAppear {
@@ -128,16 +130,16 @@ struct RecordingDialogView: View {
                     .frame(width: 36, height: 36)
                     .shadow(color: DesignTokens.Colors.statusError.opacity(0.35), radius: 6, x: 0, y: 3)
                 Image(systemName: "record.circle")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(.white)
             }
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text("终端录制")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("录制终端操作并保存为 asciinema v2 格式")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
@@ -145,10 +147,10 @@ struct RecordingDialogView: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -166,22 +168,22 @@ struct RecordingDialogView: View {
                     .fill(DesignTokens.Colors.statusError.opacity(0.08))
                     .frame(width: 64, height: 64)
                 Image(systemName: "record.circle")
-                    .font(.system(size: 28, weight: .medium))
+                    .font(DesignTokens.Typography.displayLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
             }
 
-            VStack(spacing: 6) {
+            VStack(spacing: DesignTokens.Spacing.xs) {
                 Text("准备录制")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("将捕获当前终端会话的所有输入输出，保存为 asciinema v2 格式")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 380)
                 if !sessionName.isEmpty {
                     Text("会话：\(sessionName)")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
             }
@@ -189,14 +191,14 @@ struct RecordingDialogView: View {
             Button {
                 startRecording()
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "record.circle.fill")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.titleSmall)
                     Text("开始录制")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.titleSmall)
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, DesignTokens.Spacing.xl)
                 .padding(.vertical, 9)
                 .background(DesignTokens.Colors.statusError)
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -215,7 +217,7 @@ struct RecordingDialogView: View {
     private var recordingStateView: some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             // 录制指示灯
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Circle()
                     .fill(DesignTokens.Colors.statusError)
                     .frame(width: 10, height: 10)
@@ -229,33 +231,33 @@ struct RecordingDialogView: View {
                             )
                     )
                 Text("录制中")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(DesignTokens.Colors.statusError)
             }
 
             // 大计时器
             Text(elapsedFormatted)
-                .font(.system(size: 52, weight: .thin, design: .monospaced))
+                .font(DesignTokens.Typography.heroXLarge)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .monospacedDigit()
 
             if !sessionName.isEmpty {
                 Text("会话：\(sessionName)")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
             Button {
                 stopRecording()
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "stop.fill")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(DesignTokens.Typography.bodySmallStrong)
                     Text("停止录制")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.titleSmall)
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, DesignTokens.Spacing.xl)
                 .padding(.vertical, 9)
                 .background(DesignTokens.Colors.statusError)
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -274,12 +276,12 @@ struct RecordingDialogView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             // 深色预览块（#1e1e1e 背景）
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                HStack(spacing: 8) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(DesignTokens.Typography.bodyLargeMedium)
                         .foregroundColor(DesignTokens.Colors.statusConnected)
                     Text("录制完成")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.titleSmall)
                         .foregroundColor(.white)
                     Spacer()
                     if isSaving {
@@ -293,28 +295,28 @@ struct RecordingDialogView: View {
                     .background(Color.white.opacity(0.15))
 
                 HStack(spacing: DesignTokens.Spacing.xl) {
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                         Text("时长")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(Color.white.opacity(0.50))
                         Text(durationFormatted(reviewDuration))
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .font(DesignTokens.Typography.labelLarge)
                             .foregroundColor(.white)
                     }
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                         Text("文件大小")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(Color.white.opacity(0.50))
                         Text(fileSizeFormatted(reviewFileSize))
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .font(DesignTokens.Typography.labelLarge)
                             .foregroundColor(.white)
                     }
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                         Text("文件名")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(Color.white.opacity(0.50))
                         Text(reviewFilename.isEmpty ? "—" : reviewFilename)
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(DesignTokens.Typography.codeTiny)
                             .foregroundColor(Color.white.opacity(0.80))
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -335,15 +337,15 @@ struct RecordingDialogView: View {
                     loadRecordings()
                 } label: {
                     Text("重录")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(DesignTokens.Typography.labelLarge)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 34)
-                        .background(DesignTokens.Colors.surfaceCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .background(Color.white.opacity(0.80))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
                         )
                 }
                 .buttonStyle(.plain)
@@ -353,12 +355,12 @@ struct RecordingDialogView: View {
                     onClose()
                 } label: {
                     Text("完成")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.titleSmall)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 34)
                         .background(DesignTokens.Colors.accentPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
@@ -373,25 +375,25 @@ struct RecordingDialogView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("历史录制")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Spacer()
                 Text("\(recordings.count) 个文件")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .padding(.horizontal, DesignTokens.Spacing.lg)
             .padding(.top, 10)
-            .padding(.bottom, 6)
+            .padding(.bottom, DesignTokens.Spacing.xs)
 
             ScrollView {
-                LazyVStack(spacing: 4) {
+                LazyVStack(spacing: DesignTokens.Spacing.xxs) {
                     ForEach(recordings) { recording in
                         recordingRow(recording)
                     }
                 }
                 .padding(.horizontal, DesignTokens.Spacing.lg)
-                .padding(.bottom, 8)
+                .padding(.bottom, DesignTokens.Spacing.sm)
             }
             .frame(maxHeight: 200)
         }
@@ -400,31 +402,31 @@ struct RecordingDialogView: View {
     private func recordingRow(_ recording: RecordingFile) -> some View {
         HStack(spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.statusError.opacity(0.08))
                     .frame(width: 28, height: 28)
                 Image(systemName: "play.rectangle")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.statusError)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(recording.sessionName)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Text(recording.createdAt, style: .date)
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                     if recording.fileSize > 0 {
                         Text(fileSizeFormatted(recording.fileSize))
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(DesignTokens.Typography.codeTiny)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     if recording.duration > 0 {
                         Text(durationFormatted(recording.duration))
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(DesignTokens.Typography.codeTiny)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                 }
@@ -432,15 +434,15 @@ struct RecordingDialogView: View {
 
             Spacer()
 
-            HStack(spacing: 2) {
+            HStack(spacing: DesignTokens.Spacing.xxxs) {
                 Button {
                     RecordingStorage.revealInFinder(filename: recording.filename)
                 } label: {
                     Image(systemName: "folder")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
-                        .background(DesignTokens.Colors.surfaceHover)
+                        .background(Color.black.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -451,7 +453,7 @@ struct RecordingDialogView: View {
                     showDeleteConfirm = true
                 } label: {
                     Image(systemName: "trash")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
                 }
@@ -460,12 +462,12 @@ struct RecordingDialogView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(DesignTokens.Colors.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background(Color.white.opacity(0.80))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
     }
 
@@ -473,12 +475,12 @@ struct RecordingDialogView: View {
 
     private var footerView: some View {
         HStack {
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Image(systemName: "folder")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text("~/Documents/ShellMate/Recordings/")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             Spacer()
@@ -487,7 +489,7 @@ struct RecordingDialogView: View {
                 try? RecordingStorage.ensureDirectoryExists()
                 NSWorkspace.shared.open(url)
             }
-            .font(.system(size: 11))
+            .font(DesignTokens.Typography.captionLarge)
             .buttonStyle(.borderless)
             .foregroundColor(DesignTokens.Colors.accentPrimary)
         }
