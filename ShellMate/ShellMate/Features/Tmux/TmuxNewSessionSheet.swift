@@ -24,7 +24,7 @@ struct TmuxNewSessionSheet: View {
             // 标题
             HStack {
                 Image(systemName: "rectangle.3.group")
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text("新建 tmux 会话")
                     .font(DesignTokens.Typography.titleSmall)
@@ -64,15 +64,14 @@ struct TmuxNewSessionSheet: View {
         .background {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                 .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
-                        .fill(DesignTokens.Colors.surfacePanel.opacity(0.82))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
-                        .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)
-                }
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                .fill(Color.white.opacity(0.95))
         }
+        .overlay {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 6)
         .onAppear { focusedField = .sessionName }
     }
 
@@ -80,13 +79,13 @@ struct TmuxNewSessionSheet: View {
 
     @ViewBuilder
     private func fieldRow(label: String, placeholder: String, text: Binding<String>, field: Field) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             CustomTextField(placeholder: placeholder, text: text)
-                .font(.system(size: 12, design: .monospaced))
+                .font(DesignTokens.Typography.codeSmall)
                 .focused($focusedField, equals: field)
                 .onSubmit {
                     if field == .sessionName {

@@ -50,6 +50,7 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 * ✅ `SettingsDialog.tsx` → `Features/Settings/SettingsView.swift`（Tab bar bg-black/5、active tab bg-white、容器 white/95 backdrop-blur）
 * ✅ `AIAssistantPanel.tsx` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
 * ✅ `FileTransferPanel.tsx` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
+* ✅ `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
 
 **待实现组件（优先级顺序）：**
 * `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift`
