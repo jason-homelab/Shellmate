@@ -41,12 +41,14 @@ struct TunnelManagerView: View {
         // 对齐规范 §11：sm:max-w-[700px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
         .frame(width: 700)
         .frame(minHeight: 300, maxHeight: 560)
-        .background(DesignTokens.Colors.surfaceOverlay)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
         .alert("启动失败", isPresented: $showStartError) {
@@ -69,9 +71,9 @@ struct TunnelManagerView: View {
     private var headerView: some View {
         HStack(spacing: 10) {
             Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("隧道管理器")
                     .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -82,16 +84,19 @@ struct TunnelManagerView: View {
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .frame(width: 22, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(height: 52)
-        .background(DesignTokens.Colors.surfaceOverlay)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
@@ -101,23 +106,26 @@ struct TunnelManagerView: View {
         HStack {
             Spacer()
             Button(action: { addNewRule() }) {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text("新建隧道")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.vertical, DesignTokens.Spacing.micro)
                 .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(height: 40)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
@@ -128,7 +136,7 @@ struct TunnelManagerView: View {
             if tunnelManager.rules.isEmpty {
                 emptyStateView
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: DesignTokens.Spacing.sm) {
                     ForEach(tunnelManager.rules) { rule in
                         TunnelCardView(
                             rule: rule,
@@ -148,9 +156,9 @@ struct TunnelManagerView: View {
     private var emptyStateView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "arrow.left.arrow.right.square")
-                .font(.system(size: 36, weight: .light))
+                .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
-                .padding(.bottom, 4)
+                .padding(.bottom, DesignTokens.Spacing.xxs)
             Text("暂无隧道规则")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -160,34 +168,34 @@ struct TunnelManagerView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 280)
             Button(action: { addNewRule() }) {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
                     Text("新建第一条隧道")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
                 .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             }
             .buttonStyle(.plain)
-            .padding(.top, 4)
+            .padding(.top, DesignTokens.Spacing.xxs)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 48)
+        .padding(.vertical, DesignTokens.Spacing.giant)
     }
 
     // MARK: - 编辑表单
 
     @ViewBuilder
     private var detailPanelView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             // 详情标题行
             HStack {
                 Text("规则详情")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .textCase(.uppercase)
                 Spacer()
@@ -200,7 +208,7 @@ struct TunnelManagerView: View {
             }
 
             // 第一行：隧道名称 + 类型
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 FormGroup(label: "隧道名称") {
                     CustomTextField(placeholder: "如：MySQL 数据库", text: $editDraft.name)
                         .font(DesignTokens.Typography.codeSmall)
@@ -219,7 +227,7 @@ struct TunnelManagerView: View {
             }
 
             // 第二行：本地地址 + 端口 + 远端目标 + 端口
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 FormGroup(label: "本地地址") {
                     CustomTextField(placeholder: "127.0.0.1", text: $editDraft.localBindAddress)
                         .font(DesignTokens.Typography.codeSmall)
@@ -231,10 +239,10 @@ struct TunnelManagerView: View {
                         .textFieldStyle(.plain)
                         .font(DesignTokens.Typography.codeSmall)
                         .padding(DesignTokens.Spacing.xs)
-                        .background(DesignTokens.Colors.surfaceInput)
+                        .background(Color.white.opacity(0.80))
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5))
+                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
                 }
                 .frame(width: 72)
 
@@ -259,7 +267,7 @@ struct TunnelManagerView: View {
             }
 
             // 第三行：备注 + 自动启动
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 FormGroup(label: "备注（可选）") {
                     CustomTextField(placeholder: "如：访问生产数据库", text: $editDraft.notes)
                         .font(DesignTokens.Typography.codeSmall)
@@ -271,7 +279,10 @@ struct TunnelManagerView: View {
             }
         }
         .padding(DesignTokens.Spacing.lg)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
     }
 
     // MARK: - 辅助视图组件
@@ -281,9 +292,9 @@ struct TunnelManagerView: View {
         @ViewBuilder let content: Content
 
         var body: some View {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                 Text(label)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .textCase(.uppercase)
                 content
@@ -338,24 +349,24 @@ private struct TunnelCardView: View {
     let onDelete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             // 第一行：状态点 + 名称 + 操作按钮
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Circle()
                     .fill(rule.status.statusColor)
                     .frame(width: 8, height: 8)
                 Text(rule.name.isEmpty ? rule.localAddressDisplay : rule.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
                 Spacer()
                 // Start/Stop 按钮
                 Button(action: onToggle) {
                     Text(rule.status.isActive ? "停止" : "启动")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(rule.status.isActive ? DesignTokens.Colors.statusConnected : DesignTokens.Colors.textSecondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.nano)
                         .background(rule.status.isActive ? DesignTokens.Colors.accentSecondary.opacity(0.12) : DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
@@ -363,7 +374,7 @@ private struct TunnelCardView: View {
                 // 编辑按钮
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
                         .background(DesignTokens.Colors.surfaceHover)
@@ -373,7 +384,7 @@ private struct TunnelCardView: View {
                 // 删除按钮
                 Button(action: onDelete) {
                     Image(systemName: "trash")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
                 }
@@ -387,14 +398,14 @@ private struct TunnelCardView: View {
             TunnelTypeBadgeView(type: rule.type)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.06) : DesignTokens.Colors.surfaceCard)
+        .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.08) : Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(
                     isSelected
                         ? DesignTokens.Colors.accentPrimary.opacity(0.30)
-                        : DesignTokens.Colors.borderPrimary,
+                        : Color(hex: "#d2d2d7").opacity(0.50),
                     lineWidth: 0.5
                 )
         )
@@ -410,11 +421,11 @@ private struct TunnelTypeBadgeView: View {
 
     var body: some View {
         Text(type.badgeLabel)
-            .font(.system(size: 9.5, weight: .semibold))
+            .font(DesignTokens.Typography.captionSmall)
             .foregroundColor(type.badgeColor)
-            .padding(.horizontal, 6)
+            .padding(.horizontal, DesignTokens.Spacing.xs)
             .frame(height: 18)
             .background(type.badgeColor.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous))
     }
 }

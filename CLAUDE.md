@@ -51,6 +51,7 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 * ✅ `AIAssistantPanel.tsx` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
 * ✅ `FileTransferPanel.tsx` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
 * ✅ `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
+* ✅ `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
 
 **待实现组件（优先级顺序）：**
 * `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift`
