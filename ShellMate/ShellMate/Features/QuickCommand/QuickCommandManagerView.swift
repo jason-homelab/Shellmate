@@ -41,12 +41,14 @@ struct QuickCommandManagerView: View {
         // 对齐规范 §12：sm:max-w-[700px] max-h-[80vh]，bg-white/95 backdrop-blur-2xl，rounded-2xl
         .frame(width: 700)
         .frame(minHeight: 360, maxHeight: 560)
-        .background(DesignTokens.Colors.surfaceOverlay)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
         .alert("新建命令集", isPresented: $showNewSetAlert) {
@@ -81,9 +83,9 @@ struct QuickCommandManagerView: View {
     private var headerView: some View {
         HStack(spacing: 10) {
             Image(systemName: "terminal")
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("快捷命令管理器")
                     .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -94,23 +96,26 @@ struct QuickCommandManagerView: View {
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .frame(width: 22, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(height: 52)
-        .background(DesignTokens.Colors.surfaceOverlay)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
     // MARK: - 操作栏
 
     private var actionBarView: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
             // 命令集选择器
             if !store.commandSets.isEmpty {
                 Picker("", selection: Binding(
@@ -130,7 +135,7 @@ struct QuickCommandManagerView: View {
                 showNewSetAlert = true
             } label: {
                 Image(systemName: "folder.badge.plus")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 26, height: 26)
                     .contentShape(Rectangle())
@@ -147,24 +152,27 @@ struct QuickCommandManagerView: View {
                 isNewCommand = true
                 withAnimation(.easeOut(duration: 0.15)) { showForm = true }
             } label: {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text("新建命令")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.vertical, DesignTokens.Spacing.micro)
                 .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(store.commandSets.isEmpty)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(height: 40)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
@@ -197,7 +205,7 @@ struct QuickCommandManagerView: View {
 
             if hasAnyCommands {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                         ForEach(visibleSets) { set in
                             if !set.sortedCommands.isEmpty {
                                 commandSection(set)
@@ -215,13 +223,13 @@ struct QuickCommandManagerView: View {
     /// 分类区块：标题 + 命令卡片列表
     @ViewBuilder
     private func commandSection(_ set: QuickCommandSet) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             // Figma §12 §4：text-sm font-semibold text-[#1d1d1f] mb-2 px-1
             Text(set.name)
-                .font(.system(size: 13, weight: .semibold))
+                .font(DesignTokens.Typography.titleSmall)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .padding(.horizontal, 2)
-                .padding(.bottom, 2)
+                .padding(.horizontal, DesignTokens.Spacing.xxxs)
+                .padding(.bottom, DesignTokens.Spacing.xxxs)
 
             ForEach(set.sortedCommands) { cmd in
                 commandCard(cmd, setID: set.id)
@@ -234,21 +242,21 @@ struct QuickCommandManagerView: View {
     private func commandCard(_ cmd: QuickCommand, setID: UUID) -> some View {
         HStack(alignment: .top, spacing: 10) {
             // 左侧内容
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.micro) {
                 // 命令名（text-sm font-medium text-[#1d1d1f]）
                 Text(cmd.name.isEmpty ? "（未命名）" : cmd.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
 
                 // 命令文本（text-xs bg-black/5 px-2 py-1 rounded font-mono）
                 if !cmd.content.isEmpty {
                     Text(cmd.content)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .lineLimit(2)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xxs)
                         .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
@@ -256,17 +264,17 @@ struct QuickCommandManagerView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // 右侧操作按钮
-            HStack(spacing: 2) {
+            HStack(spacing: DesignTokens.Spacing.xxxs) {
                 // 执行（Play）
                 Button {
                     onSendCommand(cmd)
                 } label: {
                     Image(systemName: "play.fill")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                         .frame(width: 32, height: 32)
                         .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("执行命令")
@@ -279,11 +287,11 @@ struct QuickCommandManagerView: View {
                     withAnimation(.easeOut(duration: 0.15)) { showForm = true }
                 } label: {
                     Image(systemName: "pencil")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 32, height: 32)
                         .background(DesignTokens.Colors.surfaceHover)
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("编辑命令")
@@ -293,7 +301,7 @@ struct QuickCommandManagerView: View {
                     pendingDelete = (command: cmd, setID: setID)
                 } label: {
                     Image(systemName: "trash")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 32, height: 32)
                 }
@@ -302,12 +310,12 @@ struct QuickCommandManagerView: View {
             }
         }
         .padding(DesignTokens.Spacing.md)
-        // 对齐规范 §12 §5：bg-white/80 backdrop-blur-sm rounded-xl border border-[#d2d2d7]/50
-        .background(DesignTokens.Colors.surfaceCard)
+        // Figma: bg-white/80 backdrop-blur-sm rounded-xl border border-[#d2d2d7]/50
+        .background(Color.white.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.03), radius: 3, x: 0, y: 1)
     }
@@ -320,7 +328,7 @@ struct QuickCommandManagerView: View {
             // 表单头部
             HStack {
                 Text(isNewCommand ? "新建命令" : "编辑命令")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button {
@@ -332,26 +340,29 @@ struct QuickCommandManagerView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
             .frame(height: 44)
-            .background(DesignTokens.Colors.surfaceCard)
+            .background {
+                Rectangle().fill(.thinMaterial)
+                Rectangle().fill(Color.white.opacity(0.60))
+            }
             .overlay(Divider(), alignment: .bottom)
 
             // 表单内容
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                     // 命令名 *
                     formField(label: "命令名称 *") {
                         TextField("如：System Update", text: $formDraft.name)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
                             .background(Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+                                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
                             )
                     }
 
@@ -360,14 +371,14 @@ struct QuickCommandManagerView: View {
                         ZStack(alignment: .topLeading) {
                             if formDraft.content.isEmpty {
                                 Text("sudo apt update && sudo apt upgrade -y")
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .font(DesignTokens.Typography.codeTiny)
                                     .foregroundColor(DesignTokens.Colors.textTertiary)
                                     .padding(.horizontal, 11)
                                     .padding(.vertical, 9)
                                     .allowsHitTesting(false)
                             }
                             TextEditor(text: $formDraft.content)
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(DesignTokens.Typography.codeTiny)
                                 .foregroundColor(DesignTokens.Colors.textPrimary)
                                 .frame(minHeight: 72)
                                 .scrollContentBackground(.hidden)
@@ -377,7 +388,7 @@ struct QuickCommandManagerView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+                                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
                         )
                     }
 
@@ -395,10 +406,10 @@ struct QuickCommandManagerView: View {
                     }
 
                     // 高级选项
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                         Toggle(isOn: $formDraft.appendNewline) {
                             Text("末尾自动追加回车")
-                                .font(.system(size: 12))
+                                .font(DesignTokens.Typography.bodySmall)
                                 .foregroundColor(DesignTokens.Colors.textSecondary)
                         }
                         .toggleStyle(.switch)
@@ -406,7 +417,7 @@ struct QuickCommandManagerView: View {
 
                         Toggle(isOn: $formDraft.sendLineByLine) {
                             Text("逐行发送")
-                                .font(.system(size: 12))
+                                .font(DesignTokens.Typography.bodySmall)
                                 .foregroundColor(DesignTokens.Colors.textSecondary)
                         }
                         .toggleStyle(.switch)
@@ -414,7 +425,7 @@ struct QuickCommandManagerView: View {
                     }
 
                     // Figma §12 §8：底部按钮 flex gap-2 justify-end pt-2
-                    HStack(spacing: 8) {
+                    HStack(spacing: DesignTokens.Spacing.sm) {
                         Spacer()
                         // Cancel（ghost）
                         Button("取消") {
@@ -422,8 +433,8 @@ struct QuickCommandManagerView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
                         .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
 
@@ -446,27 +457,30 @@ struct QuickCommandManagerView: View {
                         .buttonStyle(.plain)
                         .disabled(!canSave)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
                         .background(canSave
                             ? DesignTokens.Colors.accentPrimary
                             : DesignTokens.Colors.accentPrimary.opacity(0.4))
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                     }
-                    .padding(.top, 4)
+                    .padding(.top, DesignTokens.Spacing.xxs)
                 }
                 .padding(DesignTokens.Spacing.lg)
             }
-            .background(DesignTokens.Colors.surfaceWindow)
+            .background {
+                Rectangle().fill(.thinMaterial)
+                Rectangle().fill(Color.white.opacity(0.60))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
     private func formField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             Text(label)
-                .font(.system(size: 11, weight: .medium))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             content()
         }
@@ -475,9 +489,9 @@ struct QuickCommandManagerView: View {
     // MARK: - 空状态
 
     private var emptySetState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "terminal")
-                .font(.system(size: 36))
+                .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无命令集")
                 .font(DesignTokens.Typography.labelMedium)
@@ -490,17 +504,17 @@ struct QuickCommandManagerView: View {
             Button {
                 showNewSetAlert = true
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "folder.badge.plus")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
                     Text("新建命令集")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
                 .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             }
             .buttonStyle(.plain)
         }
@@ -508,9 +522,9 @@ struct QuickCommandManagerView: View {
     }
 
     private var emptyCommandsState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "text.cursor")
-                .font(.system(size: 36))
+                .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无快捷命令")
                 .font(DesignTokens.Typography.labelMedium)
