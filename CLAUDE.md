@@ -53,12 +53,9 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 * ✅ `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
 * ✅ `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
 * ✅ `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
+* ✅ `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
 
 **待实现组件（优先级顺序）：**
-* `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift`
-* `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
-* `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
-* `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
 * `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
 * `LogViewerDialog.tsx` → `Features/Logs/LogPanelView.swift`
 * `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`

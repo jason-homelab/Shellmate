@@ -37,7 +37,7 @@ struct ScriptLibraryView: View {
             sidebarPanel
                 .frame(width: 210)
 
-            Divider()
+            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(width: 0.5)
 
             // 右侧内容区
             if let script = selectedScript {
@@ -47,7 +47,10 @@ struct ScriptLibraryView: View {
             }
         }
         .frame(width: 1100, height: 680)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.90))
+        }
         .sheet(isPresented: $showEditorSheet) {
             ScriptEditorSheet(
                 editingScript: editingScript,
@@ -109,7 +112,7 @@ struct ScriptLibraryView: View {
             Divider()
 
             // 操作按钮
-            VStack(spacing: 8) {
+            VStack(spacing: DesignTokens.Spacing.sm) {
                 // New Script
                 Button {
                     editingScript = nil
@@ -117,15 +120,15 @@ struct ScriptLibraryView: View {
                 } label: {
                     HStack {
                         Image(systemName: "plus")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(DesignTokens.Typography.bodySmallStrong)
                         Text("New Script")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(DesignTokens.Typography.labelLarge)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 32)
                     .background(DesignTokens.Colors.accentPrimary)
                     .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
 
@@ -133,24 +136,24 @@ struct ScriptLibraryView: View {
                 Button {
                     // TODO: 录制会话功能（后续迭代实现）
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DesignTokens.Spacing.xs) {
                         Image(systemName: "video")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(DesignTokens.Typography.bodySmallStrong)
                         Text("Record Session")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(DesignTokens.Typography.labelLarge)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 32)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                             .stroke(DesignTokens.Colors.statusError, lineWidth: 1.5)
                     )
                 }
                 .buttonStyle(.plain)
                 .help("录制会话功能即将上线")
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.vertical, 10)
 
             Divider()
@@ -179,27 +182,30 @@ struct ScriptLibraryView: View {
                 }
             }
         }
-        .background(Color(NSColor.controlBackgroundColor))
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
     }
 
     private var sidebarHeader: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                     .fill(Color.orange)
                     .frame(width: 28, height: 28)
                 // FileCode 图标（对齐 Figma-Spec-v2 §14 更新：Code2 → FileCode）
                 Image(systemName: "doc.text.fill")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(.white)
             }
             Text("Script Library")
-                .font(.system(size: 14, weight: .semibold))
+                .font(DesignTokens.Typography.bodyLargeStrong)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 20, height: 20)
                     .background(DesignTokens.Colors.surfaceOverlay)
@@ -207,7 +213,7 @@ struct ScriptLibraryView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, 10)
     }
 
@@ -215,18 +221,21 @@ struct ScriptLibraryView: View {
         Button(action: onToggle) {
             HStack {
                 Text(category.uppercased())
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .tracking(0.8)
                 Spacer()
                 Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 12)
-            .padding(.bottom, 4)
-            .background(Color(NSColor.controlBackgroundColor))
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.top, DesignTokens.Spacing.md)
+            .padding(.bottom, DesignTokens.Spacing.xxs)
+            .background {
+                Rectangle().fill(.thinMaterial)
+                Rectangle().fill(Color.white.opacity(0.60))
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -239,34 +248,34 @@ struct ScriptLibraryView: View {
             selectedScriptId = script.id
             executionLogs = []
         } label: {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(script.name)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
 
                 Text(script.description)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(isSelected
                         ? .white.opacity(0.8)
                         : DesignTokens.Colors.textSecondary)
                     .lineLimit(2)
 
                 if script.isScheduled {
-                    HStack(spacing: 3) {
+                    HStack(spacing: DesignTokens.Spacing.nano) {
                         Image(systemName: "clock")
-                            .font(.system(size: 9))
+                            .font(DesignTokens.Typography.captionSmall)
                         Text("Scheduled")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                     }
                     .foregroundColor(isSelected
                         ? .white.opacity(0.75)
                         : DesignTokens.Colors.textTertiary)
-                    .padding(.top, 1)
+                    .padding(.top, DesignTokens.Spacing.px)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(isSelected ? DesignTokens.Colors.accentPrimary : Color.clear)
         }
@@ -292,7 +301,7 @@ struct ScriptLibraryView: View {
             HStack(spacing: 0) {
                 codePanel(script: script)
 
-                Divider()
+                Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(width: 0.5)
 
                 logPanel
             }
@@ -301,34 +310,34 @@ struct ScriptLibraryView: View {
 
     private func detailHeader(script: Script) -> some View {
         HStack(alignment: .top, spacing: 0) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                 Text(script.name)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
 
                 Text(script.description)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
 
-                HStack(spacing: 8) {
-                    HStack(spacing: 5) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    HStack(spacing: DesignTokens.Spacing.micro) {
                         Circle()
                             .fill(DesignTokens.Colors.statusConnected)
                             .frame(width: 7, height: 7)
                         Text(script.category)
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                     }
 
                     Text("Modified: \(script.modifiedAt.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
             }
             Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.vertical, DesignTokens.Spacing.lg)
     }
 
     private func actionBar(script: Script) -> some View {
@@ -337,23 +346,23 @@ struct ScriptLibraryView: View {
             Button {
                 runScript(script)
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     if isRunning {
                         ProgressView()
                             .controlSize(.small)
                             .tint(.white)
                     } else {
                         Image(systemName: "play.fill")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                     }
                     Text(isRunning ? "Running..." : "Run Script")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(DesignTokens.Typography.labelLarge)
                 }
                 .padding(.horizontal, 14)
                 .frame(height: 32)
                 .background(DesignTokens.Colors.statusConnected)
                 .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
             .disabled(isRunning)
@@ -363,19 +372,19 @@ struct ScriptLibraryView: View {
                 editingScript = script
                 showEditorSheet = true
             } label: {
-                HStack(spacing: 5) {
+                HStack(spacing: DesignTokens.Spacing.micro) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                     Text("Edit")
-                        .font(.system(size: 13))
+                        .font(DesignTokens.Typography.bodyMedium)
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .frame(height: 32)
                 .background(Color(NSColor.controlBackgroundColor))
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                         .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                 )
             }
@@ -386,19 +395,19 @@ struct ScriptLibraryView: View {
                 scheduleInput = script.scheduleDescription
                 showScheduleAlert = true
             } label: {
-                HStack(spacing: 5) {
+                HStack(spacing: DesignTokens.Spacing.micro) {
                     Image(systemName: "calendar")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                     Text("Schedule")
-                        .font(.system(size: 13))
+                        .font(DesignTokens.Typography.bodyMedium)
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .frame(height: 32)
                 .background(Color(NSColor.controlBackgroundColor))
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                         .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                 )
             }
@@ -409,13 +418,13 @@ struct ScriptLibraryView: View {
                 store.duplicateScript(script)
             } label: {
                 Image(systemName: "doc.on.doc")
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .frame(width: 32, height: 32)
                     .background(Color(NSColor.controlBackgroundColor))
                     .foregroundColor(DesignTokens.Colors.textPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                             .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                     )
             }
@@ -428,13 +437,13 @@ struct ScriptLibraryView: View {
                 showDeleteConfirm = true
             } label: {
                 Image(systemName: "trash")
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .frame(width: 32, height: 32)
                     .background(Color(NSColor.controlBackgroundColor))
                     .foregroundColor(DesignTokens.Colors.statusError)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                             .stroke(DesignTokens.Colors.statusError.opacity(0.6), lineWidth: 1)
                     )
             }
@@ -443,7 +452,7 @@ struct ScriptLibraryView: View {
 
             Spacer()
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.vertical, 10)
     }
 
@@ -453,26 +462,25 @@ struct ScriptLibraryView: View {
         VStack(alignment: .leading, spacing: 0) {
             // 区域标题
             Text("Script Content")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Color(hex: "#CCCCCC"))
-                .padding(.horizontal, 16)
+                .font(DesignTokens.Typography.bodySmallStrong)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
                 .padding(.vertical, 10)
 
-            Divider()
-                .overlay(Color(hex: "#333333"))
+            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
 
             // 代码内容（只读）
             ScrollView([.vertical, .horizontal]) {
                 Text(script.content)
                     .font(.system(.body, design: .monospaced))
-                    .foregroundColor(Color(hex: "#D4D4D4"))
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(DesignTokens.Spacing.lg)
                     .textSelection(.enabled)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color(hex: "#1E1E1E"))
+        .background(Color.white.opacity(0.80))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -482,26 +490,25 @@ struct ScriptLibraryView: View {
         VStack(alignment: .leading, spacing: 0) {
             // 标题
             Text("Execution Log")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Color(hex: "#CCCCCC"))
-                .padding(.horizontal, 16)
+                .font(DesignTokens.Typography.bodySmallStrong)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
                 .padding(.vertical, 10)
 
-            Divider()
-                .overlay(Color(hex: "#333333"))
+            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
 
             if executionLogs.isEmpty {
                 // 空状态
-                VStack(spacing: 8) {
+                VStack(spacing: DesignTokens.Spacing.sm) {
                     Text(">_")
-                        .font(.system(size: 28, weight: .light, design: .monospaced))
-                        .foregroundColor(Color(hex: "#555555"))
+                        .font(DesignTokens.Typography.displayLarge)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
                     Text("No execution logs yet")
-                        .font(.system(size: 13))
-                        .foregroundColor(Color(hex: "#666666"))
+                        .font(DesignTokens.Typography.bodyMedium)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
                     Text("Run the script to see output")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(hex: "#555555"))
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -523,39 +530,38 @@ struct ScriptLibraryView: View {
                 }
             }
         }
-        .background(Color(hex: "#1E1E1E"))
+        .background(Color.white.opacity(0.80))
         .frame(maxHeight: .infinity)
         .frame(width: 384)  // w-96 对齐 Figma-Spec-v2 §14 更新
     }
 
     private func logLine(_ entry: ScriptLogEntry) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
             Text(entry.timestamp.formatted(.dateTime.hour().minute().second()))
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(Color(hex: "#666666"))
+                .font(DesignTokens.Typography.codeTiny)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 70, alignment: .trailing)
             Text(entry.output)
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(entry.isError ? Color(hex: "#FF6B6B") : Color(hex: "#D4D4D4"))
+                .font(DesignTokens.Typography.codeSmall)
+                .foregroundColor(entry.isError ? DesignTokens.Colors.statusError : DesignTokens.Colors.textPrimary)
                 .textSelection(.enabled)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DesignTokens.Spacing.xxxs)
         .id(entry.id)
     }
 
     // MARK: - 空状态（未选中脚本）
 
     private var emptyDetailState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "chevron.left.forwardslash.chevron.right")
-                .font(.system(size: 36, weight: .light))
+                .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("从左侧选择一个脚本")
                 .font(DesignTokens.Typography.bodyMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     // MARK: - 运行脚本
