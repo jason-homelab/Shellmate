@@ -20,7 +20,6 @@ ShellMate 是一款面向专业开发者/运维工程师的 macOS 原生 SSH 会
 ### 2.1 需求与定义层 (MRD/PRD)
 * 📄 **[ShellMate MRD](./ShellMate_MRD.md)** - 明确产品定位、目标用户群和各阶段里程碑目标。
 * 📄 **[ShellMate PRD](./ShellMate_PRD.md)** - 详细的功能模块定义、数据模型（10章）、错误处理规范和 10 个 P0 级验收用例。
-* 📄 **[原型设计规范](./原型.md)** - 线框图与组件布局定义（ASCII 格式），涵盖完整的弹窗、覆层及错误弹窗细节。
 
 ### 2.2 技术架构层 (Tech Spec/DB)
 * 📄 **[技术方案](./技术方案.md)**（v3.0）- 涵盖 4 层架构图、SSH 连接状态机、AI 服务层、系统性能监控、欢迎引导、脚本自动化、录制回放、日志面板、导入导出等新模块设计，以及 Figma-Spec-v2 UI 令牌系统（§3.16）。
@@ -29,32 +28,39 @@ ShellMate 是一款面向专业开发者/运维工程师的 macOS 原生 SSH 会
 ### 2.3 进度与管理层
 * 📄 **[开发进度](./开发进度.md)** - 17 周项目详细 WBS 与 RACI 矩阵，追踪当前项目进展。
 
-### 2.4 UI 设计规范层 (Figma Specs)
+### 2.4 UI 设计规范层（Figma Make 直接实现）
 
-> **⚠️ 规范权威性声明：`Figma-Spec-v2/` 为当前唯一权威 UI 设计规范（2026-04-02 起）。**
-> 所有新功能开发、UI 改动必须以 v2 为准。旧版 `shellmate-figma-spec/` 仅供历史参考，存在冲突时 **v2 优先**。
+> **⚠️ UI 规范唯一来源：Figma Make 原型 `upl5OBUkpLGnOe1u5aQRZ5`（2026-04-26 起）。**
+> 所有 UI 实现必须通过 Figma MCP 读取原型源码（`WelcomeScreen.tsx`、`Sidebar.tsx` 等）1:1 实现，不再维护任何本地 Markdown 规范文档。
 
-#### ✅ 当前权威规范：`./Figma-Spec-v2/`（基于 Figma Make 原型 `upl5OBUkpLGnOe1u5aQRZ5`，2026-04-02）
+**Figma Make 文件访问方式：**
+```
+fileKey: upl5OBUkpLGnOe1u5aQRZ5
+MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
+组件路径: file://figma/make/source/upl5OBUkpLGnOe1u5aQRZ5/src/app/components/
+```
 
-* **[`00-总纲与设计令牌.md`](./Figma-Spec-v2/00-总纲与设计令牌.md)** - 颜色令牌（Apple Blue `#007aff` / 语义色）、排版令牌（8级）、间距/圆角/阴影/动效令牌、图标规范（SF Symbols 映射）、Z轴层次。
-* **[`01-整体布局规范.md`](./Figma-Spec-v2/01-整体布局规范.md)** - 主界面层次（标题栏40/工具栏48/侧边栏256/终端flex/状态栏32）、四种分屏模式（单/水平/垂直/四格）、脚本自动化覆层。
-* **[`02-侧边栏规范.md`](./Figma-Spec-v2/02-侧边栏规范.md)** - 容器、顶部工具行（新建/分组管理/密码管理/设置）、会话行（选中/未选中）、文件夹行、ScrollArea。
-* **[`03-工具栏规范.md`](./Figma-Spec-v2/03-工具栏规范.md)** - 三区段布局（左侧10个操作按钮/中间会话名/右侧4个全局按钮）、分屏下拉菜单、按钮通用样式。
-* **[`04-终端区域规范.md`](./Figma-Spec-v2/04-终端区域规范.md)** - 标签栏、终端视图、AI 命令说明 Tooltip、AI 错误建议条（内联）、终端主题切换。
-* **[`05-状态栏规范.md`](./Figma-Spec-v2/05-状态栏规范.md)** - 连接状态指示、CPU/内存/磁盘/网络实时指标（颜色阈值/迷你图/进度条）、2s 刷新频率。
-* **[`06-新建会话弹窗规范.md`](./Figma-Spec-v2/06-新建会话弹窗规范.md)** - 单页表单（名称/协议/主机/端口/用户名/密码/分组），`max-w-[500px]`，字段验证规则。
-* **[`07-设置面板规范.md`](./Figma-Spec-v2/07-设置面板规范.md)** - **3 Tab 结构**（通用/外观/终端），`max-w-[600px]`，Switch 组件规范。
-* **[`08-文件传输面板规范.md`](./Figma-Spec-v2/08-文件传输面板规范.md)** - 双面板布局（本地/远程）、文件列表项、传输进度条、底部状态栏，`W: 500px`。
-* **[`09-AI助手面板规范.md`](./Figma-Spec-v2/09-AI助手面板规范.md)** - 消息气泡（AI左/用户右）、命令块（含复制/执行）、Typing 指示器、快速提示、输入区，`W: 400px`。
-* **[`10-tmux管理器规范.md`](./Figma-Spec-v2/10-tmux管理器规范.md)** - 三 Tab（Sessions/Windows/Quick Actions）、会话卡片（附加态渐变）、窗口卡片、快捷操作 2×2 Grid，`max-w-[900px]`。
-* **[`11-隧道管理器规范.md`](./Figma-Spec-v2/11-隧道管理器规范.md)** - 隧道列表/新建表单、三种类型（本地/远程/SOCKS5）、状态切换按钮，`max-w-[700px]`。
-* **[`12-快捷命令管理器规范.md`](./Figma-Spec-v2/12-快捷命令管理器规范.md)** - 分类标题、命令卡片（执行/编辑/删除）、新建表单，`max-w-[700px]`。
-* **[`13-欢迎界面规范.md`](./Figma-Spec-v2/13-欢迎界面规范.md)** - 三步骤 Onboarding（欢迎/特性/开始），英雄图标、步骤指示器（当前步蓝色宽条）、操作卡片 3 列，z-50 全屏。
-* **[`14-其他弹窗规范.md`](./Figma-Spec-v2/14-其他弹窗规范.md)** - 分组管理、密码管理、导入/导出（JSON/CSV）、日志面板（过滤/搜索/导出）、脚本自动化面板（全屏双栏）、录制对话框、弹窗统一规范汇总。
+**已完成 1:1 实现的组件（按 Figma 组件文件对应）：**
+* ✅ `WelcomeScreen.tsx` → `Features/Welcome/WelcomeScreenView.swift`
+* ✅ `Toolbar.tsx` → `App/ContentViewToolbar.swift`
+* ✅ `Sidebar.tsx` → `Features/Sidebar/SessionSidebarView.swift` + `SessionRowView.swift` + `GroupHeaderView.swift`
+* ✅ `Terminal.tsx` → `Features/Terminal/TerminalView.swift`（SwiftTerm 渲染层无法 1:1 映射，已对齐 ToolbarButton hover/圆角样式）
+* ✅ `StatusBar.tsx` → `Features/StatusBar/TerminalStatusBarView.swift`
+* ✅ `NewSessionDialog.tsx` → `Features/SessionForm/SessionFormSheet.swift` + `Shared/Components/FormComponents.swift`
+* ✅ `SettingsDialog.tsx` → `Features/Settings/SettingsView.swift`（Tab bar bg-black/5、active tab bg-white、容器 white/95 backdrop-blur）
+* ✅ `AIAssistantPanel.tsx` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
+* ✅ `FileTransferPanel.tsx` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
 
-#### 📦 历史参考（仅供查阅，不作为实现依据）：`./shellmate-figma-spec/`
-
-旧版规范中 `shellmate-figma-spec/03-动效与交互规范.md`、`04-可访问性与Handoff检查清单.md` 中的 VoiceOver / 动效弹性曲线部分仍有参考价值，v2 未覆盖时可查阅。其余文件已被 v2 完全替代。
+**待实现组件（优先级顺序）：**
+* `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift`
+* `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
+* `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
+* `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
+* `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
+* `LogViewerDialog.tsx` → `Features/Logs/LogPanelView.swift`
+* `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`
+* `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
+* `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
 
 ---
 
