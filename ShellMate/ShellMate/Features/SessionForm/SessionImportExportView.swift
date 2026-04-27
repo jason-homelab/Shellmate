@@ -44,12 +44,14 @@ struct SessionImportExportView: View {
         }
         .frame(width: 600)
         .frame(minHeight: 380, maxHeight: 560)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
         .onAppear {
@@ -66,16 +68,16 @@ struct SessionImportExportView: View {
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 36, height: 36)
                 Image(systemName: "square.and.arrow.up.on.square")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(DesignTokens.Typography.labelLargeMid)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text("导入 / 导出")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("备份、恢复或迁移会话配置（不含凭据）")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
@@ -83,10 +85,10 @@ struct SessionImportExportView: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
-                    .background(DesignTokens.Colors.surfaceCard)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -98,7 +100,7 @@ struct SessionImportExportView: View {
     // MARK: - Tab 选择器
 
     private var tabPickerView: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(ExportTab.allCases, id: \.rawValue) { tab in
                 Button(action: { activeTab = tab }) {
                     Text(tab.rawValue)
@@ -108,12 +110,10 @@ struct SessionImportExportView: View {
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeTab == tab
-                            ? Color.white.opacity(0.95)
-                            : Color.clear)
+                        .background(activeTab == tab ? Color.white : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                        .shadow(color: activeTab == tab ? Color.black.opacity(0.06) : .clear,
-                                radius: 2, x: 0, y: 1)
+                        .shadow(color: activeTab == tab ? Color.black.opacity(0.08) : .clear,
+                                radius: 3, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
             }
@@ -144,7 +144,7 @@ struct SessionImportExportView: View {
             // 只读 JSON 预览区
             ScrollView {
                 Text(exportJSONPreview.isEmpty ? "（无会话可导出）" : exportJSONPreview)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(exportJSONPreview.isEmpty
                         ? DesignTokens.Colors.textTertiary
                         : DesignTokens.Colors.textPrimary)
@@ -152,11 +152,11 @@ struct SessionImportExportView: View {
                     .padding(DesignTokens.Spacing.sm)
             }
             .frame(height: 220)
-            .background(DesignTokens.Colors.surfaceWindow.opacity(0.80))
+            .background(Color.black.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
             )
 
             // 操作按钮行
@@ -166,7 +166,7 @@ struct SessionImportExportView: View {
                     NSPasteboard.general.setString(exportJSONPreview, forType: .string)
                 } label: {
                     Label("复制", systemImage: "doc.on.doc")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -176,7 +176,7 @@ struct SessionImportExportView: View {
                     exportAsJSON(sessions)
                 } label: {
                     Label("下载文件", systemImage: "arrow.down.circle")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -194,21 +194,21 @@ struct SessionImportExportView: View {
             // 可编辑粘贴区
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $importPasteText)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .frame(height: 180)
                     .scrollContentBackground(.hidden)
-                    .background(DesignTokens.Colors.surfaceWindow.opacity(0.80))
+                    .background(Color.white.opacity(0.80))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 1)
+                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
                     )
 
                 if importPasteText.isEmpty {
                     Text("在此粘贴 JSON 内容…")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
                         .padding(.vertical, 9)
                         .allowsHitTesting(false)
                 }
@@ -227,7 +227,7 @@ struct SessionImportExportView: View {
                     processImportData(data, fileExtension: "json")
                 } label: {
                     Label("导入粘贴内容", systemImage: "arrow.down.doc")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -237,29 +237,29 @@ struct SessionImportExportView: View {
                     pickImportFile()
                 } label: {
                     Label("选择文件…", systemImage: "folder")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
             }
 
             // 支持格式提示
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 ForEach([".json", ".xsh", ".ini", ".reg"], id: \.self) { fmt in
                     Text(fmt)
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(DesignTokens.Colors.surfaceCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .padding(.horizontal, DesignTokens.Spacing.xs)
+                        .padding(.vertical, DesignTokens.Spacing.xxxs)
+                        .background(Color.black.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
                 }
                 Spacer()
             }
 
             if let error = importError {
                 Text(error)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .multilineTextAlignment(.center)
             }

@@ -63,8 +63,9 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 
 * ✅ `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
 
-**待实现组件（优先级顺序）：**
-* `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
+* ✅ `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
+
+**所有 Figma Make 组件均已完成 1:1 实现。**
 
 ---
 
