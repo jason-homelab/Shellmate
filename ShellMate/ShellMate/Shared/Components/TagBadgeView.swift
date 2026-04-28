@@ -35,7 +35,7 @@ struct TagBadgeView: View {
                     onDelete?()
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(textColor.opacity(0.7))
                 }
                 .buttonStyle(.plain)
@@ -44,7 +44,7 @@ struct TagBadgeView: View {
         .padding(.horizontal, DesignTokens.Spacing.xs)
         .padding(.vertical, DesignTokens.Spacing.xxxs)
         .background(backgroundColor)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
     }
 }
 
@@ -133,7 +133,7 @@ extension TagBadgeView {
 // MARK: - 预览
 
 #Preview("标签徽章") {
-    VStack(spacing: 16) {
+    VStack(spacing: DesignTokens.Spacing.lg) {
         // 基本样式
         HStack {
             TagBadgeView(text: "生产")
@@ -144,7 +144,7 @@ extension TagBadgeView {
         // 带删除按钮
         HStack {
             TagBadgeView(text: "可删除", isDeletable: true) {
-                print("删除标签")
+                AppLogger.general.debug("删除标签")
             }
         }
 
@@ -158,6 +158,6 @@ extension TagBadgeView {
         // 标签列表
         TagListView(tags: ["Linux", "Ubuntu", "AWS", "生产", "重要"])
     }
-    .padding(24)
+    .padding(DesignTokens.Spacing.xxl)
     .background(DesignTokens.Colors.surfaceWindow)
 }

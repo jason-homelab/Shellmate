@@ -37,6 +37,9 @@ final class SSH2Connection {
     /// 是否正在读取
     private var isReading = false
 
+    /// libssh2 线程互斥锁：防止 readLoop 与 write() 并发调用 libssh2 导致内部状态损坏
+    private let libssh2Lock = NSLock()
+
     /// 终端尺寸
     private var terminalCols: Int = 80
     private var terminalRows: Int = 24
@@ -79,7 +82,7 @@ final class SSH2Connection {
 
         // 获取主机密钥指纹并校验
         let fingerprint = try bridge.getHostKeyFingerprint()
-        print("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
+        AppLogger.ssh.debug("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
         try onVerifyHostKey?(fingerprint)
 
         // 密码认证
@@ -100,7 +103,7 @@ final class SSH2Connection {
         // 开始读取数据
         startReading()
 
-        print("[SSH2Connection] 连接成功: \(username)@\(host):\(port)")
+        AppLogger.ssh.debug("[SSH2Connection] 连接成功: \(username)@\(host):\(port)")
     }
 
     /// 使用私钥连接
@@ -131,7 +134,7 @@ final class SSH2Connection {
 
         // 获取主机密钥指纹并校验
         let fingerprint = try bridge.getHostKeyFingerprint()
-        print("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
+        AppLogger.ssh.debug("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
         try onVerifyHostKey?(fingerprint)
 
         // 公钥认证
@@ -157,7 +160,7 @@ final class SSH2Connection {
         // 开始读取数据
         startReading()
 
-        print("[SSH2Connection] 私钥连接成功: \(username)@\(host):\(port)")
+        AppLogger.ssh.debug("[SSH2Connection] 私钥连接成功: \(username)@\(host):\(port)")
     }
 
     /// 使用 SSH Agent 连接
@@ -184,7 +187,7 @@ final class SSH2Connection {
 
         // 获取主机密钥指纹并校验
         let fingerprint = try bridge.getHostKeyFingerprint()
-        print("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
+        AppLogger.ssh.debug("[SSH2Connection] 主机密钥: \(fingerprint.sha256Display)")
         try onVerifyHostKey?(fingerprint)
 
         // SSH Agent 认证
@@ -205,7 +208,7 @@ final class SSH2Connection {
         // 开始读取数据
         startReading()
 
-        print("[SSH2Connection] Agent 连接成功: \(username)@\(host):\(port)")
+        AppLogger.ssh.debug("[SSH2Connection] Agent 连接成功: \(username)@\(host):\(port)")
     }
 
     // MARK: - 数据操作
@@ -223,11 +226,14 @@ final class SSH2Connection {
             }
             var sent = 0
             while sent < data.count {
+                // 加锁：与 readLoop 中的 readChannel 互斥，防止并发 libssh2 调用损坏内部状态
+                libssh2Lock.lock()
                 let result = bridge.writeChannel(channel: channel, data: ptr.advanced(by: sent), length: data.count - sent)
+                libssh2Lock.unlock()
                 if result > 0 {
                     sent += result
                 } else if result == Int(LIBSSH2_ERROR_EAGAIN) {
-                    // 非阻塞模式，等待重试
+                    // 非阻塞模式，等待重试（锁已释放，readLoop 可在此期间安全读取）
                     usleep(1000)
                 } else {
                     throw SSHError.writeFailed(reason: bridge.getLastErrorMessage())
@@ -251,7 +257,9 @@ final class SSH2Connection {
         guard let channel = channel else { return }
         terminalCols = cols
         terminalRows = rows
+        libssh2Lock.lock()
         bridge.resizePTY(channel: channel, cols: cols, rows: rows)
+        libssh2Lock.unlock()
     }
 
     // MARK: - 断开连接
@@ -261,7 +269,9 @@ final class SSH2Connection {
         isReading = false
 
         if let channel = channel {
+            libssh2Lock.lock()
             bridge.closeChannel(channel: channel)
+            libssh2Lock.unlock()
             self.channel = nil
         }
 
@@ -288,25 +298,28 @@ final class SSH2Connection {
     private func readLoop() {
         // W15.5 优化：32KB 缓冲区减少 libssh2_channel_read 系统调用次数（原 4KB）
         // 回调直接在后台线程触发，由 TerminalDataCoalescer 聚合到 16ms 窗口后渲染
-        let bufferSize = 32768
+        let bufferSize = AppConstants.sshReadBufferSize
         var buffer = [UInt8](repeating: 0, count: bufferSize)
 
         while isReading, let channel = channel {
+            // 加锁：与 write() 中的 writeChannel 互斥，防止并发 libssh2 调用损坏内部状态
+            libssh2Lock.lock()
             let bytesRead = bridge.readChannel(channel: channel, buffer: &buffer, bufferSize: bufferSize)
+            libssh2Lock.unlock()
 
             if bytesRead > 0 {
                 let data = Data(bytes: buffer, count: bytesRead)
                 // 直接在后台线程回调，无需跳转主线程（TerminalController 的 coalescer 处理线程安全）
                 onDataReceived?(data)
             } else if bytesRead == Int(LIBSSH2_ERROR_EAGAIN) {
-                // 非阻塞模式，使用 select 等待数据
+                // 非阻塞模式，使用 select 等待数据（锁已释放，write() 可在等待期间安全写入）
                 waitForData()
             } else if bytesRead == 0 {
                 // EOF，连接关闭
                 break
             } else {
                 // 错误
-                print("[SSH2Connection] 读取错误: \(bytesRead)")
+                AppLogger.ssh.debug("[SSH2Connection] 读取错误: \(bytesRead)")
                 break
             }
         }

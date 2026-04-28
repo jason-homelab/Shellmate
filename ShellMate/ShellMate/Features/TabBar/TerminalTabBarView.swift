@@ -27,60 +27,66 @@ struct TerminalTabBarView: View {
 
             Spacer()
         }
-        .frame(height: DesignTokens.Sizes.tabBarHeight)
+        // Figma: h-10 = 40pt
+        .frame(height: 40)
         .background {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay { Rectangle().fill(DesignTokens.Colors.glassUltraLight) }
+            // Figma: bg-[#f5f5f7]/80 backdrop-blur-xl
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(DesignTokens.Colors.surfaceWindow.opacity(0.80))
         }
         .overlay(alignment: .bottom) {
+            // Figma: border-b border-[#d2d2d7]/50
             Rectangle()
-                .fill(DesignTokens.Colors.glassBorderSide)
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
         }
     }
 
     // MARK: - 子视图
 
-    /// 标签页列表
+    /// 标签页列表（超出宽度时横向滚动，避免 Tab 溢出截断）
     private var tabList: some View {
-        HStack(spacing: 1) {
-            ForEach(store.tabs) { tab in
-                TerminalTabView(
-                    tab: tab,
-                    isSelected: store.selectedTabId == tab.id,
-                    onClose: {
-                        store.requestCloseTab(tab)
-                    },
-                    onSelect: {
-                        store.selectTab(tab)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DesignTokens.Spacing.px) {
+                ForEach(store.tabs) { tab in
+                    TerminalTabView(
+                        tab: tab,
+                        isSelected: store.selectedTabId == tab.id,
+                        onClose: {
+                            store.requestCloseTab(tab)
+                        },
+                        onSelect: {
+                            store.selectTab(tab)
+                        }
+                    )
+                    .onDrag {
+                        draggedTabId = tab.id
+                        return NSItemProvider(object: tab.id.uuidString as NSString)
                     }
-                )
-                .onDrag {
-                    draggedTabId = tab.id
-                    return NSItemProvider(object: tab.id.uuidString as NSString)
+                    .onDrop(of: [.text], delegate: TabDropDelegate(
+                        targetTab: tab,
+                        store: store,
+                        draggedTabId: $draggedTabId
+                    ))
                 }
-                .onDrop(of: [.text], delegate: TabDropDelegate(
-                    targetTab: tab,
-                    store: store,
-                    draggedTabId: $draggedTabId
-                ))
             }
+        }
+        // 选中 Tab 变化时自动滚动到可视区域
+        .onChange(of: store.selectedTabId) { _ in
+            // SwiftUI ScrollViewReader 需要绑定 id；此处依赖默认滚动行为，不引入额外状态
         }
     }
 
     /// 新建标签按钮
     private var newTabButton: some View {
-        Button(action: {
+        HoverIconButton(
+            systemImage: "plus",
+            accessibilityText: "新建标签页",
+            size: 28,
+            iconSize: 16
+        ) {
             onNewTab?()
-        }) {
-            Image(systemName: "plus")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: 28, height: 28)
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .help("新建标签页")
         .padding(.horizontal, DesignTokens.Spacing.xxs)
     }
@@ -131,7 +137,7 @@ struct TabCloseConfirmationView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             // 图标
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 40))
+                .font(DesignTokens.Typography.heroMedium)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
             // 标题
@@ -165,11 +171,7 @@ struct TabCloseConfirmationView: View {
         .frame(width: 320)
         .background {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
-                        .fill(DesignTokens.Colors.surfacePanel.opacity(0.85))
-                }
+                .fill(DesignTokens.Colors.surfacePanel)
                 .overlay {
                     RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
                         .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)

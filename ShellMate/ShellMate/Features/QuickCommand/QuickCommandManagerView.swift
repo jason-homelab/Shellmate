@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - D05 快捷命令管理器
 
 /// 快捷命令管理器面板（D05）
-/// 规格：560×460pt，浮动非模态 Panel，快捷键 ⌘⇧K
+/// 对齐 Figma-Spec-v2 §12：单列卡片布局，分类标题，命令卡片（名称/命令文本/执行/编辑/删除）
 struct QuickCommandManagerView: View {
 
     @ObservedObject var store: QuickCommandStore
@@ -16,28 +16,41 @@ struct QuickCommandManagerView: View {
 
     // MARK: - 状态
 
-    @State private var selectedCommandID: UUID?
-    @State private var editingCommand: QuickCommand? = nil
-    @State private var showNewSetAlert = false
-    @State private var newSetName = ""
-    @State private var showDeleteSetConfirm = false
+    /// 是否展示新建/编辑表单
+    @State private var showForm: Bool = false
+    /// 正在编辑的命令（nil = 新建）
+    @State private var formDraft: QuickCommand = QuickCommand()
+    /// 目标命令集 ID
+    @State private var formSetID: UUID? = nil
+    /// 是否新建（区别于编辑）
+    @State private var isNewCommand: Bool = true
+    /// 新建命令集弹窗
+    @State private var showNewSetAlert: Bool = false
+    @State private var newSetName: String = ""
+    /// 删除确认
+    @State private var pendingDelete: (command: QuickCommand, setID: UUID)? = nil
 
     // MARK: - 视图
 
     var body: some View {
         VStack(spacing: 0) {
             headerView
-            commandSetBar
-            contentArea
+            actionBarView
+            mainContent
         }
-        .frame(width: 560, height: 460)
-        .background(DesignTokens.Colors.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        // 对齐规范 §12：sm:max-w-[700px] max-h-[80vh]，bg-white/95 backdrop-blur-2xl，rounded-2xl
+        .frame(width: 700)
+        .frame(minHeight: 360, maxHeight: 560)
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.75), radius: 32, x: 0, y: 24)
+        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
         .alert("新建命令集", isPresented: $showNewSetAlert) {
             TextField("命令集名称", text: $newSetName)
             Button("创建") {
@@ -48,342 +61,494 @@ struct QuickCommandManagerView: View {
             }
             Button("取消", role: .cancel) { newSetName = "" }
         }
-        .confirmationDialog("删除命令集", isPresented: $showDeleteSetConfirm) {
+        .confirmationDialog("删除命令", isPresented: Binding(
+            get: { pendingDelete != nil },
+            set: { if !$0 { pendingDelete = nil } }
+        )) {
             Button("删除", role: .destructive) {
-                if let id = store.selectedSetID { store.deleteCommandSet(id: id) }
+                if let item = pendingDelete {
+                    store.deleteCommand(id: item.command.id, from: item.setID)
+                }
+                pendingDelete = nil
             }
-            Button("取消", role: .cancel) {}
+            Button("取消", role: .cancel) { pendingDelete = nil }
         } message: {
-            Text("此操作将删除命令集及其所有命令，且不可撤销。")
+            Text("此操作不可撤销。")
         }
     }
 
-    // MARK: - 子视图
+    // MARK: - 标题区
 
+    /// 对齐规范 §12 §3：Terminal 图标，标题，描述
     private var headerView: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "list.bullet.rectangle")
-                .font(.system(size: 14))
+        HStack(spacing: 10) {
+            Image(systemName: "terminal")
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-            Text("快捷命令管理器")
-                .font(DesignTokens.Typography.labelLarge)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+                Text("快捷命令管理器")
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("创建并管理常用命令")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .frame(width: 22, height: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 44)
-        .background(DesignTokens.Colors.surfaceOverlay)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .frame(height: 52)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
-    private var commandSetBar: some View {
-        HStack(spacing: 8) {
-            Text("命令集：")
-                .font(.system(size: 10.5))
-                .foregroundColor(DesignTokens.Colors.textDisabled)
+    // MARK: - 操作栏
 
-            if store.commandSets.isEmpty {
-                Text("无命令集").font(.system(size: 11)).foregroundColor(DesignTokens.Colors.textDisabled)
-            } else {
+    private var actionBarView: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            // 命令集选择器
+            if !store.commandSets.isEmpty {
                 Picker("", selection: Binding(
                     get: { store.selectedSetID },
                     set: { store.selectedSetID = $0 }
                 )) {
+                    Text("全部").tag(UUID?.none)
                     ForEach(store.commandSets) { set in
                         Text(set.name).tag(Optional(set.id))
                     }
                 }
                 .labelsHidden()
-                .frame(width: 160, height: 26)
+                .frame(width: 150)
             }
+
+            Button {
+                showNewSetAlert = true
+            } label: {
+                Image(systemName: "folder.badge.plus")
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .frame(width: 26, height: 26)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("新建命令集")
 
             Spacer()
 
-            HStack(spacing: 6) {
-                Button("新建命令集") { showNewSetAlert = true }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                Button("删除命令集") { showDeleteSetConfirm = true }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .foregroundColor(DesignTokens.Colors.statusError)
-                    .disabled(store.selectedSetID == nil)
+            // 新建命令按钮（Figma §12：bg-[#007aff]）
+            Button {
+                formDraft = QuickCommand()
+                formSetID = store.selectedSetID ?? store.commandSets.first?.id
+                isNewCommand = true
+                withAnimation(.easeOut(duration: 0.15)) { showForm = true }
+            } label: {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
+                    Image(systemName: "plus")
+                        .font(DesignTokens.Typography.captionMedium)
+                    Text("新建命令")
+                        .font(DesignTokens.Typography.labelSmall)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, DesignTokens.Spacing.micro)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
             }
+            .buttonStyle(.plain)
+            .disabled(store.commandSets.isEmpty)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .background(DesignTokens.Colors.surfacePanel)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .frame(height: 40)
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(Divider(), alignment: .bottom)
     }
 
-    private var contentArea: some View {
-        HStack(spacing: 0) {
-            commandListPanel
-            Divider()
-            editPanel
+    // MARK: - 主内容区（列表 / 表单）
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if showForm {
+            commandFormView
+        } else {
+            commandListView
+        }
+    }
+
+    // MARK: - 命令列表（单列，按命令集分类）
+
+    @ViewBuilder
+    private var commandListView: some View {
+        if store.commandSets.isEmpty {
+            emptySetState
+        } else {
+            let visibleSets: [QuickCommandSet] = {
+                if let id = store.selectedSetID {
+                    return store.commandSets.filter { $0.id == id }
+                }
+                return store.commandSets
+            }()
+
+            let hasAnyCommands = visibleSets.contains { !$0.sortedCommands.isEmpty }
+
+            if hasAnyCommands {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                        ForEach(visibleSets) { set in
+                            if !set.sortedCommands.isEmpty {
+                                commandSection(set)
+                            }
+                        }
+                    }
+                    .padding(DesignTokens.Spacing.lg)
+                }
+            } else {
+                emptyCommandsState
+            }
+        }
+    }
+
+    /// 分类区块：标题 + 命令卡片列表
+    @ViewBuilder
+    private func commandSection(_ set: QuickCommandSet) -> some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            // Figma §12 §4：text-sm font-semibold text-[#1d1d1f] mb-2 px-1
+            Text(set.name)
+                .font(DesignTokens.Typography.titleSmall)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .padding(.horizontal, DesignTokens.Spacing.xxxs)
+                .padding(.bottom, DesignTokens.Spacing.xxxs)
+
+            ForEach(set.sortedCommands) { cmd in
+                commandCard(cmd, setID: set.id)
+            }
+        }
+    }
+
+    /// 命令卡片（Figma §12 §5）
+    @ViewBuilder
+    private func commandCard(_ cmd: QuickCommand, setID: UUID) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            // 左侧内容
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.micro) {
+                // 命令名（text-sm font-medium text-[#1d1d1f]）
+                Text(cmd.name.isEmpty ? "（未命名）" : cmd.name)
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                    .lineLimit(1)
+
+                // 命令文本（text-xs bg-black/5 px-2 py-1 rounded font-mono）
+                if !cmd.content.isEmpty {
+                    Text(cmd.content)
+                        .font(DesignTokens.Typography.codeTiny)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .lineLimit(2)
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xxs)
+                        .background(DesignTokens.Colors.surfaceHover)
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 右侧操作按钮
+            HStack(spacing: DesignTokens.Spacing.xxxs) {
+                // 执行（Play）
+                Button {
+                    onSendCommand(cmd)
+                } label: {
+                    Image(systemName: "play.fill")
+                        .font(DesignTokens.Typography.captionLarge)
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                        .frame(width: 32, height: 32)
+                        .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .help("执行命令")
+
+                // 编辑（Edit2）
+                Button {
+                    formDraft = cmd
+                    formSetID = setID
+                    isNewCommand = false
+                    withAnimation(.easeOut(duration: 0.15)) { showForm = true }
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(DesignTokens.Typography.captionLarge)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .frame(width: 32, height: 32)
+                        .background(DesignTokens.Colors.surfaceHover)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .help("编辑命令")
+
+                // 删除（Trash2）
+                Button {
+                    pendingDelete = (command: cmd, setID: setID)
+                } label: {
+                    Image(systemName: "trash")
+                        .font(DesignTokens.Typography.captionLarge)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+                .help("删除命令")
+            }
+        }
+        .padding(DesignTokens.Spacing.md)
+        // Figma: bg-white/80 backdrop-blur-sm rounded-xl border border-[#d2d2d7]/50
+        .background(Color.white.opacity(0.80))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.03), radius: 3, x: 0, y: 1)
+    }
+
+    // MARK: - 新建/编辑表单
+
+    /// 内联表单（对齐规范 §12 §6）
+    private var commandFormView: some View {
+        VStack(spacing: 0) {
+            // 表单头部
+            HStack {
+                Text(isNewCommand ? "新建命令" : "编辑命令")
+                    .font(DesignTokens.Typography.titleSmall)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Spacer()
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { showForm = false }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .frame(height: 44)
+            .background {
+                Rectangle().fill(.thinMaterial)
+                Rectangle().fill(Color.white.opacity(0.60))
+            }
+            .overlay(Divider(), alignment: .bottom)
+
+            // 表单内容
+            ScrollView {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    // 命令名 *
+                    formField(label: "命令名称 *") {
+                        TextField("如：System Update", text: $formDraft.name)
+                            .textFieldStyle(.plain)
+                            .font(DesignTokens.Typography.bodySmall)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                            )
+                    }
+
+                    // 命令内容 *（Textarea font-mono）
+                    formField(label: "命令 *") {
+                        ZStack(alignment: .topLeading) {
+                            if formDraft.content.isEmpty {
+                                Text("sudo apt update && sudo apt upgrade -y")
+                                    .font(DesignTokens.Typography.codeTiny)
+                                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                                    .padding(.horizontal, 11)
+                                    .padding(.vertical, 9)
+                                    .allowsHitTesting(false)
+                            }
+                            TextEditor(text: $formDraft.content)
+                                .font(DesignTokens.Typography.codeTiny)
+                                .foregroundColor(DesignTokens.Colors.textPrimary)
+                                .frame(minHeight: 72)
+                                .scrollContentBackground(.hidden)
+                                .background(Color.white)
+                        }
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                        )
+                    }
+
+                    // 目标命令集
+                    if !store.commandSets.isEmpty {
+                        formField(label: "命令集") {
+                            Picker("", selection: $formSetID) {
+                                ForEach(store.commandSets) { set in
+                                    Text(set.name).tag(Optional(set.id))
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(maxWidth: 200)
+                        }
+                    }
+
+                    // 高级选项
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                        Toggle(isOn: $formDraft.appendNewline) {
+                            Text("末尾自动追加回车")
+                                .font(DesignTokens.Typography.bodySmall)
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                        }
+                        .toggleStyle(.switch)
+                        .controlSize(.mini)
+
+                        Toggle(isOn: $formDraft.sendLineByLine) {
+                            Text("逐行发送")
+                                .font(DesignTokens.Typography.bodySmall)
+                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                        }
+                        .toggleStyle(.switch)
+                        .controlSize(.mini)
+                    }
+
+                    // Figma §12 §8：底部按钮 flex gap-2 justify-end pt-2
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        Spacer()
+                        // Cancel（ghost）
+                        Button("取消") {
+                            withAnimation(.easeOut(duration: 0.15)) { showForm = false }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(DesignTokens.Colors.surfaceHover)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+                        // Add / Update Command（bg-[#007aff]）
+                        let canSave = !formDraft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            && !formDraft.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        Button(isNewCommand ? "添加命令" : "保存") {
+                            guard let setID = formSetID else { return }
+                            if isNewCommand {
+                                store.addCommand(
+                                    to: setID,
+                                    name: formDraft.name.trimmingCharacters(in: .whitespacesAndNewlines),
+                                    content: formDraft.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                                )
+                            } else {
+                                store.updateCommand(formDraft, in: setID)
+                            }
+                            withAnimation(.easeOut(duration: 0.15)) { showForm = false }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!canSave)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(canSave
+                            ? DesignTokens.Colors.accentPrimary
+                            : DesignTokens.Colors.accentPrimary.opacity(0.4))
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    }
+                    .padding(.top, DesignTokens.Spacing.xxs)
+                }
+                .padding(DesignTokens.Spacing.lg)
+            }
+            .background {
+                Rectangle().fill(.thinMaterial)
+                Rectangle().fill(Color.white.opacity(0.60))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - 左侧命令列表
-
-    private var commandListPanel: some View {
-        VStack(spacing: 0) {
-            if let set = store.selectedSet {
-                commandList(set: set)
-            } else {
-                emptySetState
-            }
-
-            // 底部新建按钮
-            Divider()
-            Button(action: {
-                if let setID = store.selectedSetID {
-                    store.addCommand(to: setID, name: "新命令", content: "")
-                }
-            }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus")
-                    Text("新建命令")
-                }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 28)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
-                )
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-            }
-            .buttonStyle(.plain)
-            .frame(height: 36)
-            .background(DesignTokens.Colors.surfacePanel)
-            .disabled(store.selectedSetID == nil)
-        }
-        .frame(width: 180)
-        .background(DesignTokens.Colors.surfaceWindow)
-    }
-
-    private func commandList(set: QuickCommandSet) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(set.sortedCommands) { cmd in
-                    CommandRowView(
-                        command: cmd,
-                        isSelected: selectedCommandID == cmd.id,
-                        onTap: { selectCommand(cmd) },
-                        onSend: { onSendCommand(cmd) }
-                    )
-                    .padding(.vertical, 0)
-                }
-            }
+    @ViewBuilder
+    private func formField<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+            Text(label)
+                .font(DesignTokens.Typography.labelSmall)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+            content()
         }
     }
+
+    // MARK: - 空状态
 
     private var emptySetState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "list.bullet")
-                .font(.system(size: 24))
+        VStack(spacing: DesignTokens.Spacing.md) {
+            Image(systemName: "terminal")
+                .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
-            Text("选择或新建命令集")
+            Text("暂无命令集")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+            Text("点击「新建命令集」创建分组，然后添加常用命令")
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 280)
+            Button {
+                showNewSetAlert = true
+            } label: {
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    Image(systemName: "folder.badge.plus")
+                        .font(DesignTokens.Typography.labelSmall)
+                    Text("新建命令集")
+                        .font(DesignTokens.Typography.labelMedium)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var emptyCommandsState: some View {
+        VStack(spacing: DesignTokens.Spacing.md) {
+            Image(systemName: "text.cursor")
+                .font(DesignTokens.Typography.heroSmall)
+                .foregroundColor(DesignTokens.Colors.textDisabled)
+            Text("暂无快捷命令")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+            Text("点击右上角「新建命令」添加第一条命令")
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    // MARK: - 右侧编辑面板
-
-    @ViewBuilder
-    private var editPanel: some View {
-        if let cmd = editingCommand {
-            QuickCommandEditPanel(
-                command: Binding(
-                    get: { editingCommand ?? QuickCommand() },
-                    set: { editingCommand = $0 }
-                ),
-                onSave: { saved in
-                    if let setID = store.selectedSetID {
-                        store.updateCommand(saved, in: setID)
-                    }
-                    editingCommand = nil
-                    selectedCommandID = nil
-                },
-                onDelete: {
-                    if let setID = store.selectedSetID {
-                        store.deleteCommand(id: cmd.id, from: setID)
-                    }
-                    editingCommand = nil
-                    selectedCommandID = nil
-                }
-            )
-        } else {
-            // 空状态
-            VStack(spacing: 10) {
-                Image(systemName: "text.cursor")
-                    .font(.system(size: 36))
-                    .foregroundColor(DesignTokens.Colors.textDisabled)
-                    .opacity(0.4)
-                Text("选择左侧命令进行编辑")
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.textDisabled)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DesignTokens.Colors.surfaceElevated)
-        }
-    }
-
-    // MARK: - 操作
-
-    private func selectCommand(_ cmd: QuickCommand) {
-        selectedCommandID = cmd.id
-        editingCommand = cmd
-    }
 }
 
-// MARK: - 命令行视图
+// MARK: - 预览
 
-private struct CommandRowView: View {
-    let command: QuickCommand
-    let isSelected: Bool
-    let onTap: () -> Void
-    let onSend: () -> Void
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 10))
-                .foregroundColor(DesignTokens.Colors.textDisabled)
-                .opacity(0)  // 仅占位（hover 时可动态显示，此处简化）
-
-            Text(command.name.isEmpty ? "（未命名）" : command.name)
-                .font(.system(size: 12))
-                .foregroundColor(isSelected ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 36)
-        .background(isSelected ? DesignTokens.Colors.accentGlow : Color.clear)
-        .overlay(
-            isSelected
-                ? Rectangle().frame(width: 2).foregroundColor(DesignTokens.Colors.accentPrimary)
-                : nil,
-            alignment: .leading
+#Preview("快捷命令管理器") {
+    let store = QuickCommandStore.shared
+    ZStack {
+        Color.black.opacity(0.85)
+        QuickCommandManagerView(
+            store: store,
+            onSendCommand: { _ in },
+            onClose: {}
         )
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
+        .padding()
     }
-}
-
-// MARK: - 命令编辑面板
-
-private struct QuickCommandEditPanel: View {
-
-    @Binding var command: QuickCommand
-    let onSave: (QuickCommand) -> Void
-    let onDelete: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-
-            // 名称
-            VStack(alignment: .leading, spacing: 4) {
-                Text("名称")
-                    .fieldLabel()
-                TextField("查看系统状态", text: $command.name)
-                    .textFieldStyle(.roundedBorder)
-                    .font(DesignTokens.Typography.bodySmall)
-            }
-
-            // 命令内容
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("命令内容")
-                        .fieldLabel()
-                    Spacer()
-                    Text("支持多行，按序发送")
-                        .font(.system(size: 9))
-                        .foregroundColor(DesignTokens.Colors.textDisabled)
-                }
-                TextEditor(text: $command.content)
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                    .frame(minHeight: 80)
-                    .background(DesignTokens.Colors.surfaceWindow)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 5)
-                            .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
-                    )
-            }
-
-            // 选项
-            HStack(spacing: 16) {
-                Toggle("末尾自动追加回车", isOn: $command.appendNewline)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .toggleStyle(.checkbox)
-
-                Toggle("逐行发送", isOn: $command.sendLineByLine)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .toggleStyle(.checkbox)
-
-                if command.sendLineByLine {
-                    HStack(spacing: 4) {
-                        Text("延迟")
-                            .font(.system(size: 10))
-                            .foregroundColor(DesignTokens.Colors.textDisabled)
-                        TextField("50", value: $command.lineDelay, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .font(DesignTokens.Typography.codeSmall)
-                            .frame(width: 44)
-                        Text("ms")
-                            .font(.system(size: 10))
-                            .foregroundColor(DesignTokens.Colors.textDisabled)
-                    }
-                }
-            }
-
-            Spacer()
-
-            // 底部按钮行
-            HStack {
-                Button("删除") { onDelete() }
-                    .buttonStyle(.borderless)
-                    .foregroundColor(DesignTokens.Colors.statusError)
-                    .font(.system(size: 11))
-
-                Spacer()
-
-                Button("保存") { onSave(command) }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-            }
-        }
-        .padding(14)
-        .background(DesignTokens.Colors.surfaceElevated)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-}
-
-// MARK: - 辅助
-
-private extension Text {
-    func fieldLabel() -> some View {
-        self.font(.system(size: 10, weight: .medium))
-            .foregroundColor(DesignTokens.Colors.textTertiary)
-            .textCase(.uppercase)
-    }
+    .frame(width: 800, height: 640)
 }

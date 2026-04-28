@@ -150,12 +150,21 @@ actor ProxyJumpManager {
 
     // MARK: - 连接
 
+    /// 最大允许的跳板机跳数（超出则拒绝连接，防止无限递归或配置错误）
+    static let maxHops: Int = 10
+
     func connect() async throws {
         guard state == .disconnected else {
             throw SSHError.libssh2Error(code: -1, message: "已有连接")
         }
         guard !proxyChain.isEmpty else {
             throw SSHError.libssh2Error(code: -1, message: "跳板机链为空")
+        }
+        guard proxyChain.count <= Self.maxHops else {
+            throw SSHError.libssh2Error(
+                code: -1,
+                message: "跳板机链过长（\(proxyChain.count) 跳），最多允许 \(Self.maxHops) 跳"
+            )
         }
 
         do {
@@ -169,7 +178,7 @@ actor ProxyJumpManager {
             try bridge0.handshake()
             try authenticateProxy(bridge: bridge0, config: p0)
             hopBridges.append(bridge0)
-            print("[ProxyJump] 跳板机 0 (\(p0.host):\(p0.port)) 认证成功")
+            AppLogger.ssh.debug("[ProxyJump] 跳板机 0 (\(p0.host):\(p0.port)) 认证成功")
 
             // ── 步骤 2：通过 direct-tcpip 链接后续跳板机（多跳）────────────
             for i in 1..<proxyChain.count {
@@ -198,7 +207,7 @@ actor ProxyJumpManager {
                 try newBridge.handshakeOnFD(pairFDs[1])
                 try authenticateProxy(bridge: newBridge, config: pCurrent)
                 hopBridges.append(newBridge)
-                print("[ProxyJump] 跳板机 \(i) (\(pCurrent.host):\(pCurrent.port)) 认证成功")
+                AppLogger.ssh.debug("[ProxyJump] 跳板机 \(i) (\(pCurrent.host):\(pCurrent.port)) 认证成功")
             }
 
             // ── 步骤 3：direct-tcpip 通道连接目标 ────────────────────────────
@@ -240,7 +249,7 @@ actor ProxyJumpManager {
             startReadTask()
 
             state = .connected
-            print("[ProxyJump] 连接成功，跳数: \(proxyChain.count)")
+            AppLogger.ssh.debug("[ProxyJump] 连接成功，跳数: \(self.proxyChain.count)")
 
         } catch {
             state = .failed(error.localizedDescription)
@@ -278,7 +287,7 @@ actor ProxyJumpManager {
         dataStream = nil
 
         state = .disconnected
-        print("[ProxyJump] 已断开连接")
+        AppLogger.ssh.debug("[ProxyJump] 已断开连接")
     }
 
     // MARK: - 数据传输

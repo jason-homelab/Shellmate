@@ -37,14 +37,14 @@ struct SessionAppearanceTab: View {
                 startupCommandSection
                     .padding(.bottom, 14)
             }
-            .padding(18)
+            .padding(DesignTokens.Spacing.lg)
         }
     }
 
     // MARK: - 颜色主题
 
     private var themeSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             sectionLabel("颜色主题")
 
             Picker("", selection: $overrideThemeId) {
@@ -60,11 +60,11 @@ struct SessionAppearanceTab: View {
 
             if !overrideThemeId.isEmpty {
                 Text("会话将使用「\(selectedThemeName)」，不影响全局设置")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             } else {
                 Text("当前全局：\(globalThemeName)")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
         }
@@ -81,10 +81,10 @@ struct SessionAppearanceTab: View {
     // MARK: - 字号
 
     private var fontSizeSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             sectionLabel("终端字号")
 
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Picker("", selection: $overrideFontSizeValue) {
                     Text("跟随全局（\(Int(globalFontSize))pt）").tag(Int32(0))
                     Divider()
@@ -98,11 +98,11 @@ struct SessionAppearanceTab: View {
 
             if overrideFontSizeValue > 0 {
                 Text("会话将使用 \(overrideFontSizeValue)pt，不影响全局设置")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             } else {
                 Text("当前全局：\(Int(globalFontSize))pt")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
         }
@@ -111,16 +111,15 @@ struct SessionAppearanceTab: View {
     // MARK: - 启动命令
 
     private var startupCommandSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             sectionLabel("启动命令（可选）")
 
-            TextField("如: screen -r main 或 tmux attach -t main",
-                      text: $startupCommand)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 11, design: .monospaced))
+            CustomTextField(placeholder: "如: screen -r main 或 tmux attach -t main",
+                            text: $startupCommand)
+                .font(DesignTokens.Typography.codeTiny)
 
             Text("连接成功后自动发送此命令")
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
         }
     }
@@ -129,7 +128,7 @@ struct SessionAppearanceTab: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 11, weight: .medium))
+            .font(DesignTokens.Typography.labelSmall)
             .foregroundColor(DesignTokens.Colors.textSecondary)
             .textCase(.uppercase)
             .kerning(0.4)

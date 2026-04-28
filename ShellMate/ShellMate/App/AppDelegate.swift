@@ -12,8 +12,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // ① 类级别：在 WindowGroup 创建任何 NSWindow 之前禁用自动标签合并
         NSWindow.allowsAutomaticWindowTabbing = false
 
-        // ② 启动时立即应用已保存的外观模式（在窗口创建前设好，避免闪烁）
-        applyWindowMode(UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "auto")
+        // ② 启动时读取用户保存的外观模式并应用（保留用户选择，默认 "dark"）
+        let savedMode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "light"
+        applyWindowMode(savedMode)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -39,24 +40,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.applyWindowMode(mode)
         }
 
-        print("ShellMate 启动完成")
+        // 启动 Hotkey Window 全局快捷键监听（⌥Space，任务 13.8）
+        HotkeyWindowManager.shared.startMonitoring()
+
+        // 监听工具栏/菜单发出的 Hotkey Window 切换通知
+        NotificationCenter.default.addObserver(
+            forName: .hotkeyWindowToggleRequested,
+            object: nil,
+            queue: .main
+        ) { _ in
+            HotkeyWindowManager.shared.toggle()
+        }
+
+        AppLogger.general.debug("ShellMate 启动完成")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        HotkeyWindowManager.shared.stopMonitoring()
         PersistenceController.shared.save()
-        print("ShellMate 即将终止")
+        AppLogger.general.debug("ShellMate 即将终止")
     }
 
     // MARK: - 外观模式
 
     private func applyWindowMode(_ mode: String) {
-        switch mode {
-        case "light":
+        // "light" = 浅色；其余（dark / auto）= 深色优先
+        if mode == "light" {
             NSApp.appearance = NSAppearance(named: .aqua)
-        case "dark":
+        } else {
             NSApp.appearance = NSAppearance(named: .darkAqua)
-        default: // "auto" — 跟随系统
-            NSApp.appearance = nil
         }
     }
 
@@ -85,7 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard url.scheme == "shellmate" else { return }
 
         // TODO: 解析 URL 并执行相应操作
-        print("打开 URL: \(url)")
+        AppLogger.general.debug("打开 URL: \(url)")
     }
 
     // MARK: - Dock 菜单
@@ -93,9 +105,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
 
-        // 新建会话
+        // 新建会话（NSLocalizedString 使用 bundle locale，受 AppleLanguages 控制）
         let newSessionItem = NSMenuItem(
-            title: "新建会话",
+            title: NSLocalizedString("新建会话", comment: "Dock menu: create new session"),
             action: #selector(newSession),
             keyEquivalent: ""
         )
@@ -103,7 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 新建窗口
         let newWindowItem = NSMenuItem(
-            title: "新建窗口",
+            title: NSLocalizedString("新建窗口", comment: "Dock menu: open new window"),
             action: #selector(newWindow),
             keyEquivalent: ""
         )
@@ -160,7 +172,16 @@ extension Notification.Name {
 
     // 功能面板操作
     static let sftpPanelRequested = Notification.Name("sftpPanelRequested")
+    static let aiPanelRequested = Notification.Name("aiPanelRequested")
     static let tunnelManagerRequested = Notification.Name("tunnelManagerRequested")
     static let quickCommandsRequested = Notification.Name("quickCommandsRequested")
     static let composePaneRequested = Notification.Name("composePaneRequested")
+    static let tmuxManagerRequested = Notification.Name("tmuxManagerRequested")
+
+    // 全局 UI 操作
+    static let settingsRequested = Notification.Name("settingsRequested")
+    static let scriptPanelRequested = Notification.Name("scriptPanelRequested")
+
+    // Hotkey Window（任务 13.8）
+    static let hotkeyWindowToggleRequested = Notification.Name("hotkeyWindowToggleRequested")
 }

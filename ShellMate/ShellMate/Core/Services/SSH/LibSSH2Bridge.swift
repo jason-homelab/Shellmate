@@ -196,7 +196,7 @@ final class LibSSH2Bridge {
         // }
 
         isGloballyInitialized = true
-        print("[LibSSH2Bridge] 全局初始化完成")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 全局初始化完成")
     }
 
     // MARK: - 会话初始化
@@ -205,7 +205,7 @@ final class LibSSH2Bridge {
     /// - Throws: SSHError 如果初始化失败
     func sessionInit() throws {
         guard session == nil else {
-            print("[LibSSH2Bridge] 会话已存在，跳过初始化")
+            AppLogger.ssh.debug("[LibSSH2Bridge] 会话已存在，跳过初始化")
             return
         }
 
@@ -219,7 +219,7 @@ final class LibSSH2Bridge {
         // 这里我们创建一个占位符来表示会话已初始化
         // session = createMockSession()
 
-        print("[LibSSH2Bridge] SSH 会话初始化完成")
+        AppLogger.ssh.debug("[LibSSH2Bridge] SSH 会话初始化完成")
     }
 
     /// 设置会话阻塞模式
@@ -231,7 +231,7 @@ final class LibSSH2Bridge {
         // libssh2_session_set_blocking(session, blocking ? 1 : 0)
 
         isNonBlocking = !blocking
-        print("[LibSSH2Bridge] 设置阻塞模式: \(blocking ? "阻塞" : "非阻塞")")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置阻塞模式: \(blocking ? "阻塞" : "非阻塞")")
     }
 
     /// 设置会话超时时间
@@ -242,7 +242,7 @@ final class LibSSH2Bridge {
         // 在实际实现中：
         // libssh2_session_set_timeout(session, timeout)
 
-        print("[LibSSH2Bridge] 设置超时时间: \(timeout)ms")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置超时时间: \(timeout)ms")
     }
 
     // MARK: - TCP 连接
@@ -254,7 +254,7 @@ final class LibSSH2Bridge {
     /// - Throws: SSHError 如果连接失败
     func tcpConnect(host: String, port: Int32) throws {
         guard socketFD < 0 else {
-            print("[LibSSH2Bridge] TCP 已连接，跳过")
+            AppLogger.ssh.debug("[LibSSH2Bridge] TCP 已连接，跳过")
             return
         }
 
@@ -297,7 +297,7 @@ final class LibSSH2Bridge {
         connectedHost = host
         connectedPort = port
 
-        print("[LibSSH2Bridge] TCP 连接成功: \(host):\(port)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] TCP 连接成功: \(host):\(port)")
     }
 
     // MARK: - SSH 握手
@@ -323,7 +323,7 @@ final class LibSSH2Bridge {
         //     throw SSHError.handshakeFailed(reason: getLastErrorMessage())
         // }
 
-        print("[LibSSH2Bridge] SSH 握手完成")
+        AppLogger.ssh.debug("[LibSSH2Bridge] SSH 握手完成")
     }
 
     /// 获取主机密钥指纹
@@ -397,7 +397,7 @@ final class LibSSH2Bridge {
         //     throw SSHError.authenticationFailed(method: "password", reason: getLastErrorMessage())
         // }
 
-        print("[LibSSH2Bridge] 密码认证成功: \(username)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 密码认证成功: \(username)")
     }
 
     /// 使用公钥认证
@@ -441,7 +441,7 @@ final class LibSSH2Bridge {
         //     throw SSHError.authenticationFailed(method: "publickey", reason: getLastErrorMessage())
         // }
 
-        print("[LibSSH2Bridge] 公钥认证成功: \(username)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 公钥认证成功: \(username)")
     }
 
     /// 使用内存中的公钥认证
@@ -490,7 +490,7 @@ final class LibSSH2Bridge {
         //     throw SSHError.authenticationFailed(method: "publickey", reason: getLastErrorMessage())
         // }
 
-        print("[LibSSH2Bridge] 内存公钥认证成功: \(username)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 内存公钥认证成功: \(username)")
     }
 
     /// 使用 SSH Agent 认证
@@ -533,7 +533,7 @@ final class LibSSH2Bridge {
         //
         // throw SSHError.agentAuthFailed(reason: "没有可用的身份")
 
-        print("[LibSSH2Bridge] SSH Agent 认证成功: \(username)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] SSH Agent 认证成功: \(username)")
     }
 
     // MARK: - 断开连接
@@ -547,14 +547,14 @@ final class LibSSH2Bridge {
             // libssh2_session_disconnect(session, reason)
             // libssh2_session_free(session)
             self.session = nil
-            print("[LibSSH2Bridge] SSH 会话已关闭")
+            AppLogger.ssh.debug("[LibSSH2Bridge] SSH 会话已关闭")
         }
 
         // 关闭 socket
         if socketFD >= 0 {
             close(socketFD)
             socketFD = -1
-            print("[LibSSH2Bridge] TCP 连接已关闭")
+            AppLogger.ssh.debug("[LibSSH2Bridge] TCP 连接已关闭")
         }
 
         connectedHost = nil
@@ -616,7 +616,7 @@ extension LibSSH2Bridge {
         // }
         // libssh2_session_method_pref(session, LIBSSH2_METHOD_CRYPT_SC, algorithms)
 
-        print("[LibSSH2Bridge] 设置加密算法: \(algorithms)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置加密算法: \(algorithms)")
     }
 
     /// 设置首选 MAC 算法
@@ -630,7 +630,7 @@ extension LibSSH2Bridge {
         // libssh2_session_method_pref(session, LIBSSH2_METHOD_MAC_CS, algorithms)
         // libssh2_session_method_pref(session, LIBSSH2_METHOD_MAC_SC, algorithms)
 
-        print("[LibSSH2Bridge] 设置 MAC 算法: \(algorithms)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置 MAC 算法: \(algorithms)")
     }
 
     /// 设置首选密钥交换算法
@@ -643,7 +643,7 @@ extension LibSSH2Bridge {
         // 在实际实现中：
         // libssh2_session_method_pref(session, LIBSSH2_METHOD_KEX, algorithms)
 
-        print("[LibSSH2Bridge] 设置密钥交换算法: \(algorithms)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置密钥交换算法: \(algorithms)")
     }
 
     /// 设置首选主机密钥类型
@@ -656,7 +656,7 @@ extension LibSSH2Bridge {
         // 在实际实现中：
         // libssh2_session_method_pref(session, LIBSSH2_METHOD_HOSTKEY, algorithms)
 
-        print("[LibSSH2Bridge] 设置主机密钥类型: \(algorithms)")
+        AppLogger.ssh.debug("[LibSSH2Bridge] 设置主机密钥类型: \(algorithms)")
     }
 
     /// 获取安全的默认算法配置

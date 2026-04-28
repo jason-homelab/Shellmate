@@ -289,7 +289,7 @@ final class SFTPSession: @unchecked Sendable {
 
         // 打开 SFTP 子系统
         sftp = try bridge.openSFTPSubsystem()
-        print("[SFTPSession] 连接成功: \(config.username)@\(config.host):\(config.port)")
+        AppLogger.sftp.debug("[SFTPSession] 连接成功: \(config.username)@\(config.host):\(config.port)")
     }
 
     // MARK: - 私有：下载实现
@@ -336,7 +336,7 @@ final class SFTPSession: @unchecked Sendable {
         defer { fclose(localFile) }
 
         // 传输循环（W15.4 SFTP CPU 优化：128KB 缓冲区减少 libssh2 调用次数）
-        let bufferSize = 131072 // 128KB
+        let bufferSize = AppConstants.sftpTransferBufferSize
         var buffer = [CChar](repeating: 0, count: bufferSize)
         var transferred: UInt64 = localOffset
         var lastSpeedUpdate = Date()
@@ -433,7 +433,7 @@ final class SFTPSession: @unchecked Sendable {
         }
 
         // 传输循环（W15.4 SFTP CPU 优化：128KB 缓冲区减少 libssh2 调用次数）
-        let bufferSize = 131072 // 128KB
+        let bufferSize = AppConstants.sftpTransferBufferSize
         var buffer = [CChar](repeating: 0, count: bufferSize)
         var transferred: UInt64 = remoteOffset
         var lastSpeedUpdate = Date()

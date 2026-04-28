@@ -24,7 +24,7 @@ struct SidebarSearchView: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 搜索图标
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
             // 搜索输入框
@@ -43,7 +43,7 @@ struct SidebarSearchView: View {
                     searchText = ""
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .buttonStyle(.plain)
@@ -53,9 +53,9 @@ struct SidebarSearchView: View {
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
         .background(DesignTokens.Colors.surfaceCard)
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                 .stroke(
                     isFocused ? DesignTokens.Colors.borderFocus : Color.clear,
                     lineWidth: 1
@@ -75,7 +75,7 @@ struct SidebarSearchView: View {
 // MARK: - 预览
 
 #Preview("搜索框") {
-    VStack(spacing: 16) {
+    VStack(spacing: DesignTokens.Spacing.lg) {
         SidebarSearchView(searchText: .constant(""), focusTrigger: .constant(false))
         SidebarSearchView(searchText: .constant("服务器"), focusTrigger: .constant(false))
     }

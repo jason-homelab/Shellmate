@@ -14,12 +14,12 @@ struct ShellMateApp: App {
     let persistenceController = PersistenceController.shared
 
     /// 窗口外观模式："auto"（跟随系统）/ "light"（浅色）/ "dark"（深色）
-    @AppStorage("appearance.windowMode") private var windowMode: String = "auto"
+    @AppStorage("appearance.windowMode") private var windowMode: String = "dark"
 
     // MARK: - 应用场景
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
                 .frame(minWidth: 900, minHeight: 600)
@@ -27,7 +27,7 @@ struct ShellMateApp: App {
                     configureAppearance()
                 }
         }
-        .windowToolbarStyle(.unifiedCompact(showsTitle: false))
+        .windowToolbarStyle(.automatic)
         .commands {
             // 自定义菜单命令
             appCommands
@@ -153,7 +153,10 @@ struct ShellMateApp: App {
 
             // 直接选择标签页 (Cmd+1 到 Cmd+9)
             ForEach(1...9, id: \.self) { index in
-                Button("标签页 \(index)") {
+                // 使用 NSLocalizedString + String.localizedStringWithFormat 以支持菜单栏多语言
+                Button(String.localizedStringWithFormat(
+                    NSLocalizedString("标签页 %d", comment: "Tab selection menu item"), index
+                )) {
                     NotificationCenter.default.post(
                         name: .selectTabRequested,
                         object: nil,
@@ -214,6 +217,15 @@ struct ShellMateApp: App {
                 NotificationCenter.default.post(name: .composePaneRequested, object: nil)
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
+        }
+
+        // 工具菜单（Hotkey Window 等快捷工具）
+        CommandMenu("工具") {
+            Button("呼出 / 隐藏 Hotkey 终端") {
+                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
+            }
+            // 注意：⌥Space 由全局 NSEvent monitor 直接捕获，菜单此处仅作发现性入口
+            // （.option + .space 在 SwiftUI Commands 中无法可靠绑定）
         }
 
         // 帮助菜单扩展

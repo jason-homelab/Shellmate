@@ -12,20 +12,26 @@ struct SessionSidebarView: View {
     /// 连接会话回调
     var onConnect: ((Session) -> Void)?
 
-    /// 搜索框焦点触发器（⌘F 快捷键驱动）
-    @State private var searchFocusTrigger: Bool = false
+    /// 侧边栏 UI 状态 ViewModel
+    @StateObject private var vm = SidebarViewModel()
 
     // MARK: - 视图
 
     var body: some View {
         VStack(spacing: 0) {
-            // 搜索框
-            SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $searchFocusTrigger)
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .padding(.top, DesignTokens.Spacing.sm)
-                .padding(.bottom, DesignTokens.Spacing.xs)
+            // 顶部操作头部：标题 + 操作图标按钮
+            sidebarHeader
 
-            // 会话列表
+            // 搜索框（默认隐藏，⌘F 触发后显示）
+            if vm.isSearchBarVisible || !sessionStore.searchQuery.isEmpty {
+                SidebarSearchView(searchText: $sessionStore.searchQuery, focusTrigger: $vm.searchFocusTrigger)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.top, DesignTokens.Spacing.sm)
+                    .padding(.bottom, DesignTokens.Spacing.xs)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            // 会话列表（flex:1）
             if sessionStore.isLoading {
                 loadingView
             } else if sessionStore.filteredSessions.isEmpty {
@@ -38,33 +44,122 @@ struct SessionSidebarView: View {
                 )
             }
 
-            // 底部操作栏
+            // 底部统计条：对齐 main-window.html .sidebar-footer
             SidebarFooterView(
-                onNewSession: {
-                    sessionStore.showNewSessionForm()
-                },
-                onNewGroup: {
-                    groupStore.showNewGroupForm()
-                }
+                connectedCount: connectedSessionCount,
+                totalCount: sessionStore.sessions.count
             )
         }
         .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
         .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
+        // Figma §02: 亮色 bg-[#f5f5f7] = surfaceWindow，与主窗口背景同色
         .background(DesignTokens.Colors.surfaceWindow)
         .task {
-            await loadData()
+            await vm.loadData(sessionStore: sessionStore, groupStore: groupStore)
         }
-        // PRD 8.1：⌘F 聚焦搜索框
+        // PRD 8.1：⌘F 唤出并聚焦搜索框
         .background(
-            Button("") { searchFocusTrigger = true }
+            Button("") { vm.showSearch() }
                 .keyboardShortcut("f", modifiers: .command)
                 .hidden()
         )
         // 菜单栏 ⌘L 聚焦侧边栏搜索框
         .onReceive(NotificationCenter.default.publisher(for: .focusSidebarSearchRequested)) { _ in
-            searchFocusTrigger = true
+            vm.showSearch()
         }
+    }
+
+    // MARK: - 侧边栏头部
+
+    /// 顶部操作头部：显示标题 + 新建会话、分组、设置快捷按钮
+    private var sidebarHeader: some View {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
+            // Figma: text-sm font-medium text-[#1d1d1f] t('sidebar.sessions') = "会话"
+            Text("会话")
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+
+            Spacer()
+
+            // 新建会话
+            sidebarIconButton(systemImage: "plus", tooltip: "新建会话 (⌘N)") {
+                sessionStore.showNewSessionForm()
+            }
+            .keyboardShortcut("n", modifiers: .command)
+
+            // 分组管理（FolderCog，对齐 Figma-Spec-v2 §02）
+            sidebarIconButton(systemImage: "folder.badge.gearshape", tooltip: "分组管理 (⌘⇧N)") {
+                vm.showGroupManager = true
+            }
+            .sheet(isPresented: $vm.showGroupManager) {
+                GroupManagerView(
+                    groupStore: groupStore,
+                    onClose: { vm.showGroupManager = false }
+                )
+            }
+
+            // 密码管理（KeyRound，对齐 Figma-Spec-v2 §02）
+            sidebarIconButton(systemImage: "key.fill", tooltip: "密码管理") {
+                vm.showPasswordManager = true
+            }
+            .sheet(isPresented: $vm.showPasswordManager) {
+                PasswordManagerView(
+                    sessions: sessionStore.sessions,
+                    onClose: { vm.showPasswordManager = false }
+                )
+            }
+
+            // 打开设置（macOS 14+ 使用 SettingsLink，13 回退到 sendAction）
+            if #available(macOS 14.0, *) {
+                SettingsLink {
+                    Label("偏好设置", systemImage: "gear")
+                        .labelStyle(.iconOnly)
+                        .font(DesignTokens.Typography.iconLarge)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("偏好设置")
+            } else {
+                sidebarIconButton(systemImage: "gear", tooltip: "偏好设置") {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }
+            }
+        }
+        // HTML: .sidebar-header { padding: 0 8px 0 14px }（左 14px，右 8px）
+        .padding(.leading, 14)
+        .padding(.trailing, DesignTokens.Spacing.sm)
+        .frame(height: 44)
+        .background {
+            // Figma: backdrop-blur-xl bg-white/40 border-b border-[#d2d2d7]/50
+            Rectangle()
+                .fill(.ultraThinMaterial)
+            Rectangle()
+                .fill(Color.white.opacity(0.40))
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                        .frame(height: 0.5)
+                }
+        }
+    }
+
+    private func sidebarIconButton(
+        systemImage: String,
+        tooltip: String,
+        accessibilityText: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        HoverIconButton(
+            systemImage: systemImage,
+            accessibilityText: accessibilityText ?? tooltip,
+            size: DesignTokens.Sizes.iconButtonSize,
+            action: action
+        )
+        .help(tooltip)
     }
 
     // MARK: - 加载中视图
@@ -97,12 +192,13 @@ struct SessionSidebarView: View {
         }
     }
 
-    // MARK: - 数据加载
+    // MARK: - 统计辅助
 
-    private func loadData() async {
-        await sessionStore.loadSessions()
-        await groupStore.loadGroups()
+    /// 当前已连接会话数（用于底部统计条）
+    private var connectedSessionCount: Int {
+        sessionStore.sessions.filter { $0.connectionState == .connected }.count
     }
+
 }
 
 // MARK: - 侧边栏工具栏视图
@@ -132,7 +228,7 @@ struct SidebarToolbarView: View {
                 }
             } label: {
                 Image(systemName: "sidebar.squares.leading")
-                    .font(.system(size: 14))
+                    .font(DesignTokens.Typography.bodyLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .menuStyle(.borderlessButton)
@@ -147,7 +243,7 @@ struct SidebarToolbarView: View {
                 Button("按创建时间排序") { }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .font(.system(size: 14))
+                    .font(DesignTokens.Typography.bodyLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .menuStyle(.borderlessButton)
@@ -155,6 +251,31 @@ struct SidebarToolbarView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+}
+
+// MARK: - 悬停图标按钮（薄壳，内部委托 PillButtonStyle）
+// 保留 HoverIconButton 名称用于现有调用点；新代码请直接用：
+//   Button { ... } label: { Label(...).labelStyle(.iconOnly) }
+//      .buttonStyle(PillButtonStyle(tone: .ghost, variant: .iconOnly))
+
+struct HoverIconButton: View {
+    let systemImage: String
+    /// VoiceOver 朗读文本（必填，缺省 fallback 到 systemImage 名）
+    var accessibilityText: String? = nil
+    var size: CGFloat = 28
+    var iconSize: CGFloat = 16
+    var iconColor: Color = DesignTokens.Colors.textPrimary
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(accessibilityText ?? systemImage, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+                .font(.system(size: iconSize, weight: .regular))
+                .foregroundColor(iconColor)
+        }
+        .buttonStyle(PillButtonStyle(tone: .ghost, variant: .iconOnly))
     }
 }
 

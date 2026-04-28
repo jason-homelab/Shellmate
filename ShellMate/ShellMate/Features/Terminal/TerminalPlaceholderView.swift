@@ -1,248 +1,6 @@
 import SwiftUI
 import Darwin
 
-// MARK: - SSH 进程桥接（内嵌实现）
-
-/// 使用系统 ssh 命令的 SSH 连接桥接
-final class SSHProcessBridge {
-
-    /// SSH 进程
-    private var process: Process?
-
-    /// PTY 主端文件描述符
-    private var masterFD: Int32 = -1
-
-    /// PTY 从端文件描述符
-    private var slaveFD: Int32 = -1
-
-    /// 数据接收回调
-    var onDataReceived: ((Data) -> Void)?
-
-    /// 连接关闭回调
-    var onDisconnected: (() -> Void)?
-
-    /// 是否已连接
-    private(set) var isConnected: Bool = false
-
-    /// 读取队列
-    private let readQueue = DispatchQueue(label: "app.shellmate.ssh.read")
-
-    init() {}
-
-    deinit {
-        disconnect()
-    }
-
-    /// 使用密码连接
-    func connect(
-        host: String,
-        port: Int32,
-        username: String,
-        password: String? = nil
-    ) throws {
-        guard !isConnected else { return }
-
-        // 创建 PTY
-        try createPTY()
-
-        // 创建 SSH 进程
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
-
-        var args: [String] = []
-        // 跳过主机密钥验证（开发测试用，生产环境需要实现自定义 known_hosts 管理）
-        args.append("-o")
-        args.append("StrictHostKeyChecking=no")
-        args.append("-o")
-        args.append("UserKnownHostsFile=/dev/null")
-
-        if port != 22 {
-            args.append("-p")
-            args.append(String(port))
-        }
-
-        args.append("-tt")
-        args.append("\(username)@\(host)")
-
-        proc.arguments = args
-
-        // 设置 PTY 作为标准 IO
-        proc.standardInput = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-        proc.standardOutput = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-        proc.standardError = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-
-        var environment = ProcessInfo.processInfo.environment
-        environment["TERM"] = "xterm-256color"
-        environment["LC_ALL"] = "en_US.UTF-8"
-        proc.environment = environment
-
-        proc.terminationHandler = { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.handleDisconnection()
-            }
-        }
-
-        try proc.run()
-        self.process = proc
-        self.isConnected = true
-
-        startReading()
-    }
-
-    /// 使用私钥连接
-    func connectWithKey(
-        host: String,
-        port: Int32,
-        username: String,
-        privateKeyPath: String,
-        passphrase: String? = nil
-    ) throws {
-        guard !isConnected else { return }
-
-        try createPTY()
-
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
-
-        var args: [String] = []
-        args.append("-i")
-        args.append(privateKeyPath)
-        args.append("-o")
-        args.append("PasswordAuthentication=no")
-        // 跳过主机密钥验证（开发测试用）
-        args.append("-o")
-        args.append("StrictHostKeyChecking=no")
-        args.append("-o")
-        args.append("UserKnownHostsFile=/dev/null")
-
-        if port != 22 {
-            args.append("-p")
-            args.append(String(port))
-        }
-
-        args.append("-tt")
-        args.append("\(username)@\(host)")
-
-        proc.arguments = args
-
-        proc.standardInput = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-        proc.standardOutput = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-        proc.standardError = FileHandle(fileDescriptor: slaveFD, closeOnDealloc: false)
-
-        var environment = ProcessInfo.processInfo.environment
-        environment["TERM"] = "xterm-256color"
-        proc.environment = environment
-
-        proc.terminationHandler = { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.handleDisconnection()
-            }
-        }
-
-        try proc.run()
-        self.process = proc
-        self.isConnected = true
-        startReading()
-    }
-
-    /// 断开连接
-    func disconnect() {
-        guard isConnected else { return }
-
-        isConnected = false
-
-        if let proc = process, proc.isRunning {
-            proc.terminate()
-        }
-        process = nil
-
-        closePTY()
-    }
-
-    /// 写入数据
-    func write(_ data: Data) throws {
-        guard isConnected, masterFD >= 0 else { return }
-
-        data.withUnsafeBytes { buffer in
-            guard let ptr = buffer.baseAddress else { return }
-            let _ = Darwin.write(masterFD, ptr, data.count)
-        }
-    }
-
-    /// 写入字符串
-    func write(_ string: String) throws {
-        guard let data = string.data(using: .utf8) else { return }
-        try write(data)
-    }
-
-    // MARK: - 私有方法
-
-    private func createPTY() throws {
-        var master: Int32 = -1
-        var slave: Int32 = -1
-        var winSize = winsize()
-        winSize.ws_col = 80
-        winSize.ws_row = 24
-
-        let result = openpty(&master, &slave, nil, nil, &winSize)
-        guard result == 0 else {
-            throw NSError(domain: "SSHProcessBridge", code: Int(errno), userInfo: [NSLocalizedDescriptionKey: "无法创建 PTY"])
-        }
-
-        masterFD = master
-        slaveFD = slave
-
-        var flags = fcntl(masterFD, F_GETFL, 0)
-        fcntl(masterFD, F_SETFL, flags | O_NONBLOCK)
-    }
-
-    private func closePTY() {
-        if masterFD >= 0 {
-            close(masterFD)
-            masterFD = -1
-        }
-        if slaveFD >= 0 {
-            close(slaveFD)
-            slaveFD = -1
-        }
-    }
-
-    private func startReading() {
-        readQueue.async { [weak self] in
-            self?.readLoop()
-        }
-    }
-
-    private func readLoop() {
-        // W15.5：与 SSHProcessBridge 对齐，32KB 缓冲区
-        let bufferSize = 32768
-        var buffer = [UInt8](repeating: 0, count: bufferSize)
-
-        while isConnected && masterFD >= 0 {
-            let bytesRead = read(masterFD, &buffer, bufferSize)
-
-            if bytesRead > 0 {
-                let data = Data(bytes: buffer, count: bytesRead)
-                DispatchQueue.main.async { [weak self] in
-                    self?.onDataReceived?(data)
-                }
-            } else if bytesRead == 0 {
-                break
-            } else {
-                if errno != EAGAIN && errno != EWOULDBLOCK {
-                    break
-                }
-                usleep(10000)
-            }
-        }
-    }
-
-    private func handleDisconnection() {
-        isConnected = false
-        closePTY()
-        onDisconnected?()
-    }
-}
 
 // MARK: - 终端占位视图
 
@@ -257,6 +15,9 @@ struct TerminalPlaceholderView: View {
 
     /// 连接回调
     var onConnect: (() -> Void)?
+
+    /// 新建会话回调（空状态按钮触发）
+    var onNewSession: (() -> Void)?
 
     /// SSH 连接桥接（系统 ssh 命令）
     @State private var sshBridge: SSHProcessBridge?
@@ -320,7 +81,7 @@ struct TerminalPlaceholderView: View {
     @ViewBuilder
     private func terminalView(_ session: Session) -> some View {
         VStack(spacing: 0) {
-            // 工具栏
+            // 工具栏（对齐 Void 暗黑设计语言）
             HStack {
                 StatusDotView(state: connectionState)
                 Text("\(session.username)@\(session.host)")
@@ -329,13 +90,18 @@ struct TerminalPlaceholderView: View {
 
                 Spacer()
 
-                Button("断开") {
+                GlassButton("断开", icon: "stop.fill", variant: .disconnect) {
                     disconnect()
                 }
-                .buttonStyle(.bordered)
             }
-            .padding(DesignTokens.Spacing.md)
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
             .background(DesignTokens.Colors.surfacePanel)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(DesignTokens.Colors.borderPrimary)
+                    .frame(height: 0.5)
+            }
 
             // 终端区域：使用 ShellMateTerminalView 处理 ANSI 序列
             ShellMateTerminalViewRepresentable(
@@ -359,8 +125,7 @@ struct TerminalPlaceholderView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
-            SecureField("密码", text: $password)
-                .textFieldStyle(.roundedBorder)
+            CustomTextField(placeholder: "密码", text: $password, isSecure: true)
                 .frame(width: 250)
 
             HStack {
@@ -381,68 +146,108 @@ struct TerminalPlaceholderView: View {
         .frame(width: 320, height: 200)
     }
 
-    // MARK: - 会话信息视图
+    // MARK: - 会话信息视图（高保真连接卡片）
 
     @ViewBuilder
     private func sessionInfoView(_ session: Session) -> some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            // 状态图标
-            ZStack {
-                Circle()
-                    .fill(DesignTokens.Colors.surfaceCard)
-                    .frame(width: 80, height: 80)
+        VStack(spacing: 0) {
+            Spacer()
 
-                Image(systemName: "terminal.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
-            }
+            VStack(spacing: DesignTokens.Spacing.xxl) {
+                // 会话图标卡片（渐变圆角，与 Figma SessionRow icon 保持视觉延续）
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    DesignTokens.Colors.accentPrimary.opacity(0.12),
+                                    DesignTokens.Colors.accentIndigo.opacity(0.12)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 1)
+                        )
 
-            // 会话名称
-            Text(session.name)
-                .font(DesignTokens.Typography.titleLarge)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
-
-            // 连接信息
-            Text("\(session.username)@\(session.host):\(session.port)")
-                .font(DesignTokens.Typography.codeMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            // 连接状态
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                StatusDotView(state: session.connectionState)
-
-                Text(session.connectionState.displayName)
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(session.connectionState.dotColor)
-            }
-            .padding(.top, DesignTokens.Spacing.sm)
-
-            // 连接按钮
-            if connectionState == .offline {
-                Button(action: {
-                    initiateConnect()
-                }) {
-                    HStack(spacing: DesignTokens.Spacing.sm) {
-                        Image(systemName: "bolt.fill")
-                        Text("连接")
-                    }
-                    .font(DesignTokens.Typography.labelLarge)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, DesignTokens.Spacing.xxl)
-                    .padding(.vertical, DesignTokens.Spacing.md)
-                    .background(DesignTokens.Colors.accentPrimary)
-                    .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+                    Image(systemName: "terminal.fill")
+                        .font(DesignTokens.Typography.displayXLarge)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
-                .buttonStyle(.plain)
-                .padding(.top, DesignTokens.Spacing.lg)
-            } else if connectionState == .connecting {
-                ProgressView()
-                    .padding(.top, DesignTokens.Spacing.lg)
-                Text("正在连接...")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+
+                // 会话信息文字组
+                VStack(spacing: DesignTokens.Spacing.xs) {
+                    Text(session.name)
+                        .font(DesignTokens.Typography.titleLarge)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+
+                    Text("\(session.username)@\(session.host):\(session.port)")
+                        .font(DesignTokens.Typography.codeMedium)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
+
+                // 连接状态 Pill
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    StatusDotView(state: session.connectionState)
+                    Text(session.connectionState.displayName)
+                        .font(DesignTokens.Typography.labelMedium)
+                        .foregroundColor(session.connectionState.dotColor)
+                }
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, DesignTokens.Spacing.micro)
+                .background(session.connectionState.dotColor.opacity(0.08))
+                .clipShape(Capsule())
+
+                // 操作区
+                if connectionState == .offline {
+                    Button(action: { initiateConnect() }) {
+                        HStack(spacing: DesignTokens.Spacing.xs) {
+                            Image(systemName: "bolt.fill")
+                                .font(DesignTokens.Typography.bodySmallStrong)
+                            Text("连接")
+                                .font(DesignTokens.Typography.bodyLargeStrong)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, DesignTokens.Spacing.xxl)
+                        .padding(.vertical, DesignTokens.Spacing.sm)
+                        .background(DesignTokens.Colors.accentPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                        .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 8, x: 0, y: 3)
+                    }
+                    .buttonStyle(.plain)
+                } else if connectionState == .connecting {
+                    VStack(spacing: DesignTokens.Spacing.sm) {
+                        ProgressView()
+                        Text("正在连接...")
+                            .font(DesignTokens.Typography.bodyMedium)
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
+                    }
+                }
             }
+            .padding(DesignTokens.Spacing.xxxl)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                    .fill(DesignTokens.Colors.surfaceCard)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+                    )
+            )
+            .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 6)
+            .frame(maxWidth: 320)
+
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - 连接方法
@@ -649,24 +454,69 @@ struct TerminalPlaceholderView: View {
     }
 
 
-    // MARK: - 空状态视图
+    // MARK: - 空状态视图（Figma-Spec-v2 §01 §4）
 
     private var emptyStateView: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "terminal")
-                .font(.system(size: 64, weight: .light))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+        VStack(spacing: DesignTokens.Spacing.xl) {
+            // 渐变圆角图标容器
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                DesignTokens.Colors.accentPrimary.opacity(0.10),
+                                DesignTokens.Colors.accentIndigo.opacity(0.10)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 96, height: 96)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.15), lineWidth: 0.75)
+                    )
+                Image(systemName: "desktopcomputer")
+                    .font(DesignTokens.Typography.heroMedium)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
 
-            Text("选择一个会话开始")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+            VStack(spacing: DesignTokens.Spacing.sm) {
+                Text("暂无活跃会话")
+                    .font(DesignTokens.Typography.displayXSmall)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
 
-            Text("从左侧边栏选择一个会话，或双击会话以连接")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .multilineTextAlignment(.center)
+                Text("从侧边栏选择会话，或新建一个 SSH 连接")
+                    .font(DesignTokens.Typography.bodyMedium)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            // 新建会话按钮
+            Button(action: { onNewSession?() }) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    Image(systemName: "plus")
+                        .font(DesignTokens.Typography.labelSmall)
+                    Text("新建会话")
+                        .font(DesignTokens.Typography.labelLarge)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, DesignTokens.Spacing.xl)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 10, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, DesignTokens.Spacing.xxs)
         }
-        .padding(DesignTokens.Spacing.xxxl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -709,7 +559,7 @@ final class SSHTerminalDelegate: ShellMateTerminalViewDelegate {
 #Preview("终端占位 - 有选中") {
     TerminalPlaceholderView(
         session: Session.preview,
-        onConnect: { print("连接") }
+        onConnect: { AppLogger.general.debug("连接") }
     )
     .frame(width: 800, height: 600)
 }
@@ -720,7 +570,7 @@ final class SSHTerminalDelegate: ShellMateTerminalViewDelegate {
 
     return TerminalPlaceholderView(
         session: session,
-        onConnect: { print("连接") }
+        onConnect: { AppLogger.general.debug("连接") }
     )
     .frame(width: 800, height: 600)
 }

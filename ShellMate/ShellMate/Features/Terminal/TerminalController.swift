@@ -94,8 +94,8 @@ final class TerminalController: ObservableObject {
 
     // MARK: - 属性
 
-    /// 会话配置
-    private let session: Session
+    /// 会话配置（internal：RecordingDialogView 通过 activeController.session.name 访问）
+    let session: Session
 
     /// 会话 ID 缓存（供 deinit 安全访问，避免在任意线程访问 Core Data 对象）
     private let sessionId: UUID
@@ -116,6 +116,10 @@ final class TerminalController: ObservableObject {
 
     /// 待用户确认的主机密钥状态（nil = 无待确认）
     @Published var pendingHostKeyState: PendingHostKeyState?
+
+    /// 终端当前工作目录（由 OSC 7 序列更新，nil = 尚未感知）
+    /// SFTP 面板观察此值实现目录同步
+    @Published private(set) var currentRemoteDirectory: String? = nil
 
     /// 凭据缺失：需要用户通过向导输入密码（password / keyboard-interactive）
     @Published var needsCredentialInput: Bool = false
@@ -142,14 +146,49 @@ final class TerminalController: ObservableObject {
     /// 隧道管理器面板是否显示
     @Published var isTunnelManagerOpen: Bool = false
 
-    /// Compose Pane 是否显示
-    @Published var isComposePaneOpen: Bool = false
+    /// tmux 会话状态管理器（懒初始化，需要 self 已准备好）
+    private(set) lazy var tmuxStore: TmuxSessionStore = TmuxSessionStore(sessionId: sessionId, sendTarget: self)
 
-    /// 服务器实时性能指标（仅私钥/SSH Agent 认证时可用）
-    @Published private(set) var serverMetrics: ServerMetrics?
+    /// Compose Pane 是否显示（转发到 terminalVM）
+    var isComposePaneOpen: Bool {
+        get { terminalVM.isComposePaneOpen }
+        set { terminalVM.isComposePaneOpen = newValue }
+    }
 
-    /// 服务器指标监控器
-    private var metricsMonitor: ServerMetricsMonitor?
+    // MARK: - 终端录制（W13）
+
+    /// 当前会话的录制器（每个 Tab 独立实例，RecordingDialogView 通过此引用控制录制）
+    let recorder = SessionRecorder()
+
+    /// 录制对话框是否显示（转发到 terminalVM）
+    var isRecordingDialogOpen: Bool {
+        get { terminalVM.isRecordingDialogOpen }
+        set { terminalVM.isRecordingDialogOpen = newValue }
+    }
+
+    // MARK: - 面板 ViewModel（AI 错误侦探、性能指标、输出缓冲区）
+
+    /// 终端 ViewModel：持有性能指标、AI 错误侦探、输出缓冲区、面板可见性
+    let terminalVM = TerminalViewModel()
+
+    /// 服务器实时性能指标（快速访问入口，实际存储在 terminalVM）
+    var serverMetrics: ServerMetrics? { terminalVM.serverMetrics }
+
+    /// AI 检测错误文本（快速访问入口）
+    var detectedErrorText: String? { terminalVM.detectedErrorText }
+
+    /// 返回最近终端输出（供 AI 命令补全使用）
+    func recentTerminalOutput() -> String { terminalVM.recentTerminalOutput() }
+
+    /// 清除已检测的错误
+    func clearDetectedError() { terminalVM.clearDetectedError() }
+
+    // MARK: - 会话日志（terminal.loggingEnabled）——方法实现在 TerminalController+SessionLog.swift
+
+    /// 当前会话的日志文件句柄（lazy，首次写入时创建）
+    var sessionLogHandle: FileHandle?
+    /// 是否已打开日志文件（避免重复尝试）
+    var sessionLogOpened = false
 
     private var reconnectTask: Task<Void, Never>?
     private var userDisconnected = false
@@ -267,15 +306,65 @@ final class TerminalController: ObservableObject {
                 let shouldFlush = await coalescer.append(bytes)
                 guard shouldFlush else { return }
                 // 窗口期：16ms ≈ 1 帧 @ 60fps
-                try? await Task.sleep(nanoseconds: 16_000_000)
+                try? await Task.sleep(nanoseconds: AppConstants.terminalCoalescerIntervalNs)
                 let flushed = await coalescer.drain()
                 guard !flushed.isEmpty else { return }
                 await MainActor.run { [weak self] in
                     guard let self else { return }
-                    // W12.4：关键字高亮处理
-                    let processed = HighlightEngine.shared.process(Data(flushed))
-                    self.terminalView?.feed(byteArray: [UInt8](processed)[...])
-                    self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                    // 智能过滤：仅在 tmux 收集阶段或数据含标记时进行行级处理；
+                    // 其余情况直接透传原始字节，避免 UTF-8 转换丢失数据或引入多余 \n
+                    if let text = String(bytes: flushed, encoding: .utf8),
+                       self.tmuxStore.isInCollectionMode || text.contains("__SM_TMUX_") {
+                        // 行过滤路径：逐行判断是否为 tmux 标记/收集数据
+                        // 被过滤行分两类：
+                        //   - 纯标记行（__SM_TMUX_ 开头）或收集阶段数据行 → 完全丢弃
+                        //   - 命令回显行（含标记但有其他前缀，如 shell 提示符）→ 只输出 \r 使
+                        //     光标回到行首，下一个 prompt 覆写同行，不产生多余空行或重复 prompt
+                        var terminalBytes: [UInt8] = []
+                        let parts = text.components(separatedBy: "\n")
+                        for (i, line) in parts.enumerated() {
+                            let wasCollecting = self.tmuxStore.isInCollectionMode
+                            if !self.tmuxStore.filterLine(line) {
+                                terminalBytes.append(contentsOf: Array(line.utf8))
+                                if i < parts.count - 1 {
+                                    terminalBytes.append(UInt8(ascii: "\n"))
+                                }
+                            } else {
+                                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                                // 命令回显行：非纯标记、非收集阶段、非空行
+                                if !trimmed.hasPrefix("__SM_TMUX_") && !wasCollecting && !trimmed.isEmpty {
+                                    terminalBytes.append(UInt8(ascii: "\r"))
+                                }
+                            }
+                        }
+                        guard !terminalBytes.isEmpty else { return }
+                        let processed = HighlightEngine.shared.process(Data(terminalBytes))
+                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        self.delegate?.terminalController(self, didReceiveData: Data(terminalBytes))
+                        self.appendToSessionLog(terminalBytes)
+                        let decoded = String(bytes: terminalBytes, encoding: .utf8) ?? ""
+                        self.terminalVM.updateOutputBuffer(decoded)
+                        self.logOutputLines(decoded)
+                        Task { await self.recorder.appendOutput(decoded) }
+                        if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
+                            self.terminalVM.detectErrors(in: decoded)
+                        }
+                        AutomationTriggerEngine.shared.process(output: decoded, sessionId: self.sessionId, controller: self)
+                    } else {
+                        // 直接透传路径：保留原始字节（含非 UTF-8 字符），性能最优
+                        let processed = HighlightEngine.shared.process(Data(flushed))
+                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                        self.appendToSessionLog(flushed)
+                        let decoded2 = String(bytes: flushed, encoding: .utf8) ?? ""
+                        self.terminalVM.updateOutputBuffer(decoded2)
+                        self.logOutputLines(decoded2)
+                        Task { await self.recorder.appendOutput(decoded2) }
+                        if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
+                            self.terminalVM.detectErrors(in: decoded2)
+                        }
+                        AutomationTriggerEngine.shared.process(output: decoded2, sessionId: self.sessionId, controller: self)
+                    }
                 }
             }
         }
@@ -354,10 +443,23 @@ final class TerminalController: ObservableObject {
             state = .connected
             connectedAt = Date()
             delegate?.terminalController(self, didChangeState: state)
+            logSystemEvent("已连接至 \(session.host):\(session.port)（用户：\(session.username)）")
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
             tunnelManager.handleSSHConnected(config: sessionConfig, sessionID: session.id)
             // 启动性能指标轮询
             startMetricsMonitor()
+            // 12.10：连接后自动执行 Login Script（延迟 1.0s 等待 shell 就绪）
+            executeStartupCommandIfNeeded()
+            // tmux 可用性检测（延迟 1.5s 等待 shell 完成 MOTD 初始化输出）
+            let tmuxCfg = TmuxConfigStore.load(sessionId: sessionId)
+            if tmuxCfg.enabled {
+                Task { [weak self] in
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    await MainActor.run { self?.tmuxStore.detectTmux() }
+                }
+            }
+            // §3.19：触发 onConnect 自动化规则
+            AutomationTriggerEngine.shared.processEvent(.onConnect, sessionId: sessionId, controller: self)
 
         } catch let error as SSHError {
             switch error {
@@ -419,36 +521,33 @@ final class TerminalController: ObservableObject {
         tunnelManager.handleSSHDisconnected()
         // 停止性能指标监控
         stopMetricsMonitor()
+        // 通知 tmux 状态管理器清理状态
+        tmuxStore.handleSSHDisconnected()
+        // §3.19：触发 onDisconnect 自动化规则
+        AutomationTriggerEngine.shared.processEvent(.onDisconnect, sessionId: sessionId, controller: self)
+        // 关闭会话日志文件句柄
+        try? sessionLogHandle?.close()
+        sessionLogHandle = nil
+        sessionLogOpened = false
+        logSystemEvent("连接已正常断开")
         state = .disconnected
         connectedAt = nil
         delegate?.terminalController(self, didChangeState: state)
     }
 
-    // MARK: - 性能指标监控
+    // MARK: - 性能指标监控（委托给 terminalVM）
 
     private func startMetricsMonitor() {
-        Task {
-            // 从凭据金库加载认证凭据，传入监控器（安全只在内存中使用）
+        Task { [weak self] in
+            guard let self else { return }
             let password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
             let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
-
-            let monitor = ServerMetricsMonitor(
-                session: session,
-                password: password,
-                passphrase: passphrase
-            )
-            monitor.onUpdate = { [weak self] metrics in
-                self?.serverMetrics = metrics
-            }
-            metricsMonitor = monitor
-            monitor.start()
+            terminalVM.startMetricsMonitor(for: session, password: password, passphrase: passphrase)
         }
     }
 
     private func stopMetricsMonitor() {
-        metricsMonitor?.stop()
-        metricsMonitor = nil
-        serverMetrics = nil
+        terminalVM.stopMetricsMonitor()
     }
 
     // MARK: - SFTP 面板管理
@@ -480,7 +579,7 @@ final class TerminalController: ObservableObject {
         sftpSession = newSFTPSession
         sftpTransferQueue = SFTPTransferQueue(sftpSession: newSFTPSession)
         isSFTPPanelOpen = true
-        print("[TerminalController] SFTP 面板已打开")
+        AppLogger.general.debug("[TerminalController] SFTP 面板已打开")
     }
 
     /// 关闭 SFTP 面板
@@ -590,13 +689,37 @@ final class TerminalController: ObservableObject {
                     let bytes = [UInt8](data)
                     let shouldFlush = await coalescer.append(bytes)
                     guard shouldFlush else { continue }
-                    try? await Task.sleep(nanoseconds: 16_000_000)
+                    try? await Task.sleep(nanoseconds: AppConstants.terminalCoalescerIntervalNs)
                     let flushed = await coalescer.drain()
                     guard !flushed.isEmpty else { continue }
                     await MainActor.run { [weak self] in
                         guard let self else { return }
-                        let processed = HighlightEngine.shared.process(Data(flushed))
-                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        // ProxyJump 路径：同样使用智能过滤
+                        if let text = String(bytes: flushed, encoding: .utf8),
+                           self.tmuxStore.isInCollectionMode || text.contains("__SM_TMUX_") {
+                            var terminalBytes: [UInt8] = []
+                            let parts = text.components(separatedBy: "\n")
+                            for (i, line) in parts.enumerated() {
+                                let wasCollecting = self.tmuxStore.isInCollectionMode
+                                if !self.tmuxStore.filterLine(line) {
+                                    terminalBytes.append(contentsOf: Array(line.utf8))
+                                    if i < parts.count - 1 {
+                                        terminalBytes.append(UInt8(ascii: "\n"))
+                                    }
+                                } else {
+                                    let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    if !trimmed.hasPrefix("__SM_TMUX_") && !wasCollecting && !trimmed.isEmpty {
+                                        terminalBytes.append(UInt8(ascii: "\r"))
+                                    }
+                                }
+                            }
+                            guard !terminalBytes.isEmpty else { return }
+                            let processed = HighlightEngine.shared.process(Data(terminalBytes))
+                            self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        } else {
+                            let processed = HighlightEngine.shared.process(Data(flushed))
+                            self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        }
                     }
                 }
             }
@@ -607,6 +730,16 @@ final class TerminalController: ObservableObject {
         delegate?.terminalController(self, didChangeState: state)
         // 启动性能指标轮询（ProxyJump 路径）
         startMetricsMonitor()
+        // 12.10：连接后自动执行 Login Script（ProxyJump 路径）
+        executeStartupCommandIfNeeded()
+        // tmux 可用性检测（ProxyJump 路径，同样延迟 1.5s）
+        let tmuxCfgPJ = TmuxConfigStore.load(sessionId: sessionId)
+        if tmuxCfgPJ.enabled {
+            Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                await MainActor.run { self?.tmuxStore.detectTmux() }
+            }
+        }
     }
 
     // MARK: - 数据传输
@@ -629,6 +762,29 @@ final class TerminalController: ObservableObject {
         SyncInputStore.shared.broadcast(data: data, from: sessionId)
     }
 
+    /// 12.10：连接成功后自动执行 Login Script（startupCommand）
+    /// 延迟 1.0s 等待 shell 完成 MOTD/初始化输出，然后逐行发送命令
+    private func executeStartupCommandIfNeeded() {
+        guard let cmd = session.startupCommand, !cmd.isEmpty else { return }
+        Task { [weak self] in
+            // 等待 1.0s，确保 shell 已就绪（MOTD 输出完毕）
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            guard let self, self.state == .connected else { return }
+            // 逐行发送，每行末尾附加换行符
+            let lines = cmd.components(separatedBy: "\n")
+            for (index, line) in lines.enumerated() {
+                let toSend = line + "\n"
+                guard let data = toSend.data(using: .utf8) else { continue }
+                try? await self.send(data)
+                // 多行命令之间添加 100ms 间隔，避免 shell 缓冲区溢出
+                if index < lines.count - 1 {
+                    try? await Task.sleep(nanoseconds: 100_000_000)
+                }
+            }
+            AppLogger.ssh.info("[\(self.session.name)] Login Script 执行完毕（\(lines.count) 行）")
+        }
+    }
+
     /// W12.6：接收来自同步组其他终端的广播输入，直接写入 SSH（不再二次广播）
     func broadcastReceive(data: Data) {
         Task {
@@ -642,7 +798,7 @@ final class TerminalController: ObservableObject {
                     }.value
                 }
             } catch {
-                print("[SyncInput] 广播接收写入失败: \(error.localizedDescription)")
+                AppLogger.general.debug("[SyncInput] 广播接收写入失败: \(error.localizedDescription)")
             }
         }
     }
@@ -662,11 +818,16 @@ final class TerminalController: ObservableObject {
 
     /// 发送 Compose Pane 中的命令内容到当前终端
     func sendComposeContent(_ text: String) {
-        Task { try? await send(text) }
+        logInputEntry(text)
+        Task {
+            await recorder.appendInput(text)
+            try? await send(text)
+        }
     }
 
     /// 发送快捷命令到当前终端（支持逐行模式）
     func sendQuickCommand(_ command: QuickCommand) {
+        logInputEntry(command.content)
         let lines = command.content.components(separatedBy: "\n")
         if command.sendLineByLine && lines.count > 1 {
             Task { [weak self] in
@@ -768,6 +929,8 @@ final class TerminalController: ObservableObject {
 
     private func handleConnectionLost() {
         guard state == .connected else { return }
+        tmuxStore.handleSSHDisconnected()
+        logSystemEvent("连接意外断开")
         state = .failed("连接已断开")
         delegate?.terminalController(self, didChangeState: state)
         if reconnectConfig.enabled && !userDisconnected { scheduleReconnect() }
@@ -792,6 +955,25 @@ final class TerminalController: ObservableObject {
             }
         }
         monitor.start(queue: DispatchQueue(label: "com.shellmate.networkmonitor", qos: .utility))
+    }
+}
+
+// MARK: - TmuxSendTarget
+
+extension TerminalController: TmuxSendTarget {
+    /// 发送 tmux 内部命令：直接写入 SSH 连接，不经过 SyncInputStore 广播
+    func sendTmuxCommand(_ command: String) {
+        guard let data = command.data(using: .utf8) else { return }
+        Task {
+            guard state == .connected else { return }
+            if let pm = proxyJumpManager {
+                try? await pm.write(data)
+            } else if let conn = sshConnection {
+                try? await Task.detached(priority: .userInitiated) {
+                    try conn.write(data)
+                }.value
+            }
+        }
     }
 }
 
@@ -822,10 +1004,44 @@ extension TerminalController: SwiftTerm.TerminalViewDelegate {
     }
 
     nonisolated func bell(source: SwiftTerm.TerminalView) {
-        NSSound.beep()
+        // 默认 true；UserDefaults.object 为 nil 表示未设置，则遵从默认值
+        let enabled = UserDefaults.standard.object(forKey: "terminal.bellEnabled") as? Bool ?? true
+        guard enabled else { return }
+        let visual = UserDefaults.standard.bool(forKey: "terminal.visualBell")
+        if visual {
+            Task { @MainActor in
+                source.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
+                try? await Task.sleep(nanoseconds: 120_000_000) // 0.12s
+                source.layer?.backgroundColor = .clear
+            }
+        } else {
+            NSSound.beep()
+        }
     }
 
-    nonisolated func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {}
+    nonisolated func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {
+        // OSC 7 序列：shells 在 cd 后发出 \e]7;file://host/path\a
+        // directory 可能是 "file:///home/user" 或 "/home/user"
+        guard let raw = directory, !raw.isEmpty else { return }
+        let path: String
+        if raw.hasPrefix("file://") {
+            // 去掉 file://host 或 file:// 前缀，保留 path 部分
+            if let url = URL(string: raw), !url.path.isEmpty {
+                path = url.path
+            } else {
+                path = raw
+            }
+        } else {
+            path = raw
+        }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            if self.currentRemoteDirectory != path {
+                self.currentRemoteDirectory = path
+                AppLogger.ssh.debug("[PWD] OSC-7 目录更新: \(path)")
+            }
+        }
+    }
 
     nonisolated func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {}
 

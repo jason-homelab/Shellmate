@@ -98,6 +98,9 @@ final class TunnelRule: Identifiable, ObservableObject {
     /// 会话连接时是否自动启动
     @Published var autoStart: Bool
 
+    /// 隧道名称（用于卡片显示，如"MySQL 数据库"）
+    @Published var name: String
+
     /// 备注
     @Published var notes: String
 
@@ -113,6 +116,7 @@ final class TunnelRule: Identifiable, ObservableObject {
         remotePort: Int = 80,
         sessionID: UUID? = nil,
         autoStart: Bool = false,
+        name: String = "",
         notes: String = ""
     ) {
         self.id = id
@@ -123,6 +127,7 @@ final class TunnelRule: Identifiable, ObservableObject {
         self.remotePort = remotePort
         self.sessionID = sessionID
         self.autoStart = autoStart
+        self.name = name
         self.notes = notes
     }
 
@@ -136,6 +141,15 @@ final class TunnelRule: Identifiable, ObservableObject {
         type == .dynamicSocks ? "（动态）" : "\(remoteHost):\(remotePort)"
     }
 
+    /// 卡片描述文字（按 Figma §11 §9 规则生成）
+    var descriptionText: String {
+        switch type {
+        case .localForward:  return "本地 \(localPort) → \(remoteHost.isEmpty ? "localhost" : remoteHost):\(remotePort)"
+        case .remoteForward: return "远程 \(remotePort) → localhost:\(localPort)"
+        case .dynamicSocks:  return "动态 SOCKS 代理，端口 \(localPort)"
+        }
+    }
+
     /// 创建可编辑的独立副本（用于表单编辑，避免直接修改已启动规则）
     func editableCopy() -> TunnelRule {
         TunnelRule(
@@ -147,6 +161,7 @@ final class TunnelRule: Identifiable, ObservableObject {
             remotePort: remotePort,
             sessionID: sessionID,
             autoStart: autoStart,
+            name: name,
             notes: notes
         )
     }
@@ -160,6 +175,7 @@ final class TunnelRule: Identifiable, ObservableObject {
         remotePort = other.remotePort
         sessionID = other.sessionID
         autoStart = other.autoStart
+        name = other.name
         notes = other.notes
     }
 }

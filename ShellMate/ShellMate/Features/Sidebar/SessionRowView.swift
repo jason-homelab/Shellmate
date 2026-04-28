@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// 会话行视图（Liquid Glass 设计）
-/// 玻璃拟态悬停 + 选中光晕 + 精致状态点
+/// 会话行视图 — 亮色 macOS 风格
+/// 激活状态：全宽 Apple Blue 胶囊背景 + 白色文字（对齐 Figma Make bg-[#007aff]）
+/// 图标：server.rack SF Symbol
 struct SessionRowView: View {
 
     // MARK: - 属性
@@ -13,77 +14,39 @@ struct SessionRowView: View {
     // MARK: - 状态
 
     @State private var isHovering: Bool = false
+    @State private var isDragging: Bool = false
 
     // MARK: - 视图
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
 
-            // 服务器图标（含连接状态角标）
-            serverIcon
+            // ── 1. 服务器图标容器
+            sessionAvatar
 
-            // 会话信息
-            VStack(alignment: .leading, spacing: 2) {
-                Text(session.name)
-                    .font(DesignTokens.Typography.bodyMedium)
-                    .foregroundColor(
-                        isSelected
-                            ? DesignTokens.Colors.textPrimary
-                            : (isHovering ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textPrimary)
-                    )
-                    .lineLimit(1)
+            // ── 2. 会话信息
+            sessionInfo
 
-                Text("\(session.username)@\(session.host)")
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(
-                        isSelected
-                            ? DesignTokens.Colors.accentSecondary.opacity(0.80)
-                            : DesignTokens.Colors.textTertiary
-                    )
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            // 标签徽章
-            if !session.tags.isEmpty {
-                TagListView(tags: session.tags, maxDisplayCount: 1)
-            }
+            Spacer(minLength: 0)
         }
+        // Figma: px-3 py-2 = 12pt horizontal, 8pt vertical
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.xs)
-        .frame(height: DesignTokens.Sizes.sessionRowHeight)
-        .background {
-            if isSelected {
-                // 选中：蓝色玻璃光晕（内缩居中 + 较大圆角）
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .fill(DesignTokens.Colors.glassSelected)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                            .strokeBorder(
-                                DesignTokens.Gradients.glassAccentBorder,
-                                lineWidth: 0.75
-                            )
-                    }
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, 2)
-                    .shadow(color: DesignTokens.Colors.accentGlow, radius: 8, x: 0, y: 0)
-            } else if isHovering {
-                // 悬停：轻玻璃（同样内缩居中）
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .fill(DesignTokens.Colors.glassHoverColor)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 0.5)
-                    }
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, 2)
-            }
-        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background(rowBackground)
         .contentShape(Rectangle())
+        .opacity(isDragging ? 0.45 : 1.0)
+        .scaleEffect(isDragging ? 0.97 : 1.0)
+        .animation(DesignTokens.Animation.hover, value: isDragging)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isSelected)
+        .onDrag {
+            withAnimation(DesignTokens.Animation.hover) { isDragging = true }
+            return NSItemProvider(object: session.id.uuidString as NSString)
+        }
         .onHover { hovering in
             withAnimation(DesignTokens.Animation.hover) {
                 isHovering = hovering
+                if !hovering { isDragging = false }
             }
         }
         .onTapGesture(count: 2) {
@@ -96,58 +59,79 @@ struct SessionRowView: View {
         .accessibilityValue(session.connectionState.displayName)
     }
 
-    // MARK: - 服务器图标
+    // MARK: - 背景
 
-    private var serverIcon: some View {
-        ZStack(alignment: .bottomTrailing) {
-            // 图标背景圆角框
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
-                }
-                .frame(width: 32, height: 32)
+    @ViewBuilder
+    private var rowBackground: some View {
+        if isSelected {
+            // Figma: bg-[#007aff] shadow-md shadow-[#007aff]/30
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(DesignTokens.Colors.accentPrimary)
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
+        } else if isHovering {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(DesignTokens.Colors.surfaceHover)
+        } else {
+            Color.clear
+        }
+    }
 
-            // 服务器图标
+    // MARK: - 服务器图标容器
+
+    private var sessionAvatar: some View {
+        ZStack {
+            // Figma: selected=bg-white/20, unselected=bg-[#007aff]/10
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                .fill(isSelected
+                    ? Color.white.opacity(0.20)
+                    : DesignTokens.Colors.accentPrimary.opacity(0.10))
+
             Image(systemName: "server.rack")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.accentPrimary.opacity(0.75))
-                .frame(width: 32, height: 32)
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(isSelected
+                    ? Color.white
+                    : DesignTokens.Colors.accentPrimary)
+        }
+        .frame(width: 26, height: 26)
+    }
 
-            // 连接状态角标（仅非离线时显示）
-            if session.connectionState != .offline {
-                Circle()
-                    .fill(dotColorForState(session.connectionState))
-                    .frame(width: 7, height: 7)
-                    .overlay {
-                        Circle().strokeBorder(DesignTokens.Colors.surfaceWindow, lineWidth: 1.5)
-                    }
-                    .offset(x: 2, y: 2)
-            }
+    // MARK: - 会话信息
+
+    private var sessionInfo: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+            // Figma: text-sm font-medium truncate（14pt medium）
+            Text(session.name)
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(isSelected
+                    ? Color.white
+                    : DesignTokens.Colors.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            // Figma: text-xs truncate（12pt regular）
+            Text("\(session.username)@\(session.host)")
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(isSelected
+                    ? Color.white.opacity(0.80)
+                    : DesignTokens.Colors.textSecondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
     }
 
-    private func dotColorForState(_ state: ConnectionState) -> Color {
-        switch state {
-        case .connected:                  return DesignTokens.Colors.statusConnected
-        case .connecting, .disconnecting: return DesignTokens.Colors.statusConnecting
-        case .error:                      return DesignTokens.Colors.statusError
-        default:                          return DesignTokens.Colors.statusOffline
-        }
-    }
 }
+
 
 // MARK: - 预览
 
 #Preview("会话行状态") {
-    VStack(spacing: 2) {
-        SessionRowView(session: {
-            var s = Session.preview; s.connectionState = .connected; return s
-        }())
+    VStack(spacing: DesignTokens.Spacing.px) {
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connected; return s
         }(), isSelected: true)
+        SessionRowView(session: {
+            var s = Session.preview; s.connectionState = .connected; return s
+        }())
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connecting; return s
         }())
@@ -158,7 +142,8 @@ struct SessionRowView: View {
             var s = Session.preview; s.connectionState = .offline; return s
         }())
     }
-    .padding(8)
-    .background(DesignTokens.Colors.surfaceWindow)
-    .frame(width: 224)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, DesignTokens.Spacing.xs)
+    .background(DesignTokens.Colors.surfacePanel)
+    .frame(width: 240)
 }

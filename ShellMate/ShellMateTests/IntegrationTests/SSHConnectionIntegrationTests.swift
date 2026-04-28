@@ -333,15 +333,15 @@ final class SSHConnectionIntegrationTests: XCTestCase {
 
         do {
             try await controller.connect()
-            // 若 connect() 未抛出，检查 credentialsMissing（CI 无 Keychain 时的合法出口）
-            let credMissing = await MainActor.run { controller.credentialsMissing }
+            // 若 connect() 未抛出，检查 needsCredentialInput（CI 无 Keychain 时的合法出口）
+            let credMissing = await MainActor.run { controller.needsCredentialInput }
             if !credMissing {
                 XCTFail("TC-005c: 不可达主机不应连接成功")
             }
         } catch { /* 预期失败：TCP 无法到达 192.0.2.1 */ }
 
         let finalState = await MainActor.run { controller.state }
-        // 允许两种合法结果：.failed（TCP 失败）或 .disconnected（credentialsMissing 提前返回）
+        // 允许两种合法结果：.failed（TCP 失败）或 .disconnected（needsCredentialInput 提前返回）
         let isExpectedState: Bool
         switch finalState {
         case .failed, .disconnected: isExpectedState = true

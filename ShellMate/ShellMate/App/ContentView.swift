@@ -2,10 +2,11 @@ import SwiftUI
 
 // MARK: - 分屏布局类型
 
-private enum SplitLayout {
+enum SplitLayout {
     case none
     case horizontal  // 左右分屏
     case vertical    // 上下分屏
+    case grid        // 四格分屏 (2×2)，对齐 Figma-Spec-v2 §01
 }
 
 /// 主内容视图
@@ -14,18 +15,49 @@ struct ContentView: View {
 
     // MARK: - 状态
 
-    @StateObject private var sessionStore = SessionStore()
-    @StateObject private var groupStore = GroupStore()
-    @StateObject private var tabBarStore = TabBarStore()
+    @StateObject var sessionStore = SessionStore()
+    @StateObject var groupStore = GroupStore()
+    @StateObject var tabBarStore = TabBarStore()
 
     // MARK: - 分屏状态
-    @State private var splitLayout: SplitLayout = .none
-    @State private var splitSessionId: Session.ID? = nil
-    @State private var showSplitSessionPicker: Bool = false
+    @State var splitLayout: SplitLayout = .none
+    /// 左右/上下分屏：第二格会话 ID
+    @State var splitSessionId: Session.ID? = nil
+    /// 四格分屏：格 1–3 的额外会话 ID（格 0 = mainTerminalStack）
+    @State var gridSessionIds: [Session.ID] = []
+    @State var showSplitSessionPicker: Bool = false
 
     // MARK: - 外观状态
-    @AppStorage("appearance.windowMode") private var windowMode: String = "auto"
-    @State private var showAppearancePicker: Bool = false
+    @AppStorage("appearance.windowMode") var windowMode: String = "light"
+    @AppStorage("appearance.bgOpacity")  private var bgOpacity: Double = 0
+    @State var showAppearancePicker: Bool = false
+
+    // MARK: - 语言状态
+    @AppStorage("app.language") var appLanguage: String = "zh"
+    @State var showLanguagePicker: Bool = false
+
+    // MARK: - 欢迎界面（首次启动，对齐 Figma-Spec-v2 §13）
+    @AppStorage("hasLaunchedBefore") private var hasLaunchedBefore: Bool = false
+
+    // MARK: - 面板与对话框状态
+    @State var showScriptPanel: Bool = false
+    @State var showSharePopover: Bool = false
+    @State var showSSHConfigImport: Bool = false
+    @State var showRecordingDialog: Bool = false
+    @State var showLogPanel: Bool = false
+    @State var showImportExportDialog: Bool = false
+
+    // MARK: - 当前活跃会话（已有标签页的选中会话）
+    var activeSession: Session? {
+        guard let tab = tabBarStore.selectedTab else { return nil }
+        return sessionStore.sessions.first(where: { $0.id == tab.sessionId })
+    }
+
+    /// 当前活跃 Tab 对应的 TerminalController（通过注册表查找）
+    var activeController: TerminalController? {
+        guard let tab = tabBarStore.selectedTab else { return nil }
+        return TerminalControllerRegistry.shared.controller(for: tab.sessionId)
+    }
 
     // MARK: - 视图
 
@@ -45,24 +77,49 @@ struct ContentView: View {
                 max: DesignTokens.Sizes.sidebarMaxWidth
             )
         } detail: {
-            // 主区域：标签栏 + 终端内容
-            VStack(spacing: 0) {
-                // 标签栏（有标签时显示）
-                if !tabBarStore.tabs.isEmpty {
-                    TerminalTabBarView(store: tabBarStore, onNewTab: {
-                        // 新建标签页：打开新建会话表单
-                        sessionStore.showNewSessionForm()
-                    })
-                }
-
-                // 终端内容区域
-                terminalContentArea
-            }
-            .background(DesignTokens.Colors.surfaceWindow)
+            detailArea
         }
-        .navigationTitle("")
+        .navigationTitle("ShellMate")
         .toolbar {
             toolbarContent
+        }
+        .sheet(isPresented: $showScriptPanel) {
+            ScriptLibraryView(onClose: { showScriptPanel = false })
+        }
+        .sheet(isPresented: $showSSHConfigImport) {
+            sshConfigImportSheet
+        }
+        .sheet(isPresented: $showRecordingDialog) {
+            if let ctrl = activeController {
+                RecordingDialogView(
+                    sessionName: ctrl.session.name,
+                    recorder: ctrl.recorder,
+                    onClose: { showRecordingDialog = false }
+                )
+            } else {
+                // 无活跃 SSH 会话（本地 Shell 或无连接），仅展示历史录制列表
+                RecordingDialogView(
+                    sessionName: activeSession?.name ?? "",
+                    recorder: SessionRecorder(),
+                    onClose: { showRecordingDialog = false }
+                )
+            }
+        }
+        .sheet(isPresented: $showLogPanel) {
+            LogPanelView(onClose: { showLogPanel = false })
+        }
+        .sheet(isPresented: $showImportExportDialog) {
+            SessionImportExportView(
+                sessions: sessionStore.sessions,
+                onImport: { sessions in
+                    Task {
+                        for session in sessions {
+                            await sessionStore.saveSession(session)
+                        }
+                    }
+                },
+                onClose: { showImportExportDialog = false }
+            )
         }
         .sheet(isPresented: $sessionStore.isShowingSessionForm) {
             sessionFormSheet
@@ -76,21 +133,44 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSplitSessionPicker, onDismiss: {
             // 若用户关闭弹窗时未选择会话，取消分屏
-            if splitSessionId == nil { splitLayout = .none }
+            let noSelection = splitLayout == .grid
+                ? gridSessionIds.isEmpty
+                : splitSessionId == nil
+            if noSelection { splitLayout = .none }
         }) {
-            SplitSessionPickerView(
-                sessions: sessionStore.sessions,
-                onSelect: { session in
-                    splitSessionId = session.id
-                    showSplitSessionPicker = false
-                },
-                onCancel: {
-                    splitLayout = .none
-                    splitSessionId = nil
-                    showSplitSessionPicker = false
-                }
-            )
-            .frame(width: 360, height: 480)
+            if splitLayout == .grid {
+                // 四格分屏：多选模式（最多选 3 个额外会话，任务 13.15）
+                SplitSessionPickerView(
+                    sessions: sessionStore.sessions,
+                    isMultiSelect: true,
+                    maxSelection: 3,
+                    onSelectMultiple: { sessions in
+                        gridSessionIds = sessions.map(\.id)
+                        showSplitSessionPicker = false
+                    },
+                    onCancel: {
+                        splitLayout = .none
+                        gridSessionIds = []
+                        showSplitSessionPicker = false
+                    }
+                )
+                .frame(width: 400, height: 520)
+            } else {
+                // 左右/上下分屏：单选模式
+                SplitSessionPickerView(
+                    sessions: sessionStore.sessions,
+                    onSelect: { session in
+                        splitSessionId = session.id
+                        showSplitSessionPicker = false
+                    },
+                    onCancel: {
+                        splitLayout = .none
+                        splitSessionId = nil
+                        showSplitSessionPicker = false
+                    }
+                )
+                .frame(width: 360, height: 480)
+            }
         }
         .alert("错误", isPresented: Binding(
             get: { sessionStore.errorMessage != nil },
@@ -111,10 +191,54 @@ struct ContentView: View {
                 Text("本地数据库初始化失败，应用无法继续运行。\n\n\(error.localizedDescription)")
             }
         }
+        // 全局 UI 通知处理
+        .onReceive(NotificationCenter.default.publisher(for: .settingsRequested)) { _ in
+            openNativeSettingsWindow()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
+            showLogPanel = true
+        }
+        // 欢迎界面覆层（首次启动，Figma-Spec-v2 §13）
+        .overlay {
+            if !hasLaunchedBefore {
+                WelcomeScreenView(
+                    onDismiss: {
+                        hasLaunchedBefore = true
+                    },
+                    onCreateSession: {
+                        hasLaunchedBefore = true
+                        sessionStore.showNewSessionForm()
+                    },
+                    onImportConfiguration: {
+                        hasLaunchedBefore = true
+                        sessionStore.showNewSessionForm() // 临时指向新建，后续对接导入
+                    }
+                )
+                .zIndex(100)
+                .transition(.opacity.animation(.easeInOut(duration: 0.3)))
+            }
+        }
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
+        // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
+        .background(WindowTransparencyConfigurator(opacity: bgOpacity, windowMode: windowMode))
+        // NSToolbar 背景：对齐 Figma `bg-[#f5f5f7]/80`（亮色 #F5F5F7 / 深色 #070a11）
+        .toolbarBackground(DesignTokens.Colors.surfaceWindow, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         // 根据用户选择的外观模式应用 ColorScheme；nil 表示跟随系统
         .preferredColorScheme(preferredColorScheme)
+        // 根据用户选择的语言应用 Locale
+        .environment(\.locale, appLocale)
+        // 新窗口打开时自动连接待连接会话（由右键菜单"在新窗口打开"写入 UserDefaults）
+        .task {
+            await checkPendingAutoConnect()
+        }
+        // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）
+        .onChange(of: tabBarStore.selectedTabId) { newId in
+            guard let newId,
+                  let tab = tabBarStore.tabs.first(where: { $0.id == newId }) else { return }
+            sessionStore.selectedSessionId = tab.sessionId
+        }
         // 数据加载 + 菜单栏通知处理（拆分以规避 Swift 类型检查超时）
         .modifier(ContentViewLifecycleModifier(
             sessionStore: sessionStore,
@@ -126,540 +250,93 @@ struct ContentView: View {
 
     // MARK: - 终端内容区域
 
+    /// 主区域：标签栏 + 终端内容（对齐 Figma-Spec-v2 §04 Tab 标签栏设计）
+    private var detailArea: some View {
+        VStack(spacing: 0) {
+            // 标签栏：会话 Tab 切换（始终显示，Figma §04）
+            TerminalTabBarView(store: tabBarStore, onNewTab: {
+                sessionStore.showNewSessionForm()
+            })
+            terminalContentArea
+        }
+        .background(DesignTokens.Colors.terminalBackground)
+    }
+
     @ViewBuilder
     private var terminalContentArea: some View {
-        if tabBarStore.tabs.isEmpty {
-            // 空状态：无标签页时引导用户连接
-            VStack(spacing: DesignTokens.Spacing.lg) {
-                Image(systemName: "terminal")
-                    .font(.system(size: 64, weight: .ultraLight))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                Text("请从左侧选择一个会话")
-                    .font(DesignTokens.Typography.bodyLarge)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                Text("双击会话或点击「连接」按钮以打开终端")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DesignTokens.Colors.surfaceWindow)
-        } else {
-            // 分屏：有分屏会话时显示分割布局
-            if splitLayout != .none,
-               let splitId = splitSessionId,
-               let splitSession = sessionStore.sessions.first(where: { $0.id == splitId }) {
-                if splitLayout == .horizontal {
-                    HSplitView {
-                        mainTerminalStack.frame(minWidth: 300)
-                        TerminalView(session: splitSession).frame(minWidth: 300)
-                    }
-                } else {
-                    VSplitView {
-                        mainTerminalStack.frame(minHeight: 200)
-                        TerminalView(session: splitSession).frame(minHeight: 200)
-                    }
+        // 分屏布局（任务 13.15：四格分屏支持独立会话）
+        switch splitLayout {
+        case .horizontal:
+            if let splitId = splitSessionId,
+               let s = sessionStore.sessions.first(where: { $0.id == splitId }) {
+                HSplitView {
+                    mainTerminalStack.frame(minWidth: 300)
+                    TerminalView(session: s).frame(minWidth: 300)
                 }
-            } else {
-                mainTerminalStack
+            } else { mainTerminalStack }
+
+        case .vertical:
+            if let splitId = splitSessionId,
+               let s = sessionStore.sessions.first(where: { $0.id == splitId }) {
+                VSplitView {
+                    mainTerminalStack.frame(minHeight: 200)
+                    TerminalView(session: s).frame(minHeight: 200)
+                }
+            } else { mainTerminalStack }
+
+        case .grid:
+            // 四格分屏：格 0 = 当前标签栈，格 1-3 = gridSessionIds 对应会话
+            // 若某格未选会话则显示本地 Shell（LocalTerminalView）
+            let g = gridSessionIds.compactMap { id in
+                sessionStore.sessions.first(where: { $0.id == id })
             }
+            VSplitView {
+                HSplitView {
+                    mainTerminalStack.frame(minWidth: 200, minHeight: 150)
+                    gridPanel(session: g[safe: 0]).frame(minWidth: 200, minHeight: 150)
+                }
+                HSplitView {
+                    gridPanel(session: g[safe: 1]).frame(minWidth: 200, minHeight: 150)
+                    gridPanel(session: g[safe: 2]).frame(minWidth: 200, minHeight: 150)
+                }
+            }
+
+        case .none:
+            mainTerminalStack
+        }
+    }
+
+    /// 四格分屏中单个额外格子：有会话则显示 TerminalView，否则显示占位视图
+    @ViewBuilder
+    private func gridPanel(session: Session?) -> some View {
+        if let session {
+            TerminalView(session: session)
+        } else {
+            TerminalPlaceholderView(onNewSession: { sessionStore.showNewSessionForm() })
         }
     }
 
     /// 主终端标签栈（ZStack + opacity 保持多标签连接存活，TC-004）
     private var mainTerminalStack: some View {
         ZStack {
-            ForEach(tabBarStore.tabs) { tab in
-                if let session = sessionStore.sessions.first(where: { $0.id == tab.sessionId }) {
-                    TerminalView(session: session)
-                        .opacity(tabBarStore.selectedTabId == tab.id ? 1 : 0)
-                        .zIndex(tabBarStore.selectedTabId == tab.id ? 1 : 0)
-                        .allowsHitTesting(tabBarStore.selectedTabId == tab.id)
+            if tabBarStore.tabs.isEmpty {
+                TerminalPlaceholderView(onNewSession: { sessionStore.showNewSessionForm() })
+            } else {
+                ForEach(tabBarStore.tabs) { tab in
+                    Group {
+                        if let session = sessionStore.sessions.first(where: { $0.id == tab.sessionId }) {
+                            TerminalView(session: session)
+                        }
+                    }
+                    .opacity(tabBarStore.selectedTabId == tab.id ? 1 : 0)
+                    .zIndex(tabBarStore.selectedTabId == tab.id ? 1 : 0)
+                    .allowsHitTesting(tabBarStore.selectedTabId == tab.id)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow)
-    }
-
-    // MARK: - 工具栏
-
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        // 新建会话
-        ToolbarItem(placement: .primaryAction) {
-            Button(action: {
-                sessionStore.showNewSessionForm()
-            }) {
-                Label("新建会话", systemImage: "plus")
-            }
-            .help("新建会话 (⌘N)")
-            .keyboardShortcut("n", modifiers: .command)
-        }
-
-        // 快速连接（无标签页时显示）
-        ToolbarItem(placement: .primaryAction) {
-            if tabBarStore.tabs.isEmpty, let session = sessionStore.selectedSession {
-                Button(action: {
-                    connectToSession(session)
-                }) {
-                    Label("连接", systemImage: "bolt.fill")
-                }
-                .help("连接选中会话 (⌘↩)")
-                .keyboardShortcut(.return, modifiers: .command)
-            }
-        }
-
-        // 分屏控制（有标签页时显示）
-        ToolbarItem(placement: .primaryAction) {
-            if !tabBarStore.tabs.isEmpty {
-                Menu {
-                    if splitLayout == .none {
-                        Button(action: { showSplitSessionPicker = true; splitLayout = .horizontal }) {
-                            Label("左右分屏", systemImage: "rectangle.split.2x1")
-                        }
-                        Button(action: { showSplitSessionPicker = true; splitLayout = .vertical }) {
-                            Label("上下分屏", systemImage: "rectangle.split.1x2")
-                        }
-                    } else {
-                        Button(action: {
-                            splitLayout = .horizontal
-                            if splitSessionId == nil { showSplitSessionPicker = true }
-                        }) {
-                            Label("切换为左右分屏", systemImage: "rectangle.split.2x1")
-                        }
-                        Button(action: {
-                            splitLayout = .vertical
-                            if splitSessionId == nil { showSplitSessionPicker = true }
-                        }) {
-                            Label("切换为上下分屏", systemImage: "rectangle.split.1x2")
-                        }
-                        Divider()
-                        Button(role: .destructive) {
-                            splitLayout = .none
-                            splitSessionId = nil
-                        } label: {
-                            Label("关闭分屏", systemImage: "rectangle")
-                        }
-                    }
-                } label: {
-                    Image(systemName: splitLayout != .none ? "rectangle.split.2x1.fill" : "rectangle.split.2x1")
-                        .foregroundColor(splitLayout != .none ? DesignTokens.Colors.accentPrimary : nil)
-                }
-                .help(splitLayout != .none ? "分屏管理" : "开启分屏")
-            }
-        }
-
-        // 外观模式快速切换
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                showAppearancePicker.toggle()
-            } label: {
-                Image(systemName: windowModeIcon)
-                    .help("外观模式（⌘⌥1/2/3）")
-            }
-            .popover(isPresented: $showAppearancePicker, arrowEdge: .bottom) {
-                AppearanceModePickerView(windowMode: $windowMode)
-            }
-        }
-    }
-
-    private var windowModeIcon: String {
-        switch windowMode {
-        case "light": return "sun.max"
-        case "dark":  return "moon"
-        default:      return "circle.lefthalf.filled"
-        }
-    }
-
-    private var preferredColorScheme: ColorScheme? {
-        switch windowMode {
-        case "light": return .light
-        case "dark":  return .dark
-        default:      return nil
-        }
-    }
-
-    // MARK: - 会话表单弹窗
-
-    private var sessionFormSheet: some View {
-        SessionFormSheet(
-            editingSession: sessionStore.editingSession,
-            groups: groupStore.groups,
-            onSave: { session in
-                Task {
-                    await sessionStore.saveSession(session)
-                    sessionStore.dismissSessionForm()
-                }
-            },
-            onCancel: {
-                sessionStore.dismissSessionForm()
-            }
-        )
-    }
-
-    // MARK: - 分组表单弹窗
-
-    private var groupFormSheet: some View {
-        GroupFormSheet(
-            editingGroup: groupStore.editingGroup,
-            onSave: { group in
-                Task {
-                    await groupStore.saveGroup(group)
-                    groupStore.dismissGroupForm()
-                }
-            },
-            onCancel: {
-                groupStore.dismissGroupForm()
-            }
-        )
-    }
-
-    // MARK: - 连接方法
-
-    private func connectToSession(_ session: Session) {
-        sessionStore.selectedSessionId = session.id
-
-        // 如果该会话已有标签页，直接切换到它
-        if let existingTab = tabBarStore.tab(for: session.id) {
-            tabBarStore.selectTab(existingTab)
-        } else {
-            // 否则新建标签页
-            tabBarStore.addTab(for: session)
-        }
-
-        // 更新最后连接时间
-        Task {
-            await sessionStore.updateLastConnectedAt(for: session.id)
-        }
-    }
-}
-
-// MARK: - 窗口标签禁用器
-
-/// 原生 Window Tab Bar 禁用器
-///
-/// 使用 NSView 子类覆写 viewDidMoveToWindow()，该方法在 view 被加入窗口层级时
-/// 由 AppKit 回调，此时 window 属性保证非 nil——比 DispatchQueue.main.async 更可靠。
-///
-/// 三重防御层级（配合 AppDelegate 的 ① ② ③ 共同生效）：
-/// - AppDelegate.applicationWillFinishLaunching：类级别，拦截窗口创建前
-/// - AppDelegate.applicationDidFinishLaunching：实例级别，覆盖已有窗口
-/// - 此处：视图级别，兜底处理 NavigationSplitView 内部列窗口
-private final class _WindowTabbingDisablerView: NSView {
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        window?.tabbingMode = .disallowed
-    }
-}
-
-private struct WindowTabbingDisabler: NSViewRepresentable {
-    func makeNSView(context: Context) -> _WindowTabbingDisablerView {
-        _WindowTabbingDisablerView()
-    }
-    func updateNSView(_ nsView: _WindowTabbingDisablerView, context: Context) {}
-}
-
-// MARK: - 生命周期与通知处理 ViewModifier
-
-/// 将数据加载和菜单栏通知处理拆分为独立 ViewModifier，
-/// 避免 ContentView.body 中链式修饰符过多导致 Swift 类型检查超时
-private struct ContentViewLifecycleModifier: ViewModifier {
-
-    let sessionStore: SessionStore
-    let groupStore: GroupStore
-    let tabBarStore: TabBarStore
-    let onConnect: (Session) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            // 会话 / 分组操作
-            .onReceive(NotificationCenter.default.publisher(for: .newSessionRequested)) { _ in
-                sessionStore.showNewSessionForm()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .newGroupRequested)) { _ in
-                groupStore.showNewGroupForm()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .connectSessionRequested)) { _ in
-                if let session = sessionStore.selectedSession { onConnect(session) }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .disconnectSessionRequested)) { _ in
-                if let sessionId = tabBarStore.selectedTab?.sessionId {
-                    NotificationCenter.default.post(
-                        name: .disconnectActiveTerminalRequested,
-                        object: nil,
-                        userInfo: ["sessionId": sessionId]
-                    )
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .disconnectAllRequested)) { _ in
-                for tab in tabBarStore.tabs {
-                    NotificationCenter.default.post(
-                        name: .disconnectActiveTerminalRequested,
-                        object: nil,
-                        userInfo: ["sessionId": tab.sessionId]
-                    )
-                }
-            }
-            // 标签页操作
-            .onReceive(NotificationCenter.default.publisher(for: .newTabRequested)) { _ in
-                if let session = sessionStore.selectedSession {
-                    onConnect(session)
-                } else {
-                    sessionStore.showNewSessionForm()
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .closeTabRequested)) { _ in
-                if let tab = tabBarStore.selectedTab { tabBarStore.requestCloseTab(tab) }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .nextTabRequested)) { _ in
-                tabBarStore.selectNextTab()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .previousTabRequested)) { _ in
-                tabBarStore.selectPreviousTab()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .selectTabRequested)) { notification in
-                if let index = notification.userInfo?["index"] as? Int {
-                    tabBarStore.selectTab(at: index)
-                }
-            }
-    }
-}
-
-// MARK: - 分屏会话选择弹窗
-
-/// 选择要在分屏窗格显示的会话
-struct SplitSessionPickerView: View {
-
-    let sessions: [Session]
-    var onSelect: ((Session) -> Void)?
-    var onCancel: (() -> Void)?
-
-    @State private var searchText: String = ""
-
-    private var filteredSessions: [Session] {
-        if searchText.isEmpty { return sessions }
-        return sessions.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.host.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 标题栏
-            HStack {
-                Text("选择分屏会话")
-                    .font(DesignTokens.Typography.titleMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Spacer()
-                Button(action: { onCancel?() }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .frame(width: 24, height: 24)
-                        .background(DesignTokens.Colors.surfaceCard)
-                        .cornerRadius(12)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(DesignTokens.Spacing.lg)
-
-            Divider()
-
-            // 搜索框
-            HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                TextField("搜索会话…", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(DesignTokens.Typography.bodySmall)
-            }
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusSmall)
-            .padding(DesignTokens.Spacing.md)
-
-            // 会话列表
-            if filteredSessions.isEmpty {
-                Spacer()
-                Text("没有匹配的会话")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                Spacer()
-            } else {
-                List(filteredSessions, id: \.id) { session in
-                    Button(action: { onSelect?(session) }) {
-                        HStack(spacing: DesignTokens.Spacing.md) {
-                            Image(systemName: "terminal")
-                                .font(.system(size: 13))
-                                .foregroundColor(DesignTokens.Colors.accentPrimary)
-                                .frame(width: 20)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(session.name)
-                                    .font(DesignTokens.Typography.labelMedium)
-                                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                                Text("\(session.username)@\(session.host):\(session.port)")
-                                    .font(DesignTokens.Typography.codeSmall)
-                                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 10))
-                                .foregroundColor(DesignTokens.Colors.textTertiary)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-                .listStyle(.plain)
-            }
-
-            Divider()
-
-            // 底部按钮
-            HStack {
-                Spacer()
-                Button("取消", action: { onCancel?() })
-                    .buttonStyle(.bordered)
-            }
-            .padding(DesignTokens.Spacing.md)
-        }
-        .background(DesignTokens.Colors.surfacePanel)
-    }
-}
-
-/// 分组表单弹窗
-struct GroupFormSheet: View {
-
-    // MARK: - 属性
-
-    var editingGroup: SessionGroup?
-    var onSave: ((SessionGroup) -> Void)?
-    var onCancel: (() -> Void)?
-
-    // MARK: - 状态
-
-    @State private var name: String = ""
-    @State private var colorHex: String = "#4A90D9"
-
-    // MARK: - 预设颜色
-
-    private let presetColors: [String] = [
-        "#4A90D9", "#2DCE7A", "#F0A500", "#F04060",
-        "#9B59B6", "#E67E22", "#1ABC9C", "#34495E"
-    ]
-
-    // MARK: - 视图
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 标题
-            HStack {
-                Text(editingGroup != nil ? "编辑分组" : "新建分组")
-                    .font(DesignTokens.Typography.titleMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-
-                Spacer()
-
-                Button(action: { onCancel?() }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .frame(width: 24, height: 24)
-                        .background(DesignTokens.Colors.surfaceCard)
-                        .cornerRadius(12)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(DesignTokens.Spacing.lg)
-
-            Divider()
-
-            // 内容
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                FormField(label: "分组名称", isRequired: true) {
-                    TextField("输入分组名称", text: $name)
-                        .textFieldStyle(.roundedBorder)
-                }
-
-                FormField(label: "颜色") {
-                    HStack(spacing: DesignTokens.Spacing.sm) {
-                        ForEach(presetColors, id: \.self) { hex in
-                            Button(action: { colorHex = hex }) {
-                                Circle()
-                                    .fill(Color(hex: hex))
-                                    .frame(width: 24, height: 24)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(
-                                                colorHex == hex ? Color.white : Color.clear,
-                                                lineWidth: 2
-                                            )
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-            .padding(DesignTokens.Spacing.lg)
-
-            Spacer()
-
-            Divider()
-
-            // 底部按钮
-            HStack {
-                Spacer()
-
-                Button("取消") {
-                    onCancel?()
-                }
-                .buttonStyle(.bordered)
-
-                Button(editingGroup != nil ? "保存" : "创建") {
-                    saveGroup()
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding(DesignTokens.Spacing.lg)
-        }
-        .frame(width: 400, height: 280)
-        .background(DesignTokens.Colors.surfacePanel)
-        .onAppear {
-            if let group = editingGroup {
-                name = group.name
-                colorHex = group.colorHex
-            }
-        }
-    }
-
-    private func saveGroup() {
-        let group: SessionGroup
-        if let existing = editingGroup {
-            group = SessionGroup(
-                id: existing.id,
-                name: name.trimmingCharacters(in: .whitespaces),
-                colorHex: colorHex,
-                sortOrder: existing.sortOrder,
-                isExpanded: existing.isExpanded,
-                modifiedAt: Date(),
-                parentId: existing.parentId,
-                childrenIds: existing.childrenIds
-            )
-        } else {
-            group = SessionGroup(
-                name: name.trimmingCharacters(in: .whitespaces),
-                colorHex: colorHex
-            )
-        }
-        onSave?(group)
+        // 终端区域使用纯色背景，零毛玻璃，降低 GPU 渲染压力（W27 Sprint-01 §修改意见3）
+        .background(DesignTokens.Colors.terminalBackground)
     }
 }
 

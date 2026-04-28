@@ -81,7 +81,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
         }
 
         isGloballyInitialized = true
-        print("[LibSSH2] 全局初始化完成")
+        AppLogger.ssh.debug("[LibSSH2] 全局初始化完成")
     }
 
     // MARK: - 会话初始化
@@ -89,7 +89,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
     /// 初始化 SSH 会话
     func sessionInit() throws {
         guard session == nil else {
-            print("[LibSSH2] 会话已存在，跳过初始化")
+            AppLogger.ssh.debug("[LibSSH2] 会话已存在，跳过初始化")
             return
         }
 
@@ -99,7 +99,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.libssh2Error(code: -1, message: "无法创建 SSH 会话")
         }
 
-        print("[LibSSH2] SSH 会话初始化完成")
+        AppLogger.ssh.debug("[LibSSH2] SSH 会话初始化完成")
     }
 
     /// 设置会话阻塞模式
@@ -120,7 +120,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
     /// 建立 TCP 连接
     func tcpConnect(host: String, port: Int32) throws {
         guard socketFD < 0 else {
-            print("[LibSSH2] TCP 已连接")
+            AppLogger.ssh.debug("[LibSSH2] TCP 已连接")
             return
         }
 
@@ -160,7 +160,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
         connectedHost = host
         connectedPort = port
 
-        print("[LibSSH2] TCP 连接成功: \(host):\(port)")
+        AppLogger.ssh.debug("[LibSSH2] TCP 连接成功: \(host):\(port)")
     }
 
     // MARK: - SSH 握手
@@ -184,7 +184,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.handshakeFailed(reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] SSH 握手完成")
+        AppLogger.ssh.debug("[LibSSH2] SSH 握手完成")
     }
 
     /// 在已有文件描述符上执行 SSH 握手（用于 ProxyJump 多跳：socketpair 桥接通道）
@@ -205,7 +205,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.handshakeFailed(reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] 通过 socketpair 完成 SSH 握手（ProxyJump 中间跳）")
+        AppLogger.ssh.debug("[LibSSH2] 通过 socketpair 完成 SSH 握手（ProxyJump 中间跳）")
     }
 
     /// 获取主机密钥指纹
@@ -282,7 +282,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.authenticationFailed(method: "password", reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] 密码认证成功")
+        AppLogger.ssh.debug("[LibSSH2] 密码认证成功")
     }
 
     /// 使用公钥认证
@@ -319,7 +319,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.authenticationFailed(method: "publickey", reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] 公钥认证成功")
+        AppLogger.ssh.debug("[LibSSH2] 公钥认证成功")
     }
 
     /// 使用 SSH Agent 认证
@@ -352,7 +352,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
         while libssh2_agent_get_identity(agent, &identity, prevIdentity) == 0 {
             if let identity = identity {
                 if libssh2_agent_userauth(agent, username, identity) == 0 {
-                    print("[LibSSH2] SSH Agent 认证成功")
+                    AppLogger.ssh.debug("[LibSSH2] SSH Agent 认证成功")
                     return
                 }
             }
@@ -391,7 +391,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             }
         } while channel == nil
 
-        print("[LibSSH2] Shell 通道已打开")
+        AppLogger.ssh.debug("[LibSSH2] Shell 通道已打开")
         return channel!
     }
 
@@ -416,7 +416,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.ptyRequestFailed(reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] PTY 请求成功: \(cols)x\(rows)")
+        AppLogger.ssh.debug("[LibSSH2] PTY 请求成功: \(cols)x\(rows)")
     }
 
     /// 启动 Shell
@@ -437,7 +437,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             throw SSHError.shellStartFailed(reason: getLastErrorMessage())
         }
 
-        print("[LibSSH2] Shell 已启动")
+        AppLogger.ssh.debug("[LibSSH2] Shell 已启动")
     }
 
     /// 读取通道数据
@@ -459,7 +459,7 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
     func closeChannel(channel: OpaquePointer) {
         libssh2_channel_close(channel)
         libssh2_channel_free(channel)
-        print("[LibSSH2] 通道已关闭")
+        AppLogger.ssh.debug("[LibSSH2] 通道已关闭")
     }
 
     /// 执行命令并返回 stdout 输出（阻塞，适合指标采集等轻量命令）
@@ -535,13 +535,13 @@ final class LibSSH2BridgeReal: @unchecked Sendable {
             libssh2_session_disconnect_ex(session, SSH_DISCONNECT_BY_APPLICATION, reason, "")
             libssh2_session_free(session)
             self.session = nil
-            print("[LibSSH2] SSH 会话已关闭")
+            AppLogger.ssh.debug("[LibSSH2] SSH 会话已关闭")
         }
 
         if socketFD >= 0 {
             Darwin.close(socketFD)
             socketFD = -1
-            print("[LibSSH2] TCP 连接已关闭")
+            AppLogger.ssh.debug("[LibSSH2] TCP 连接已关闭")
         }
 
         connectedHost = nil
@@ -630,14 +630,14 @@ extension LibSSH2BridgeReal {
             }
         } while sftp == nil
 
-        print("[LibSSH2] SFTP 子系统已打开")
+        AppLogger.ssh.debug("[LibSSH2] SFTP 子系统已打开")
         return sftp!
     }
 
     /// 关闭 SFTP 子系统
     func closeSFTPSubsystem(_ sftp: OpaquePointer) {
         libssh2_sftp_shutdown(sftp)
-        print("[LibSSH2] SFTP 子系统已关闭")
+        AppLogger.ssh.debug("[LibSSH2] SFTP 子系统已关闭")
     }
 
     // MARK: - 目录操作

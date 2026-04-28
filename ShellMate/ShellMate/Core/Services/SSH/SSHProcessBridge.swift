@@ -134,7 +134,7 @@ final class SSHProcessBridge {
             // 开始读取数据
             startReading()
 
-            print("[SSHProcessBridge] SSH 进程已启动 PID: \(proc.processIdentifier)")
+            AppLogger.ssh.debug("[SSHProcessBridge] SSH 进程已启动 PID: \(proc.processIdentifier)")
 
         } catch {
             closePTY()
@@ -212,7 +212,7 @@ final class SSHProcessBridge {
             self.isConnected = true
             startReading()
 
-            print("[SSHProcessBridge] SSH 密钥连接已启动")
+            AppLogger.ssh.debug("[SSHProcessBridge] SSH 密钥连接已启动")
 
         } catch {
             closePTY()
@@ -235,7 +235,7 @@ final class SSHProcessBridge {
         // 关闭 PTY
         closePTY()
 
-        print("[SSHProcessBridge] 已断开连接")
+        AppLogger.ssh.debug("[SSHProcessBridge] 已断开连接")
     }
 
     // MARK: - 数据传输
@@ -274,7 +274,7 @@ final class SSHProcessBridge {
 
         _ = ioctl(masterFD, TIOCSWINSZ, &winSize)
 
-        print("[SSHProcessBridge] 终端尺寸已调整: \(columns)x\(rows)")
+        AppLogger.ssh.debug("[SSHProcessBridge] 终端尺寸已调整: \(columns)x\(rows)")
     }
 
     // MARK: - 私有方法
@@ -301,7 +301,7 @@ final class SSHProcessBridge {
         let flags = fcntl(masterFD, F_GETFL, 0)
         _ = fcntl(masterFD, F_SETFL, flags | O_NONBLOCK)
 
-        print("[SSHProcessBridge] PTY 已创建 master=\(masterFD) slave=\(slaveFD)")
+        AppLogger.ssh.debug("[SSHProcessBridge] PTY 已创建 master=\(self.masterFD) slave=\(self.slaveFD)")
     }
 
     /// 关闭 PTY
@@ -337,7 +337,7 @@ final class SSHProcessBridge {
     /// 读取循环
     private func readLoop() {
         // W15.5：32KB 缓冲区与 SSH2Connection 对齐，减少 read() 系统调用频率
-        let bufferSize = 32768
+        let bufferSize = AppConstants.sshReadBufferSize
         var buffer = [UInt8](repeating: 0, count: bufferSize)
 
         while isConnected && masterFD >= 0 {
@@ -471,7 +471,7 @@ actor SSHProcessConnection {
         self.bridge = processBridge
         state = .connected
 
-        print("[SSHProcessConnection] 连接成功")
+        AppLogger.ssh.debug("[SSHProcessConnection] 连接成功")
     }
 
     /// 断开连接

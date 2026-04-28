@@ -20,26 +20,52 @@ ShellMate 是一款面向专业开发者/运维工程师的 macOS 原生 SSH 会
 ### 2.1 需求与定义层 (MRD/PRD)
 * 📄 **[ShellMate MRD](./ShellMate_MRD.md)** - 明确产品定位、目标用户群和各阶段里程碑目标。
 * 📄 **[ShellMate PRD](./ShellMate_PRD.md)** - 详细的功能模块定义、数据模型（10章）、错误处理规范和 10 个 P0 级验收用例。
-* 📄 **[原型设计规范](./原型.md)** - 线框图与组件布局定义（ASCII 格式），涵盖完整的弹窗、覆层及错误弹窗细节。
 
 ### 2.2 技术架构层 (Tech Spec/DB)
-* 📄 **[技术方案](./技术方案.md)** - 涵盖 4 层架构图、Swift Concurrency 的应用、SSH 连接状态机、CloudKit 同步设计与 6 个高风险点的解决方案。
+* 📄 **[技术方案](./技术方案.md)**（v3.0）- 涵盖 4 层架构图、SSH 连接状态机、AI 服务层、系统性能监控、欢迎引导、脚本自动化、录制回放、日志面板、导入导出等新模块设计，以及 Figma-Spec-v2 UI 令牌系统（§3.16）。
 * 📄 **[数据库设计文档](./数据库设计文档.md)** - 详述 10 个 Core Data Entity（基于 SQLite）、枚举对应关系、关联层级以及 Keychain 桥接策略。
 
 ### 2.3 进度与管理层
 * 📄 **[开发进度](./开发进度.md)** - 17 周项目详细 WBS 与 RACI 矩阵，追踪当前项目进展。
 
-### 2.4 UI 设计规范层 (Figma Specs)
-*(存放在 `./shellmate-figma-spec/` 目录)*
-* **[`00-总纲与设计令牌.md`](./shellmate-figma-spec/00-总纲与设计令牌.md)** - 颜色（Semantic System）、排版、尺寸常量（Tokens）。
-* **[`01-界面布局规范.md`](./shellmate-figma-spec/01-界面布局规范.md)** - 涵盖主界面、分屏、侧边栏折叠等场景的嵌套布局（Auto Layout 逻辑）。
-* **[`02-SF_Symbols图标规范.md`](./shellmate-figma-spec/02-SF_Symbols图标规范.md)** - 标准化图标清单及颜色设定。
-* **[`03-动效与交互规范.md`](./shellmate-figma-spec/03-动效与交互规范.md)** - 微交互定义，包含弹性曲线（Spring parameters）。
-* **[`04-可访问性与Handoff检查清单.md`](./shellmate-figma-spec/04-可访问性与Handoff检查清单.md)** - VoiceOver 标签定义以及开发 Handoff 的注意点。
-* **[`05-弹窗D04D05规范.md`](./shellmate-figma-spec/05-弹窗D04D05规范.md)** - 隧道管理器、快捷命令管理器专项。
-* **[`06-设置面板规范.md`](./shellmate-figma-spec/06-设置面板规范.md)** - 高亮、外观、安全的具体布局。
-* **[`07-终端覆层规范.md`](./shellmate-figma-spec/07-终端覆层规范.md)** - 终端内搜寻、Compose Pane 等覆盖层。
-* **[`08-缺失组件补充.md`](./shellmate-figma-spec/08-缺失组件补充.md)** - Segmented Control, Slider及骨架屏等组件。
+### 2.4 UI 设计规范层（Figma Make 直接实现）
+
+> **⚠️ UI 规范唯一来源：Figma Make 原型 `upl5OBUkpLGnOe1u5aQRZ5`（2026-04-26 起）。**
+> 所有 UI 实现必须通过 Figma MCP 读取原型源码（`WelcomeScreen.tsx`、`Sidebar.tsx` 等）1:1 实现，不再维护任何本地 Markdown 规范文档。
+
+**Figma Make 文件访问方式：**
+```
+fileKey: upl5OBUkpLGnOe1u5aQRZ5
+MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
+组件路径: file://figma/make/source/upl5OBUkpLGnOe1u5aQRZ5/src/app/components/
+```
+
+**已完成 1:1 实现的组件（按 Figma 组件文件对应）：**
+* ✅ `WelcomeScreen.tsx` → `Features/Welcome/WelcomeScreenView.swift`
+* ✅ `Toolbar.tsx` → `App/ContentViewToolbar.swift`
+* ✅ `Sidebar.tsx` → `Features/Sidebar/SessionSidebarView.swift` + `SessionRowView.swift` + `GroupHeaderView.swift`
+* ✅ `Terminal.tsx` → `Features/Terminal/TerminalView.swift`（SwiftTerm 渲染层无法 1:1 映射，已对齐 ToolbarButton hover/圆角样式）
+* ✅ `StatusBar.tsx` → `Features/StatusBar/TerminalStatusBarView.swift`
+* ✅ `NewSessionDialog.tsx` → `Features/SessionForm/SessionFormSheet.swift` + `Shared/Components/FormComponents.swift`
+* ✅ `SettingsDialog.tsx` → `Features/Settings/SettingsView.swift`（Tab bar bg-black/5、active tab bg-white、容器 white/95 backdrop-blur）
+* ✅ `AIAssistantPanel.tsx` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
+* ✅ `FileTransferPanel.tsx` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
+* ✅ `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
+* ✅ `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
+* ✅ `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
+* ✅ `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
+
+* ✅ `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
+
+* ✅ `LogViewerDialog.tsx` → `Features/Logs/LogPanelView.swift`
+
+* ✅ `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`
+
+* ✅ `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
+
+* ✅ `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
+
+**所有 Figma Make 组件均已完成 1:1 实现。**
 
 ---
 

@@ -183,7 +183,7 @@ class TerminalNSTextView: NSTextView {
     TerminalTextView(
         output: .constant("ubuntu@server:~$ ls -la\ntotal 48\ndrwxr-xr-x  12 ubuntu ubuntu 4096 Mar 19 12:00 .\ndrwxr-xr-x   3 root   root   4096 Mar 19 11:00 ..\n-rw-r--r--   1 ubuntu ubuntu  220 Mar 19 11:00 .bash_logout\n-rw-r--r--   1 ubuntu ubuntu 3771 Mar 19 11:00 .bashrc\nubuntu@server:~$ "),
         onKeyPress: { key in
-            print("Key pressed: \(key.debugDescription)")
+            AppLogger.general.debug("Key pressed: \(key.debugDescription)")
         }
     )
     .frame(width: 600, height: 400)

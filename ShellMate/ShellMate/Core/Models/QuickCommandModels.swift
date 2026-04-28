@@ -1,4 +1,5 @@
 import Foundation
+import CoreData
 
 // MARK: - 快捷命令
 
@@ -48,6 +49,18 @@ struct QuickCommand: Identifiable, Codable, Equatable {
         self.shortcut = shortcut
         self.sortOrder = sortOrder
     }
+
+    /// 从 Core Data 实体构造
+    init(from entity: CDQuickCommand) {
+        self.id = entity.id ?? UUID()
+        self.name = entity.name ?? ""
+        self.content = entity.commandText ?? ""
+        self.appendNewline = entity.appendNewline
+        self.sendLineByLine = entity.lineByLine
+        self.lineDelay = Int(entity.lineDelay)
+        self.shortcut = entity.shortcut
+        self.sortOrder = Int(entity.sortOrder)
+    }
 }
 
 // MARK: - 快捷命令集
@@ -81,6 +94,16 @@ struct QuickCommandSet: Identifiable, Codable, Equatable {
     /// 按 sortOrder 排序后的命令列表
     var sortedCommands: [QuickCommand] {
         commands.sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    /// 从 Core Data 实体构造
+    init(from entity: CDQuickCommandSet) {
+        self.id = entity.id ?? UUID()
+        self.name = entity.name ?? ""
+        self.sortOrder = Int(entity.sortOrder)
+        let cmds = (entity.commands as? Set<CDQuickCommand>) ?? []
+        self.commands = cmds.map { QuickCommand(from: $0) }
+            .sorted { $0.sortOrder < $1.sortOrder }
     }
 
     /// 默认命令集（含常用系统命令示例）

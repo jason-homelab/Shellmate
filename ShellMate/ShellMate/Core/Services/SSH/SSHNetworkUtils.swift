@@ -276,7 +276,7 @@ final class TCPConnector: @unchecked Sendable {
     func connect(host: String, port: Int32) async throws -> Int32 {
         // DNS 解析
         let dnsResult = try await dnsResolver.resolve(host)
-        print("[TCPConnector] DNS 解析完成: \(dnsResult.addresses) (\(dnsResult.resolutionTime)ms)")
+        AppLogger.ssh.debug("[TCPConnector] DNS 解析完成: \(dnsResult.addresses) (\(dnsResult.resolutionTime)ms)")
 
         // 选择地址
         guard let address = selectAddress(from: dnsResult) else {
@@ -355,7 +355,7 @@ final class TCPConnector: @unchecked Sendable {
         flags = fcntl(fd, F_GETFL, 0)
         _ = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK)
 
-        print("[TCPConnector] TCP 连接成功: \(address):\(port)")
+        AppLogger.ssh.debug("[TCPConnector] TCP 连接成功: \(address):\(port)")
         return fd
     }
 
@@ -509,14 +509,14 @@ final class NetworkReachabilityMonitor {
         monitor.start(queue: monitorQueue)
         pathMonitor = monitor
 
-        print("[NetworkMonitor] 开始监控网络状态")
+        AppLogger.ssh.debug("[NetworkMonitor] 开始监控网络状态")
     }
 
     /// 停止监控
     func stopMonitoring() {
         pathMonitor?.cancel()
         pathMonitor = nil
-        print("[NetworkMonitor] 停止监控网络状态")
+        AppLogger.ssh.debug("[NetworkMonitor] 停止监控网络状态")
     }
 
     /// 检查主机是否可达

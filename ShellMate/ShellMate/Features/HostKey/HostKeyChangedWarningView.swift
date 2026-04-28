@@ -73,7 +73,14 @@ struct HostKeyChangedWarningView: View {
             footerView
         }
         .frame(width: 560, height: 620)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
 
     // MARK: - 子视图
@@ -82,7 +89,7 @@ struct HostKeyChangedWarningView: View {
     private var warningHeader: some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 24))
+                .font(DesignTokens.Typography.displaySmall)
                 .foregroundColor(DesignTokens.Colors.statusError)
 
             Text("安全警告：主机密钥已变更")
@@ -100,7 +107,7 @@ struct HostKeyChangedWarningView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
                 Image(systemName: "shield.slash.fill")
-                    .font(.system(size: 40))
+                    .font(DesignTokens.Typography.heroMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -118,7 +125,7 @@ struct HostKeyChangedWarningView: View {
             // 中间人攻击警告
             HStack(spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "person.fill.xmark")
-                    .font(.system(size: 16))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 Text("有人可能正在拦截您的连接（中间人攻击）")
@@ -129,7 +136,7 @@ struct HostKeyChangedWarningView: View {
             .padding(DesignTokens.Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(DesignTokens.Colors.statusError.opacity(0.15))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
         }
     }
 
@@ -201,7 +208,7 @@ struct HostKeyChangedWarningView: View {
 
                 // 箭头
                 Image(systemName: "arrow.down")
-                    .font(.system(size: 16))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 // 新指纹
@@ -214,7 +221,12 @@ struct HostKeyChangedWarningView: View {
             }
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
 
             if showDetails {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -243,7 +255,12 @@ struct HostKeyChangedWarningView: View {
             }
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
         }
     }
 
@@ -255,23 +272,29 @@ struct HostKeyChangedWarningView: View {
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                Toggle(isOn: $understandRisk) {
+                HStack {
                     Text("我理解继续连接可能导致凭据泄露")
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $understandRisk)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
-                .toggleStyle(.checkbox)
 
-                Toggle(isOn: $verifiedNewKey) {
+                HStack {
                     Text("我已通过其他渠道验证了新的主机密钥")
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $verifiedNewKey)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
-                .toggleStyle(.checkbox)
             }
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.statusError.opacity(0.05))
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium)
                     .stroke(DesignTokens.Colors.statusError.opacity(0.3), lineWidth: 1)
@@ -314,11 +337,11 @@ struct HostKeyChangedWarningView: View {
     private func causeRow(icon: String, title: String, description: String, severity: Severity) -> some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(severity.color)
                 .frame(width: 20)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -336,7 +359,7 @@ struct HostKeyChangedWarningView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(color)
 
                 Text(label)

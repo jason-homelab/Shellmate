@@ -46,22 +46,27 @@ struct SyncInputConfirmView: View {
             actionBar
         }
         .frame(width: 400)
-        .background(DesignTokens.Colors.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .background(DesignTokens.Colors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 12)
+        .shadow(color: .black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
 
     // MARK: - 子视图
 
     private var headerView: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "square.grid.2x2.fill")
-                .font(.system(size: 14))
-                .foregroundColor(.orange)
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 32, height: 32)
+                Image(systemName: "square.grid.2x2.fill")
+                    .font(DesignTokens.Typography.bodyLargeStrong)
+                    .foregroundColor(.orange)
+            }
             Text("启用同步输入模式")
                 .font(DesignTokens.Typography.labelLarge)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -71,23 +76,28 @@ struct SyncInputConfirmView: View {
     }
 
     private var warningBanner: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 13))
-                .foregroundColor(.orange)
-            Text("同步输入会将你的每次键盘输入广播到所有已选终端，请谨慎操作，避免误操作生产环境。")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(.orange.opacity(0.9))
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 0) {
+            Divider()
+            HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(DesignTokens.Typography.bodyMedium)
+                    .foregroundColor(.orange)
+                    .padding(.top, DesignTokens.Spacing.px)
+                Text("同步输入会将你的每次键盘输入广播到所有已选终端，请谨慎操作，避免误操作生产环境。")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(DesignTokens.Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.10))
+            Divider()
         }
-        .padding(DesignTokens.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.12))
     }
 
     private var sessionList: some View {
         let sessions = syncStore.registeredSessionInfos()
-        return VStack(alignment: .leading, spacing: 2) {
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
             Text("选择参与同步的终端：")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -115,11 +125,19 @@ struct SyncInputConfirmView: View {
         let isCurrent  = info.id == currentSessionId
 
         return HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                .font(.system(size: 14))
-                .foregroundColor(isSelected
-                    ? DesignTokens.Colors.accentPrimary
-                    : DesignTokens.Colors.textTertiary)
+            // 勾选指示器
+            ZStack {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(isSelected
+                        ? DesignTokens.Colors.accentPrimary
+                        : DesignTokens.Colors.surfaceHover)
+                    .frame(width: 18, height: 18)
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(DesignTokens.Typography.captionMedium)
+                        .foregroundColor(.white)
+                }
+            }
 
             Circle()
                 .fill(info.state.stateColor.dotColor)
@@ -130,15 +148,22 @@ struct SyncInputConfirmView: View {
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             if isCurrent {
-                Text("（当前）")
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Text("当前")
+                    .font(DesignTokens.Typography.captionMedium)
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+                    .padding(.horizontal, DesignTokens.Spacing.xs)
+                    .padding(.vertical, DesignTokens.Spacing.xxxs)
+                    .background(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                    .clipShape(Capsule())
             }
 
             Spacer()
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 6)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        .background(isSelected
+            ? DesignTokens.Colors.accentPrimary.opacity(0.06)
+            : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
             // 当前终端默认选中，不允许取消

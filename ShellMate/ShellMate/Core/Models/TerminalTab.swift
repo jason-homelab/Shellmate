@@ -9,7 +9,7 @@ struct TerminalTab: Identifiable, Equatable, Hashable {
     /// 唯一标识符
     let id: UUID
 
-    /// 关联的会话 ID
+    /// 关联的会话 ID（本地终端标签页时为占位 UUID，不对应任何 Session）
     let sessionId: UUID
 
     /// 标签标题

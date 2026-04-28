@@ -11,9 +11,21 @@ struct SessionBasicTab: View {
     @Binding var port: String
     @Binding var username: String
     @Binding var selectedGroupId: UUID?
+    @Binding var connectionProtocol: String
 
     /// 可选分组列表
     var groups: [SessionGroup] = []
+
+    private let protocols = ["SSH", "Telnet", "Serial"]
+
+    /// 各协议的默认端口
+    private func defaultPort(for proto: String) -> String {
+        switch proto {
+        case "Telnet": return "23"
+        case "Serial": return ""
+        default: return "22"
+        }
+    }
 
     // MARK: - 私有辅助
 
@@ -31,29 +43,44 @@ struct SessionBasicTab: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+            // 连接协议
+            FormField(label: "连接协议", isRequired: true) {
+                Picker("", selection: $connectionProtocol) {
+                    ForEach(protocols, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 200)
+                .onChange(of: connectionProtocol) { newProto in
+                    // 自动填充对应协议的默认端口（仅在当前端口是已知默认值时才更新）
+                    let knownDefaults = ["22", "23", ""]
+                    if knownDefaults.contains(port) {
+                        port = defaultPort(for: newProto)
+                    }
+                }
+            }
+
+            Divider()
+
             // 会话名称
             FormField(label: "会话名称", isRequired: true) {
-                TextField("输入会话名称", text: $name)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "输入会话名称", text: $name)
             }
 
             // 主机地址
             FormField(label: "主机地址", isRequired: true) {
-                TextField("例如: 192.168.1.100 或 example.com", text: $host)
-                    .textFieldStyle(.roundedBorder)
+                CustomTextField(placeholder: "例如: 192.168.1.100 或 example.com", text: $host)
             }
 
             // 端口和用户名（并排）
             HStack(spacing: DesignTokens.Spacing.lg) {
                 FormField(label: "端口", isRequired: true) {
-                    TextField("22", text: $port)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "22", text: $port)
                         .frame(width: 80)
                 }
 
                 FormField(label: "用户名", isRequired: true) {
-                    TextField("root", text: $username)
-                        .textFieldStyle(.roundedBorder)
+                    CustomTextField(placeholder: "root", text: $username)
                 }
             }
 
@@ -90,6 +117,7 @@ struct SessionBasicTab: View {
         port: .constant("22"),
         username: .constant("root"),
         selectedGroupId: .constant(nil),
+        connectionProtocol: .constant("SSH"),
         groups: SessionGroup.previewList
     )
     .frame(width: 480)

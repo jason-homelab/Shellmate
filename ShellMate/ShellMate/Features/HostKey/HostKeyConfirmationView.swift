@@ -71,7 +71,14 @@ struct HostKeyConfirmationView: View {
             footerView
         }
         .frame(width: 520, height: 480)
-        .background(DesignTokens.Colors.surfacePanel)
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
 
     // MARK: - 子视图
@@ -80,7 +87,7 @@ struct HostKeyConfirmationView: View {
     private var headerView: some View {
         HStack {
             Image(systemName: "key.fill")
-                .font(.system(size: 20))
+                .font(DesignTokens.Typography.titleLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
             Text("验证主机密钥")
@@ -91,11 +98,11 @@ struct HostKeyConfirmationView: View {
 
             Button(action: { onCancel?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(DesignTokens.Colors.surfaceCard)
-                    .cornerRadius(12)
+                    .background(DesignTokens.Colors.surfaceHover)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             }
             .buttonStyle(.plain)
         }
@@ -106,7 +113,7 @@ struct HostKeyConfirmationView: View {
     private var warningSection: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             Image(systemName: "exclamationmark.shield.fill")
-                .font(.system(size: 32))
+                .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -122,7 +129,7 @@ struct HostKeyConfirmationView: View {
         }
         .padding(DesignTokens.Spacing.md)
         .background(DesignTokens.Colors.statusConnecting.opacity(0.1))
-        .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
     }
 
     /// 主机信息
@@ -139,7 +146,12 @@ struct HostKeyConfirmationView: View {
             }
             .padding(DesignTokens.Spacing.md)
             .background(DesignTokens.Colors.surfaceCard)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
         }
     }
 
@@ -173,15 +185,19 @@ struct HostKeyConfirmationView: View {
 
                 Button(action: copyFingerprint) {
                     Image(systemName: "doc.on.doc")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
                 .buttonStyle(.plain)
                 .help("复制指纹")
             }
             .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceWindow)
-            .cornerRadius(DesignTokens.Sizes.cornerRadiusMedium)
+            .background(DesignTokens.Colors.surfaceHover)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
         }
     }
 
@@ -203,7 +219,7 @@ struct HostKeyConfirmationView: View {
     /// 记住选项
     private var rememberOptionSection: some View {
         Toggle(isOn: $rememberHost) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("记住此主机")
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -223,7 +239,7 @@ struct HostKeyConfirmationView: View {
             // 显示连接风险提示
             HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "info.circle")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
 
                 Text("确认后将建立 SSH 连接")
@@ -272,7 +288,7 @@ struct HostKeyConfirmationView: View {
     private func tipRow(icon: String, text: String, isWarning: Bool = false) -> some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(isWarning ? DesignTokens.Colors.statusError : DesignTokens.Colors.statusConnected)
 
             Text(text)

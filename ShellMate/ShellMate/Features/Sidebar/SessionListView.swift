@@ -12,11 +12,13 @@ struct SessionListView: View {
     /// 双击会话回调（连接）
     var onConnect: ((Session) -> Void)?
 
+    @Environment(\.openWindow) private var openWindow
+
     // MARK: - 视图
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: []) {
+            LazyVStack(spacing: DesignTokens.Spacing.xxxs, pinnedViews: []) {
                 // 未分组的会话
                 ungroupedSessionsSection
 
@@ -25,7 +27,8 @@ struct SessionListView: View {
                     groupSection(group)
                 }
             }
-            .padding(.vertical, DesignTokens.Spacing.xs)
+            // Figma: p-2 = 8pt 四周
+            .padding(DesignTokens.Spacing.sm)
         }
     }
 
@@ -35,26 +38,19 @@ struct SessionListView: View {
     private var ungroupedSessionsSection: some View {
         let ungroupedSessions = sessionStore.filteredSessions.filter { $0.groupId == nil }
 
-        // 未分组区域头部（有未分组会话或有分组时始终显示，作为拖拽目标）
+        // 未分组拖拽目标区域（透明，不显示标签）
         if !ungroupedSessions.isEmpty || !groupStore.topLevelGroups.isEmpty {
-            HStack {
-                Text("未分组")
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                Spacer()
-            }
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.xs)
-            .background(Color.clear)
-            .dropDestination(for: String.self) { items, _ in
-                guard let idString = items.first,
-                      let sessionId = UUID(uuidString: idString),
-                      let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
-                      session.groupId != nil else { return false }
-                draggedSessionId = nil
-                Task { await sessionStore.moveSession(session, to: nil) }
-                return true
-            }
+            Color.clear
+                .frame(height: 4)
+                .dropDestination(for: String.self) { items, _ in
+                    guard let idString = items.first,
+                          let sessionId = UUID(uuidString: idString),
+                          let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
+                          session.groupId != nil else { return false }
+                    draggedSessionId = nil
+                    Task { await sessionStore.moveSession(session, to: nil) }
+                    return true
+                }
         }
 
         ForEach(ungroupedSessions) { session in
@@ -119,19 +115,35 @@ struct SessionListView: View {
     /// 正在拖拽的会话 ID
     @State private var draggedSessionId: UUID?
 
+    /// 当前拖拽悬停的目标会话 ID（用于显示插入指示线）
+    @State private var dropTargetSessionId: UUID?
+
     // MARK: - 会话行
 
     @ViewBuilder
     private func sessionRow(_ session: Session) -> some View {
-        SessionRowView(
-            session: session,
-            isSelected: sessionStore.selectedSessionId == session.id,
-            onDoubleClick: {
-                onConnect?(session)
+        VStack(spacing: 0) {
+            // 拖拽插入指示线（当前悬停目标上方显示蓝色线条）
+            if dropTargetSessionId == session.id && draggedSessionId != session.id {
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(DesignTokens.Colors.accentPrimary)
+                    .frame(height: 2)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .transition(.opacity)
             }
-        )
+
+            SessionRowView(
+                session: session,
+                isSelected: sessionStore.selectedSessionId == session.id,
+                onDoubleClick: {
+                    onConnect?(session)
+                }
+            )
+            .opacity(draggedSessionId == session.id ? 0.4 : 1.0)
+        }
         .onTapGesture {
-            sessionStore.selectedSessionId = session.id
+            // Figma-Spec-v2 §02：单击侧边栏会话行即切换/连接（无需双击）
+            onConnect?(session)
         }
         .contextMenu {
             sessionContextMenu(session)
@@ -143,7 +155,8 @@ struct SessionListView: View {
         .onDrop(of: [.text], delegate: SessionDropDelegate(
             targetSession: session,
             sessionStore: sessionStore,
-            draggedSessionId: $draggedSessionId
+            draggedSessionId: $draggedSessionId,
+            dropTargetSessionId: $dropTargetSessionId
         ))
     }
 
@@ -155,10 +168,24 @@ struct SessionListView: View {
             onConnect?(session)
         }
 
+        Button("在新窗口打开") {
+            // 选中会话，写入待连接会话 ID，再打开新窗口（新窗口会自动连接）
+            sessionStore.selectedSessionId = session.id
+            UserDefaults.standard.set(session.id.uuidString, forKey: "pendingAutoConnectSessionId")
+            openWindow(id: "main")
+        }
+
         Divider()
 
         Button("编辑") {
-            sessionStore.showEditSessionForm(for: session)
+            // 从 store 取最新快照：拖拽后 session 闭包参数可能已过期（groupId 为旧值）
+            let fresh = sessionStore.sessions.first(where: { $0.id == session.id }) ?? session
+            sessionStore.showEditSessionForm(for: fresh)
+        }
+
+        Button("重命名") {
+            let fresh = sessionStore.sessions.first(where: { $0.id == session.id }) ?? session
+            sessionStore.showEditSessionForm(for: fresh)
         }
 
         Button("复制") {
@@ -203,6 +230,10 @@ struct SessionListView: View {
 
     @ViewBuilder
     private func groupContextMenu(_ group: SessionGroup) -> some View {
+        Button("新建会话") {
+            sessionStore.showNewSessionForm(groupId: group.id)
+        }
+
         Button("编辑分组") {
             groupStore.showEditGroupForm(for: group)
         }
@@ -300,47 +331,34 @@ struct SessionListView: View {
 // MARK: - 会话拖拽代理
 
 /// 会话拖拽代理
-/// 处理会话行之间的拖拽排序
+/// 处理会话行之间的拖拽排序（本地即时重排 + 放下时持久化）
 struct SessionDropDelegate: DropDelegate {
     let targetSession: Session
     let sessionStore: SessionStore
     @Binding var draggedSessionId: UUID?
+    @Binding var dropTargetSessionId: UUID?
 
     func performDrop(info: DropInfo) -> Bool {
-        defer { draggedSessionId = nil }
-
-        // 优先从 NSItemProvider 读取，避免 @Binding 时序问题
-        let providers = info.itemProviders(for: [.text])
-        if let provider = providers.first {
-            provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { item, _ in
-                let idString: String?
-                if let data = item as? Data {
-                    idString = String(data: data, encoding: .utf8)
-                } else if let str = item as? String {
-                    idString = str
-                } else {
-                    idString = nil
-                }
-                guard let str = idString,
-                      let draggedId = UUID(uuidString: str),
-                      draggedId != targetSession.id,
-                      let draggedSession = sessionStore.filteredSessions.first(where: { $0.id == draggedId }),
-                      draggedSession.groupId != targetSession.groupId else { return }
-                Task { @MainActor in
-                    await sessionStore.moveSession(draggedSession, to: targetSession.groupId)
-                }
-            }
-            return true
+        defer {
+            draggedSessionId = nil
+            dropTargetSessionId = nil
         }
 
-        // 兜底：使用 @Binding（同组内重排时走此路径，跨组则依赖上方）
         guard let draggedId = draggedSessionId,
-              draggedId != targetSession.id,
-              let draggedSession = sessionStore.filteredSessions.first(where: { $0.id == draggedId }) else {
-            return false
+              draggedId != targetSession.id else {
+            // 兜底：从 NSItemProvider 读取（跨组移动场景）
+            return handleCrossGroupDrop(info: info)
         }
 
-        if draggedSession.groupId != targetSession.groupId {
+        let draggedSession = sessionStore.filteredSessions.first { $0.id == draggedId }
+
+        if draggedSession?.groupId == targetSession.groupId {
+            // 同组内：排序已在 dropEntered 中完成，仅需持久化
+            Task {
+                await sessionStore.persistSortOrder(in: targetSession.groupId)
+            }
+        } else if let draggedSession = draggedSession {
+            // 跨组：移动到目标分组
             Task {
                 await sessionStore.moveSession(draggedSession, to: targetSession.groupId)
             }
@@ -355,7 +373,10 @@ struct SessionDropDelegate: DropDelegate {
             return
         }
 
-        // 仅在同一分组内处理排序
+        // 更新悬停指示器
+        dropTargetSessionId = targetSession.id
+
+        // 仅在同一分组内处理即时重排
         let draggedSession = sessionStore.filteredSessions.first { $0.id == draggedId }
         guard draggedSession?.groupId == targetSession.groupId else {
             return
@@ -364,12 +385,14 @@ struct SessionDropDelegate: DropDelegate {
         let groupSessions = sessionStore.filteredSessions.filter { $0.groupId == targetSession.groupId }
 
         guard let sourceIndex = groupSessions.firstIndex(where: { $0.id == draggedId }),
-              let destinationIndex = groupSessions.firstIndex(where: { $0.id == targetSession.id }) else {
+              let destinationIndex = groupSessions.firstIndex(where: { $0.id == targetSession.id }),
+              sourceIndex != destinationIndex else {
             return
         }
 
-        Task {
-            await sessionStore.updateSortOrder(
+        // 仅做本地重排 + 动画，不触发持久化
+        withAnimation(DesignTokens.Animation.spring) {
+            sessionStore.reorderLocally(
                 from: IndexSet(integer: sourceIndex),
                 to: destinationIndex > sourceIndex ? destinationIndex + 1 : destinationIndex,
                 in: targetSession.groupId
@@ -377,8 +400,44 @@ struct SessionDropDelegate: DropDelegate {
         }
     }
 
+    func dropExited(info: DropInfo) {
+        // 离开当前目标时清除指示器
+        if dropTargetSessionId == targetSession.id {
+            dropTargetSessionId = nil
+        }
+    }
+
     func dropUpdated(info: DropInfo) -> DropProposal? {
         return DropProposal(operation: .move)
+    }
+
+    // MARK: - 跨组拖拽兜底
+
+    private func handleCrossGroupDrop(info: DropInfo) -> Bool {
+        let providers = info.itemProviders(for: [.text])
+        guard let provider = providers.first else { return false }
+
+        provider.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { item, _ in
+            let idString: String?
+            if let data = item as? Data {
+                idString = String(data: data, encoding: .utf8)
+            } else if let str = item as? String {
+                idString = str
+            } else {
+                idString = nil
+            }
+            // filteredSessions 是主 Actor 隔离属性，不能在 @Sendable 闭包内直接访问
+            // 将 UUID 解析结果传入 Task { @MainActor in } 后再查找
+            guard let str = idString,
+                  let draggedId = UUID(uuidString: str),
+                  draggedId != targetSession.id else { return }
+            Task { @MainActor in
+                guard let draggedSession = sessionStore.filteredSessions.first(where: { $0.id == draggedId }),
+                      draggedSession.groupId != targetSession.groupId else { return }
+                await sessionStore.moveSession(draggedSession, to: targetSession.groupId)
+            }
+        }
+        return true
     }
 }
 

@@ -36,7 +36,7 @@ struct AppearanceModePickerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("外观模式")
-                .font(.system(size: 11, weight: .semibold))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             HStack(spacing: 10) {
@@ -46,11 +46,11 @@ struct AppearanceModePickerView: View {
             }
 
             Text("⌘⌥1 / 2 / 3 快速切换")
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
-        .padding(14)
+        .padding(DesignTokens.Spacing.md)
         .frame(width: 260)
     }
 
@@ -61,13 +61,13 @@ struct AppearanceModePickerView: View {
         Button {
             windowMode = mode.rawValue
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: DesignTokens.Spacing.sm) {
                 // 预览图
                 modePreview(mode)
                     .frame(width: 64, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                             .stroke(
                                 isSelected
                                     ? DesignTokens.Colors.accentPrimary
@@ -83,10 +83,10 @@ struct AppearanceModePickerView: View {
                     )
 
                 // 标签 + 选中圈
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                     }
                     Text(mode.label)
@@ -109,22 +109,22 @@ struct AppearanceModePickerView: View {
         case .light:
             ZStack {
                 Color(hex: "#F5F5F5")
-                VStack(spacing: 3) {
+                VStack(spacing: DesignTokens.Spacing.nano) {
                     // 模拟标题栏
-                    HStack(spacing: 3) {
+                    HStack(spacing: DesignTokens.Spacing.nano) {
                         Circle().fill(Color(hex: "#FF5F57")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#FEBC2E")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#28C840")).frame(width: 5, height: 5)
                         Spacer()
                     }
-                    .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.horizontal, DesignTokens.Spacing.micro)
+                    .padding(.top, DesignTokens.Spacing.micro)
                     // 模拟内容
-                    RoundedRectangle(cornerRadius: 2)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusTiny)
                         .fill(Color(hex: "#E8E8E8"))
                         .frame(height: 6)
-                        .padding(.horizontal, 5)
-                    RoundedRectangle(cornerRadius: 2)
+                        .padding(.horizontal, DesignTokens.Spacing.micro)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusTiny)
                         .fill(Color(hex: "#DEDEDE"))
                         .frame(height: 6)
                         .padding(.horizontal, 10)
@@ -135,20 +135,20 @@ struct AppearanceModePickerView: View {
         case .dark:
             ZStack {
                 Color(hex: "#1C1C1E")
-                VStack(spacing: 3) {
-                    HStack(spacing: 3) {
+                VStack(spacing: DesignTokens.Spacing.nano) {
+                    HStack(spacing: DesignTokens.Spacing.nano) {
                         Circle().fill(Color(hex: "#FF5F57")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#FEBC2E")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#28C840")).frame(width: 5, height: 5)
                         Spacer()
                     }
-                    .padding(.horizontal, 5)
-                    .padding(.top, 5)
-                    RoundedRectangle(cornerRadius: 2)
+                    .padding(.horizontal, DesignTokens.Spacing.micro)
+                    .padding(.top, DesignTokens.Spacing.micro)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusTiny)
                         .fill(Color(hex: "#3A3A3C"))
                         .frame(height: 6)
-                        .padding(.horizontal, 5)
-                    RoundedRectangle(cornerRadius: 2)
+                        .padding(.horizontal, DesignTokens.Spacing.micro)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusTiny)
                         .fill(Color(hex: "#2C2C2E"))
                         .frame(height: 6)
                         .padding(.horizontal, 10)
@@ -169,14 +169,14 @@ struct AppearanceModePickerView: View {
                     .frame(width: 1)
                 // 标题栏点（横跨两色）
                 VStack {
-                    HStack(spacing: 3) {
+                    HStack(spacing: DesignTokens.Spacing.nano) {
                         Circle().fill(Color(hex: "#FF5F57")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#FEBC2E")).frame(width: 5, height: 5)
                         Circle().fill(Color(hex: "#28C840")).frame(width: 5, height: 5)
                         Spacer()
                     }
-                    .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.horizontal, DesignTokens.Spacing.micro)
+                    .padding(.top, DesignTokens.Spacing.micro)
                     Spacer()
                 }
             }
