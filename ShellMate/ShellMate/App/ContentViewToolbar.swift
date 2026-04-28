@@ -8,8 +8,7 @@ import SwiftUI
 // macOS NSToolbar 注意：
 //   - 所有 label 必须 Text(verbatim:)，防止 Localizable.strings 把"断开"自动译为 Disconnect
 //   - 单个 ToolbarItem 包裹 HStack，避免多 item ButtonStyle 丢失
-//   - principal placement 始终保留（无会话时占位），保证 primaryAction 推到最右
-//     —— 步骤 4 重构后将改为 NSToolbarDelegate flexibleSpace 方案
+//   - principal placement 仅在有活跃会话时发射，右侧由 flexibleSpace 保证贴右
 
 extension ContentView {
 
@@ -42,12 +41,14 @@ extension ContentView {
     }
 
     // MARK: - 左侧按钮区
+    // 布局对齐 Figma Toolbar.tsx:
+    //   连接(text) 断开(text) | AI Script File | Split Log Commands Tunnel Tmux
 
     @ViewBuilder
     private var leftToolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
 
-            // 连接（蓝色主操作）
+            // 连接（蓝色主操作，text + icon）
             Button {
                 if let session = sessionStore.selectedSession { connectToSession(session) }
             } label: {
@@ -58,7 +59,7 @@ extension ContentView {
             .help("连接选中会话 (⌘↩)")
             .keyboardShortcut(.return, modifiers: .command)
 
-            // 断开
+            // 断开（text only）
             Button {
                 if let sessionId = tabBarStore.selectedTab?.sessionId {
                     NotificationCenter.default.post(
@@ -74,71 +75,88 @@ extension ContentView {
             .disabled(tabBarStore.selectedTab == nil)
             .help("断开当前会话")
 
-            // AI
+            // ── 分隔线 1（Figma: Separator after Disconnect）──
+            toolbarDivider
+
+            // AI（icon-only — Sparkles）
             Button {
                 NotificationCenter.default.post(name: .aiPanelRequested, object: nil)
             } label: {
-                pillLabel(icon: "sparkle", text: "AI")
+                Label("AI 助手", systemImage: "sparkles").labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .disabled(tabBarStore.selectedTab == nil)
             .help("AI 助手 (⌘⇧A)")
             .keyboardShortcut("a", modifiers: [.command, .shift])
 
-            // 脚本
+            // 脚本（icon-only — Code2）
             Button {
                 showScriptPanel = true
             } label: {
-                pillLabel(icon: "chevron.left.forwardslash.chevron.right", text: "脚本")
+                Label("脚本自动化", systemImage: "chevron.left.forwardslash.chevron.right")
+                    .labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("脚本自动化 (⌘⇧S)")
             .keyboardShortcut("s", modifiers: [.command, .shift])
 
-            // 文件
+            // 文件（icon-only — FolderSync）
             Button {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             } label: {
-                pillLabel(icon: "arrow.up.arrow.down", text: "文件")
+                Label("文件传输", systemImage: "arrow.up.arrow.down").labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .disabled(tabBarStore.selectedTab == nil)
             .help("文件传输 (SFTP)")
 
-            // 分屏（Menu）
+            // ── 分隔线 2（Figma: Separator before SplitControls）──
+            toolbarDivider
+
+            // 分屏（Menu — icon-only label，Menu 无法套 ButtonStyle，手写样式）
             splitMenu
 
-            // 日志
+            // 日志（icon-only — FileText）
             Button {
                 showLogPanel = true
             } label: {
-                pillLabel(text: "日志")
+                Label("会话日志", systemImage: "doc.text").labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("会话日志")
 
-            // 命令
+            // 命令（icon-only — Zap）
             Button {
                 NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
             } label: {
-                pillLabel(text: "命令")
+                Label("快捷命令", systemImage: "bolt").labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("快捷命令")
 
-            // 隧道
+            // 隧道（icon-only — Network）
             Button {
                 NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
             } label: {
-                pillLabel(text: "隧道")
+                Label("隧道管理", systemImage: "network").labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("隧道管理器")
+
+            // Tmux（icon-only — Terminal）
+            Button {
+                NotificationCenter.default.post(name: .tmuxManagerRequested, object: nil)
+            } label: {
+                Label("Tmux 管理", systemImage: "terminal").labelStyle(.iconOnly)
+            }
+            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
+            .disabled(tabBarStore.selectedTab == nil)
+            .help("Tmux 管理器")
         }
     }
 
     // MARK: - 分屏 Menu
-    // Menu 不能直接套 ButtonStyle，因此 label 内联手写胶囊样式（一处特例）
+    // Menu 不能直接套 ButtonStyle，icon-only 样式内联实现。
 
     @ViewBuilder
     private var splitMenu: some View {
@@ -173,23 +191,21 @@ extension ContentView {
                 } label: { Label("关闭分屏", systemImage: "rectangle") }
             }
         } label: {
-            HStack(spacing: DesignTokens.Spacing.xxs) {
-                Image(systemName: "rectangle.split.2x1")
-                    .font(DesignTokens.Typography.labelMedium)
-                Text(verbatim: "分屏")
-                    .font(DesignTokens.Typography.labelMedium)
-            }
-            .foregroundColor(isActive
-                ? DesignTokens.Colors.accentPrimary
-                : DesignTokens.Colors.textSecondary)
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .frame(height: DesignTokens.Sizes.iconButtonSize)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                    .fill(isActive
-                        ? DesignTokens.Colors.accentPrimary.opacity(0.10)
-                        : DesignTokens.Colors.surfaceHover)
-            )
+            Image(systemName: "rectangle.split.2x1")
+                .font(DesignTokens.Typography.labelMedium)
+                .foregroundColor(isActive
+                    ? DesignTokens.Colors.accentPrimary
+                    : DesignTokens.Colors.textSecondary)
+                .frame(
+                    width: DesignTokens.Sizes.iconButtonSize,
+                    height: DesignTokens.Sizes.iconButtonSize
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .fill(isActive
+                            ? DesignTokens.Colors.accentPrimary.opacity(0.10)
+                            : DesignTokens.Colors.surfaceHover)
+                )
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
@@ -198,16 +214,14 @@ extension ContentView {
     }
 
     // MARK: - 右侧图标按钮区
+    // 对齐 Figma: ImportExport Search Info | separator | Settings
 
     @ViewBuilder
     private var rightToolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
 
-            // Label(...).labelStyle(.iconOnly) 让 VoiceOver 朗读"导入导出"，
-            // 同时视觉仅显示图标。.help() 同步提供 tooltip 与 accessibility hint。
             Button { showImportExportDialog = true } label: {
-                Label("导入导出", systemImage: "shippingbox")
-                    .labelStyle(.iconOnly)
+                Label("导入导出", systemImage: "shippingbox").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("导入 / 导出会话")
@@ -215,28 +229,41 @@ extension ContentView {
             Button {
                 NotificationCenter.default.post(name: .searchTerminalRequested, object: nil)
             } label: {
-                Label("终端搜索", systemImage: "magnifyingglass")
-                    .labelStyle(.iconOnly)
+                Label("终端搜索", systemImage: "magnifyingglass").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("终端内搜索 (⌘F)")
 
-            Button { showRecordingDialog = true } label: {
-                Label("录制", systemImage: "record.circle")
-                    .labelStyle(.iconOnly)
+            // Info（Figma: Info icon — macOS 标准 About 面板）
+            Button {
+                NSApp.orderFrontStandardAboutPanel(nil)
+            } label: {
+                Label("关于 ShellMate", systemImage: "info.circle").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("录制 / 历史")
+            .help("关于 ShellMate")
+
+            // ── 分隔线（Figma: Separator before Settings）──
+            toolbarDivider
 
             Button {
                 NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
             } label: {
-                Label("设置", systemImage: "gearshape")
-                    .labelStyle(.iconOnly)
+                Label("设置", systemImage: "gearshape").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("设置 (⌘,)")
         }
+    }
+
+    // MARK: - 工具栏竖向分隔线
+    // 对齐 Figma: h-5 mx-1 bg-[#d2d2d7]/50
+
+    private var toolbarDivider: some View {
+        Rectangle()
+            .fill(Color(hex: "#d2d2d7").opacity(0.50))
+            .frame(width: 1, height: 20)
+            .padding(.horizontal, 4)
     }
 
     // MARK: - 文字 + 可选图标 label 辅助构造器
