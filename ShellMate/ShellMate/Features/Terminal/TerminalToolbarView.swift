@@ -99,18 +99,14 @@ struct TerminalToolbarView: View {
 
             // 字号显示（精致芯片样式）
             Text("\(Int(fontSize))pt")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 36)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
+                .padding(.horizontal, DesignTokens.Spacing.xs)
+                .padding(.vertical, DesignTokens.Spacing.xxxs)
                 .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .fill(DesignTokens.Colors.glassUltraLight)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .strokeBorder(DesignTokens.Colors.glassBorderBottom, lineWidth: 0.5)
-                        )
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                        .fill(Color.black.opacity(0.05))
                 )
 
             // 字号增大
@@ -253,12 +249,12 @@ struct ToolbarButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .regular))
+                .font(DesignTokens.Typography.bodyMedium)
                 .imageScale(.medium)
                 .foregroundColor(buttonColor)
                 .frame(width: 28, height: 28, alignment: .center)
                 .background(backgroundColor)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())
@@ -287,13 +283,13 @@ struct ToolbarButton: View {
         return DesignTokens.Colors.textSecondary
     }
 
-    /// 背景颜色
+    /// 背景颜色（Figma: hover:bg-black/5 = surfaceHover）
     private var backgroundColor: Color {
         if isActive {
             return DesignTokens.Colors.accentPrimary.opacity(0.15)
         }
         if isHovered && isEnabled {
-            return DesignTokens.Colors.glassHoverColor
+            return DesignTokens.Colors.surfaceHover
         }
         return .clear
     }
@@ -340,7 +336,7 @@ struct TerminalSearchBar: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 搜索图标
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
             // 搜索输入框
@@ -369,7 +365,7 @@ struct TerminalSearchBar: View {
                     .foregroundColor(caseSensitive ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(caseSensitive ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
-                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
             }
             .buttonStyle(.plain)
             .help("区分大小写")
@@ -381,7 +377,7 @@ struct TerminalSearchBar: View {
                     .foregroundColor(useRegex ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(useRegex ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
-                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
             }
             .buttonStyle(.plain)
             .help("正则表达式")
@@ -392,7 +388,7 @@ struct TerminalSearchBar: View {
             // 上一个
             Button(action: { onPrevious?() }) {
                 Image(systemName: "chevron.up")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
@@ -402,7 +398,7 @@ struct TerminalSearchBar: View {
             // 下一个
             Button(action: { onNext?() }) {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
@@ -415,7 +411,7 @@ struct TerminalSearchBar: View {
             // 关闭按钮
             Button(action: { onClose?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)

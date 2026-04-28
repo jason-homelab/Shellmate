@@ -54,7 +54,7 @@ struct ScriptEditorSheet: View {
                     }
 
                     // 脚本内容
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                         HStack {
                             Text("脚本内容")
                                 .font(DesignTokens.Typography.labelMedium)
@@ -67,11 +67,11 @@ struct ScriptEditorSheet: View {
                             .font(.system(.body, design: .monospaced))
                             .foregroundColor(.white)
                             .scrollContentBackground(.hidden)
-                            .background(Color(hex: "#1E1E1E"))
+                            .background(DesignTokens.Colors.surfaceCard)
                             .frame(minHeight: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 6)
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall)
                                     .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                             )
                     }
@@ -87,7 +87,7 @@ struct ScriptEditorSheet: View {
 
                     // 验证错误
                     if !validationError.isEmpty {
-                        HStack(spacing: 6) {
+                        HStack(spacing: DesignTokens.Spacing.xs) {
                             Image(systemName: "exclamationmark.triangle.fill")
                             Text(validationError)
                         }
@@ -118,7 +118,7 @@ struct ScriptEditorSheet: View {
             Spacer()
             Button(action: onCancel) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
                     .glassPanel(radius: 12)

@@ -19,25 +19,27 @@ struct SidebarFooterView: View {
         HStack {
             // HTML: .sidebar-stat-val { color: rgba(52,211,153,0.75); font-weight:600 }
             // HTML: "N connected" — N 用绿色加粗，" connected" 用极暗色
-            HStack(spacing: 3) {
+            HStack(spacing: DesignTokens.Spacing.nano) {
                 Text("\(connectedCount)")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
+                    .monospacedDigit()
                     .foregroundColor(DesignTokens.Colors.statusConnected.opacity(0.75))
                 Text("connected")
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
             Spacer()
 
             Text("\(totalCount) total")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
+                .monospacedDigit()
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        // HTML: background: var(--surface)，border-top: 1px solid var(--border)
-        .background(DesignTokens.Colors.surfacePanel)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+        // Figma §02: 跟随侧边栏 surfaceWindow (#f5f5f7)
+        .background(DesignTokens.Colors.surfaceWindow)
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(DesignTokens.Colors.borderPrimary)

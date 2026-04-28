@@ -1,10 +1,9 @@
 import SwiftUI
 
-/// 欢迎界面（首次启动，三步引导）
-/// 对齐 Figma-Spec-v2 §13：中文文案 / 6张特性卡片网格 / 第三步竖向行卡片
-struct WelcomeScreenView: View {
+// MARK: - WelcomeScreenView
+// 1:1 对齐 Figma Make upl5OBUkpLGnOe1u5aQRZ5 WelcomeScreen.tsx
 
-    // MARK: - ViewModel
+struct WelcomeScreenView: View {
 
     @StateObject private var vm: WelcomeViewModel
 
@@ -20,225 +19,217 @@ struct WelcomeScreenView: View {
         ))
     }
 
-    // MARK: - 视图
-
     var body: some View {
         ZStack {
-            DesignTokens.Colors.surfaceWindow.ignoresSafeArea()
-            VStack(spacing: 0) {
-                closeRow
-                Spacer()
-                centralContent.frame(maxWidth: 900)
+            // Figma: bg-gradient-to-br from-[#f5f5f7] via-white to-[#e8e8ed]
+            LinearGradient(
+                stops: [
+                    .init(color: Color(hex: "#f5f5f7"), location: 0.0),
+                    .init(color: Color.white,           location: 0.5),
+                    .init(color: Color(hex: "#e8e8ed"), location: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
+            // Close button — absolute top-4 right-4, rounded-full, hover:bg-black/5
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { vm.skip() }) {
+                        Image(systemName: "xmark")
+                            .font(DesignTokens.Typography.labelSmall)
+                            .foregroundColor(DesignTokens.Colors.textPrimary)
+                            .frame(width: 32, height: 32)
+                            .background(Color.black.opacity(0.05))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.top, DesignTokens.Spacing.lg)
+                .padding(.trailing, DesignTokens.Spacing.lg)
                 Spacer()
             }
+
+            // Main content — w-full max-w-5xl, centered
+            VStack(spacing: 0) {
+                Spacer()
+                mainContent
+                    .frame(maxWidth: 900)
+                Spacer()
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - 子区域
+    // MARK: - 主内容
 
-    private var closeRow: some View {
-        HStack {
-            Spacer()
-            Button(action: { vm.skip() }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                    .frame(width: 28, height: 28)
-                    .background(DesignTokens.Colors.surfaceHover)
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.top, 16).padding(.trailing, 16)
-    }
-
-    private var centralContent: some View {
+    private var mainContent: some View {
         VStack(spacing: 0) {
             heroSection
-            Spacer().frame(height: 32)
-            if vm.currentStep == 1 { featuresGrid; Spacer().frame(height: 32) }
-            if vm.currentStep == 2 { actionCards; Spacer().frame(height: 32) }
+
+            // Step 1: 特性格 grid-cols-4
+            if vm.currentStep == 1 {
+                featuresGrid
+                    .padding(.top, DesignTokens.Spacing.xxl)
+            }
+
+            // Step 2: 操作卡 grid-cols-3
+            if vm.currentStep == 2 {
+                actionCards
+                    .padding(.top, DesignTokens.Spacing.xxl)
+            }
+
+            // Step 0 & 1: 导航按钮
             if vm.currentStep < 2 {
                 navigationButtons
+                    .padding(.top, DesignTokens.Spacing.xxl)
             }
         }
     }
 
-    // MARK: - 英雄区（Figma-Spec-v2 §13 §4.1）
+    // MARK: - Hero 区（text-center mb-12）
 
     private var heroSection: some View {
         let step = vm.steps[vm.currentStep]
-        return VStack(spacing: 16) {
+        return VStack(spacing: DesignTokens.Spacing.lg) {
+
+            // 图标容器：w-32 h-32 rounded-[2.5rem]，emoji text-7xl
             ZStack {
-                // 步骤 0：背景光晕 + SF Symbol 图标组（Figma-Spec-v2 §13 §4.1）
-                if vm.currentStep == 0 {
-                    // 背景光晕：accentPrimary.opacity(0.08) 圆形，200pt，blur 40pt
-                    Circle()
-                        .fill(DesignTokens.Colors.accentPrimary.opacity(0.08))
-                        .frame(width: 200, height: 200)
-                        .blur(radius: 40)
+                RoundedRectangle(cornerRadius: 40, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: step.gradientColors,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 128, height: 128)
+                    .shadow(color: .black.opacity(0.10), radius: 50, x: 0, y: 25)
 
-                    // 左侧装饰：terminal，40pt，textTertiary，向左偏移 60pt
-                    Image(systemName: "terminal")
-                        .font(.system(size: 40, weight: .light))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .offset(x: -72, y: 0)
-
-                    // 右侧装饰：lock.shield.fill，40pt，textTertiary，向右偏移 60pt
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 40, weight: .light))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .offset(x: 72, y: 0)
-
-                    // 中央图标容器
-                    RoundedRectangle(cornerRadius: 40, style: .continuous)
-                        .fill(LinearGradient(
-                            colors: [
-                                DesignTokens.Colors.accentPrimary.opacity(0.15),
-                                DesignTokens.Colors.accentIndigo.opacity(0.15)
-                            ],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 128, height: 128)
-                        .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.25), radius: 20, x: 0, y: 6)
-
-                    // 中央 SF Symbol：desktopcomputer
-                    Image(systemName: "desktopcomputer")
-                        .font(.system(size: 52, weight: .light))
-                        .foregroundStyle(LinearGradient(
-                            colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.50), radius: 12, x: 0, y: 0)
-                } else {
-                    // 步骤 1/2：保持 emoji 风格
-                    RoundedRectangle(cornerRadius: 40, style: .continuous)
-                        .fill(LinearGradient(colors: step.gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 128, height: 128)
-                        .shadow(color: .black.opacity(0.10), radius: 24, x: 0, y: 8)
-                    Text(step.emoji).font(.system(size: 56))
-                }
+                Text(step.emoji)
+                    .font(.system(size: 72))
             }
-            .frame(width: 200, height: 128)
             .animation(.easeInOut(duration: 0.5), value: vm.currentStep)
 
+            // 标题：text-5xl font-bold text-[#1d1d1f]
             Text(step.title)
-                .font(.system(size: 48, weight: .bold, design: .rounded))
+                .font(.system(size: 48, weight: .bold))
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: vm.currentStep)
+
+            // 描述：text-xl text-[#86868b] max-w-2xl
             Text(step.description)
-                .font(.system(size: 20))
+                .font(.system(size: 20, weight: .regular))
                 .foregroundColor(DesignTokens.Colors.textSecondary)
-                .multilineTextAlignment(.center).frame(maxWidth: 560)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 640)
                 .animation(.easeInOut(duration: 0.3), value: vm.currentStep)
+
             stepIndicator
         }
     }
 
-    // MARK: - 步骤指示器（Figma-Spec-v2 §13 §3）
+    // MARK: - 步骤指示器（h-2 rounded-full，active w-8 bg-[#007aff]，inactive w-2 bg-[#d2d2d7]）
 
     private var stepIndicator: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             ForEach(0..<vm.steps.count, id: \.self) { index in
                 Button(action: { vm.goToStep(index) }) {
-                    if index == vm.currentStep {
-                        // 激活：32×8pt，accentPrimary
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.Colors.accentPrimary)
-                            .frame(width: 32, height: 8)
-                    } else {
-                        // 非激活：8×8pt，textTertiary
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.Colors.textTertiary.opacity(0.50))
-                            .frame(width: 8, height: 8)
-                    }
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(index == vm.currentStep
+                              ? DesignTokens.Colors.accentPrimary
+                              : Color(hex: "#d2d2d7"))
+                        .frame(width: index == vm.currentStep ? 32 : 8, height: 8)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: vm.currentStep)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: vm.currentStep)
-        .padding(.top, 8)
+        .padding(.top, DesignTokens.Spacing.xxs)
     }
 
-    // MARK: - 步骤 1/2 导航按钮（Figma-Spec-v2 §13 §4.3 / §5.2）
+    // MARK: - 导航按钮（step 0 & 1）：flex justify-center gap-4
 
     private var navigationButtons: some View {
-        HStack(spacing: 16) {
-            // 跳过
+        HStack(spacing: DesignTokens.Spacing.lg) {
+            // 跳过：ghost, text-[#86868b] hover:bg-black/5 rounded-xl px-8
             Button(action: { vm.skip() }) {
                 Text("跳过")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(DesignTokens.Typography.bodyLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .padding(.horizontal, DesignTokens.Spacing.xxl)
+                    .padding(.horizontal, DesignTokens.Spacing.xxxl)
                     .padding(.vertical, DesignTokens.Spacing.sm)
-                    .background(DesignTokens.Colors.surfaceHover)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                    .background(Color.black.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
             }
             .buttonStyle(.plain)
-            // 下一步
+
+            // 下一步：bg-[#007aff] hover:bg-[#0051d5] text-white rounded-xl px-8
             Button(action: { vm.nextStep() }) {
-                HStack(spacing: 6) {
-                    Text("下一步").font(.system(size: 14, weight: .semibold))
-                    Image(systemName: "arrow.right").font(.system(size: 12, weight: .semibold))
+                HStack(spacing: DesignTokens.Spacing.xxs) {
+                    Text("下一步")
+                        .font(DesignTokens.Typography.bodyLargeStrong)
+                    Image(systemName: "arrow.right")
+                        .font(DesignTokens.Typography.captionLarge)
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, DesignTokens.Spacing.xxl)
+                .padding(.horizontal, DesignTokens.Spacing.xxxl)
                 .padding(.vertical, DesignTokens.Spacing.sm)
             }
             .buttonStyle(.plain)
             .background(DesignTokens.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 12, x: 0, y: 4)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.20), radius: 20, x: 0, y: 10)
         }
     }
 
-    // MARK: - 步骤 2 特性网格（四列 Emoji 卡片，对齐 Figma Make grid-cols-4）
+    // MARK: - 特性格（step 1）：grid-cols-4 gap-4 mt-8
 
     private var featuresGrid: some View {
         LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 4),
-            spacing: 16
+            columns: Array(repeating: GridItem(.flexible(), spacing: DesignTokens.Spacing.lg), count: 4),
+            spacing: DesignTokens.Spacing.lg
         ) {
             ForEach(vm.features) { feature in
-                VStack(spacing: 12) {
+                VStack(spacing: DesignTokens.Spacing.xxs) {
+                    // emoji text-4xl
                     Text(feature.icon)
                         .font(.system(size: 36))
-                    VStack(spacing: 4) {
-                        Text(feature.label)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(DesignTokens.Colors.textPrimary)
-                        Text(feature.description)
-                            .font(.system(size: 12))
-                            .foregroundColor(DesignTokens.Colors.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                    }
+                    // label text-sm font-medium
+                    Text(feature.label)
+                        .font(DesignTokens.Typography.bodyLargeMedium)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 110)
-                .padding(16)
-                .background(DesignTokens.Colors.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(DesignTokens.Spacing.lg)
+                // bg-white/60 backdrop-blur-sm rounded-2xl border border-[#d2d2d7]/30
+                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.60))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 0.75)
                 )
-                .shadow(DesignTokens.Shadow.small)
             }
         }
     }
 
-    // MARK: - 步骤 3 三列横向操作卡片（对齐 Figma Make grid-cols-3）
+    // MARK: - 操作卡（step 2）：grid-cols-3 gap-6
 
     private var actionCards: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: DesignTokens.Spacing.xxl) {
             WelcomeActionCard(
                 iconName: "plus",
-                iconFg: DesignTokens.Colors.accentPrimary,
-                gradientColors: [DesignTokens.Colors.accentPrimary.opacity(0.10), DesignTokens.Colors.accentIndigo.opacity(0.10)],
-                title: "新建会话",
+                iconColor: DesignTokens.Colors.accentPrimary,
+                gradientColors: [
+                    DesignTokens.Colors.accentPrimary.opacity(0.10),
+                    Color(hex: "#5856d6").opacity(0.10)
+                ],
+                hoverBorderColor: DesignTokens.Colors.accentPrimary.opacity(0.50),
+                title: "新建连接",
                 description: "填写服务器信息，立即连接远程主机",
                 buttonLabel: "新建连接",
                 buttonVariant: .primary,
@@ -246,8 +237,12 @@ struct WelcomeScreenView: View {
             )
             WelcomeActionCard(
                 iconName: "arrow.down.doc",
-                iconFg: DesignTokens.Colors.statusConnected,
-                gradientColors: [DesignTokens.Colors.statusConnected.opacity(0.10), DesignTokens.Colors.statusConnected.opacity(0.05)],
+                iconColor: DesignTokens.Colors.statusConnected,
+                gradientColors: [
+                    DesignTokens.Colors.statusConnected.opacity(0.10),
+                    DesignTokens.Colors.statusConnected.opacity(0.05)
+                ],
+                hoverBorderColor: DesignTokens.Colors.statusConnected.opacity(0.50),
                 title: "导入配置",
                 description: "从 SSH config 文件或其他 SSH 客户端批量导入",
                 buttonLabel: "导入配置",
@@ -256,8 +251,12 @@ struct WelcomeScreenView: View {
             )
             WelcomeActionCard(
                 iconName: "sparkles",
-                iconFg: DesignTokens.Colors.textSecondary,
-                gradientColors: [DesignTokens.Colors.textSecondary.opacity(0.10), DesignTokens.Colors.textSecondary.opacity(0.05)],
+                iconColor: DesignTokens.Colors.textSecondary,
+                gradientColors: [
+                    DesignTokens.Colors.textSecondary.opacity(0.10),
+                    DesignTokens.Colors.textSecondary.opacity(0.05)
+                ],
+                hoverBorderColor: DesignTokens.Colors.textSecondary.opacity(0.50),
                 title: "先行探索",
                 description: "直接进入主界面，自行探索各项功能",
                 buttonLabel: "开始探索",
@@ -265,16 +264,17 @@ struct WelcomeScreenView: View {
                 action: { vm.skip() }
             )
         }
-        .frame(maxWidth: 800)
     }
 }
 
-// MARK: - WelcomeActionCard（横向三列操作卡片，对齐 Figma Make grid-cols-3）
+// MARK: - WelcomeActionCard
 
 private struct WelcomeActionCard: View {
+
     let iconName: String
-    let iconFg: Color
+    let iconColor: Color
     let gradientColors: [Color]
+    let hoverBorderColor: Color
     let title: String
     let description: String
     let buttonLabel: String
@@ -286,92 +286,102 @@ private struct WelcomeActionCard: View {
     @State private var isHovering = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // 图标容器 44×44
+        VStack(alignment: .leading, spacing: 0) {
+
+            // 图标：w-14 h-14 rounded-2xl, group-hover:scale-110
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                     .fill(LinearGradient(
                         colors: gradientColors,
-                        startPoint: .topLeading, endPoint: .bottomTrailing
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     ))
-                    .frame(width: 44, height: 44)
-                Image(systemName: iconName)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(iconFg)
-            }
+                    .frame(width: 56, height: 56)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text(description)
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Image(systemName: iconName)
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(iconColor)
             }
+            .scaleEffect(isHovering ? 1.10 : 1.0)
+            .animation(.easeInOut(duration: 0.3), value: isHovering)
+
+            // 标题：text-lg text-[#1d1d1f]
+            Text(title)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .padding(.top, DesignTokens.Spacing.xl)
+
+            // 描述：text-sm text-[#86868b]
+            Text(description)
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, DesignTokens.Spacing.xxs)
 
             Spacer()
 
-            // 操作按钮
+            // 按钮：w-full rounded-xl
             Button(action: action) {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Text(buttonLabel)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(DesignTokens.Typography.labelLarge)
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.captionLarge)
+                        .offset(x: isHovering ? 2 : 0)
+                        .animation(.easeInOut(duration: 0.2), value: isHovering)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .foregroundColor(buttonVariant == .primary ? .white : iconFg)
+                .padding(.vertical, DesignTokens.Spacing.sm)
+                .foregroundColor(buttonVariant == .primary ? .white : iconColor)
                 .background {
-                    if buttonVariant == .primary {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    switch buttonVariant {
+                    case .primary:
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                             .fill(DesignTokens.Colors.accentPrimary)
-                    } else if buttonVariant == .outline {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(iconFg.opacity(0.50), lineWidth: 1)
-                    } else {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(DesignTokens.Colors.surfaceHover)
+                            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.20), radius: 20, x: 0, y: 10)
+                    case .outline:
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                            .strokeBorder(iconColor.opacity(0.50), lineWidth: 1)
+                    case .ghost:
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                            .fill(Color.black.opacity(0.05))
                     }
                 }
             }
             .buttonStyle(.plain)
+            .padding(.top, DesignTokens.Spacing.xl)
         }
-        .frame(maxWidth: .infinity, minHeight: 180, alignment: .leading)
-        .padding(20)
-        .background(isHovering ? DesignTokens.Colors.surfaceHover : DesignTokens.Colors.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 220, alignment: .leading)
+        .padding(DesignTokens.Spacing.xl)
+        // bg-white/80 backdrop-blur-xl
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.80))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(
+                    isHovering ? hoverBorderColor : Color(hex: "#d2d2d7").opacity(0.50),
+                    lineWidth: 0.75
+                )
         )
-        .shadow(DesignTokens.Shadow.small)
-        .onHover { hovering in
-            withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }
-        }
+        .shadow(
+            color: isHovering ? iconColor.opacity(0.10) : Color.black.opacity(0.04),
+            radius: isHovering ? 30 : 10,
+            x: 0, y: isHovering ? 15 : 5
+        )
+        .offset(y: isHovering ? -4 : 0)
+        .animation(.easeInOut(duration: 0.3), value: isHovering)
+        .onHover { hovering in isHovering = hovering }
     }
 }
 
 // MARK: - 预览
 
-#Preview("欢迎界面 - 步骤 0") {
+#Preview("步骤 0 — 欢迎") {
     WelcomeScreenView(
-        onDismiss: { AppLogger.ui.debug("关闭") },
-        onCreateSession: { AppLogger.ui.debug("创建会话") },
-        onImportConfiguration: { AppLogger.ui.debug("导入配置") }
+        onDismiss: {},
+        onCreateSession: {},
+        onImportConfiguration: {}
     )
     .frame(width: 960, height: 720)
-}
-
-#Preview("欢迎界面 - 步骤 1（特性）") {
-    WelcomeScreenView(
-        onDismiss: { AppLogger.ui.debug("关闭") },
-        onCreateSession: { AppLogger.ui.debug("创建会话") },
-        onImportConfiguration: { AppLogger.ui.debug("导入配置") }
-    )
-    .frame(width: 960, height: 720)
-    .onAppear {
-        // 预览中直接展示步骤 1
-    }
 }

@@ -49,18 +49,18 @@ struct SSHConfigImportView: View {
     // MARK: - 头部
 
     private var headerView: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             // 图标
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 40, height: 40)
                 Image(systemName: "terminal")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("从 SSH 配置导入")
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -73,7 +73,7 @@ struct SSHConfigImportView: View {
 
             Button(action: onCancel) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
                     .background(DesignTokens.Colors.surfaceCard)
@@ -106,18 +106,18 @@ struct SSHConfigImportView: View {
     // MARK: - 错误视图
 
     private func errorView(message: String) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 32))
+                .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("无法读取配置文件")
-                .font(.system(size: 15, weight: .semibold))
+                .font(DesignTokens.Typography.labelLargeAlt)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Text(message)
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DesignTokens.Spacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -125,15 +125,15 @@ struct SSHConfigImportView: View {
     // MARK: - 空状态视图
 
     private var emptyView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: "doc.text")
-                .font(.system(size: 32))
+                .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("未找到可导入的主机")
-                .font(.system(size: 15, weight: .semibold))
+                .font(DesignTokens.Typography.labelLargeAlt)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Text("~/.ssh/config 中没有具体的主机条目\n（通配符条目 Host * 已被跳过）")
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -145,17 +145,17 @@ struct SSHConfigImportView: View {
     private var entryListView: some View {
         VStack(spacing: 0) {
             // 搜索栏 + 全选
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 TextField("搜索主机名…", text: $searchText)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
@@ -164,16 +164,16 @@ struct SSHConfigImportView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             .background(DesignTokens.Colors.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
 
             // 全选/全取消行
             HStack {
                 Text("\(filteredEntries.count) 个主机条目")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Spacer()
                 Button(allSelected ? "取消全选" : "全选") {
@@ -183,16 +183,16 @@ struct SSHConfigImportView: View {
                         selected.formUnion(filteredEntries.map(\.id))
                     }
                 }
-                .font(.system(size: 11, weight: .medium))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 2)
-            .padding(.vertical, 6)
+            .padding(.horizontal, DesignTokens.Spacing.xxxs)
+            .padding(.vertical, DesignTokens.Spacing.xs)
 
             // 条目列表
             ScrollView {
-                LazyVStack(spacing: 4) {
+                LazyVStack(spacing: DesignTokens.Spacing.xxs) {
                     ForEach(filteredEntries) { entry in
                         EntryRowView(
                             entry: entry,
@@ -214,7 +214,7 @@ struct SSHConfigImportView: View {
             // 已选数量提示
             if !selected.isEmpty {
                 Text("已选 \(selected.count) 个")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
@@ -294,7 +294,7 @@ private struct EntryRowView: View {
     // 拆分子表达式以避免编译器类型推断超时
     private var hostPatternText: some View {
         Text(entry.hostPattern)
-            .font(.system(size: 13, weight: .medium))
+            .font(DesignTokens.Typography.labelLarge)
             .foregroundColor(DesignTokens.Colors.textPrimary)
     }
 
@@ -302,10 +302,10 @@ private struct EntryRowView: View {
     private var wildcardBadge: some View {
         if entry.isWildcard {
             Text("通配符")
-                .font(.system(size: 10, weight: .medium))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
-                .padding(.horizontal, 5)
-                .padding(.vertical, 1)
+                .padding(.horizontal, DesignTokens.Spacing.micro)
+                .padding(.vertical, DesignTokens.Spacing.px)
                 .background(DesignTokens.Colors.statusConnecting.opacity(0.10))
                 .clipShape(Capsule())
         }
@@ -316,7 +316,7 @@ private struct EntryRowView: View {
             // 勾选框
             Button(action: onToggle) {
                 Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 16))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(isSelected
                         ? DesignTokens.Colors.accentPrimary
                         : DesignTokens.Colors.textTertiary)
@@ -325,32 +325,32 @@ private struct EntryRowView: View {
 
             // 主机图标
             ZStack {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.08))
                     .frame(width: 28, height: 28)
                 Image(systemName: "server.rack")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
             // 信息
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     hostPatternText
                     wildcardBadge
                 }
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     if !entry.username.isEmpty {
                         Text(entry.username + "@")
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(DesignTokens.Typography.codeTiny)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                     }
                     Text(entry.hostname)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                     if entry.port != 22 {
                         Text(":\(entry.port)")
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(DesignTokens.Typography.codeTiny)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                 }
@@ -359,17 +359,17 @@ private struct EntryRowView: View {
             Spacer()
 
             // 额外标记
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 if entry.identityFile != nil {
                     Label("密钥", systemImage: "key.fill")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(Color(hex: "#34c759"))
+                        .font(DesignTokens.Typography.captionMedium)
+                        .foregroundColor(DesignTokens.Colors.accentSecondary)
                         .labelStyle(.iconOnly)
                         .help("使用私钥认证")
                 }
                 if entry.proxyJump != nil {
                     Label("跳板", systemImage: "arrow.triangle.branch")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.accentIndigo)
                         .labelStyle(.iconOnly)
                         .help("ProxyJump: \(entry.proxyJump!)")
@@ -377,16 +377,16 @@ private struct EntryRowView: View {
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.vertical, DesignTokens.Spacing.sm)
         .background(isSelected
             ? DesignTokens.Colors.accentPrimary.opacity(0.05)
-            : Color.white.opacity(0.70))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            : DesignTokens.Colors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .strokeBorder(isSelected
                     ? DesignTokens.Colors.accentPrimary.opacity(0.25)
-                    : Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                    : DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .contentShape(Rectangle())
         .onTapGesture(perform: onToggle)

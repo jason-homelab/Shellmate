@@ -10,17 +10,17 @@ struct SessionLogEntry: Identifiable {
     let content: String
 
     enum LogType: String, CaseIterable {
-        case output = "output"
-        case input  = "input"
-        case error  = "error"
-        case system = "system"
+        case info    = "info"
+        case warning = "warning"
+        case error   = "error"
+        case command = "command"
 
         var label: String {
             switch self {
-            case .output: return "输出"
-            case .input:  return "输入"
-            case .error:  return "错误"
-            case .system: return "系统"
+            case .info:    return "信息"
+            case .warning: return "警告"
+            case .error:   return "错误"
+            case .command: return "命令"
             }
         }
     }

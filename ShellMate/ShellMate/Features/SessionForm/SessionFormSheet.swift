@@ -67,6 +67,9 @@ struct SessionFormSheet: View {
     // 高级设置折叠状态
     @State private var advancedExpanded: Bool = false
 
+    // 取消按钮 hover 状态（Figma: hover:bg-black/5）
+    @State private var cancelHovered: Bool = false
+
     // MARK: - 计算属性
 
     private var isEditing: Bool {
@@ -87,8 +90,10 @@ struct SessionFormSheet: View {
     // MARK: - 颜色常量
 
     private let labelColor = DesignTokens.Colors.textPrimary
-    private let borderColor = DesignTokens.Colors.borderPrimary
-    private let fieldBackground = DesignTokens.Colors.surfaceInput
+    // Figma: border-[#d2d2d7]/50
+    private let borderColor = Color(hex: "#d2d2d7").opacity(0.50)
+    // Figma: bg-white/80
+    private let fieldBackground = Color.white.opacity(0.80)
 
     // MARK: - 视图
 
@@ -102,7 +107,7 @@ struct SessionFormSheet: View {
 
             // 单页滚动表单
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 16) {
+                VStack(spacing: DesignTokens.Spacing.lg) {
                     // 1. 名称
                     fieldGroup(label: "名称") {
                         CustomTextField(placeholder: "输入会话名称", text: $name)
@@ -120,19 +125,19 @@ struct SessionFormSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .background(fieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                                 .strokeBorder(borderColor, lineWidth: 1)
                         )
                     }
 
                     // 3. 主机 + 端口（并排）
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                         Text("主机 / 端口")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(DesignTokens.Typography.labelLarge)
                             .foregroundColor(labelColor)
-                        HStack(spacing: 16) {
+                        HStack(spacing: DesignTokens.Spacing.lg) {
                             CustomTextField(placeholder: "主机地址或 IP", text: $host)
                                 .frame(maxWidth: .infinity)
                             CustomTextField(placeholder: "22", text: $port)
@@ -147,11 +152,11 @@ struct SessionFormSheet: View {
 
                     // 5. 密码 + 保存密码
                     fieldGroup(label: "密码") {
-                        VStack(spacing: 8) {
+                        VStack(spacing: DesignTokens.Spacing.sm) {
                             CustomTextField(placeholder: "输入密码（可选）", text: $password, isSecure: true)
                             HStack {
                                 Text("保存密码到 Keychain")
-                                    .font(.system(size: 12))
+                                    .font(DesignTokens.Typography.bodySmall)
                                     .foregroundColor(DesignTokens.Colors.textSecondary)
                                 Spacer()
                                 Toggle("", isOn: $saveCredential)
@@ -174,9 +179,9 @@ struct SessionFormSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .background(fieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                                 .strokeBorder(borderColor, lineWidth: 1)
                         )
                     }
@@ -185,7 +190,7 @@ struct SessionFormSheet: View {
                     DisclosureGroup(
                         isExpanded: $advancedExpanded,
                         content: {
-                            VStack(spacing: 16) {
+                            VStack(spacing: DesignTokens.Spacing.lg) {
                                 // 认证方式
                                 fieldGroup(label: "认证方式") {
                                     Picker("", selection: $authMethod) {
@@ -198,9 +203,9 @@ struct SessionFormSheet: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 7)
                                     .background(fieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
+                                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                                             .strokeBorder(borderColor, lineWidth: 1)
                                     )
                                 }
@@ -220,19 +225,19 @@ struct SessionFormSheet: View {
                                 }
 
                                 // 连接超时 + Keep-Alive
-                                HStack(spacing: 16) {
-                                    VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: DesignTokens.Spacing.lg) {
+                                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                                         Text("连接超时 (秒)")
-                                            .font(.system(size: 13, weight: .medium))
+                                            .font(DesignTokens.Typography.labelLarge)
                                             .foregroundColor(labelColor)
                                         CustomTextField(placeholder: "30", text: Binding(
                                             get: { String(connectTimeout) },
                                             set: { connectTimeout = Int32($0) ?? 30 }
                                         ))
                                     }
-                                    VStack(alignment: .leading, spacing: 6) {
+                                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                                         Text("Keep-Alive (秒)")
-                                            .font(.system(size: 13, weight: .medium))
+                                            .font(DesignTokens.Typography.labelLarge)
                                             .foregroundColor(labelColor)
                                         CustomTextField(placeholder: "60", text: Binding(
                                             get: { String(keepAliveInterval) },
@@ -244,7 +249,7 @@ struct SessionFormSheet: View {
                                 // 自动重连
                                 HStack {
                                     Text("自动重连")
-                                        .font(.system(size: 13, weight: .medium))
+                                        .font(DesignTokens.Typography.labelLarge)
                                         .foregroundColor(labelColor)
                                     Spacer()
                                     Toggle("", isOn: $autoReconnect)
@@ -253,19 +258,19 @@ struct SessionFormSheet: View {
                                 }
 
                                 if autoReconnect {
-                                    HStack(spacing: 16) {
-                                        VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: DesignTokens.Spacing.lg) {
+                                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                                             Text("最大重试次数")
-                                                .font(.system(size: 13, weight: .medium))
+                                                .font(DesignTokens.Typography.labelLarge)
                                                 .foregroundColor(labelColor)
                                             CustomTextField(placeholder: "3", text: Binding(
                                                 get: { String(maxReconnectRetries) },
                                                 set: { maxReconnectRetries = Int32($0) ?? 3 }
                                             ))
                                         }
-                                        VStack(alignment: .leading, spacing: 6) {
+                                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                                             Text("重连间隔 (秒)")
-                                                .font(.system(size: 13, weight: .medium))
+                                                .font(DesignTokens.Typography.labelLarge)
                                                 .foregroundColor(labelColor)
                                             CustomTextField(placeholder: "5", text: Binding(
                                                 get: { String(reconnectInterval) },
@@ -288,9 +293,9 @@ struct SessionFormSheet: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 7)
                                     .background(fieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
+                                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                                             .strokeBorder(borderColor, lineWidth: 1)
                                     )
                                 }
@@ -300,41 +305,138 @@ struct SessionFormSheet: View {
                                     ZStack(alignment: .topLeading) {
                                         if startupCommand.isEmpty {
                                             Text("连接成功后自动执行的命令（支持多行，每行独立执行）")
-                                                .font(.system(size: 13))
+                                                .font(DesignTokens.Typography.bodyMedium)
                                                 .foregroundColor(Color.secondary.opacity(0.6))
                                                 .padding(.horizontal, 10)
-                                                .padding(.vertical, 8)
+                                                .padding(.vertical, DesignTokens.Spacing.sm)
                                                 .allowsHitTesting(false)
                                         }
                                         TextEditor(text: $startupCommand)
-                                            .font(.system(size: 13, design: .monospaced))
+                                            .font(DesignTokens.Typography.codeMedium)
                                             .frame(minHeight: 72, maxHeight: 120)
                                             .scrollContentBackground(.hidden)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 4)
+                                            .padding(.horizontal, DesignTokens.Spacing.xs)
+                                            .padding(.vertical, DesignTokens.Spacing.xxs)
                                     }
                                     .background(fieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
+                                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                                             .strokeBorder(borderColor, lineWidth: 1)
                                     )
                                 }
+
+                                // tmux 集成配置（W23）
+                                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                                    Text("tmux 集成")
+                                        .font(DesignTokens.Typography.labelLarge)
+                                        .foregroundColor(labelColor)
+
+                                    // 启用 tmux 检测
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+                                            Text("连接后自动检测 tmux")
+                                                .font(DesignTokens.Typography.bodyMedium)
+                                                .foregroundColor(DesignTokens.Colors.textPrimary)
+                                            Text("SSH 连接成功后静默检测远程 tmux 可用性")
+                                                .font(DesignTokens.Typography.captionLarge)
+                                                .foregroundColor(DesignTokens.Colors.textTertiary)
+                                        }
+                                        Spacer()
+                                        Toggle("", isOn: $tmuxConfig.enabled)
+                                            .toggleStyle(.switch)
+                                            .labelsHidden()
+                                    }
+
+                                    if tmuxConfig.enabled {
+                                        // 自动附加策略
+                                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                                            Text("自动附加策略")
+                                                .font(DesignTokens.Typography.captionLarge)
+                                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                                            Picker("", selection: $tmuxConfig.autoAttach) {
+                                                ForEach(TmuxAutoAttach.allCases, id: \.self) { opt in
+                                                    Text(opt.rawValue).tag(opt)
+                                                }
+                                            }
+                                            .pickerStyle(.menu)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 7)
+                                            .background(fieldBackground)
+                                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                                                    .strokeBorder(borderColor, lineWidth: 1)
+                                            )
+                                        }
+
+                                        // 附加指定会话名（autoAttach == .named）
+                                        if tmuxConfig.autoAttach == .named {
+                                            CustomTextField(placeholder: "会话名称", text: $tmuxConfig.sessionName)
+                                        }
+
+                                        // 新建会话名（autoAttach == .create）
+                                        if tmuxConfig.autoAttach == .create {
+                                            CustomTextField(placeholder: "新会话名称（留空使用 tmux 默认编号）", text: $tmuxConfig.newSessionName)
+                                        }
+
+                                        // SSH 断开行为
+                                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                                            Text("SSH 断开时")
+                                                .font(DesignTokens.Typography.captionLarge)
+                                                .foregroundColor(DesignTokens.Colors.textSecondary)
+                                            Picker("", selection: $tmuxConfig.disconnectBehavior) {
+                                                ForEach(TmuxDisconnectBehavior.allCases, id: \.self) { opt in
+                                                    Text(opt.rawValue).tag(opt)
+                                                }
+                                            }
+                                            .pickerStyle(.menu)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 7)
+                                            .background(fieldBackground)
+                                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                                                    .strokeBorder(borderColor, lineWidth: 1)
+                                            )
+                                        }
+
+                                        // 有会话时自动弹出管理器
+                                        HStack {
+                                            Text("有会话时自动弹出管理器")
+                                                .font(DesignTokens.Typography.bodyMedium)
+                                                .foregroundColor(DesignTokens.Colors.textPrimary)
+                                            Spacer()
+                                            Toggle("", isOn: $tmuxConfig.autoShowManager)
+                                                .toggleStyle(.switch)
+                                                .labelsHidden()
+                                        }
+                                    }
+                                }
+                                .padding(DesignTokens.Spacing.md)
+                                .background(Color.black.opacity(0.03))
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
+                                        .strokeBorder(borderColor.opacity(0.60), lineWidth: 0.75)
+                                )
                             }
-                            .padding(.top, 12)
+                            .padding(.top, DesignTokens.Spacing.md)
                         },
                         label: {
                             Text("高级设置")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(DesignTokens.Typography.labelLarge)
                                 .foregroundColor(DesignTokens.Colors.accentPrimary)
                         }
                     )
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, DesignTokens.Spacing.sm)
                     .background(DesignTokens.Colors.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall)
                             .strokeBorder(borderColor, lineWidth: 0.75)
                     )
                 }
@@ -349,15 +451,19 @@ struct SessionFormSheet: View {
         }
         .frame(width: 500)
         .frame(minHeight: 520)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(DesignTokens.Colors.surfaceOverlay)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
-                )
-                .shadow(color: Color.black.opacity(0.50), radius: 32, x: 0, y: 8)
+        // Figma: bg-white/95 backdrop-blur-2xl rounded-2xl
+        .background {
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .fill(Color.white.opacity(0.95))
+        }
+        .overlay(
+            // Figma: border border-[#d2d2d7]/50
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
         )
+        .shadow(color: Color.black.opacity(0.20), radius: 32, x: 0, y: 8)
         .onAppear {
             loadSessionData()
             // 新建会话时，协议默认跟随通用设置里的"默认连接协议"
@@ -375,12 +481,12 @@ struct SessionFormSheet: View {
 
     private var headerView: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(labelColor)
                 Text("填写连接信息")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
@@ -388,7 +494,7 @@ struct SessionFormSheet: View {
 
             Button(action: { onCancel?() }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(DesignTokens.Colors.surfaceHover)
@@ -396,72 +502,71 @@ struct SessionFormSheet: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.vertical, DesignTokens.Spacing.lg)
     }
 
     // MARK: - 底部按钮
 
     private var footerView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             // 验证错误提示
             if !validationErrors.isEmpty {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.statusError)
                     Text(validationErrors.first ?? "")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.statusError)
                 }
             }
 
             Spacer()
 
-            // Void: 取消按钮 ghost
+            // Figma: ghost button — text-[#1d1d1f] hover:bg-black/5 rounded-lg
             Button("取消") {
                 onCancel?()
             }
-            .font(.system(size: 14))
-            .foregroundColor(DesignTokens.Colors.textSecondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(DesignTokens.Colors.surfaceCard)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .font(DesignTokens.Typography.bodyLarge)
+            .foregroundColor(DesignTokens.Colors.textPrimary)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(cancelHovered ? DesignTokens.Colors.surfaceHover : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(DesignTokens.Animation.hover) { cancelHovered = hovering }
+            }
             .keyboardShortcut(.escape, modifiers: [])
 
             // Void: 保存按钮 Apple Blue 主色
             Button(isEditing ? "保存会话" : "保存会话") {
                 saveSession()
             }
-            .font(.system(size: 14, weight: .medium))
+            .font(DesignTokens.Typography.bodyLargeMedium)
             .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.sm)
             .background(DesignTokens.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 12, x: 0, y: 4)
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(!canSave)
             .opacity(canSave ? 1.0 : 0.4)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.vertical, DesignTokens.Spacing.lg)
     }
 
     // MARK: - 通用字段组
 
     @ViewBuilder
     private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             Text(label)
-                .font(.system(size: 13, weight: .medium))
+                .font(DesignTokens.Typography.labelLarge)
                 .foregroundColor(labelColor)
             content()
         }

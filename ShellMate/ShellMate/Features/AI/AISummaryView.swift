@@ -46,14 +46,13 @@ struct AISummaryView: View {
             footerView
         }
         .frame(width: 480)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
         )
-        .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.50), radius: 24, x: 0, y: 8)
         .onAppear { startSummary() }
         .onDisappear { streamTask?.cancel() }
     }
@@ -61,22 +60,22 @@ struct AISummaryView: View {
     // MARK: - 头部
 
     private var headerView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             ZStack {
                 Circle()
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 44, height: 44)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text("会话摘要")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(sessionName)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .lineLimit(1)
             }
@@ -86,12 +85,12 @@ struct AISummaryView: View {
             if isStreaming {
                 ProgressView()
                     .scaleEffect(0.7)
-                    .padding(.trailing, 4)
+                    .padding(.trailing, DesignTokens.Spacing.xxs)
             }
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
                     .background(DesignTokens.Colors.surfaceCard)
@@ -110,12 +109,12 @@ struct AISummaryView: View {
             Group {
                 if let err = errorMessage {
                     // 错误状态
-                    VStack(spacing: 8) {
+                    VStack(spacing: DesignTokens.Spacing.sm) {
                         Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 28))
+                            .font(DesignTokens.Typography.displayLarge)
                             .foregroundColor(DesignTokens.Colors.statusConnecting)
                         Text(err)
-                            .font(.system(size: 13))
+                            .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                             .multilineTextAlignment(.center)
                     }
@@ -123,25 +122,25 @@ struct AISummaryView: View {
                     .padding(.vertical, DesignTokens.Spacing.xl)
                 } else if summaryText.isEmpty && isStreaming {
                     // 等待第一个 token
-                    HStack(spacing: 8) {
+                    HStack(spacing: DesignTokens.Spacing.sm) {
                         ProgressView()
                             .scaleEffect(0.8)
                         Text("正在生成摘要…")
-                            .font(.system(size: 13))
+                            .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DesignTokens.Spacing.xl)
                 } else if summaryText.isEmpty {
                     Text("暂无内容")
-                        .font(.system(size: 13))
+                        .font(DesignTokens.Typography.bodyMedium)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, DesignTokens.Spacing.xl)
                 } else {
                     // 摘要正文（纯文本，保留 Markdown 符号便于阅读）
                     Text(summaryText)
-                        .font(.system(size: 13))
+                        .font(DesignTokens.Typography.bodyMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)

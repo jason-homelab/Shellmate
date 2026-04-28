@@ -15,7 +15,7 @@ struct AISettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
                 // 启用开关
                 enableSection
 
@@ -45,7 +45,7 @@ struct AISettingsView: View {
 
     private var enableSection: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Label("AI 助手", systemImage: "sparkles")
                     .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -92,7 +92,7 @@ struct AISettingsView: View {
                         )
                     )
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                     Text(prov.displayName)
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -105,7 +105,7 @@ struct AISettingsView: View {
                     Text("无需 API Key")
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.statusConnected)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .padding(.horizontal, DesignTokens.Spacing.xs).padding(.vertical, DesignTokens.Spacing.xxxs)
                         .background(DesignTokens.Colors.statusConnected.opacity(0.12))
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
@@ -158,18 +158,19 @@ struct AISettingsView: View {
                     .font(DesignTokens.Typography.codeSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .padding(DesignTokens.Spacing.sm)
-                    .background(DesignTokens.Colors.surfaceInput)
+                    // Figma: bg-white/80 border-[#d2d2d7]/50
+                    .background(Color.white.opacity(0.80))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
                     )
 
                     Button {
                         showAPIKey.toggle()
                     } label: {
                         Image(systemName: showAPIKey ? "eye.slash" : "eye")
-                            .font(.system(size: 13))
+                            .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
@@ -198,7 +199,7 @@ struct AISettingsView: View {
 
                 // 保存结果提示
                 if let result = saveKeyResult {
-                    HStack(spacing: 4) {
+                    HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: result == .success ? "checkmark.circle.fill" : "xmark.circle.fill")
                         Text(result == .success ? "API Key 已安全存入 Keychain" : "API Key 为空，已清除")
                     }
@@ -279,10 +280,10 @@ struct AISettingsView: View {
     private func featureToggle(title: String, subtitle: String, icon: String, binding: Binding<Bool>) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
                 .frame(width: 20)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)

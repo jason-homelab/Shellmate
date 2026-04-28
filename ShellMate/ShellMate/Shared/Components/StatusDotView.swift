@@ -74,26 +74,26 @@ struct StatusDotView: View {
 // MARK: - 预览
 
 #Preview("状态点 - 所有状态") {
-    HStack(spacing: 32) {
-        VStack(spacing: 8) {
+    HStack(spacing: DesignTokens.Spacing.xxxl) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             StatusDotView(state: .offline)
             Text("离线")
                 .font(DesignTokens.Typography.labelSmall)
         }
 
-        VStack(spacing: 8) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             StatusDotView(state: .connecting)
             Text("连接中")
                 .font(DesignTokens.Typography.labelSmall)
         }
 
-        VStack(spacing: 8) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             StatusDotView(state: .connected)
             Text("已连接")
                 .font(DesignTokens.Typography.labelSmall)
         }
 
-        VStack(spacing: 8) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             StatusDotView(state: .error)
             Text("错误")
                 .font(DesignTokens.Typography.labelSmall)
@@ -105,7 +105,7 @@ struct StatusDotView: View {
 }
 
 #Preview("状态点 - 尺寸变体") {
-    HStack(spacing: 24) {
+    HStack(spacing: DesignTokens.Spacing.xxl) {
         StatusDotView(state: .connected, size: 4)
         StatusDotView(state: .connected, size: 6)
         StatusDotView(state: .connected, size: 8)

@@ -149,183 +149,46 @@ final class TerminalController: ObservableObject {
     /// tmux 会话状态管理器（懒初始化，需要 self 已准备好）
     private(set) lazy var tmuxStore: TmuxSessionStore = TmuxSessionStore(sessionId: sessionId, sendTarget: self)
 
-    /// Compose Pane 是否显示
-    @Published var isComposePaneOpen: Bool = false
+    /// Compose Pane 是否显示（转发到 terminalVM）
+    var isComposePaneOpen: Bool {
+        get { terminalVM.isComposePaneOpen }
+        set { terminalVM.isComposePaneOpen = newValue }
+    }
 
     // MARK: - 终端录制（W13）
 
     /// 当前会话的录制器（每个 Tab 独立实例，RecordingDialogView 通过此引用控制录制）
     let recorder = SessionRecorder()
 
-    /// 录制对话框是否显示
-    @Published var isRecordingDialogOpen: Bool = false
+    /// 录制对话框是否显示（转发到 terminalVM）
+    var isRecordingDialogOpen: Bool {
+        get { terminalVM.isRecordingDialogOpen }
+        set { terminalVM.isRecordingDialogOpen = newValue }
+    }
 
-    /// AI 命令补全上下文缓冲（最近 N 行终端输出，任务 14.8）
-    private var _outputBuffer: String = ""
-    private let _outputBufferMaxChars = 32_000  // ~200 行 × 160 字符（供 AI 摘要使用）
+    // MARK: - 面板 ViewModel（AI 错误侦探、性能指标、输出缓冲区）
+
+    /// 终端 ViewModel：持有性能指标、AI 错误侦探、输出缓冲区、面板可见性
+    let terminalVM = TerminalViewModel()
+
+    /// 服务器实时性能指标（快速访问入口，实际存储在 terminalVM）
+    var serverMetrics: ServerMetrics? { terminalVM.serverMetrics }
+
+    /// AI 检测错误文本（快速访问入口）
+    var detectedErrorText: String? { terminalVM.detectedErrorText }
 
     /// 返回最近终端输出（供 AI 命令补全使用）
-    func recentTerminalOutput() -> String {
-        _outputBuffer
-    }
+    func recentTerminalOutput() -> String { terminalVM.recentTerminalOutput() }
 
-    /// 服务器实时性能指标（仅私钥/SSH Agent 认证时可用）
-    @Published private(set) var serverMetrics: ServerMetrics?
+    /// 清除已检测的错误
+    func clearDetectedError() { terminalVM.clearDetectedError() }
 
-    /// 服务器指标监控器
-    private var metricsMonitor: ServerMetricsMonitor?
-
-    // MARK: - 会话日志（terminal.loggingEnabled）
+    // MARK: - 会话日志（terminal.loggingEnabled）——方法实现在 TerminalController+SessionLog.swift
 
     /// 当前会话的日志文件句柄（lazy，首次写入时创建）
-    private var sessionLogHandle: FileHandle?
+    var sessionLogHandle: FileHandle?
     /// 是否已打开日志文件（避免重复尝试）
-    private var sessionLogOpened = false
-
-    /// 将原始终端字节追加到日志文件（仅 terminal.loggingEnabled=true 时生效）
-    private func appendToSessionLog(_ bytes: [UInt8]) {
-        let enabled = UserDefaults.standard.object(forKey: "terminal.loggingEnabled") as? Bool ?? false
-        guard enabled else { return }
-
-        if !sessionLogOpened {
-            sessionLogOpened = true
-            sessionLogHandle = openSessionLogFile()
-        }
-        guard let handle = sessionLogHandle else { return }
-        let data = Data(bytes)
-        try? handle.write(contentsOf: data)
-    }
-
-    /// 创建并打开会话日志文件，返回 FileHandle
-    private func openSessionLogFile() -> FileHandle? {
-        var logDir = UserDefaults.standard.string(forKey: "terminal.logDirectory") ?? "~/Documents/ShellMate/Logs/"
-        logDir = (logDir as NSString).expandingTildeInPath
-
-        var fmt = UserDefaults.standard.string(forKey: "terminal.logFilenameFormat") ?? "{session}_{date}.log"
-        let dateStr = {
-            let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd_HHmmss"
-            return f.string(from: Date())
-        }()
-        fmt = fmt
-            .replacingOccurrences(of: "{session}", with: session.name.replacingOccurrences(of: "/", with: "-"))
-            .replacingOccurrences(of: "{date}", with: dateStr)
-            .replacingOccurrences(of: "{host}", with: session.host)
-
-        let url = URL(fileURLWithPath: logDir).appendingPathComponent(fmt)
-        do {
-            try FileManager.default.createDirectory(at: URL(fileURLWithPath: logDir),
-                                                    withIntermediateDirectories: true)
-            if !FileManager.default.fileExists(atPath: url.path) {
-                FileManager.default.createFile(atPath: url.path, contents: nil)
-            }
-            return try FileHandle(forWritingTo: url)
-        } catch {
-            AppLogger.general.debug("[SessionLog] 无法创建日志文件 \(url.path): \(error.localizedDescription)")
-            return nil
-        }
-    }
-
-    // MARK: - AI 错误侦探
-
-    /// 最近检测到的错误摘要文本（非 nil 时显示错误徽章）
-    @Published private(set) var detectedErrorText: String? = nil
-
-    /// 用于错误检测的输出滚动缓冲区（最近 1024 字节）
-    private var errorOutputBuffer: String = ""
-
-    private static let errorPatterns: [String] = [
-        "command not found", "No such file or directory", "Permission denied",
-        "Connection refused", "No route to host",
-        ": error:", "Error:", "ERROR:", "FATAL:", "fatal error:",
-        "Traceback (most recent call last)", "npm ERR!", "yarn error",
-        "SyntaxError:", "NameError:", "TypeError:", "ValueError:",
-        "ModuleNotFoundError:", "ImportError:", "FileNotFoundError:",
-        "Exception in thread main",
-    ]
-
-    /// 清除已检测的错误（用户手动关闭徽章后调用）
-    func clearDetectedError() {
-        detectedErrorText = nil
-        errorOutputBuffer = ""
-    }
-
-    /// 追加终端输出到 AI 补全上下文缓冲，保持最大长度（任务 14.8）
-    private func appendToOutputBuffer(_ text: String) {
-        guard !text.isEmpty else { return }
-        _outputBuffer += text
-        if _outputBuffer.count > _outputBufferMaxChars {
-            _outputBuffer = String(_outputBuffer.suffix(_outputBufferMaxChars))
-        }
-    }
-
-    // MARK: - 日志面板集成（任务 W14）
-
-    /// 将终端输出按行写入 SessionLogStore（去除 ANSI 转义码）
-    private func logOutputLines(_ raw: String) {
-        let clean = stripANSI(raw)
-        let lines = clean.components(separatedBy: "\n")
-        let now = Date()
-        let name = session.name
-        for line in lines {
-            let trimmed = line.trimmingCharacters(in: .controlCharacters)
-            guard !trimmed.isEmpty else { continue }
-            SessionLogStore.shared.append(SessionLogEntry(
-                timestamp: now,
-                sessionName: name,
-                type: .output,
-                content: trimmed
-            ))
-        }
-    }
-
-    /// 写入用户输入日志（来自 Compose Pane 或快捷命令）
-    private func logInputEntry(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        SessionLogStore.shared.append(SessionLogEntry(
-            timestamp: Date(),
-            sessionName: session.name,
-            type: .input,
-            content: trimmed
-        ))
-    }
-
-    /// 写入系统事件日志
-    private func logSystemEvent(_ message: String) {
-        SessionLogStore.shared.append(SessionLogEntry(
-            timestamp: Date(),
-            sessionName: session.name,
-            type: .system,
-            content: message
-        ))
-    }
-
-    private func detectErrors(in text: String) {
-        errorOutputBuffer += text
-        if errorOutputBuffer.count > 1024 {
-            errorOutputBuffer = String(errorOutputBuffer.suffix(1024))
-        }
-        let stripped = stripANSI(errorOutputBuffer)
-        let lines = stripped.components(separatedBy: "\n")
-        for line in lines.reversed() {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { continue }
-            if Self.errorPatterns.contains(where: { trimmed.contains($0) }) {
-                if trimmed != detectedErrorText {
-                    detectedErrorText = String(trimmed.prefix(120))
-                }
-                return
-            }
-        }
-    }
-
-    private func stripANSI(_ str: String) -> String {
-        let pattern = "\u{1B}\\[[0-9;]*[A-Za-z]|\u{1B}\\][^\u{0007}]*\u{0007}"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return str }
-        let range = NSRange(str.startIndex..., in: str)
-        return regex.stringByReplacingMatches(in: str, options: [], range: range, withTemplate: "")
-    }
+    var sessionLogOpened = false
 
     private var reconnectTask: Task<Void, Never>?
     private var userDisconnected = false
@@ -480,12 +343,13 @@ final class TerminalController: ObservableObject {
                         self.delegate?.terminalController(self, didReceiveData: Data(terminalBytes))
                         self.appendToSessionLog(terminalBytes)
                         let decoded = String(bytes: terminalBytes, encoding: .utf8) ?? ""
-                        self.appendToOutputBuffer(decoded)
+                        self.terminalVM.updateOutputBuffer(decoded)
                         self.logOutputLines(decoded)
                         Task { await self.recorder.appendOutput(decoded) }
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
-                            self.detectErrors(in: decoded)
+                            self.terminalVM.detectErrors(in: decoded)
                         }
+                        AutomationTriggerEngine.shared.process(output: decoded, sessionId: self.sessionId, controller: self)
                     } else {
                         // 直接透传路径：保留原始字节（含非 UTF-8 字符），性能最优
                         let processed = HighlightEngine.shared.process(Data(flushed))
@@ -493,12 +357,13 @@ final class TerminalController: ObservableObject {
                         self.delegate?.terminalController(self, didReceiveData: Data(flushed))
                         self.appendToSessionLog(flushed)
                         let decoded2 = String(bytes: flushed, encoding: .utf8) ?? ""
-                        self.appendToOutputBuffer(decoded2)
+                        self.terminalVM.updateOutputBuffer(decoded2)
                         self.logOutputLines(decoded2)
                         Task { await self.recorder.appendOutput(decoded2) }
                         if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
-                            self.detectErrors(in: decoded2)
+                            self.terminalVM.detectErrors(in: decoded2)
                         }
+                        AutomationTriggerEngine.shared.process(output: decoded2, sessionId: self.sessionId, controller: self)
                     }
                 }
             }
@@ -593,6 +458,8 @@ final class TerminalController: ObservableObject {
                     await MainActor.run { self?.tmuxStore.detectTmux() }
                 }
             }
+            // §3.19：触发 onConnect 自动化规则
+            AutomationTriggerEngine.shared.processEvent(.onConnect, sessionId: sessionId, controller: self)
 
         } catch let error as SSHError {
             switch error {
@@ -656,6 +523,8 @@ final class TerminalController: ObservableObject {
         stopMetricsMonitor()
         // 通知 tmux 状态管理器清理状态
         tmuxStore.handleSSHDisconnected()
+        // §3.19：触发 onDisconnect 自动化规则
+        AutomationTriggerEngine.shared.processEvent(.onDisconnect, sessionId: sessionId, controller: self)
         // 关闭会话日志文件句柄
         try? sessionLogHandle?.close()
         sessionLogHandle = nil
@@ -666,31 +535,19 @@ final class TerminalController: ObservableObject {
         delegate?.terminalController(self, didChangeState: state)
     }
 
-    // MARK: - 性能指标监控
+    // MARK: - 性能指标监控（委托给 terminalVM）
 
     private func startMetricsMonitor() {
-        Task {
-            // 从凭据金库加载认证凭据，传入监控器（安全只在内存中使用）
+        Task { [weak self] in
+            guard let self else { return }
             let password = try? await CredentialVault.shared.load(sessionId: session.id, type: .password)
             let passphrase = try? await CredentialVault.shared.load(sessionId: session.id, type: .passphrase)
-
-            let monitor = ServerMetricsMonitor(
-                session: session,
-                password: password,
-                passphrase: passphrase
-            )
-            monitor.onUpdate = { [weak self] metrics in
-                self?.serverMetrics = metrics
-            }
-            metricsMonitor = monitor
-            monitor.start()
+            terminalVM.startMetricsMonitor(for: session, password: password, passphrase: passphrase)
         }
     }
 
     private func stopMetricsMonitor() {
-        metricsMonitor?.stop()
-        metricsMonitor = nil
-        serverMetrics = nil
+        terminalVM.stopMetricsMonitor()
     }
 
     // MARK: - SFTP 面板管理
@@ -1154,9 +1011,8 @@ extension TerminalController: SwiftTerm.TerminalViewDelegate {
         if visual {
             Task { @MainActor in
                 source.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    source.layer?.backgroundColor = .clear
-                }
+                try? await Task.sleep(nanoseconds: 120_000_000) // 0.12s
+                source.layer?.backgroundColor = .clear
             }
         } else {
             NSSound.beep()

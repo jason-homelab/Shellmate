@@ -33,10 +33,15 @@ struct AIAssistantPanelView: View {
             messageListView
             inputView
         }
-        .background(DesignTokens.Colors.surfacePanel)
+        // Figma: bg-white/90 backdrop-blur-xl
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.90))
+        }
         .overlay(alignment: .leading) {
+            // Figma: border-[#d2d2d7]/50
             Rectangle()
-                .fill(DesignTokens.Colors.borderPrimary)
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(width: 0.5)
         }
         .onAppear {
@@ -67,15 +72,15 @@ struct AIAssistantPanelView: View {
                     .frame(width: 36, height: 36)
                     .shadow(color: DesignTokens.Colors.accentAI.opacity(0.35), radius: 8, x: 0, y: 3)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(DesignTokens.Typography.labelLargeMid)
                     .foregroundColor(.white)
             }
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text("AI 助手")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("基于 \(aiSettings.currentModel.name) · \(vm.session.name)")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
             }
@@ -83,14 +88,14 @@ struct AIAssistantPanelView: View {
             modelPickerView
             Button { withAnimation(.easeInOut(duration: 0.15)) { vm.clear() } } label: {
                 Image(systemName: "square.and.pencil")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
             .help("新对话")
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .buttonStyle(.plain)
@@ -98,10 +103,14 @@ struct AIAssistantPanelView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(DesignTokens.Colors.surfaceWindow)
+        // Figma: bg-white/60 backdrop-blur-xl border-b border-[#d2d2d7]/50
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(DesignTokens.Colors.borderPrimary.opacity(0.5))
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
         }
     }
@@ -125,21 +134,21 @@ struct AIAssistantPanelView: View {
                 }
             }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Text(aiSettings.currentModel.name)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 8, weight: .medium))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(DesignTokens.Colors.surfaceCard)
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.xxs)
+            .background(Color.white.opacity(0.80))
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5))
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -150,7 +159,7 @@ struct AIAssistantPanelView: View {
     private var messageListView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 16) {
+                LazyVStack(spacing: DesignTokens.Spacing.lg) {
                     offlineBannerView
                     ForEach(vm.messages) { msg in
                         AIMessageBubbleView(message: msg, onInsertCommand: onInsertCommand).id(msg.id)
@@ -162,7 +171,7 @@ struct AIAssistantPanelView: View {
                         ).id("streaming")
                     }
                     if vm.messages.count <= 1 && !vm.isStreaming { quickSuggestionsView }
-                    if let err = vm.errorMessage { errorBanner(err).padding(.horizontal, 14).padding(.top, 6) }
+                    if let err = vm.errorMessage { errorBanner(err).padding(.horizontal, 14).padding(.top, DesignTokens.Spacing.xs) }
                     Color.clear.frame(height: 8)
                 }
                 .padding(DesignTokens.Spacing.md)
@@ -186,42 +195,43 @@ struct AIAssistantPanelView: View {
     ]
 
     private var quickSuggestionsView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: "lightbulb").font(.system(size: 11))
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Image(systemName: "lightbulb").font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
-                Text("快速建议").font(.system(size: 11, weight: .medium))
+                Text("快速建议").font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
-            let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
-            LazyVGrid(columns: columns, spacing: 8) {
+            let columns = [GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)]
+            LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
                 ForEach(quickSuggestions, id: \.self) { s in
                     Button { vm.send(text: s) } label: {
-                        Text(s).font(.system(size: 11, weight: .medium))
+                        Text(s).font(DesignTokens.Typography.labelSmall)
                             .foregroundColor(DesignTokens.Colors.textPrimary)
                             .multilineTextAlignment(.center).lineLimit(2)
                             .padding(.horizontal, 10).padding(.vertical, 7)
                             .frame(maxWidth: .infinity)
-                            .background(DesignTokens.Colors.surfaceCard)
+                            // Figma: bg-white/80 border-[#d2d2d7]/50 rounded-full
+                            .background(Color.white.opacity(0.80))
                             .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(DesignTokens.Colors.borderPrimary.opacity(0.5), lineWidth: 1))
+                            .overlay(Capsule().strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1))
                     }.buttonStyle(.plain)
                 }
             }
         }
-        .padding(.horizontal, 4).padding(.top, 8)
+        .padding(.horizontal, DesignTokens.Spacing.xxs).padding(.top, DesignTokens.Spacing.sm)
     }
 
     private func errorBanner(_ msg: String) -> some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.triangle").font(.system(size: 11))
+        VStack(spacing: DesignTokens.Spacing.xs) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle").font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
-                Text(msg).font(.system(size: 11)).foregroundColor(DesignTokens.Colors.statusError)
+                Text(msg).font(DesignTokens.Typography.captionLarge).foregroundColor(DesignTokens.Colors.statusError)
                     .lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button { vm.errorMessage = nil; vm.canRetry = false } label: {
-                    Image(systemName: "xmark").font(.system(size: 10)).foregroundColor(DesignTokens.Colors.textTertiary)
+                    Image(systemName: "xmark").font(DesignTokens.Typography.captionMedium).foregroundColor(DesignTokens.Colors.textTertiary)
                 }.buttonStyle(.plain)
             }
             if vm.canRetry {
@@ -229,13 +239,13 @@ struct AIAssistantPanelView: View {
                     Spacer()
                     Button { vm.retry() } label: {
                         Label("重试", systemImage: "arrow.clockwise")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(DesignTokens.Typography.labelSmall)
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                     }.buttonStyle(.plain)
                 }
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 8)
+        .padding(.horizontal, DesignTokens.Spacing.md).padding(.vertical, DesignTokens.Spacing.sm)
         .background(DesignTokens.Colors.statusError.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
@@ -245,53 +255,54 @@ struct AIAssistantPanelView: View {
     @ViewBuilder
     private var offlineBannerView: some View {
         if !networkMonitor.isConnected {
-            HStack(spacing: 8) {
-                Image(systemName: "wifi.slash").font(.system(size: 11))
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "wifi.slash").font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
                 Text("网络不可用，AI 请求将在网络恢复后才能发送")
-                    .font(.system(size: 11)).foregroundColor(DesignTokens.Colors.statusConnecting).lineLimit(2)
+                    .font(DesignTokens.Typography.captionLarge).foregroundColor(DesignTokens.Colors.statusConnecting).lineLimit(2)
             }
-            .padding(.horizontal, 12).padding(.vertical, 8)
+            .padding(.horizontal, DesignTokens.Spacing.md).padding(.vertical, DesignTokens.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(DesignTokens.Colors.statusConnecting.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .strokeBorder(DesignTokens.Colors.statusConnecting.opacity(0.25), lineWidth: 0.5))
-            .padding(.horizontal, 14).padding(.top, 6)
+            .padding(.horizontal, 14).padding(.top, DesignTokens.Spacing.xs)
         }
     }
 
     // MARK: - 输入区
 
     private var inputView: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: DesignTokens.Spacing.xs) {
             modeSwitchBar
-            HStack(alignment: .center, spacing: 8) {
+            HStack(alignment: .center, spacing: DesignTokens.Spacing.sm) {
                 ZStack(alignment: .leading) {
                     if vm.inputText.isEmpty {
                         Text(vm.inputMode == .nlCommand
                              ? "用自然语言描述你想执行的操作..."
                              : "Ask me anything about terminal commands...")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, DesignTokens.Spacing.md)
                             .allowsHitTesting(false)
                     }
                     TextField("", text: $vm.inputText)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
                         .onSubmit { guard !vm.isStreaming else { return }; vm.send(text: vm.inputText) }
                 }
                 .frame(minHeight: 44)
-                .background(DesignTokens.Colors.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                // Figma: bg-white/80 border-[#d2d2d7]/50 rounded-xl
+                .background(Color.white.opacity(0.80))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                     .strokeBorder(
                         vm.inputMode == .nlCommand
                             ? DesignTokens.Colors.accentSecondary.opacity(0.50)
-                            : DesignTokens.Colors.borderPrimary.opacity(0.5),
+                            : Color(hex: "#d2d2d7").opacity(0.50),
                         lineWidth: vm.inputMode == .nlCommand ? 1.0 : 0.75
                     ))
                 .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
@@ -300,14 +311,18 @@ struct AIAssistantPanelView: View {
             Text(vm.inputMode == .nlCommand
                  ? "AI 将生成一条 shell 命令，可一键插入终端执行"
                  : "Press Enter to send, Shift+Enter for new line")
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(DesignTokens.Colors.surfaceWindow)
+        .padding(.horizontal, 14).padding(.vertical, DesignTokens.Spacing.md)
+        // Figma: bg-white/60 backdrop-blur-xl border-t border-[#d2d2d7]/50
+        .background {
+            Rectangle().fill(.thinMaterial)
+            Rectangle().fill(Color.white.opacity(0.60))
+        }
         .overlay(alignment: .top) {
-            Rectangle().fill(DesignTokens.Colors.borderPrimary.opacity(0.5)).frame(height: 0.5)
+            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
         }
     }
 
@@ -315,7 +330,7 @@ struct AIAssistantPanelView: View {
     private var sendOrStopButton: some View {
         if vm.isStreaming {
             Button { vm.cancel() } label: {
-                Image(systemName: "stop.fill").font(.system(size: 12, weight: .semibold))
+                Image(systemName: "stop.fill").font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .frame(width: 44, height: 44)
                     .background(DesignTokens.Colors.statusError.opacity(0.12))
@@ -326,7 +341,7 @@ struct AIAssistantPanelView: View {
             let sendColor: Color = vm.inputMode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary
             Button { vm.send(text: vm.inputText) } label: {
                 Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "paperplane.fill")
-                    .font(.system(size: 13)).foregroundColor(.white)
+                    .font(DesignTokens.Typography.bodyMedium).foregroundColor(.white)
                     .frame(width: 44, height: 44)
                     .background(sendColor)
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
@@ -338,21 +353,21 @@ struct AIAssistantPanelView: View {
     }
 
     private var modeSwitchBar: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             ForEach(AIInputMode.allCases, id: \.rawValue) { mode in
                 let isSelected = vm.inputMode == mode
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { vm.inputMode = mode; vm.inputText = "" }
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: mode == .chat ? "bubble.left" : "terminal")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(DesignTokens.Typography.captionMedium)
                         Text(mode.rawValue).font(.system(size: 11, weight: isSelected ? .semibold : .regular))
                     }
                     .foregroundColor(isSelected
                         ? (mode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary)
                         : DesignTokens.Colors.textTertiary)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .padding(.horizontal, 10).padding(.vertical, DesignTokens.Spacing.xxs)
                     .background(isSelected
                         ? (mode == .nlCommand
                            ? DesignTokens.Colors.accentSecondary.opacity(0.10)
@@ -378,41 +393,42 @@ struct AIMessageBubbleView: View {
     var body: some View {
         Group {
             if isUser {
-                HStack(alignment: .bottom, spacing: 8) {
+                HStack(alignment: .bottom, spacing: DesignTokens.Spacing.sm) {
                     Spacer(minLength: 32)
                     Text(message.content)
-                        .font(.system(size: 12)).foregroundColor(.white)
+                        .font(DesignTokens.Typography.bodySmall).foregroundColor(.white)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 16).padding(.vertical, 12)
+                        .padding(.horizontal, DesignTokens.Spacing.lg).padding(.vertical, DesignTokens.Spacing.md)
                         .background(DesignTokens.Colors.accentPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
                         .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.3), radius: 8, x: 0, y: 3)
                     ZStack {
                         Circle().fill(DesignTokens.Colors.textSecondary).frame(width: 32, height: 32)
-                        Text("U").font(.system(size: 11, weight: .medium)).foregroundColor(.white)
+                        Text("U").font(DesignTokens.Typography.labelSmall).foregroundColor(.white)
                     }
                     .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
                 }
             } else {
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                     ZStack {
                         Circle().fill(DesignTokens.Gradients.aiGradient)
                             .frame(width: 32, height: 32)
                             .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
-                        Image(systemName: "sparkles").font(.system(size: 13, weight: .medium)).foregroundColor(.white)
+                        Image(systemName: "sparkles").font(DesignTokens.Typography.labelLarge).foregroundColor(.white)
                     }
                     VStack(alignment: .leading, spacing: 0) {
                         if isStreaming && message.content.isEmpty {
-                            typingIndicator.padding(.horizontal, 16).padding(.vertical, 12)
+                            typingIndicator.padding(.horizontal, DesignTokens.Spacing.lg).padding(.vertical, DesignTokens.Spacing.md)
                         } else {
-                            aiBubbleContent.padding(.horizontal, 16).padding(.vertical, 12)
+                            aiBubbleContent.padding(.horizontal, DesignTokens.Spacing.lg).padding(.vertical, DesignTokens.Spacing.md)
                         }
                     }
-                    .background(DesignTokens.Colors.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.borderPrimary.opacity(0.5), lineWidth: 0.75))
+                    // Figma: bg-white/80 border border-[#d2d2d7]/50 shadow-sm
+                    .background(Color.white.opacity(0.80))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.75))
                     .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
                     Spacer(minLength: 32)
                 }
@@ -423,20 +439,20 @@ struct AIMessageBubbleView: View {
     @ViewBuilder
     private var aiBubbleContent: some View {
         let segments = AIMarkdownParser.parse(message.content)
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
                 switch seg {
                 case .text(let t):
                     if !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(t).font(.system(size: 12)).foregroundColor(DesignTokens.Colors.textPrimary)
+                        Text(t).font(DesignTokens.Typography.bodySmall).foregroundColor(DesignTokens.Colors.textPrimary)
                             .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     }
                 case .code(let code, let lang):
                     AICodeBlockView(code: code, language: lang, onInsert: onInsertCommand)
                 case .inlineCode(let c):
-                    Text(c).font(.system(size: 11, design: .monospaced))
+                    Text(c).font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
-                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .padding(.horizontal, DesignTokens.Spacing.micro).padding(.vertical, DesignTokens.Spacing.xxxs)
                         .background(DesignTokens.Colors.accentPrimary.opacity(0.10))
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
@@ -445,7 +461,7 @@ struct AIMessageBubbleView: View {
     }
 
     private var typingIndicator: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             ForEach(0..<3, id: \.self) { i in
                 Circle().fill(DesignTokens.Colors.textSecondary).frame(width: 8, height: 8)
                     .offset(y: bounce ? -4 : 0)
@@ -501,7 +517,7 @@ struct AIPrivacyConsentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 12) {
+            VStack(spacing: DesignTokens.Spacing.md) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(LinearGradient(
@@ -509,13 +525,13 @@ struct AIPrivacyConsentView: View {
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         ))
                         .frame(width: 60, height: 60)
-                    Image(systemName: "sparkles").font(.system(size: 26, weight: .medium)).foregroundColor(.white)
+                    Image(systemName: "sparkles").font(DesignTokens.Typography.displayMedium).foregroundColor(.white)
                 }
                 Text("AI 助手数据说明").font(.system(size: 16, weight: .bold)).foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("在开启 AI 功能前，请了解以下数据处理方式")
-                    .font(.system(size: 12)).foregroundColor(DesignTokens.Colors.textSecondary).multilineTextAlignment(.center)
+                    .font(DesignTokens.Typography.bodySmall).foregroundColor(DesignTokens.Colors.textSecondary).multilineTextAlignment(.center)
             }
-            .padding(.top, 28).padding(.horizontal, 24).padding(.bottom, 20)
+            .padding(.top, 28).padding(.horizontal, DesignTokens.Spacing.xxl).padding(.bottom, DesignTokens.Spacing.xl)
             Divider()
             VStack(alignment: .leading, spacing: 14) {
                 privacyItem(icon: "text.alignleft", color: DesignTokens.Colors.accentPrimary, title: "会发送的数据",
@@ -525,28 +541,28 @@ struct AIPrivacyConsentView: View {
                 privacyItem(icon: "building.2", color: DesignTokens.Colors.statusConnecting, title: "数据去向",
                             body: "数据发送至您配置的 AI 服务商（Claude / OpenAI / 本地 Ollama），ShellMate 本身不存储或上传任何数据。")
             }
-            .padding(.horizontal, 24).padding(.vertical, 18)
+            .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, 18)
             Divider()
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 Button("不使用 AI 功能", action: onDecline).buttonStyle(.bordered).controlSize(.regular)
                 Button("我已了解，继续使用", action: onAccept).buttonStyle(.borderedProminent).controlSize(.regular)
             }
-            .padding(.horizontal, 24).padding(.vertical, 16)
+            .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, DesignTokens.Spacing.lg)
         }
         .frame(width: 420)
         .background(DesignTokens.Colors.surfacePanel)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
     }
 
     private func privacyItem(icon: String, color: Color, title: String, body: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             ZStack {
                 Circle().fill(color.opacity(0.12)).frame(width: 32, height: 32)
-                Image(systemName: icon).font(.system(size: 13, weight: .medium)).foregroundColor(color)
+                Image(systemName: icon).font(DesignTokens.Typography.labelLarge).foregroundColor(color)
             }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 12, weight: .semibold)).foregroundColor(DesignTokens.Colors.textPrimary)
-                Text(body).font(.system(size: 11)).foregroundColor(DesignTokens.Colors.textSecondary)
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
+                Text(title).font(DesignTokens.Typography.bodySmallStrong).foregroundColor(DesignTokens.Colors.textPrimary)
+                Text(body).font(DesignTokens.Typography.captionLarge).foregroundColor(DesignTokens.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

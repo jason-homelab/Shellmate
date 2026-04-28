@@ -87,6 +87,9 @@ final class HighlightEngine: ObservableObject {
     /// 预编译的正则表达式缓存
     private var compiled: [(regex: NSRegularExpression, color: HighlightColor)] = []
 
+    /// 检测已有 ANSI 序列所用的正则（类级预编译，避免重复构建）
+    private static let ansiDetectRegex = try! NSRegularExpression(pattern: "\u{1B}\\[[0-9;]*m")
+
     private let rulesKey   = "HighlightEngine.rules"
     private let enabledKey = "HighlightEngine.enabled"
 
@@ -141,12 +144,29 @@ final class HighlightEngine: ObservableObject {
             let fragment = String(result[swiftRange])
             // 跳过已含 ESC 的片段，避免双重高亮损坏 ANSI 序列
             guard !fragment.contains("\u{1B}") else { continue }
+            // 跳过已处于活动 ANSI 颜色序列内部的匹配
+            guard !isInsideActiveANSI(result, before: swiftRange.lowerBound) else { continue }
             result.replaceSubrange(
                 swiftRange,
                 with: "\u{1B}[\(color.ansiFGCode)m\(fragment)\u{1B}[0m"
             )
         }
         return result
+    }
+
+    /// 判断 text 中 index 之前是否处于一个尚未 reset 的 ANSI 颜色序列内
+    /// 取 prefix 中最后一条 ANSI SGR 序列：若参数为空或 "0" 表示 reset（不在序列内），否则在序列内。
+    private func isInsideActiveANSI(_ text: String, before index: String.Index) -> Bool {
+        let prefix = String(text[text.startIndex..<index])
+        let nsPrefix = prefix as NSString
+        let range = NSRange(location: 0, length: nsPrefix.length)
+        let hits = Self.ansiDetectRegex.matches(in: prefix, range: range)
+        guard let last = hits.last else { return false }
+        // 提取 SGR 参数（ESC [ <params> m 中的 <params>）
+        let inner = NSRange(location: last.range.location + 2,
+                            length: max(0, last.range.length - 3))
+        let param = nsPrefix.substring(with: inner)
+        return param != "0" && !param.isEmpty
     }
 
     /// 重新编译所有规则

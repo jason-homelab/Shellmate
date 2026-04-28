@@ -137,9 +137,9 @@ struct ConnectionErrorView: View {
         }
         .frame(width: 440)
         .background(DesignTokens.Colors.surfaceCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
@@ -148,22 +148,22 @@ struct ConnectionErrorView: View {
     // MARK: - 头部
 
     private var headerView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             ZStack {
                 Circle()
                     .fill(analysis.category.iconColor.opacity(0.12))
                     .frame(width: 44, height: 44)
                 Image(systemName: analysis.category.icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(analysis.category.iconColor)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text(analysis.title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("\(session.name) · \(session.username)@\(session.host):\(session.port)")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .lineLimit(1)
             }
@@ -172,7 +172,7 @@ struct ConnectionErrorView: View {
 
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
                     .background(DesignTokens.Colors.surfaceCard)
@@ -187,15 +187,15 @@ struct ConnectionErrorView: View {
     // MARK: - 内容
 
     private var contentView: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             // 错误原文（等宽字体，可滚动）
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                 Text("错误详情")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 ScrollView(.vertical, showsIndicators: false) {
                     Text(errorMessage)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
@@ -207,21 +207,21 @@ struct ConnectionErrorView: View {
             }
 
             // 解决建议
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 Text("可能原因 & 解决方案")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
 
                 ForEach(Array(analysis.suggestions.enumerated()), id: \.offset) { idx, suggestion in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                         Text("\(idx + 1)")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                             .frame(width: 16, height: 16)
                             .background(DesignTokens.Colors.accentPrimary.opacity(0.10))
                             .clipShape(Circle())
                         Text(suggestion)
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                     }

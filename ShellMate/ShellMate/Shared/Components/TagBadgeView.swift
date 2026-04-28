@@ -35,7 +35,7 @@ struct TagBadgeView: View {
                     onDelete?()
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(textColor.opacity(0.7))
                 }
                 .buttonStyle(.plain)
@@ -133,7 +133,7 @@ extension TagBadgeView {
 // MARK: - 预览
 
 #Preview("标签徽章") {
-    VStack(spacing: 16) {
+    VStack(spacing: DesignTokens.Spacing.lg) {
         // 基本样式
         HStack {
             TagBadgeView(text: "生产")

@@ -21,7 +21,7 @@ struct AIErrorDetectiveView: View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             // 警告图标
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 11, weight: .semibold))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
             // 错误摘要文本（最多 2 行，避免过长截断丢失关键信息）
@@ -39,9 +39,9 @@ struct AIErrorDetectiveView: View {
             Button {
                 onAnalyze?(errorText)
             } label: {
-                HStack(spacing: 3) {
+                HStack(spacing: DesignTokens.Spacing.nano) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text("AI 分析")
                         .font(DesignTokens.Typography.labelSmall)
                 }
@@ -57,7 +57,7 @@ struct AIErrorDetectiveView: View {
             // 关闭按钮
             Button { onDismiss?() } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)

@@ -79,36 +79,36 @@ struct TerminalSettingsView: View {
 
     private var scrollbackSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 Text("缓冲行数")
                     .frame(width: 100, alignment: .leading)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
 
                 TextField("", value: $scrollbackLines,
                           formatter: boundedIntFormatter(1000, 100000))
                     .textFieldStyle(.plain)
                     .frame(width: 80)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .padding(DesignTokens.Spacing.xs)
-                    .background(DesignTokens.Colors.surfaceInput)
+                    .background(Color.white.opacity(0.80))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5))
+                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
                     .disabled(unlimitedScrollback)
 
                 Text("行")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
             }
 
             Text("较大值占用更多内存")
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
 
             HStack {
                 Text("滚动时跳转到底部（新内容时自动回底部）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $scrollToBottom)
@@ -117,7 +117,7 @@ struct TerminalSettingsView: View {
 
             HStack {
                 Text("无限滚动缓冲区")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $unlimitedScrollback)
@@ -126,7 +126,7 @@ struct TerminalSettingsView: View {
 
             if unlimitedScrollback {
                 Text("开启后忽略上方行数限制，注意内存占用")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .padding(.leading, 22)
             }
@@ -143,7 +143,7 @@ struct TerminalSettingsView: View {
 
             HStack {
                 Text("Option 键作为 Meta 键（Alt）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $optionAsMeta)
@@ -152,7 +152,7 @@ struct TerminalSettingsView: View {
 
             if optionAsMeta {
                 Text("关闭后 Option 用于输入特殊字符（如 ™ © 等）")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .padding(.leading, 22)
             }
@@ -165,7 +165,7 @@ struct TerminalSettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("启用会话日志记录")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $loggingEnabled)
@@ -173,10 +173,10 @@ struct TerminalSettingsView: View {
             }
 
             if loggingEnabled {
-                HStack(spacing: 8) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
                     Text("日志目录")
                         .frame(width: 100, alignment: .leading)
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
 
                     CustomTextField(placeholder: "~/Documents/ShellMate/Logs/", text: $logDirectory)
@@ -192,7 +192,7 @@ struct TerminalSettingsView: View {
 
                 HStack {
                     Text("日志中记录时间戳")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                     Spacer()
                     Toggle("", isOn: $logTimestamp)
@@ -210,7 +210,7 @@ struct TerminalSettingsView: View {
 
             HStack {
                 Text("响铃（Bell）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $bellEnabled)
@@ -219,14 +219,14 @@ struct TerminalSettingsView: View {
 
             if bellEnabled {
                 Text("接收到 BEL 字符时播放系统提示音")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .padding(.leading, 22)
             }
 
             HStack {
                 Text("窗口闪烁提醒（Visual Bell）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $visualBell)
@@ -235,7 +235,7 @@ struct TerminalSettingsView: View {
 
             HStack {
                 Text("多行粘贴时弹出确认框")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $pasteConfirm)
@@ -244,14 +244,14 @@ struct TerminalSettingsView: View {
 
             if pasteConfirm {
                 Text("防止误粘贴包含换行的命令直接执行")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .padding(.leading, 22)
             }
 
             HStack {
                 Text("右键弹出上下文菜单（而非粘贴）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $rightClickMenu)
@@ -267,9 +267,9 @@ struct TerminalSettingsView: View {
         title: LocalizedStringKey,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             content()
@@ -277,10 +277,10 @@ struct TerminalSettingsView: View {
     }
 
     private func pickerRow(label: LocalizedStringKey, selection: Binding<String>, options: [String]) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             Text(label)
                 .frame(width: 100, alignment: .leading)
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             Picker("", selection: selection) {

@@ -12,8 +12,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // ① 类级别：在 WindowGroup 创建任何 NSWindow 之前禁用自动标签合并
         NSWindow.allowsAutomaticWindowTabbing = false
 
-        // ② 启动时立即应用已保存的外观模式（在窗口创建前设好，避免闪烁）
-        applyWindowMode(UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "auto")
+        // ② 启动时读取用户保存的外观模式并应用（保留用户选择，默认 "dark"）
+        let savedMode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "light"
+        applyWindowMode(savedMode)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -63,13 +64,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 外观模式
 
     private func applyWindowMode(_ mode: String) {
-        switch mode {
-        case "light":
+        // "light" = 浅色；其余（dark / auto）= 深色优先
+        if mode == "light" {
             NSApp.appearance = NSAppearance(named: .aqua)
-        case "dark":
+        } else {
             NSApp.appearance = NSAppearance(named: .darkAqua)
-        default: // "auto" — 跟随系统
-            NSApp.appearance = nil
         }
     }
 

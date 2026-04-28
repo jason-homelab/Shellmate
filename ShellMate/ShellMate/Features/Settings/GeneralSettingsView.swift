@@ -121,7 +121,7 @@ struct GeneralSettingsView: View {
 
     private func toggleRow(title: LocalizedStringKey, subtitle: LocalizedStringKey?, binding: Binding<Bool>) -> some View {
         HStack(alignment: subtitle != nil ? .top : .center) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -144,7 +144,7 @@ struct GeneralSettingsView: View {
         @ViewBuilder control: () -> Content
     ) -> some View {
         HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)

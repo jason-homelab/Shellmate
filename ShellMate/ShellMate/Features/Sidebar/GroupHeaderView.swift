@@ -19,68 +19,57 @@ struct GroupHeaderView: View {
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
 
             // ── 展开/折叠箭头 ──
-            // HTML: .folder-chevron { font-size:9px; color:var(--text-4) }
+            // Figma: ChevronRight h-4 w-4 (16pt regular)，rotate-90 时展开。
+            // 16pt regular 在 DesignTokens 中无精确匹配（labelXLarge 是 medium），
+            // 此处保留 .system 字面量。
             Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(
-                    isHovering
-                        ? DesignTokens.Colors.textSecondary
-                        : DesignTokens.Colors.textDisabled
-                )
-                .frame(width: 12)
+                .font(DesignTokens.Typography.iconLarge)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .frame(width: 16, height: 16)
                 .rotationEffect(.degrees(group.isExpanded ? 90 : 0))
                 .animation(DesignTokens.Animation.fast, value: group.isExpanded)
 
             // ── 文件夹图标徽章 ──
-            // HTML: .folder-icon { width:22px; height:22px; bg:rgba(0,212,170,0.06); border:rgba(0,212,170,0.10) }
+            // Figma: p-1.5 rounded-md bg-[#007aff]/10, Folder h-3.5 w-3.5 text-[#007aff]
+            // 容器 = 6+14+6 = 26pt（与会话行图标一致）
             ZStack {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(group.color.opacity(0.10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .strokeBorder(group.color.opacity(0.18), lineWidth: 0.75)
-                    )
-                    .frame(width: 22, height: 22)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                    .frame(width: 26, height: 26)
                 Image(systemName: group.isExpanded ? "folder.fill" : "folder")
-                    .font(.system(size: 10.5, weight: .medium))
-                    .foregroundColor(group.color.opacity(0.75))
+                    .font(DesignTokens.Typography.bodyLarge)
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
 
             // ── 分组名称 ──
+            // Figma: text-sm font-medium = 14pt medium
             Text(group.name)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(
-                    isHovering
-                        ? DesignTokens.Colors.textPrimary
-                        : DesignTokens.Colors.textSecondary
-                )
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
 
             Spacer(minLength: 0)
 
             // ── 会话数徽章 ──
-            // HTML: .folder-badge { font-size:9.5px; bg:rgba(255,255,255,0.04); border:rgba(255,255,255,0.04) }
+            // Figma: text-xs text-[#86868b] ml-auto bg-black/5 px-2 py-0.5 rounded-full
             Text("\(sessionCount)")
-                .font(.system(size: 9.5, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textDisabled)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 1)
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .padding(.vertical, 2)
                 .background(
                     Capsule()
-                        .fill(DesignTokens.Colors.glassUltraLight)
-                        .overlay(
-                            Capsule()
-                                .strokeBorder(DesignTokens.Colors.glassBorderBottom, lineWidth: 0.5)
-                        )
+                        .fill(DesignTokens.Colors.surfaceHover)
                 )
         }
-        .padding(.horizontal, DesignTokens.Spacing.sm)
-        .frame(height: DesignTokens.Sizes.groupRowHeight)
+        // Figma: px-3 py-2 rounded-lg = 12pt h-padding, 8pt v-padding, cornerRadiusSmall
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, DesignTokens.Spacing.sm)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(isHovering ? DesignTokens.Colors.surfaceHover : Color.clear)
         )
         .contentShape(Rectangle())
@@ -97,7 +86,7 @@ struct GroupHeaderView: View {
 // MARK: - 预览
 
 #Preview("分组头部") {
-    VStack(spacing: 1) {
+    VStack(spacing: DesignTokens.Spacing.px) {
         GroupHeaderView(
             group: SessionGroup(name: "开发服务器", colorHex: "#4A90D9", isExpanded: true),
             sessionCount: 5

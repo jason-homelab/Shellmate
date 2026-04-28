@@ -69,7 +69,7 @@ struct ComposePaneView: View {
                 .fill(isDragging ? DesignTokens.Colors.accentPrimary.opacity(0.3) : DesignTokens.Colors.borderFaint)
 
             // 居中三点装饰
-            HStack(spacing: 3) {
+            HStack(spacing: DesignTokens.Spacing.nano) {
                 ForEach(0..<3, id: \.self) { _ in
                     Circle()
                         .fill(DesignTokens.Colors.borderSubtle)
@@ -104,9 +104,9 @@ struct ComposePaneView: View {
                 .foregroundColor(DesignTokens.Colors.terminalText)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
-                .padding(.top, 6)
+                .padding(.top, DesignTokens.Spacing.xs)
                 .padding(.leading, 10)
-                .padding(.trailing, 4)
+                .padding(.trailing, DesignTokens.Spacing.xxs)
         }
         .background(DesignTokens.Colors.terminalBackground)
         .overlay(
@@ -125,14 +125,14 @@ struct ComposePaneView: View {
             VStack(alignment: .trailing, spacing: 0) {
                 ForEach(Array(lines.indices), id: \.self) { i in
                     Text("\(i + 1)")
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                         .frame(height: 20, alignment: .trailing)
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 6)
-            .padding(.top, 6)
+            .padding(.horizontal, DesignTokens.Spacing.xs)
+            .padding(.top, DesignTokens.Spacing.xs)
         }
         .frame(width: 28)
         .overlay(
@@ -144,14 +144,14 @@ struct ComposePaneView: View {
     }
 
     private var actionBar: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DesignTokens.Spacing.xs) {
             // 发送按钮
             Button(action: sendContent) {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Image(systemName: "paperplane.fill")
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text("发送")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
             }
             .buttonStyle(.bordered)
@@ -163,13 +163,13 @@ struct ComposePaneView: View {
             // 逐行发送切换
             Toggle("逐行", isOn: $sendLineByLine)
                 .toggleStyle(.button)
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .controlSize(.small)
 
             if sendLineByLine {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Text("延迟")
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                     TextField("50", value: $lineDelay, format: .number)
                         .textFieldStyle(.plain)
@@ -183,7 +183,7 @@ struct ComposePaneView: View {
                         )
                         .frame(width: 44)
                     Text("ms")
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                 }
             }
@@ -206,7 +206,7 @@ struct ComposePaneView: View {
             // 清空并关闭
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
             }
             .buttonStyle(.plain)
@@ -228,10 +228,10 @@ struct ComposePaneView: View {
     @ViewBuilder
     private var aiSuggestionBar: some View {
         if isLoadingAI {
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 ProgressView().controlSize(.mini)
                 Text("AI 补全中…")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Spacer()
             }
@@ -240,13 +240,13 @@ struct ComposePaneView: View {
             .background(DesignTokens.Colors.accentPrimary.opacity(0.04))
             .overlay(Rectangle().frame(height: 1).foregroundColor(DesignTokens.Colors.borderFaint), alignment: .top)
         } else if let suggestion = aiSuggestion {
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
 
                 Text(suggestion)
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -257,20 +257,20 @@ struct ComposePaneView: View {
                 Button("Tab 接受") {
                     acceptSuggestion(suggestion)
                 }
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .buttonStyle(.plain)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
+                .padding(.horizontal, DesignTokens.Spacing.xs)
+                .padding(.vertical, DesignTokens.Spacing.xxxs)
                 .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
 
                 // 关闭
                 Button {
                     aiSuggestion = nil
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 9))
+                        .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                 }
                 .buttonStyle(.plain)

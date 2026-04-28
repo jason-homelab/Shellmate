@@ -14,7 +14,7 @@ struct ShellMateApp: App {
     let persistenceController = PersistenceController.shared
 
     /// 窗口外观模式："auto"（跟随系统）/ "light"（浅色）/ "dark"（深色）
-    @AppStorage("appearance.windowMode") private var windowMode: String = "auto"
+    @AppStorage("appearance.windowMode") private var windowMode: String = "dark"
 
     // MARK: - 应用场景
 
@@ -27,7 +27,7 @@ struct ShellMateApp: App {
                     configureAppearance()
                 }
         }
-        .windowToolbarStyle(.unifiedCompact(showsTitle: false))
+        .windowToolbarStyle(.automatic)
         .commands {
             // 自定义菜单命令
             appCommands

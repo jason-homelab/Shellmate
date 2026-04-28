@@ -28,10 +28,10 @@ struct AICodeBlockView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 标题栏（语言标签 + 操作按钮）
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 if let lang = language, !lang.isEmpty {
                     Text(lang.lowercased())
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 Spacer()
@@ -39,27 +39,29 @@ struct AICodeBlockView: View {
                 if onInsert != nil { insertButton }
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(DesignTokens.Colors.glassLight)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(Color.black.opacity(0.04))
 
             Divider()
+                .overlay(Color(hex: "#d2d2d7").opacity(0.30))
 
             // 代码内容（横向可滚动）
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(code.trimmingCharacters(in: .newlines))
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, DesignTokens.Spacing.md)
                     .padding(.vertical, 10)
             }
         }
-        .background(DesignTokens.Colors.glassUltraLight)
+        // Figma: bg-black/5 border border-[#d2d2d7]/30 rounded-lg
+        .background(Color.black.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
+                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 0.5)
         )
     }
 
@@ -74,11 +76,11 @@ struct AICodeBlockView: View {
                 withAnimation { isCopied = false }
             }
         } label: {
-            HStack(spacing: 3) {
+            HStack(spacing: DesignTokens.Spacing.nano) {
                 Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                 Text(isCopied ? "已复制" : "复制")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
             }
             .foregroundColor(isCopied
                 ? DesignTokens.Colors.statusConnected
@@ -97,23 +99,23 @@ struct AICodeBlockView: View {
                 withAnimation { isInserted = false }
             }
         } label: {
-            HStack(spacing: 3) {
+            HStack(spacing: DesignTokens.Spacing.nano) {
                 Image(systemName: isInserted ? "checkmark.circle.fill" : "terminal")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                 Text(isInserted ? "已插入" : "插入终端")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMedium)
             }
             .foregroundColor(isInserted
                 ? DesignTokens.Colors.statusConnected
                 : DesignTokens.Colors.accentPrimary)
             .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.vertical, DesignTokens.Spacing.nano)
             .background(
                 isInserted
                     ? DesignTokens.Colors.statusConnected.opacity(0.12)
                     : DesignTokens.Colors.accentPrimary.opacity(0.10)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
         }
         .buttonStyle(.plain)
         .help("将命令插入当前终端并执行")

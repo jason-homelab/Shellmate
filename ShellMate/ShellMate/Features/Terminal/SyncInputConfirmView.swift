@@ -46,12 +46,11 @@ struct SyncInputConfirmView: View {
             actionBar
         }
         .frame(width: 400)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(DesignTokens.Colors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
@@ -61,11 +60,11 @@ struct SyncInputConfirmView: View {
     private var headerView: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(Color.orange.opacity(0.15))
                     .frame(width: 32, height: 32)
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(.orange)
             }
             Text("启用同步输入模式")
@@ -81,12 +80,12 @@ struct SyncInputConfirmView: View {
             Divider()
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(.orange)
-                    .padding(.top, 1)
+                    .padding(.top, DesignTokens.Spacing.px)
                 Text("同步输入会将你的每次键盘输入广播到所有已选终端，请谨慎操作，避免误操作生产环境。")
                     .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(Color(hex: "#b25000"))
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(DesignTokens.Spacing.md)
@@ -98,7 +97,7 @@ struct SyncInputConfirmView: View {
 
     private var sessionList: some View {
         let sessions = syncStore.registeredSessionInfos()
-        return VStack(alignment: .leading, spacing: 2) {
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
             Text("选择参与同步的终端：")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -131,11 +130,11 @@ struct SyncInputConfirmView: View {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .fill(isSelected
                         ? DesignTokens.Colors.accentPrimary
-                        : Color.black.opacity(0.06))
+                        : DesignTokens.Colors.surfaceHover)
                     .frame(width: 18, height: 18)
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(.white)
                 }
             }
@@ -150,10 +149,10 @@ struct SyncInputConfirmView: View {
 
             if isCurrent {
                 Text("当前")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, DesignTokens.Spacing.xs)
+                    .padding(.vertical, DesignTokens.Spacing.xxxs)
                     .background(DesignTokens.Colors.accentPrimary.opacity(0.10))
                     .clipShape(Capsule())
             }
@@ -161,7 +160,7 @@ struct SyncInputConfirmView: View {
             Spacer()
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 8)
+        .padding(.vertical, DesignTokens.Spacing.sm)
         .background(isSelected
             ? DesignTokens.Colors.accentPrimary.opacity(0.06)
             : Color.clear)

@@ -27,18 +27,17 @@ struct TerminalTabBarView: View {
 
             Spacer()
         }
-        .frame(height: DesignTokens.Sizes.tabBarHeight)
+        // Figma: h-10 = 40pt
+        .frame(height: 40)
         .background {
-            // Figma: bg-[#f5f5f7]/80 backdrop-blur-xl shadow-sm border-b border-[#d2d2d7]/50
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    Rectangle().fill(Color(hex: "#f5f5f7").opacity(0.80))
-                }
+            // Figma: bg-[#f5f5f7]/80 backdrop-blur-xl
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(DesignTokens.Colors.surfaceWindow.opacity(0.80))
         }
         .overlay(alignment: .bottom) {
+            // Figma: border-b border-[#d2d2d7]/50
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.5))
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
         }
     }
@@ -48,7 +47,7 @@ struct TerminalTabBarView: View {
     /// 标签页列表（超出宽度时横向滚动，避免 Tab 溢出截断）
     private var tabList: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 1) {
+            HStack(spacing: DesignTokens.Spacing.px) {
                 ForEach(store.tabs) { tab in
                     TerminalTabView(
                         tab: tab,
@@ -80,16 +79,14 @@ struct TerminalTabBarView: View {
 
     /// 新建标签按钮
     private var newTabButton: some View {
-        Button(action: {
+        HoverIconButton(
+            systemImage: "plus",
+            accessibilityText: "新建标签页",
+            size: 28,
+            iconSize: 16
+        ) {
             onNewTab?()
-        }) {
-            Image(systemName: "plus")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: 28, height: 28)
-                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .help("新建标签页")
         .padding(.horizontal, DesignTokens.Spacing.xxs)
     }
@@ -140,7 +137,7 @@ struct TabCloseConfirmationView: View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             // 图标
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 40))
+                .font(DesignTokens.Typography.heroMedium)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
             // 标题
@@ -174,11 +171,7 @@ struct TabCloseConfirmationView: View {
         .frame(width: 320)
         .background {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
-                        .fill(DesignTokens.Colors.surfacePanel.opacity(0.85))
-                }
+                .fill(DesignTokens.Colors.surfacePanel)
                 .overlay {
                     RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXLarge, style: .continuous)
                         .strokeBorder(DesignTokens.Gradients.glassBorder(), lineWidth: 0.75)

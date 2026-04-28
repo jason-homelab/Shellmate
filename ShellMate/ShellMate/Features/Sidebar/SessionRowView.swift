@@ -19,23 +19,19 @@ struct SessionRowView: View {
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
 
-            // ── 1. 状态点（6×6）
-            statusDot
-
-            // ── 2. 文字缩写 Avatar（26×26）
+            // ── 1. 服务器图标容器
             sessionAvatar
 
-            // ── 3. 会话信息
+            // ── 2. 会话信息
             sessionInfo
 
             Spacer(minLength: 0)
         }
-        // HTML: padding: 7px 10px 7px 14px（左侧留给边栏指示器）
-        .padding(.leading, 14)
-        .padding(.trailing, 10)
-        .padding(.vertical, 7)
+        // Figma: px-3 py-2 = 12pt horizontal, 8pt vertical
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, DesignTokens.Spacing.sm)
         .background(rowBackground)
         .contentShape(Rectangle())
         .opacity(isDragging ? 0.45 : 1.0)
@@ -68,53 +64,15 @@ struct SessionRowView: View {
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            // Figma: bg-[#007aff] shadow-md shadow-[#007aff]/30
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.accentPrimary)
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
         } else if isHovering {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.surfaceHover)
         } else {
             Color.clear
-        }
-    }
-
-    // MARK: - 状态点
-
-    private var statusDot: some View {
-        Circle()
-            .fill(dotColor)
-            .shadow(color: dotGlowColor, radius: 3, x: 0, y: 0)
-            .frame(width: 6, height: 6)
-            .animation(DesignTokens.Animation.slow, value: session.connectionState)
-    }
-
-    private var dotColor: Color {
-        if isSelected {
-            switch session.connectionState {
-            case .connected:    return Color.white
-            case .connecting, .disconnecting: return Color.white.opacity(0.75)
-            case .error:        return Color.white.opacity(0.75)
-            default:            return Color.white.opacity(0.40)
-            }
-        }
-        switch session.connectionState {
-        case .connected:
-            return DesignTokens.Colors.statusConnected
-        case .connecting, .disconnecting:
-            return DesignTokens.Colors.statusConnecting
-        case .error:
-            return DesignTokens.Colors.statusError
-        default:
-            return DesignTokens.Colors.textDisabled
-        }
-    }
-
-    private var dotGlowColor: Color {
-        switch session.connectionState {
-        case .connected:
-            return DesignTokens.Colors.statusConnected.opacity(0.70)
-        default:
-            return Color.clear
         }
     }
 
@@ -122,22 +80,14 @@ struct SessionRowView: View {
 
     private var sessionAvatar: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            // Figma: selected=bg-white/20, unselected=bg-[#007aff]/10
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                 .fill(isSelected
                     ? Color.white.opacity(0.20)
                     : DesignTokens.Colors.accentPrimary.opacity(0.10))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(
-                            isSelected
-                                ? Color.white.opacity(0.20)
-                                : DesignTokens.Colors.accentPrimary.opacity(0.15),
-                            lineWidth: 0.75
-                        )
-                }
 
             Image(systemName: "server.rack")
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(isSelected
                     ? Color.white
                     : DesignTokens.Colors.accentPrimary)
@@ -148,20 +98,22 @@ struct SessionRowView: View {
     // MARK: - 会话信息
 
     private var sessionInfo: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+            // Figma: text-sm font-medium truncate（14pt medium）
             Text(session.name)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .font(DesignTokens.Typography.bodyLargeMedium)
                 .foregroundColor(isSelected
                     ? Color.white
                     : DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
 
+            // Figma: text-xs truncate（12pt regular）
             Text("\(session.username)@\(session.host)")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(isSelected
-                    ? Color.white.opacity(0.70)
-                    : DesignTokens.Colors.textTertiary)
+                    ? Color.white.opacity(0.80)
+                    : DesignTokens.Colors.textSecondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
@@ -173,7 +125,7 @@ struct SessionRowView: View {
 // MARK: - 预览
 
 #Preview("会话行状态") {
-    VStack(spacing: 1) {
+    VStack(spacing: DesignTokens.Spacing.px) {
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connected; return s
         }(), isSelected: true)
@@ -190,8 +142,8 @@ struct SessionRowView: View {
             var s = Session.preview; s.connectionState = .offline; return s
         }())
     }
-    .padding(.horizontal, 6)
-    .padding(.vertical, 6)
+    .padding(.horizontal, DesignTokens.Spacing.xs)
+    .padding(.vertical, DesignTokens.Spacing.xs)
     .background(DesignTokens.Colors.surfacePanel)
     .frame(width: 240)
 }

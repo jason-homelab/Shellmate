@@ -73,12 +73,12 @@ struct HostKeyChangedWarningView: View {
             footerView
         }
         .frame(width: 560, height: 620)
-        .background(Color.white.opacity(0.95))
+        .background(DesignTokens.Colors.surfaceOverlay)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: Color.black.opacity(0.18), radius: 40, x: 0, y: 20)
     }
@@ -89,7 +89,7 @@ struct HostKeyChangedWarningView: View {
     private var warningHeader: some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 24))
+                .font(DesignTokens.Typography.displaySmall)
                 .foregroundColor(DesignTokens.Colors.statusError)
 
             Text("安全警告：主机密钥已变更")
@@ -107,7 +107,7 @@ struct HostKeyChangedWarningView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
                 Image(systemName: "shield.slash.fill")
-                    .font(.system(size: 40))
+                    .font(DesignTokens.Typography.heroMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -125,7 +125,7 @@ struct HostKeyChangedWarningView: View {
             // 中间人攻击警告
             HStack(spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "person.fill.xmark")
-                    .font(.system(size: 16))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 Text("有人可能正在拦截您的连接（中间人攻击）")
@@ -208,7 +208,7 @@ struct HostKeyChangedWarningView: View {
 
                 // 箭头
                 Image(systemName: "arrow.down")
-                    .font(.system(size: 16))
+                    .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
                 // 新指纹
@@ -220,12 +220,12 @@ struct HostKeyChangedWarningView: View {
                 )
             }
             .padding(DesignTokens.Spacing.md)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceCard)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
 
             if showDetails {
@@ -254,12 +254,12 @@ struct HostKeyChangedWarningView: View {
                 actionRow(number: 4, text: "如果无法确认，请勿继续连接")
             }
             .padding(DesignTokens.Spacing.md)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceCard)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
         }
     }
@@ -337,11 +337,11 @@ struct HostKeyChangedWarningView: View {
     private func causeRow(icon: String, title: String, description: String, severity: Severity) -> some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(severity.color)
                 .frame(width: 20)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(title)
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -359,7 +359,7 @@ struct HostKeyChangedWarningView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(color)
 
                 Text(label)

@@ -81,7 +81,7 @@ struct TerminalPlaceholderView: View {
     @ViewBuilder
     private func terminalView(_ session: Session) -> some View {
         VStack(spacing: 0) {
-            // 工具栏
+            // 工具栏（对齐 Void 暗黑设计语言）
             HStack {
                 StatusDotView(state: connectionState)
                 Text("\(session.username)@\(session.host)")
@@ -90,14 +90,18 @@ struct TerminalPlaceholderView: View {
 
                 Spacer()
 
-                Button("断开") {
+                GlassButton("断开", icon: "stop.fill", variant: .disconnect) {
                     disconnect()
                 }
-                .buttonStyle(.bordered)
             }
-            .padding(DesignTokens.Spacing.md)
-            .background(DesignTokens.Colors.surfaceWindow.opacity(0.90))
-            .background(.ultraThinMaterial)
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(DesignTokens.Colors.surfacePanel)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(DesignTokens.Colors.borderPrimary)
+                    .frame(height: 0.5)
+            }
 
             // 终端区域：使用 ShellMateTerminalView 处理 ANSI 序列
             ShellMateTerminalViewRepresentable(
@@ -149,7 +153,7 @@ struct TerminalPlaceholderView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 24) {
+            VStack(spacing: DesignTokens.Spacing.xxl) {
                 // 会话图标卡片（渐变圆角，与 Figma SessionRow icon 保持视觉延续）
                 ZStack {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -170,7 +174,7 @@ struct TerminalPlaceholderView: View {
                         )
 
                     Image(systemName: "terminal.fill")
-                        .font(.system(size: 32, weight: .light))
+                        .font(DesignTokens.Typography.displayXLarge)
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
@@ -181,36 +185,36 @@ struct TerminalPlaceholderView: View {
                 }
 
                 // 会话信息文字组
-                VStack(spacing: 6) {
+                VStack(spacing: DesignTokens.Spacing.xs) {
                     Text(session.name)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(DesignTokens.Typography.titleLarge)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
 
                     Text("\(session.username)@\(session.host):\(session.port)")
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(DesignTokens.Typography.codeMedium)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
 
                 // 连接状态 Pill
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     StatusDotView(state: session.connectionState)
                     Text(session.connectionState.displayName)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(session.connectionState.dotColor)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 5)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, DesignTokens.Spacing.micro)
                 .background(session.connectionState.dotColor.opacity(0.08))
                 .clipShape(Capsule())
 
                 // 操作区
                 if connectionState == .offline {
                     Button(action: { initiateConnect() }) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: DesignTokens.Spacing.xs) {
                             Image(systemName: "bolt.fill")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(DesignTokens.Typography.bodySmallStrong)
                             Text("连接")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(DesignTokens.Typography.bodyLargeStrong)
                         }
                         .foregroundColor(.white)
                         .padding(.horizontal, DesignTokens.Spacing.xxl)
@@ -221,10 +225,10 @@ struct TerminalPlaceholderView: View {
                     }
                     .buttonStyle(.plain)
                 } else if connectionState == .connecting {
-                    VStack(spacing: 8) {
+                    VStack(spacing: DesignTokens.Spacing.sm) {
                         ProgressView()
                         Text("正在连接...")
-                            .font(.system(size: 13))
+                            .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                     }
                 }
@@ -232,7 +236,7 @@ struct TerminalPlaceholderView: View {
             .padding(DesignTokens.Spacing.xxxl)
             .background(
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
-                    .fill(Color.white.opacity(0.80))
+                    .fill(DesignTokens.Colors.surfaceCard)
                     .overlay(
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
@@ -453,10 +457,10 @@ struct TerminalPlaceholderView: View {
     // MARK: - 空状态视图（Figma-Spec-v2 §01 §4）
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            // 渐变圆角图标容器：96×96px，from-[#007aff]/10 to-[#5856d6]/10
+        VStack(spacing: DesignTokens.Spacing.xl) {
+            // 渐变圆角图标容器
             ZStack {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                     .fill(
                         LinearGradient(
                             colors: [
@@ -468,8 +472,12 @@ struct TerminalPlaceholderView: View {
                         )
                     )
                     .frame(width: 96, height: 96)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.15), lineWidth: 0.75)
+                    )
                 Image(systemName: "desktopcomputer")
-                    .font(.system(size: 40, weight: .light))
+                    .font(DesignTokens.Typography.heroMedium)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
@@ -479,30 +487,34 @@ struct TerminalPlaceholderView: View {
                     )
             }
 
-            // 主标题：text-xl semibold #1d1d1f
-            Text("No Active Sessions")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+            VStack(spacing: DesignTokens.Spacing.sm) {
+                Text("暂无活跃会话")
+                    .font(DesignTokens.Typography.displayXSmall)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
 
-            // 副文字：text-sm #86868b
-            Text("Select a session from the sidebar to get started")
-                .font(.system(size: 14))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .multilineTextAlignment(.center)
+                Text("从侧边栏选择会话，或新建一个 SSH 连接")
+                    .font(DesignTokens.Typography.bodyMedium)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
 
-            // 新建会话按钮：bg-primary rounded-xl
+            // 新建会话按钮
             Button(action: { onNewSession?() }) {
-                Text("Create New Session")
-                    .font(.system(size: 14, weight: .medium))
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    Image(systemName: "plus")
+                        .font(DesignTokens.Typography.labelSmall)
+                    Text("新建会话")
+                        .font(DesignTokens.Typography.labelLarge)
+                }
                 .foregroundColor(.white)
                 .padding(.horizontal, DesignTokens.Spacing.xl)
                 .padding(.vertical, DesignTokens.Spacing.sm)
                 .background(DesignTokens.Colors.accentPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 8, x: 0, y: 3)
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 10, x: 0, y: 4)
             }
             .buttonStyle(.plain)
-            .padding(.top, 4)
+            .padding(.top, DesignTokens.Spacing.xxs)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

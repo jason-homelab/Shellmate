@@ -33,7 +33,7 @@ struct HighlightSettingsView: View {
                 globalToggleSection
 
                 Divider()
-                    .padding(.vertical, 12)
+                    .padding(.vertical, DesignTokens.Spacing.md)
 
                 // 规则集标题行
                 ruleSectionHeader
@@ -44,11 +44,11 @@ struct HighlightSettingsView: View {
                 // 添加规则表单（内联展开）
                 if showAddForm {
                     addRuleForm
-                        .padding(.top, 8)
+                        .padding(.top, DesignTokens.Spacing.sm)
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .padding(.vertical, DesignTokens.Spacing.lg)
         }
     }
 
@@ -56,12 +56,12 @@ struct HighlightSettingsView: View {
 
     private var globalToggleSection: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text("启用关键词高亮")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("对终端输出中的关键词注入 ANSI 颜色序列")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             Spacer()
@@ -74,9 +74,9 @@ struct HighlightSettingsView: View {
     // MARK: - 规则集标题行
 
     private var ruleSectionHeader: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DesignTokens.Spacing.xs) {
             Text("规则集")
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
@@ -87,15 +87,15 @@ struct HighlightSettingsView: View {
             }
             .buttonStyle(BorderedButtonStyle())
             .controlSize(.small)
-            .font(.system(size: 11))
+            .font(DesignTokens.Typography.captionLarge)
 
             // 添加规则
             Button(action: { withAnimation { showAddForm.toggle() } }) {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Image(systemName: showAddForm ? "minus" : "plus")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text("添加规则")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
             }
             .buttonStyle(BorderedButtonStyle())
@@ -119,9 +119,9 @@ struct HighlightSettingsView: View {
                 Text("操作")
                     .frame(width: 60, alignment: .trailing)
             }
-            .font(.system(size: 10, weight: .medium))
+            .font(DesignTokens.Typography.captionMedium)
             .foregroundColor(DesignTokens.Colors.textTertiary)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .frame(height: 26)
             .background(DesignTokens.Colors.surfacePanel)
 
@@ -148,17 +148,17 @@ struct HighlightSettingsView: View {
     }
 
     private var emptyRulesView: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             Image(systemName: "highlighter")
-                .font(.system(size: 24))
+                .font(DesignTokens.Typography.displaySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .opacity(0.4)
             Text("尚无高亮规则")
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, DesignTokens.Spacing.xxl)
     }
 
     @ViewBuilder
@@ -176,37 +176,37 @@ struct HighlightSettingsView: View {
 
             // 关键词
             Text(rule.pattern)
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(rule.enabled
                     ? DesignTokens.Colors.textPrimary
                     : DesignTokens.Colors.textTertiary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 4)
+                .padding(.leading, DesignTokens.Spacing.xxs)
 
             // 匹配模式
             Text(rule.useRegex ? "正则" : "字面量")
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 72, alignment: .leading)
 
             // 颜色预览
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Circle()
                     .fill(rule.color.previewColor)
                     .frame(width: 10, height: 10)
                 Text(rule.color.displayName)
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .frame(width: 60, alignment: .leading)
 
             // 操作按钮（悬停时显示）
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Button(action: { engine.removeRule(id: rule.id) }) {
                     Image(systemName: "trash")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(hoveredRuleId == rule.id
                             ? DesignTokens.Colors.statusError
                             : DesignTokens.Colors.textTertiary)
@@ -217,7 +217,7 @@ struct HighlightSettingsView: View {
             .frame(width: 60, alignment: .trailing)
             .opacity(hoveredRuleId == rule.id ? 1 : 0.4)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 38)
         .background(hoveredRuleId == rule.id
             ? DesignTokens.Colors.surfacePanel
@@ -230,30 +230,30 @@ struct HighlightSettingsView: View {
     // MARK: - 添加规则表单
 
     private var addRuleForm: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             // 第一行：关键词输入 + 模式选项
             HStack(spacing: 10) {
                 CustomTextField(placeholder: "error|ERROR|^Traceback", text: $newPattern)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .frame(maxWidth: .infinity)
 
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Toggle("", isOn: $newUseRegex)
                         .toggleStyle(.switch)
                         .labelsHidden()
                         .controlSize(.mini)
                     Text("正则")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
 
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Toggle("", isOn: $newCaseSensitive)
                         .toggleStyle(.switch)
                         .labelsHidden()
                         .controlSize(.mini)
                     Text("大小写敏感")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
             }
@@ -261,7 +261,7 @@ struct HighlightSettingsView: View {
             // 第二行：颜色选择
             HStack(spacing: 10) {
                 Text("颜色：")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
 
                 Picker("", selection: $newColor) {
@@ -281,12 +281,12 @@ struct HighlightSettingsView: View {
                 // 颜色预览
                 if !newPattern.isEmpty {
                     Text(newPattern)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(DesignTokens.Typography.codeTiny)
                         .foregroundColor(newColor.previewColor)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, DesignTokens.Spacing.xs)
+                        .padding(.vertical, DesignTokens.Spacing.xxxs)
                         .background(DesignTokens.Colors.surfacePanel)
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
                 }
 
                 Spacer()

@@ -222,8 +222,8 @@ struct ContentView: View {
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
         .background(WindowTransparencyConfigurator(opacity: bgOpacity, windowMode: windowMode))
-        // NSToolbar 背景使用 surfacePanel（自适应亮/暗模式）
-        .toolbarBackground(DesignTokens.Colors.surfacePanel, for: .windowToolbar)
+        // NSToolbar 背景：对齐 Figma `bg-[#f5f5f7]/80`（亮色 #F5F5F7 / 深色 #070a11）
+        .toolbarBackground(DesignTokens.Colors.surfaceWindow, for: .windowToolbar)
         .toolbarBackground(.visible, for: .windowToolbar)
         // 根据用户选择的外观模式应用 ColorScheme；nil 表示跟随系统
         .preferredColorScheme(preferredColorScheme)

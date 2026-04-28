@@ -28,7 +28,7 @@ struct ServerMonitorPanelView: View {
             headerView
             Divider()
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(spacing: DesignTokens.Spacing.md) {
                     metricsGrid
                     networkCard
                 }
@@ -37,14 +37,13 @@ struct ServerMonitorPanelView: View {
         }
         .frame(width: 420)
         .frame(minHeight: 360, maxHeight: 520)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(DesignTokens.Colors.surfaceOverlay)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
         )
-        .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
+        .shadow(color: .black.opacity(0.50), radius: 20, x: 0, y: 6)
         .onChange(of: metrics) { newMetrics in
             appendHistory(newMetrics)
         }
@@ -59,24 +58,20 @@ struct ServerMonitorPanelView: View {
     private var headerView: some View {
         HStack(spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(DesignTokens.Gradients.aiGradient)
                     .frame(width: 32, height: 32)
                 Image(systemName: "chart.xyaxis.line")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(.white)
             }
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text("服务器监控")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(session.map { "\($0.username)@\($0.host)" } ?? "未连接")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .lineLimit(1)
             }
@@ -86,13 +81,13 @@ struct ServerMonitorPanelView: View {
             // 更新时间
             if let m = metrics {
                 Text(m.updatedAt, style: .time)
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 20, height: 20)
                     .background(DesignTokens.Colors.surfaceCard)
@@ -101,7 +96,7 @@ struct ServerMonitorPanelView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
     // MARK: - 指标网格（2×2）
@@ -121,11 +116,11 @@ struct ServerMonitorPanelView: View {
             metricCard(
                 title: "内存使用率",
                 icon: "memorychip",
-                iconColor: Color(hex: "#5856d6"),
+                iconColor: DesignTokens.Colors.accentAI,
                 value: metrics.map { "\(ServerMetrics.formatBytes($0.memoryUsed)) / \(ServerMetrics.formatBytes($0.memoryTotal))" } ?? "—",
                 ratio: metrics?.memoryRatio ?? 0,
                 history: memHistory,
-                historyColor: Color(hex: "#5856d6")
+                historyColor: DesignTokens.Colors.accentAI
             )
 
             diskCard
@@ -142,21 +137,21 @@ struct ServerMonitorPanelView: View {
         history: [Double],
         historyColor: Color
     ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             // 标题行
-            HStack(spacing: 5) {
+            HStack(spacing: DesignTokens.Spacing.micro) {
                 Image(systemName: icon)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(iconColor)
                 Text(title)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
             }
 
             // 当前数值
             Text(value)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(DesignTokens.Typography.codeMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -164,10 +159,10 @@ struct ServerMonitorPanelView: View {
             // 进度条
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(Color.black.opacity(0.06))
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous)
+                        .fill(DesignTokens.Colors.borderPrimary)
                         .frame(height: 5)
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous)
                         .fill(iconColor)
                         .frame(width: geo.size.width * min(max(ratio, 0), 1), height: 5)
                 }
@@ -181,11 +176,11 @@ struct ServerMonitorPanelView: View {
             }
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 
@@ -193,34 +188,34 @@ struct ServerMonitorPanelView: View {
         let used = metrics?.diskUsed ?? 0
         let total = metrics?.diskTotal ?? 1
         let ratio = total > 0 ? Double(used) / Double(total) : 0
-        let diskColor: Color = ratio > 0.85 ? Color(hex: "#ff3b30") : Color(hex: "#ff9500")
+        let diskColor: Color = ratio > 0.85 ? DesignTokens.Colors.statusError : DesignTokens.Colors.statusConnecting
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.micro) {
                 Image(systemName: "internaldrive")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(diskColor)
                 Text("磁盘 (/)")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Text(String(format: "%.0f%%", ratio * 100))
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(diskColor)
             }
 
             Text(metrics.map { "\(ServerMetrics.formatBytes($0.diskUsed)) / \(ServerMetrics.formatBytes($0.diskTotal))" } ?? "—")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(DesignTokens.Typography.codeMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(Color.black.opacity(0.06))
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous)
+                        .fill(DesignTokens.Colors.borderPrimary)
                         .frame(height: 5)
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous)
                         .fill(diskColor)
                         .frame(width: geo.size.width * min(max(ratio, 0), 1), height: 5)
                 }
@@ -228,47 +223,47 @@ struct ServerMonitorPanelView: View {
             .frame(height: 5)
 
             Text("剩余 " + (metrics.map { ServerMetrics.formatBytes($0.diskTotal - $0.diskUsed) } ?? "—"))
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 
     private var uptimeCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.micro) {
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color(hex: "#34c759"))
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.accentSecondary)
                 Text("采样统计")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
             }
 
             Text("\(cpuHistory.count) 个采样点")
-                .font(.system(size: 13, weight: .semibold))
+                .font(DesignTokens.Typography.titleSmall)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Text("CPU 峰值：\(cpuHistory.max().map { String(format: "%.1f%%", $0) } ?? "—")")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
             Text("CPU 均值：\(cpuAverage.map { String(format: "%.1f%%", $0) } ?? "—")")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 
@@ -276,42 +271,42 @@ struct ServerMonitorPanelView: View {
 
     private var networkCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 5) {
+            HStack(spacing: DesignTokens.Spacing.micro) {
                 Image(systemName: "network")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.accentIndigo)
                 Text("网络 I/O")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
             }
 
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xl) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                    HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: "arrow.down")
-                            .font(.system(size: 10))
-                            .foregroundColor(Color(hex: "#34c759"))
+                            .font(DesignTokens.Typography.captionMedium)
+                            .foregroundColor(DesignTokens.Colors.accentSecondary)
                         Text("下载")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     Text(metrics.map { ServerMetrics.formatRate($0.networkRxRate) } ?? "—")
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .font(DesignTokens.Typography.codeMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+                    HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: "arrow.up")
-                            .font(.system(size: 10))
-                            .foregroundColor(Color(hex: "#ff9500"))
+                            .font(DesignTokens.Typography.captionMedium)
+                            .foregroundColor(DesignTokens.Colors.accentPrimary)
                         Text("上传")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
                     Text(metrics.map { ServerMetrics.formatRate($0.networkTxRate) } ?? "—")
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .font(DesignTokens.Typography.codeMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                 }
 
@@ -321,29 +316,29 @@ struct ServerMonitorPanelView: View {
             // 网络趋势图（下载/上传叠加）
             if !netRxHistory.isEmpty {
                 ZStack {
-                    SparklineView(values: netRxHistory, color: Color(hex: "#34c759"))
-                    SparklineView(values: netTxHistory, color: Color(hex: "#ff9500").opacity(0.7))
+                    SparklineView(values: netRxHistory, color: DesignTokens.Colors.accentSecondary)
+                    SparklineView(values: netTxHistory, color: DesignTokens.Colors.accentPrimary.opacity(0.7))
                 }
                 .frame(height: 36)
             }
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.40), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 
     // MARK: - 辅助
 
     private var cpuColor: Color {
-        guard let m = metrics else { return Color(hex: "#34c759") }
+        guard let m = metrics else { return DesignTokens.Colors.accentSecondary }
         switch m.cpuColor {
-        case .low:    return Color(hex: "#34c759")
-        case .medium: return Color(hex: "#ff9500")
-        case .high:   return Color(hex: "#ff3b30")
+        case .low:    return DesignTokens.Colors.accentSecondary
+        case .medium: return DesignTokens.Colors.statusConnecting
+        case .high:   return DesignTokens.Colors.statusError
         }
     }
 

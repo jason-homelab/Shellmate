@@ -177,35 +177,7 @@ struct TextButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - 工具栏图标按钮样式
-
-struct ToolbarIconButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    var isActive: Bool = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundColor(
-                isActive
-                    ? DesignTokens.Colors.accentPrimary
-                    : (isEnabled ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textDisabled)
-            )
-            .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
-            .background {
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                    .fill(
-                        configuration.isPressed
-                            ? DesignTokens.Colors.glassPress
-                            : (isActive
-                                ? DesignTokens.Colors.accentGlow
-                                : (configuration.isPressed ? DesignTokens.Colors.glassHoverColor : Color.clear))
-                    )
-            }
-            .opacity(isEnabled ? 1.0 : 0.40)
-            .scaleEffect(configuration.isPressed ? 0.90 : 1.0)
-            .animation(DesignTokens.Animation.hover, value: configuration.isPressed)
-    }
-}
+// 注：旧 `ToolbarIconButtonStyle` 已删除，统一改用 `PillButtonStyle(tone:variant:)`。
 
 // MARK: - 玻璃输入框
 
@@ -222,12 +194,11 @@ struct CustomTextField: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             ZStack {
                 // 玻璃背景
+                // Figma: bg-white/80 backdrop-blur-sm
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                    .fill(DesignTokens.Colors.surfaceInput)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .fill(DesignTokens.Colors.glassUltraLight)
-                    }
+                    .fill(.regularMaterial)
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(Color.white.opacity(0.80))
 
                 // 边框（状态感知）
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
@@ -256,7 +227,7 @@ struct CustomTextField: View {
 
                     if isError {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .font(.system(size: 13))
+                            .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.statusError)
                     }
                 }
@@ -268,14 +239,14 @@ struct CustomTextField: View {
             .animation(DesignTokens.Animation.fast, value: isError)
 
             if let error = errorMessage, isError {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                     Text(error)
                         .font(DesignTokens.Typography.labelSmall)
                 }
                 .foregroundColor(DesignTokens.Colors.statusError)
-                .padding(.horizontal, 2)
+                .padding(.horizontal, DesignTokens.Spacing.xxxs)
                 .accessibilityLabel("错误：\(error)")
             }
         }
@@ -293,12 +264,18 @@ struct CustomTextField: View {
         } else if isFocused {
             return LinearGradient(
                 colors: [DesignTokens.Colors.accentPrimary.opacity(0.75),
-                         DesignTokens.Colors.accentSecondary.opacity(0.45)],
+                         DesignTokens.Colors.accentPrimary.opacity(0.40)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         } else {
-            return DesignTokens.Gradients.glassBorder()
+            // Figma: border-[#d2d2d7]/50
+            return LinearGradient(
+                colors: [Color(hex: "#d2d2d7").opacity(0.50),
+                         Color(hex: "#d2d2d7").opacity(0.50)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 }
@@ -336,7 +313,7 @@ struct CustomSegmentedPicker<T: Hashable>: View {
     let labelProvider: (T) -> String
 
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(options, id: \.self) { option in
                 let isSelected = selection == option
                 Button {
@@ -397,7 +374,7 @@ struct CustomSegmentedPicker<T: Hashable>: View {
 // MARK: - 预览
 
 #Preview("按钮样式") {
-    VStack(spacing: 16) {
+    VStack(spacing: DesignTokens.Spacing.lg) {
         Button("主要按钮") {}
             .buttonStyle(PrimaryButtonStyle())
         Button("次要按钮") {}
@@ -415,7 +392,7 @@ struct CustomSegmentedPicker<T: Hashable>: View {
 }
 
 #Preview("输入框状态") {
-    VStack(spacing: 16) {
+    VStack(spacing: DesignTokens.Spacing.lg) {
         CustomTextField(placeholder: "主机地址", text: .constant(""))
         CustomTextField(placeholder: "主机地址", text: .constant("192.168.1.1"))
         CustomTextField(

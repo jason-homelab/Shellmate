@@ -465,12 +465,12 @@ struct TerminalView: View {
                         sftpSession: sftpSess,
                         transferQueue: transferQueue,
                         sessionName: session.name,
+                        syncDirectory: controller.currentRemoteDirectory,
                         onClose: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 _ = Task { await controller.closeSFTPPanel() }
                             }
-                        },
-                        syncDirectory: controller.currentRemoteDirectory
+                        }
                     )
                     .frame(width: sftpPanelWidth)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -558,8 +558,7 @@ struct TerminalView: View {
         .frame(height: 36)
         .background {
             Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay(Rectangle().fill(DesignTokens.Colors.glassUltraLight))
+                .fill(DesignTokens.Colors.surfacePanel)
                 .overlay(alignment: .bottom) {
                     Rectangle()
                         .fill(DesignTokens.Colors.glassBorderSide)
@@ -756,15 +755,15 @@ struct TerminalView: View {
                     toggleSFTPPanel()
                 }
             } label: {
-                VStack(spacing: 5) {
+                VStack(spacing: DesignTokens.Spacing.micro) {
                     // 箭头方向指示（展开 ← / 收起 →）
                     Image(systemName: controller.isSFTPPanelOpen ? "chevron.right" : "chevron.left")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
 
                     // SFTP 图标（Figma: folder.fill）
                     Image(systemName: "folder.fill")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(
                             controller.isSFTPPanelOpen
                                 ? DesignTokens.Colors.accentPrimary
@@ -774,7 +773,7 @@ struct TerminalView: View {
                     // "SFTP" 纵向标签（面板收起时显示）
                     if !controller.isSFTPPanelOpen {
                         Text("SFTP")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(DesignTokens.Typography.captionSmall)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                             .rotationEffect(.degrees(-90))
                             .fixedSize()
@@ -841,7 +840,7 @@ struct TerminalView: View {
     private var disconnectedOverlay: some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Image(systemName: "terminal")
-                .font(.system(size: 48, weight: .light))
+                .font(DesignTokens.Typography.heroLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
             Text("未连接")
@@ -905,7 +904,7 @@ struct TerminalView: View {
     private func failedOverlay(reason: String) -> some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
+                .font(DesignTokens.Typography.heroLarge)
                 .foregroundColor(DesignTokens.Colors.statusError)
 
             Text("连接失败")
@@ -934,7 +933,7 @@ struct TerminalView: View {
         VStack(spacing: 0) {
             // 标题
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     Text("输入连接凭据")
                         .font(DesignTokens.Typography.titleMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -948,7 +947,7 @@ struct TerminalView: View {
                     controller.needsCredentialInput = false
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(DesignTokens.Typography.bodySmallStrong)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
                         .background(DesignTokens.Colors.surfaceCard)
@@ -964,7 +963,7 @@ struct TerminalView: View {
                 // 认证方式提示
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "key.fill")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                     Text(session.authMethod == .keyboardInteractive ? "键盘交互认证" : "密码认证")
                         .font(DesignTokens.Typography.labelMedium)
@@ -972,7 +971,7 @@ struct TerminalView: View {
                 }
 
                 // 密码输入
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                     Text("密码")
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)

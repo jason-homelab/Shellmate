@@ -22,7 +22,7 @@ struct CommandSafetyAlertView: View {
 
     // MARK: - 颜色
 
-    private var riskColor: Color { Color(hex: risk.level.color) }
+    private var riskColor: Color { risk.level.color }
 
     // MARK: - Body
 
@@ -39,11 +39,10 @@ struct CommandSafetyAlertView: View {
             footerView
         }
         .frame(width: 460)
-        .background(Color.white.opacity(0.95))
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(DesignTokens.Colors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(riskColor.opacity(0.35), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.18), radius: 28, x: 0, y: 10)
@@ -53,22 +52,22 @@ struct CommandSafetyAlertView: View {
     // MARK: - 头部
 
     private var headerView: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             ZStack {
                 Circle()
                     .fill(riskColor.opacity(0.12))
                     .frame(width: 44, height: 44)
                 Image(systemName: risk.level.icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(riskColor)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text(risk.level.title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("匹配规则：\(risk.matchedPattern)")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
 
@@ -81,14 +80,14 @@ struct CommandSafetyAlertView: View {
     // MARK: - 内容
 
     private var contentView: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             // 命令原文
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                 Text("即将执行的命令")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text(risk.command)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(DesignTokens.Typography.codeSmall)
                     .foregroundColor(riskColor)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(DesignTokens.Spacing.sm)
@@ -98,12 +97,12 @@ struct CommandSafetyAlertView: View {
             }
 
             // 风险说明
-            HStack(alignment: .top, spacing: 8) {
+            HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "info.circle.fill")
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(riskColor)
                 Text(risk.reason)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -114,13 +113,13 @@ struct CommandSafetyAlertView: View {
     // MARK: - AI 分析区
 
     private var aiAnalysisView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                 Text("AI 风险说明")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Spacer()
                 if isAnalyzing {
@@ -130,12 +129,12 @@ struct CommandSafetyAlertView: View {
 
             if let err = analyzeError {
                 Text(err)
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             } else {
                 ScrollView(.vertical, showsIndicators: false) {
                     Text(aiAnalysis)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)

@@ -20,42 +20,38 @@ struct TerminalTabView: View {
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: 7) {                       // HTML: gap:7px
+        HStack(spacing: 8) {                       // Figma: gap-2 = 8pt
 
-            // ── 连接状态点（6×6）── main-window.html .tab-dot
+            // ── 连接状态点（保留为 SSH 客户端功能性指示，Figma 通用 mock 未含）──
             tabDot
 
             // ── 标题 ──
+            // Figma: text-xs font-medium (12pt medium，非等宽)
             Text(tab.title)
-                // HTML: .tab { font-size:11.5px; }
-                .font(.system(size: 11.5, weight: .medium, design: .monospaced))
-                // HTML: .tab { color: var(--text-3) = rgba(226,228,240,0.30) }
-                // HTML: .tab:hover { color: var(--text-2) = rgba(226,228,240,0.52) }
-                // HTML: .tab.active { color: rgba(226,228,240,0.90) }
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(isSelected
                     ? DesignTokens.Colors.textPrimary
-                    : (isHovering ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textTertiary))
+                    : (isHovering ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary))
                 .lineLimit(1)
                 .truncationMode(.tail)
 
             // 同步输入激活时显示 ⚡
             if syncStore.isSynced(tab.sessionId) {
                 Image(systemName: "bolt.fill")
-                    .font(.system(size: 9))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(.orange)
             }
 
             Spacer(minLength: 0)
 
-            // ── 关闭按钮 ── .tab-close
+            // ── 关闭按钮：Figma opacity-0 group-hover:opacity-100
             closeButton
                 .opacity(isHovering || isSelected ? 1 : 0)
         }
-        .padding(.horizontal, 14)                  // HTML: padding: 0 14px
-        .frame(height: DesignTokens.Sizes.tabBarHeight)
+        .padding(.horizontal, DesignTokens.Spacing.lg)  // Figma: px-4 = 16pt
+        .frame(height: 40)                              // Figma: h-10 = 40pt
         .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: DesignTokens.Sizes.tabMaxWidth)
         .background(tabBackground)
-        .overlay(alignment: .bottom) { activeBottomLine }
         .overlay(tabBorderRight)
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
@@ -87,19 +83,23 @@ struct TerminalTabView: View {
 
     // MARK: - 关闭按钮
 
+    @State private var isCloseHovering = false
+
+    /// Figma: ml-2 h-5 w-5 rounded-md hover:bg-black/10 + X icon h-3 w-3 (12pt)
     private var closeButton: some View {
         Button(action: onClose) {
-            Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .medium))
-                // HTML: .tab-close { color: rgba(226,228,240,0.30) }
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: 16, height: 16)
+            Label("关闭标签页", systemImage: "xmark")
+                .labelStyle(.iconOnly)
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .frame(width: 20, height: 20)
                 .background(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(isHovering ? DesignTokens.Colors.surfaceHover : Color.clear)
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                        .fill(isCloseHovering ? DesignTokens.Colors.glassPressStrong : Color.clear)
                 )
         }
         .buttonStyle(.plain)
+        .onHover { isCloseHovering = $0 }
         .help("关闭标签页")
     }
 
@@ -108,16 +108,11 @@ struct TerminalTabView: View {
     @ViewBuilder
     private var tabBackground: some View {
         if isSelected {
-            // HTML: .tab.active { background: linear-gradient(180deg, rgba(0,122,255,0.055) 0%, rgba(0,122,255,0.025) 60%, transparent 100%) }
-            LinearGradient(
-                stops: [
-                    .init(color: DesignTokens.Colors.accentPrimary.opacity(0.055), location: 0),
-                    .init(color: DesignTokens.Colors.accentPrimary.opacity(0.025), location: 0.60),
-                    .init(color: .clear, location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            // Figma: data-[state=active]:bg-white/90 data-[state=active]:backdrop-blur-xl data-[state=active]:shadow-sm
+            ZStack {
+                Color.white.opacity(0.90)
+            }
+            .shadow(color: .black.opacity(0.06), radius: 2, x: 0, y: 1)
         } else if isHovering {
             DesignTokens.Colors.glassUltraLight
         } else {
@@ -125,35 +120,14 @@ struct TerminalTabView: View {
         }
     }
 
-    // MARK: - 底部激活线
-
-    @ViewBuilder
-    private var activeBottomLine: some View {
-        if isSelected {
-            // HTML: linear-gradient(90deg, transparent, primary, transparent) + 双层光晕
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0),
-                    .init(color: DesignTokens.Colors.accentPrimary, location: 0.25),
-                    .init(color: DesignTokens.Colors.accentPrimary, location: 0.75),
-                    .init(color: .clear, location: 1.0)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 2)
-            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.60), radius: 6, x: 0, y: 0)
-            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.28), radius: 14, x: 0, y: 0)
-        }
-    }
-
     // MARK: - 右侧边框
 
+    /// Figma: border-r border-[#d2d2d7]/50（右侧 1pt 分隔线）
     private var tabBorderRight: some View {
         HStack(spacing: 0) {
             Spacer()
             Rectangle()
-                .fill(DesignTokens.Colors.borderSecondary)
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(width: 1)
         }
     }

@@ -1,13 +1,13 @@
 import SwiftUI
 
-// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07，2026-04-03 更新至 5 Tab）
+// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07，2026-04-27 更新至 6 Tab）
 
 /// 设置窗口主容器
-/// 顶部 Segmented Picker（通用/外观/终端/颜色/AI助手），共 640×520pt
-/// 对齐 Figma-Spec-v2 §07：grid-cols-5，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
+/// 顶部 Segmented Picker（通用/外观/终端/颜色/AI助手/自动化），共 640×520pt
+/// 对齐 Figma-Spec-v2 §07：grid-cols-6，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
 struct SettingsView: View {
 
-    // MARK: - 导航项（五主 Tab，对齐 Figma-Spec-v2 §07 2026-04-03）
+    // MARK: - 导航项（六主 Tab，W26 新增自动化 Tab）
 
     enum SettingsTab: String, CaseIterable, Identifiable {
         case general     = "通用"
@@ -15,6 +15,7 @@ struct SettingsView: View {
         case terminal    = "终端"
         case colors      = "颜色"
         case aiAssistant = "AI 助手"
+        case automation  = "自动化"
 
         var id: String { rawValue }
 
@@ -25,6 +26,7 @@ struct SettingsView: View {
             case .terminal:    return "terminal"
             case .colors:      return "circle.hexagongrid.fill"
             case .aiAssistant: return "sparkles"
+            case .automation:  return "bolt"
             }
         }
     }
@@ -47,54 +49,57 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(width: 600, height: 520)
-        .background(DesignTokens.Colors.surfaceOverlay)
+        // Figma: bg-white/95 backdrop-blur-2xl
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.95))
+        }
     }
 
     // MARK: - 顶部选择器
 
     private var tabPickerBar: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(SettingsTab.allCases) { tab in
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) {
                         selectedTab = tab
                     }
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: tab.iconName)
-                            .font(.system(size: 11))
+                            .font(DesignTokens.Typography.captionLarge)
+                        // Figma: text-xs = 11pt
                         Text(tab.rawValue)
-                            .font(.system(size: 12, weight: selectedTab == tab ? .medium : .regular))
+                            .font(.system(size: 11, weight: selectedTab == tab ? .medium : .regular))
                     }
+                    // Figma: active=text-primary, inactive=text-secondary, text-xs
                     .foregroundColor(
                         selectedTab == tab
-                            ? DesignTokens.Colors.accentPrimary
+                            ? DesignTokens.Colors.textPrimary
                             : DesignTokens.Colors.textSecondary
                     )
                     .frame(maxWidth: .infinity)
                     .frame(height: 30)
+                    // Figma: active=bg-white shadow-sm, inactive=transparent
                     .background(
                         selectedTab == tab
-                            ? DesignTokens.Colors.surfaceActive
+                            ? Color.white
                             : Color.clear
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .shadow(color: selectedTab == tab ? Color.black.opacity(0.08) : Color.clear, radius: 3, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(DesignTokens.Spacing.xxs)
-        .background(DesignTokens.Colors.surfaceCard)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        // Figma: bg-black/5 backdrop-blur-sm rounded-xl p-1（无边框）
+        .background(Color.black.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.vertical, DesignTokens.Spacing.md)
         .frame(maxWidth: .infinity)
-        .background(DesignTokens.Colors.surfaceOverlay)
     }
 
     // MARK: - 内容区
@@ -112,6 +117,8 @@ struct SettingsView: View {
             ColorsSettingsView()
         case .aiAssistant:
             AISettingsView()
+        case .automation:
+            AutomationTriggersSettingsView()
         }
     }
 }

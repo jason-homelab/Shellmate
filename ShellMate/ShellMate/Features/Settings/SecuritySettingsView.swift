@@ -135,18 +135,18 @@ struct SecuritySettingsView: View {
                 // 主密码 Section
                 masterPasswordSection
 
-                Divider().padding(.vertical, 12)
+                Divider().padding(.vertical, DesignTokens.Spacing.md)
 
                 // Known Hosts Section
                 knownHostsSection
 
-                Divider().padding(.vertical, 12)
+                Divider().padding(.vertical, DesignTokens.Spacing.md)
 
                 // SSH 密钥管理 Section
                 sshKeysSection
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .padding(.vertical, DesignTokens.Spacing.lg)
         }
         .sheet(isPresented: $showKeyGenSheet) {
             KeyGenSheet(isPresented: $showKeyGenSheet)
@@ -174,13 +174,13 @@ struct SecuritySettingsView: View {
     private var masterPasswordSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("主密码")
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             // 启用开关
             HStack {
                 Text("启用主密码（应用启动时要求验证）")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $store.masterPasswordEnabled)
@@ -189,9 +189,9 @@ struct SecuritySettingsView: View {
             }
 
             // 自动锁定
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Text("自动锁定")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(store.masterPasswordEnabled
                         ? DesignTokens.Colors.textSecondary
                         : DesignTokens.Colors.textTertiary)
@@ -226,7 +226,7 @@ struct SecuritySettingsView: View {
             // 标题行
             HStack {
                 Text("Known Hosts（已信任服务器指纹）")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
 
                 Spacer()
@@ -261,7 +261,7 @@ struct SecuritySettingsView: View {
                 Text("操作")
                     .frame(width: 56, alignment: .trailing)
             }
-            .font(.system(size: 10, weight: .medium))
+            .font(DesignTokens.Typography.captionMedium)
             .foregroundColor(DesignTokens.Colors.textTertiary)
             .padding(.horizontal, 10)
             .frame(height: 26)
@@ -271,17 +271,17 @@ struct SecuritySettingsView: View {
 
             if store.knownHosts.isEmpty {
                 // 空状态
-                VStack(spacing: 12) {
+                VStack(spacing: DesignTokens.Spacing.md) {
                     Image(systemName: "server.rack")
-                        .font(.system(size: 28))
+                        .font(DesignTokens.Typography.displayLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .opacity(0.4)
                     Text("尚无已记录的服务器指纹")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .padding(.vertical, DesignTokens.Spacing.xxl)
             } else {
                 ForEach(store.knownHosts) { entry in
                     knownHostRow(entry)
@@ -304,32 +304,32 @@ struct SecuritySettingsView: View {
         let dateStr = dateFormatter.string(from: entry.addedAt)
         HStack(spacing: 0) {
             Text(entry.hostIdentifier)
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(entry.keyType)
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 72, alignment: .leading)
 
             Text(dateStr)
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 88, alignment: .leading)
 
             // 状态
             Text("—")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 32, alignment: .center)
 
             // 删除按钮
             Button(action: { store.deleteKnownHost(entry) }) {
                 Image(systemName: "trash")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(hoveredKHId == entry.id
                         ? DesignTokens.Colors.statusError
                         : DesignTokens.Colors.textTertiary)
@@ -359,21 +359,21 @@ struct SecuritySettingsView: View {
             // 标题行
             HStack {
                 Text("SSH 密钥管理")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
 
                 Spacer()
 
                 Button(action: { showKeyGenSheet = true }) {
                     Text("生成新密钥对…")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
                 .buttonStyle(BorderedButtonStyle())
                 .controlSize(.small)
 
                 Button(action: importKey) {
                     Text("导入私钥…")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
                 .buttonStyle(BorderedButtonStyle())
                 .controlSize(.small)
@@ -397,7 +397,7 @@ struct SecuritySettingsView: View {
                 Text("操作")
                     .frame(width: 60, alignment: .trailing)
             }
-            .font(.system(size: 10, weight: .medium))
+            .font(DesignTokens.Typography.captionMedium)
             .foregroundColor(DesignTokens.Colors.textTertiary)
             .padding(.horizontal, 10)
             .frame(height: 26)
@@ -406,17 +406,17 @@ struct SecuritySettingsView: View {
             Divider()
 
             if store.sshKeys.isEmpty {
-                VStack(spacing: 8) {
+                VStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "key.fill")
-                        .font(.system(size: 22))
+                        .font(DesignTokens.Typography.displaySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .opacity(0.4)
                     Text("尚无已存储的 SSH 私钥")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                .padding(.vertical, DesignTokens.Spacing.xl)
             } else {
                 ForEach(store.sshKeys) { key in
                     sshKeyRow(key)
@@ -438,40 +438,40 @@ struct SecuritySettingsView: View {
         HStack(spacing: 0) {
             // 图标
             Image(systemName: "key.fill")
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(Color(red: 0.72, green: 0.53, blue: 0.04))
                 .frame(width: 26)
 
             // 信息区
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
                 Text(key.name)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(key.path)
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(key.keyType)
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .frame(width: 80, alignment: .leading)
 
             Text("用于 \(key.linkedSessionCount) 个会话")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 80, alignment: .leading)
 
-            HStack(spacing: 4) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {
                 Button("查看") {}
                     .buttonStyle(BorderedButtonStyle())
                     .controlSize(.mini)
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
 
                 Button(action: {}) {
                     Image(systemName: "trash")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .buttonStyle(.plain)
@@ -560,12 +560,12 @@ struct KeyGenSheet: View {
             // 标题行
             HStack {
                 Text("生成新的 SSH 密钥对")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button(action: { isPresented = false }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -594,9 +594,9 @@ struct KeyGenSheet: View {
             }
 
             // 保存路径
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 CustomTextField(placeholder: "", text: $savePath)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
 
                 Button("选择…") {
                     chooseSavePath()
@@ -679,12 +679,12 @@ struct MasterPasswordSheet: View {
             // 标题栏
             HStack {
                 Text(isFirstSetup ? "设置主密码" : "修改主密码")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button(action: { isPresented = false }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 22, height: 22)
                         .background(DesignTokens.Colors.surfaceCard)
@@ -698,9 +698,9 @@ struct MasterPasswordSheet: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 // 说明
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "lock.shield")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                     Text("主密码存储于本设备 Keychain，用于应用启动时身份验证。SSH 凭据使用 AES-256-GCM 加密存储于本地数据库，不参与 iCloud 同步。忘记主密码后需重置应用数据。")
                         .font(.system(size: 10.5))
@@ -713,22 +713,22 @@ struct MasterPasswordSheet: View {
 
                 // 旧密码（首次设置时隐藏）
                 if !isFirstSetup {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                         Text("当前密码")
-                            .font(.system(size: 11))
+                            .font(DesignTokens.Typography.captionLarge)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                         CustomTextField(placeholder: "请输入当前主密码", text: $oldPassword, isSecure: true)
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                     }
                 }
 
                 // 新密码
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     Text("新密码")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                     CustomTextField(placeholder: "至少 8 位，建议包含大小写字母+数字", text: $newPassword, isSecure: true)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
 
                     // 密码强度指示器
                     if !newPassword.isEmpty {
@@ -737,27 +737,27 @@ struct MasterPasswordSheet: View {
                 }
 
                 // 确认新密码
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     Text("确认新密码")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                     CustomTextField(placeholder: "再次输入新密码", text: $confirmPassword, isSecure: true)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                     // 不一致提示
                     if !confirmPassword.isEmpty && confirmPassword != newPassword {
                         Text("两次输入不一致")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.statusError)
                     }
                 }
 
                 // 错误信息
                 if !errorMessage.isEmpty {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DesignTokens.Spacing.xs) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 11))
+                            .font(DesignTokens.Typography.captionLarge)
                         Text(errorMessage)
-                            .font(.system(size: 11))
+                            .font(DesignTokens.Typography.captionLarge)
                     }
                     .foregroundColor(DesignTokens.Colors.statusError)
                 }
@@ -813,13 +813,13 @@ struct MasterPasswordSheet: View {
         switch passwordStrength {
         case 0, 1: return DesignTokens.Colors.statusError
         case 2:    return DesignTokens.Colors.statusConnecting
-        case 3:    return Color(hex: "#FFCC00")
+        case 3:    return DesignTokens.Colors.statusConnecting
         default:   return DesignTokens.Colors.statusConnected
         }
     }
 
     private var passwordStrengthBar: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             ForEach(0..<4, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 1.5)
                     .fill(i < passwordStrength
@@ -828,7 +828,7 @@ struct MasterPasswordSheet: View {
                     .frame(height: 3)
             }
             Text(passwordStrengthLabel)
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(passwordStrengthColor)
         }
     }

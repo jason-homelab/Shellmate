@@ -45,25 +45,25 @@ extension ContentView {
     // MARK: - 导入/导出 Popover
 
     var sessionShareMenu: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             Text("会话配置")
-                .font(.system(size: 11, weight: .semibold))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .padding(.top, 10)
-                .padding(.bottom, 2)
+                .padding(.bottom, DesignTokens.Spacing.xxxs)
 
             Button {
                 showSharePopover = false
                 showImportExportDialog = true
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "arrow.up.arrow.down.square")
                         .frame(width: 16)
                     Text("导入 / 导出会话…")
                 }
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .padding(.vertical, 7)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -72,26 +72,26 @@ extension ContentView {
             .contentShape(Rectangle())
 
             Divider()
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
 
             Text("迁移")
-                .font(.system(size: 11, weight: .semibold))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 2)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.top, DesignTokens.Spacing.xs)
+                .padding(.bottom, DesignTokens.Spacing.xxxs)
 
             Button {
                 showSharePopover = false
                 showSSHConfigImport = true
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "terminal")
                         .frame(width: 16)
                     Text("从 ~/.ssh/config 导入…")
                 }
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .padding(.vertical, 7)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -100,14 +100,14 @@ extension ContentView {
             .contentShape(Rectangle())
 
             Divider()
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
 
             Text("密码与私钥不会包含在导出文件中")
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DesignTokens.Spacing.md)
                 .padding(.bottom, 10)
-                .padding(.top, 2)
+                .padding(.top, DesignTokens.Spacing.xxxs)
         }
         .frame(width: 240)
     }
@@ -133,7 +133,7 @@ extension ContentView {
     // MARK: - 语言选择器菜单
 
     var languagePickerMenu: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
             languageOption(label: "中文", tag: "zh")
             languageOption(label: "English", tag: "en")
         }
@@ -148,12 +148,12 @@ extension ContentView {
         }) {
             HStack {
                 Text(label)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 if appLanguage == tag {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                 }
             }

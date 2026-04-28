@@ -71,12 +71,12 @@ struct ColorsSettingsView: View {
                     Spacer()
                     Button(action: resetToDefault) {
                         Text("重置为默认")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(DesignTokens.Typography.labelLarge)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, DesignTokens.Spacing.lg)
+                            .padding(.vertical, DesignTokens.Spacing.xs)
                             .background(DesignTokens.Colors.surfaceHover)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -89,7 +89,7 @@ struct ColorsSettingsView: View {
     // MARK: - 颜色行（bg-white/80 backdrop-blur-sm rounded-xl border）
 
     private func colorRow(label: String, description: String, hex: Binding<String>) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             // 色块 + ColorPicker
             ColorPicker("", selection: Binding(
                 get: { Color(hex: hex.wrappedValue) },
@@ -108,7 +108,7 @@ struct ColorsSettingsView: View {
             .labelsHidden()
             .frame(width: 28, height: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(label)
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
@@ -123,10 +123,10 @@ struct ColorsSettingsView: View {
             Text(hex.wrappedValue.uppercased())
                 .font(DesignTokens.Typography.codeSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .padding(.vertical, DesignTokens.Spacing.xxs)
                 .background(DesignTokens.Colors.surfaceHover)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
         }
         .padding(DesignTokens.Spacing.md)
         .background(DesignTokens.Colors.surfaceCard)
@@ -141,13 +141,13 @@ struct ColorsSettingsView: View {
     // MARK: - ANSI 调色板（8×2 网格）
 
     private var ansiPaletteGrid: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             // 基础 8 色
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 ForEach(0..<8) { i in ansiSwatch(index: i) }
             }
             // 高亮 8 色
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 ForEach(8..<16) { i in ansiSwatch(index: i) }
             }
         }

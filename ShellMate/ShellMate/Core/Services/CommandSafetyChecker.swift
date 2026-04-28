@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - AI-06 高风险命令安全审计（§21.1）
 
@@ -30,10 +31,10 @@ struct CommandRisk: Identifiable {
             }
         }
 
-        var color: String {
+        var color: Color {
             switch self {
-            case .danger:  return "#ff3b30"
-            case .warning: return "#ff9500"
+            case .danger:  return DesignTokens.Colors.statusError
+            case .warning: return DesignTokens.Colors.statusConnecting
             }
         }
     }

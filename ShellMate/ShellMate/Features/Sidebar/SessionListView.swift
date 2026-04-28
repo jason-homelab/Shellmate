@@ -18,7 +18,7 @@ struct SessionListView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: []) {
+            LazyVStack(spacing: DesignTokens.Spacing.xxxs, pinnedViews: []) {
                 // 未分组的会话
                 ungroupedSessionsSection
 
@@ -27,7 +27,8 @@ struct SessionListView: View {
                     groupSection(group)
                 }
             }
-            .padding(.vertical, DesignTokens.Spacing.xs)
+            // Figma: p-2 = 8pt 四周
+            .padding(DesignTokens.Spacing.sm)
         }
     }
 
@@ -37,26 +38,19 @@ struct SessionListView: View {
     private var ungroupedSessionsSection: some View {
         let ungroupedSessions = sessionStore.filteredSessions.filter { $0.groupId == nil }
 
-        // 未分组区域头部（有未分组会话或有分组时始终显示，作为拖拽目标）
+        // 未分组拖拽目标区域（透明，不显示标签）
         if !ungroupedSessions.isEmpty || !groupStore.topLevelGroups.isEmpty {
-            HStack {
-                Text("未分组")
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                Spacer()
-            }
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.xs)
-            .background(Color.clear)
-            .dropDestination(for: String.self) { items, _ in
-                guard let idString = items.first,
-                      let sessionId = UUID(uuidString: idString),
-                      let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
-                      session.groupId != nil else { return false }
-                draggedSessionId = nil
-                Task { await sessionStore.moveSession(session, to: nil) }
-                return true
-            }
+            Color.clear
+                .frame(height: 4)
+                .dropDestination(for: String.self) { items, _ in
+                    guard let idString = items.first,
+                          let sessionId = UUID(uuidString: idString),
+                          let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
+                          session.groupId != nil else { return false }
+                    draggedSessionId = nil
+                    Task { await sessionStore.moveSession(session, to: nil) }
+                    return true
+                }
         }
 
         ForEach(ungroupedSessions) { session in
@@ -148,7 +142,8 @@ struct SessionListView: View {
             .opacity(draggedSessionId == session.id ? 0.4 : 1.0)
         }
         .onTapGesture {
-            sessionStore.selectedSessionId = session.id
+            // Figma-Spec-v2 §02：单击侧边栏会话行即切换/连接（无需双击）
+            onConnect?(session)
         }
         .contextMenu {
             sessionContextMenu(session)

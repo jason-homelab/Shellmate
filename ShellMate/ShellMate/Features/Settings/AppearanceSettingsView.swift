@@ -24,9 +24,9 @@ struct AppTheme: Identifiable, Equatable, Codable {
 
     static let builtins: [AppTheme] = [
         AppTheme(id: "shellmate-dark",  name: "ShellMate Dark",
-                 backgroundHex: "#0C0C0E", promptHex: "#4CAF7D", outputHex: "#8E8E9A",
-                 ansiColors: ["#1C1C1E","#FF453A","#4CAF7D","#FFD60A","#0A84FF","#BF5AF2","#5AC8FA","#8E8E9A",
-                              "#3A3A3C","#FF6961","#6FD19B","#FFE55C","#409CFF","#DA8FFF","#7DD4F8","#FFFFFF"]),
+                 backgroundHex: "#070a11", promptHex: "#00d4aa", outputHex: "#c9cbe0",
+                 ansiColors: ["#070a11","#f87171","#34d399","#fbbf24","#818cf8","#c084fc","#00d4aa","#c9cbe0",
+                              "#1a2232","#ff8080","#6ee7b7","#fde68a","#a5b4fc","#d8b4fe","#5eead4","#e2e4f0"]),
         AppTheme(id: "shellmate-light", name: "ShellMate Light",
                  backgroundHex: "#FFFFFF", promptHex: "#1E8C52", outputHex: "#6B6B7B",
                  ansiColors: ["#000000","#C0392B","#1E8C52","#B7950B","#2980B9","#8E44AD","#16A085","#7F8C8D",
@@ -148,26 +148,26 @@ struct AppearanceSettingsView: View {
                 // S02-B：颜色主题
                 themeSectionView
 
-                Divider().padding(.vertical, 20)
+                Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
                 // S02-C：字体配置
                 fontSectionView
 
-                Divider().padding(.vertical, 20)
+                Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
                 // S02-E：光标配置
                 cursorSectionView
 
-                Divider().padding(.vertical, 20)
+                Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
                 // S02-F：窗口配置
                 windowSectionView
 
                 Spacer().frame(height: 16)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-            .padding(.bottom, 8)
+            .padding(.horizontal, DesignTokens.Spacing.xl)
+            .padding(.top, DesignTokens.Spacing.xl)
+            .padding(.bottom, DesignTokens.Spacing.sm)
         }
     }
 
@@ -198,14 +198,14 @@ struct AppearanceSettingsView: View {
             HStack(spacing: 10) {
                 Button(action: importItermColors) {
                     Label("导入 .itermcolors", systemImage: "square.and.arrow.down")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
 
                 Button(action: exportCurrentTheme) {
                     Label("导出主题", systemImage: "square.and.arrow.up")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
@@ -235,14 +235,14 @@ struct AppearanceSettingsView: View {
                 ZStack {
                     DesignTokens.Colors.surfaceCard
                     Image(systemName: "plus")
-                        .font(.system(size: 18))
+                        .font(DesignTokens.Typography.displayXSmall)  // 无对应令牌，保持不变
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
 
                 Text("自定义")
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 20)
@@ -270,10 +270,10 @@ struct AppearanceSettingsView: View {
                 lineSpacingRow
 
                 // 连字（Toggle + 说明分两行）
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     HStack {
                         Text("启用字体连字（Ligatures）")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                         Spacer()
                         Toggle("", isOn: $ligatures)
@@ -281,7 +281,7 @@ struct AppearanceSettingsView: View {
                     }
 
                     Text("⚠ 需字体支持（Fira Code, JetBrains Mono）")
-                        .font(.system(size: 10))
+                        .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
 
@@ -383,14 +383,14 @@ struct AppearanceSettingsView: View {
 
     private func sectionHeader(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .font(.system(size: 13, weight: .semibold))
+            .font(DesignTokens.Typography.titleSmall)
             .foregroundColor(DesignTokens.Colors.textPrimary)
     }
 
     // MARK: - 表单行辅助（统一 label 宽度 = 88pt）
 
     private var fontFamilyRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             rowLabel("字体族")
             Picker("", selection: $fontFamily) {
                 Text("JetBrains Mono").tag("JetBrains Mono")
@@ -406,22 +406,22 @@ struct AppearanceSettingsView: View {
     }
 
     private var fontSizeRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             rowLabel("字号")
             Slider(value: $fontSize, in: 8...32, step: 1)
                 .accentColor(DesignTokens.Colors.accentPrimary)
             Text("\(Int(fontSize)) pt")
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .frame(width: 42, alignment: .trailing)
             HStack(spacing: 0) {
                 Button(action: { fontSize = max(8, fontSize - 1) }) {
-                    Image(systemName: "minus").font(.system(size: 10))
+                    Image(systemName: "minus").font(DesignTokens.Typography.captionMedium)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 24, height: 24)
                 Button(action: { fontSize = min(32, fontSize + 1) }) {
-                    Image(systemName: "plus").font(.system(size: 10))
+                    Image(systemName: "plus").font(DesignTokens.Typography.captionMedium)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 24, height: 24)
@@ -430,19 +430,19 @@ struct AppearanceSettingsView: View {
     }
 
     private var lineSpacingRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             rowLabel("行间距")
             Slider(value: $lineSpacing, in: 0.8...2.0, step: 0.1)
                 .accentColor(DesignTokens.Colors.accentPrimary)
             Text(String(format: "%.1f×", lineSpacing))
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .frame(width: 42, alignment: .trailing)
         }
     }
 
     private var nonAsciiRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             rowLabel("非 ASCII 字体")
             Picker("", selection: $nonAsciiFont) {
                 Text("冬青黑体").tag("冬青黑体")
@@ -453,20 +453,20 @@ struct AppearanceSettingsView: View {
             .labelsHidden()
             .frame(maxWidth: .infinity)
             Text("中文等宽字符")
-                .font(.system(size: 10))
+                .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
     }
 
     private func rowLabel(_ text: LocalizedStringKey) -> some View {
         Text(text)
-            .font(.system(size: 12))
+            .font(DesignTokens.Typography.bodySmall)
             .foregroundColor(DesignTokens.Colors.textSecondary)
             .frame(width: 88, alignment: .leading)
     }
 
     private var fontPreviewArea: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             HStack(spacing: 0) {
                 Text("ubuntu@server:~$ ")
                     .foregroundColor(DesignTokens.Colors.terminalPromptDefault)
@@ -498,17 +498,17 @@ struct AppearanceSettingsView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 // 形状选择
-                HStack(spacing: 20) {
+                HStack(spacing: DesignTokens.Spacing.xl) {
                     ForEach(CursorShape.allCases, id: \.self) { shape in
                         cursorShapeOption(shape)
                     }
                 }
 
                 // 闪烁设置
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                     HStack {
                         Text("光标闪烁")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                         Spacer()
                         Toggle("", isOn: $cursorBlink)
@@ -517,7 +517,7 @@ struct AppearanceSettingsView: View {
 
                     HStack {
                         Text("仅空闲时闪烁")
-                            .font(.system(size: 12))
+                            .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(cursorBlink
                                 ? DesignTokens.Colors.textSecondary
                                 : DesignTokens.Colors.textTertiary)
@@ -526,7 +526,7 @@ struct AppearanceSettingsView: View {
                             .toggleStyle(.switch).labelsHidden()
                     }
                     .disabled(!cursorBlink)
-                    .padding(.leading, 16)
+                    .padding(.leading, DesignTokens.Spacing.lg)
                 }
             }
             .padding(.top, 14)
@@ -536,7 +536,7 @@ struct AppearanceSettingsView: View {
     private func cursorShapeOption(_ shape: CursorShape) -> some View {
         let isSelected = cursorShape == shape
         return Button(action: { cursorShapeRaw = shape.rawValue }) {
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 // 单选点
                 Circle()
                     .fill(isSelected ? DesignTokens.Colors.accentPrimary : Color.clear)
@@ -557,7 +557,7 @@ struct AppearanceSettingsView: View {
 
                 // 标签
                 Text(shape.displayName)
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(isSelected
                         ? DesignTokens.Colors.textPrimary
                         : DesignTokens.Colors.textSecondary)
@@ -573,9 +573,9 @@ struct AppearanceSettingsView: View {
             sectionHeader("窗口")
 
             // 背景透明度
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 Text("背景透明度")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 100, alignment: .leading)
 
@@ -583,7 +583,7 @@ struct AppearanceSettingsView: View {
                     .accentColor(DesignTokens.Colors.accentPrimary)
 
                 Text("\(Int(bgOpacity))%")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .frame(width: 36, alignment: .trailing)
             }
@@ -607,8 +607,8 @@ private struct ThemeCardView: View {
                 // 预览区（全宽自适应 × 44pt）
                 ZStack(alignment: .topLeading) {
                     theme.background
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 3) {
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
+                        HStack(spacing: DesignTokens.Spacing.nano) {
                             Text("$")
                                 .foregroundColor(theme.promptColor)
                             Text("ls")
@@ -625,7 +625,7 @@ private struct ThemeCardView: View {
 
                 // 标签区
                 Text(theme.name)
-                    .font(.system(size: 9.5))
+                    .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(isSelected
                         ? DesignTokens.Colors.accentPrimary
                         : DesignTokens.Colors.textTertiary)
@@ -681,7 +681,7 @@ private struct CustomThemeEditorSheet: View {
                 Spacer()
                 Button(action: onCancel) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(DesignTokens.Typography.bodySmallStrong)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
                         .background(DesignTokens.Colors.surfaceCard)
@@ -696,13 +696,13 @@ private struct CustomThemeEditorSheet: View {
             // 编辑区
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 // 主题名称
-                HStack(spacing: 12) {
+                HStack(spacing: DesignTokens.Spacing.md) {
                     Text("主题名称")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 76, alignment: .leading)
                     CustomTextField(placeholder: "输入主题名称", text: $themeName)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                 }
 
                 Divider()
@@ -717,8 +717,8 @@ private struct CustomThemeEditorSheet: View {
                 Divider()
 
                 // 实时预览
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 3) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
+                    HStack(spacing: DesignTokens.Spacing.nano) {
                         Text("$")
                             .foregroundColor(promptColor)
                         Text("ls -la")
@@ -729,7 +729,7 @@ private struct CustomThemeEditorSheet: View {
                     Text("-rwxr-xr-x  1 ubuntu 4096 Jan 1 app.sh")
                         .foregroundColor(outputColor.opacity(0.45))
                 }
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .padding(DesignTokens.Spacing.md)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(bgColor)
@@ -756,9 +756,9 @@ private struct CustomThemeEditorSheet: View {
     }
 
     private func colorRow(_ label: LocalizedStringKey, color: Binding<Color>) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             Text(label)
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 76, alignment: .leading)
 
@@ -776,7 +776,7 @@ private struct CustomThemeEditorSheet: View {
                 )
 
             Text(color.wrappedValue.toHex().uppercased())
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
         }
     }

@@ -47,13 +47,17 @@ struct TerminalStatusBarView: View {
                 disconnectedContent
             }
         }
-        .frame(height: DesignTokens.Sizes.statusBarHeight)
-        // Figma: bg-[#f5f5f7]/90
-        .background(DesignTokens.Colors.surfacePanel)
-        // Void: border-t rgba(255,255,255,0.07)
+        // Figma: h-8 = 32pt
+        .frame(height: 32)
+        // Figma: bg-[#f5f5f7]/90 backdrop-blur-2xl
+        .background {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color(hex: "#f5f5f7").opacity(0.90))
+        }
+        // Figma: border-t border-[#d2d2d7]/50
         .overlay(alignment: .top) {
             Rectangle()
-                .fill(DesignTokens.Colors.borderPrimary)
+                .fill(Color(hex: "#d2d2d7").opacity(0.50))
                 .frame(height: 0.5)
         }
         // CPU 历史记录：每次 metrics 更新时追加，保留最近 8 条
@@ -67,72 +71,53 @@ struct TerminalStatusBarView: View {
     // MARK: - 未连接状态
 
     private var disconnectedContent: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
+        // Figma: gap-1.5 = 6pt, WifiOff h-3 w-3 = 12pt, text-xs = 12pt, text-[#86868b]
+        HStack(spacing: 6) {
             if connectionState == .connecting {
-                GlowingStatusDot(color: connectionState.dotColor, size: 2)
+                GlowingStatusDot(color: connectionState.dotColor, size: 3)
             } else {
                 Image(systemName: "wifi.slash")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             Text(connectionState == .connecting ? "Connecting..." : "Not connected")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
 
             // W12.6：同步输入状态
             if syncStore.isActive {
                 syncBadge
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.md)
+        // Figma: px-4 = 16pt
+        .padding(.horizontal, DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - 已连接状态
 
     private var connectedContent: some View {
-        // HTML: .statusbar { font-family:mono; font-size:10px; padding:0 10px; gap:5px }
-        HStack(spacing: 5) {
-            // ── 左侧：连接信息芯片 ──────────────────────────────
-            // HTML: .status-session { background:rgba(52,211,153,0.055); border:1px solid rgba(52,211,153,0.12) }
-            HStack(spacing: 5) {
+        // Figma: gap-4 = 16pt 顶层间距
+        HStack(spacing: DesignTokens.Spacing.lg) {
+            // ── 左侧：会话标识 — Figma: green dot + name(textPrimary) + • + user@host(textSecondary)
+            HStack(spacing: 6) {
                 statusDotView
 
                 if let session {
+                    // Figma: text-xs font-medium text-[#1d1d1f]
                     Text(session.name)
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .lineLimit(1)
-                    Text("·")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                    Text("•")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
                     Text("\(session.username)@\(session.host)")
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .lineLimit(1)
                 }
-
-                // 连接时长
-                if let connectedAt {
-                    Text("·")
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                    Text(connectionDuration(from: connectedAt))
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .monospacedDigit()
-                }
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 2)
-            .background(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(DesignTokens.Colors.statusConnected.opacity(0.055))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.statusConnected.opacity(0.12), lineWidth: 0.75)
-                    }
-            )
 
             // tmux、同步状态保持独立（不放入芯片）
             if let sessionName = tmuxAttachedSession {
@@ -164,48 +149,36 @@ struct TerminalStatusBarView: View {
                     }
                 }
             } else {
-                // 无指标：终端尺寸 + SSH 端口芯片
-                HStack(spacing: 5) {
-                    metricChip {
-                        Text("\(columns)×\(rows)")
-                            .font(.system(size: 10, weight: .regular, design: .monospaced))
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
-                    }
-                    metricChip {
-                        Text("SSH:\(session?.port ?? 22)")
-                            .font(.system(size: 10, weight: .regular, design: .monospaced))
-                            .foregroundColor(DesignTokens.Colors.textTertiary)
-                    }
+                // 无指标：Figma right = Activity icon + "SSH Port {port}"
+                HStack(spacing: 6) {
+                    Image(systemName: "waveform.path.ecg")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text("SSH Port \(session?.port ?? 22)")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
             }
         }
-        .padding(.horizontal, 10)
+        // Figma: px-4 = 16pt
+        .padding(.horizontal, DesignTokens.Spacing.lg)
     }
 
-    // MARK: - 芯片容器
+    // MARK: - 芯片容器（仅作内边距包装，无视觉背景）
 
     @ViewBuilder
     private func metricChip<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(DesignTokens.Colors.glassUltraLight)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.75)
-                    }
-            )
     }
 
-    /// 状态点（带 pulse 动画）— main-window.html .status-dot
+    /// 状态点（带 pulse 动画）
+    /// Figma: w-2 h-2 rounded-full bg-[#34c759] shadow-sm animate-pulse
     @State private var dotPulse = false
     private var statusDotView: some View {
         Circle()
             .fill(DesignTokens.Colors.statusConnected)
             .shadow(color: DesignTokens.Colors.statusConnected.opacity(0.60), radius: 3, x: 0, y: 0)
-            .frame(width: 6, height: 6)
+            .frame(width: 8, height: 8)
             .opacity(dotPulse ? 0.40 : 1.0)
             .onAppear {
                 withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
@@ -218,17 +191,20 @@ struct TerminalStatusBarView: View {
 
     @ViewBuilder
     private func metricsView(_ m: ServerMetrics) -> some View {
-        // HTML: gap:5px，各指标独立芯片（无分隔线）
-        HStack(spacing: 5) {
-            metricChip { cpuView(m) }
-            metricChip { memoryView(m) }
-            metricChip { diskView(m) }
-            metricChip { networkView(m) }
-            // HTML: .status-port 芯片
-            metricChip {
+        // Figma: gap-4 = 16pt 各指标内联
+        HStack(spacing: DesignTokens.Spacing.lg) {
+            cpuView(m)
+            memoryView(m)
+            diskView(m)
+            networkView(m)
+            // Figma: Activity icon h-3 w-3 + "SSH Port {port}" text-xs text-[#86868b]
+            HStack(spacing: 6) {
+                Image(systemName: "waveform.path.ecg")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
                 Text("SSH:\(session?.port ?? 22)")
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
             }
         }
     }
@@ -242,25 +218,39 @@ struct TerminalStatusBarView: View {
     // MARK: - CPU（对齐 main-window.html .status-metric）
 
     private func cpuView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 4) {
-            // HTML: .status-label { color: rgba(226,228,240,0.22) }
-            Text("CPU")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            // HTML: .metric-val.warn/.ok { font-weight:600; color:warning/success }
-            Text(String(format: "%.1f%%", m.cpuUsage))
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(cpuColor(m.cpuColor))
-            // HTML: .mini-bars { height:10px; gap:1.5px } .mini-bar { width:3px; opacity:0.65 }
-            HStack(spacing: 1.5) {
-                ForEach(Array(cpuHistory.suffix(5).enumerated()), id: \.offset) { _, value in
-                    RoundedRectangle(cornerRadius: 1, style: .continuous)
-                        .fill(cpuColor(m.cpuColor).opacity(0.65))
-                        .frame(width: 3, height: max(2, CGFloat(value / 100.0) * 10))
-                        .frame(height: 10, alignment: .bottom)
-                }
+        // Figma: gap-2 内部 + gap-1.5 文字组（外层使用 gap-2，文字组用 gap-1.5）
+        HStack(spacing: 8) {
+            // Figma: p-1 rounded-md bg-[#007aff]/10，icon h-3 w-3 = 12pt
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
+                Image(systemName: "cpu")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
-            .animation(.easeInOut(duration: 0.3), value: cpuHistory.count)
+            .frame(width: 20, height: 20)
+
+            HStack(spacing: 6) {
+                // Figma: text-xs text-[#86868b] "CPU"
+                Text("CPU")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                // Figma: font-semibold ${cpuColor}（12pt semibold）
+                Text(String(format: "%.1f%%", m.cpuUsage))
+                    .font(DesignTokens.Typography.bodySmallStrong)
+                    .monospacedDigit()
+                    .foregroundColor(cpuColor(m.cpuColor))
+                // Figma: 8 bars, max height 12px, w-0.5 = 2pt, opacity-60
+                HStack(alignment: .bottom, spacing: 1.5) {
+                    ForEach(Array(cpuHistory.suffix(8).enumerated()), id: \.offset) { _, value in
+                        RoundedRectangle(cornerRadius: 1, style: .continuous)
+                            .fill(cpuColor(m.cpuColor).opacity(0.60))
+                            .frame(width: 2, height: max(2, CGFloat(value / 100.0) * 12))
+                    }
+                }
+                .frame(height: 12)
+                .animation(.easeInOut(duration: 0.3), value: cpuHistory.count)
+            }
         }
     }
 
@@ -275,37 +265,52 @@ struct TerminalStatusBarView: View {
     // MARK: - 内存（对齐 main-window.html .status-metric）
 
     private func memoryView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 4) {
-            Text("MEM")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            HStack(spacing: 2) {
-                Text(ServerMetrics.formatBytes(m.memoryUsed))
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundColor(memoryBarColor(m.memoryRatio))
-                Text("/")
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                Text(ServerMetrics.formatBytes(m.memoryTotal))
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+        HStack(spacing: 8) {
+            // Figma: p-1 rounded-md bg-[#5856d6]/10，icon h-3 w-3 = 12pt
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(Color(hex: "#5856d6").opacity(0.10))
+                Image(systemName: "memorychip")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(Color(hex: "#5856d6"))
             }
-            // HTML: .progress-track { width:36px; height:4px; background:rgba(255,255,255,0.08) }
-            memoryBar(ratio: m.memoryRatio)
+            .frame(width: 20, height: 20)
+            HStack(spacing: 6) {
+                Text("Memory")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                HStack(spacing: 2) {
+                    Text(ServerMetrics.formatBytes(m.memoryUsed))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(memoryBarColor(m.memoryRatio))
+                    Text("/")
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text(ServerMetrics.formatBytes(m.memoryTotal))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
+                // Figma: w-12 h-1.5 = 48pt × 6pt
+                memoryBar(ratio: m.memoryRatio)
+            }
         }
     }
 
     private func memoryBar(ratio: Double) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(DesignTokens.Colors.borderSubtle)
-                RoundedRectangle(cornerRadius: 2)
+                // Figma: bg-black/5 rounded-full overflow-hidden
+                Capsule()
+                    .fill(DesignTokens.Colors.surfaceHover)
+                Capsule()
                     .fill(memoryBarColor(ratio))
                     .frame(width: geo.size.width * CGFloat(min(ratio, 1)))
             }
         }
-        .frame(width: 36, height: 4)  // HTML: width:36px height:4px
+        // Figma: w-12 h-1.5 = 48pt × 6pt
+        .frame(width: 48, height: 6)
     }
 
     private func memoryBarColor(_ ratio: Double) -> Color {
@@ -317,35 +322,62 @@ struct TerminalStatusBarView: View {
     // MARK: - 磁盘（对齐 main-window.html .status-metric）
 
     private func diskView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 4) {
-            Text("DISK")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            Text(ServerMetrics.formatBytes(m.diskUsed))
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+        HStack(spacing: 8) {
+            // Figma: p-1 rounded-md bg-[#ff9500]/10，icon h-3 w-3 = 12pt
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(Color(hex: "#ff9500").opacity(0.10))
+                Image(systemName: "internaldrive")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(Color(hex: "#ff9500"))
+            }
+            .frame(width: 20, height: 20)
+            HStack(spacing: 6) {
+                Text("Disk")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                Text(ServerMetrics.formatBytes(m.diskUsed))
+                    .font(DesignTokens.Typography.bodySmallStrong)
+                    .monospacedDigit()
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+            }
         }
     }
 
     // MARK: - 网络（对齐 main-window.html .status-metric）
 
     private func networkView(_ m: ServerMetrics) -> some View {
-        HStack(spacing: 4) {
-            // HTML: .net-arrow { color: rgba(226,228,240,0.22) }
-            // HTML: .net-down { color: var(--success); font-weight:600 }
-            // HTML: .net-up { color: var(--primary); font-weight:600 }
-            Text("↓")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            Text(ServerMetrics.formatRate(m.networkRxRate))
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.statusConnected)
-            Text("↑")
-                .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            Text(ServerMetrics.formatRate(m.networkTxRate))
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
+        HStack(spacing: 8) {
+            // Figma: p-1 rounded-md bg-[#34c759]/10，icon h-3 w-3 = 12pt
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                    .fill(DesignTokens.Colors.statusConnected.opacity(0.10))
+                Image(systemName: "network")
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.statusConnected)
+            }
+            .frame(width: 20, height: 20)
+            // Figma: gap-2 between rx/tx groups, gap-1 inside each
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("↓")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text(ServerMetrics.formatRate(m.networkRxRate))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(DesignTokens.Colors.statusConnected)
+                }
+                HStack(spacing: 4) {
+                    Text("↑")
+                        .font(DesignTokens.Typography.bodySmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text(ServerMetrics.formatRate(m.networkTxRate))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
+                }
+            }
         }
     }
 
@@ -364,9 +396,9 @@ struct TerminalStatusBarView: View {
     private var divider: some View { statusSepV }
 
     private var syncBadge: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DesignTokens.Spacing.nano) {
             Image(systemName: "bolt.fill")
-                .font(.system(size: 9))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("同步(\(syncStore.syncCount))")
                 .font(DesignTokens.Typography.labelSmall)
@@ -376,9 +408,9 @@ struct TerminalStatusBarView: View {
 
     /// 已附加 tmux 会话时的绿色徽章
     private func tmuxBadge(sessionName: String) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DesignTokens.Spacing.nano) {
             Image(systemName: "rectangle.3.group.fill")
-                .font(.system(size: 9))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.statusConnected)
             Text("tmux:\(sessionName)")
                 .font(DesignTokens.Typography.labelSmall)
@@ -389,9 +421,9 @@ struct TerminalStatusBarView: View {
 
     /// 有 tmux 会话但未附加时的灰色徽章
     private func tmuxIdleBadge(count: Int) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DesignTokens.Spacing.nano) {
             Image(systemName: "rectangle.3.group")
-                .font(.system(size: 9))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("tmux[\(count)]")
                 .font(DesignTokens.Typography.labelSmall)
@@ -405,33 +437,33 @@ struct TerminalStatusBarView: View {
     private var tmuxWindowPopover: some View {
         VStack(spacing: 0) {
             // 标题行
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "macwindow")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                 Text("切换 tmux 窗口")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .padding(.top, 10)
-            .padding(.bottom, 8)
+            .padding(.bottom, DesignTokens.Spacing.sm)
 
             Divider()
 
             // 窗口列表
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
+                VStack(spacing: DesignTokens.Spacing.xxxs) {
                     ForEach(tmuxWindows, id: \.index) { window in
                         Button {
                             onSelectTmuxWindow?(window.index)
                             showWindowPopover = false
                         } label: {
-                            HStack(spacing: 8) {
+                            HStack(spacing: DesignTokens.Spacing.sm) {
                                 // 窗口序号徽章
                                 Text("\(window.index)")
-                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .font(DesignTokens.Typography.codeTiny)
                                     .foregroundColor(window.isActive
                                         ? DesignTokens.Colors.accentPrimary
                                         : DesignTokens.Colors.textTertiary)
@@ -439,10 +471,10 @@ struct TerminalStatusBarView: View {
                                     .background(window.isActive
                                         ? DesignTokens.Colors.accentPrimary.opacity(0.12)
                                         : DesignTokens.Colors.surfaceHover)
-                                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXXSmall, style: .continuous))
 
                                 Text(window.name)
-                                    .font(.system(size: 12, design: .monospaced))
+                                    .font(DesignTokens.Typography.codeSmall)
                                     .foregroundColor(DesignTokens.Colors.textPrimary)
                                     .lineLimit(1)
 
@@ -450,22 +482,22 @@ struct TerminalStatusBarView: View {
 
                                 if window.isActive {
                                     Image(systemName: "checkmark")
-                                        .font(.system(size: 9, weight: .semibold))
+                                        .font(DesignTokens.Typography.captionSmall)
                                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                                 }
                             }
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, DesignTokens.Spacing.xs)
                             .background(window.isActive
                                 ? DesignTokens.Colors.accentPrimary.opacity(0.06)
                                 : Color.clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 6)
+                .padding(.horizontal, DesignTokens.Spacing.xs)
+                .padding(.vertical, DesignTokens.Spacing.xs)
             }
             .frame(maxHeight: 200)
         }

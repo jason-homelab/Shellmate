@@ -53,8 +53,8 @@ struct SessionSidebarView: View {
         .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
         .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
-        // Void: bg-[#111420] 深色面板层
-        .background(DesignTokens.Colors.surfacePanel)
+        // Figma §02: 亮色 bg-[#f5f5f7] = surfaceWindow，与主窗口背景同色
+        .background(DesignTokens.Colors.surfaceWindow)
         .task {
             await vm.loadData(sessionStore: sessionStore, groupStore: groupStore)
         }
@@ -75,11 +75,10 @@ struct SessionSidebarView: View {
     /// 顶部操作头部：显示标题 + 新建会话、分组、设置快捷按钮
     private var sidebarHeader: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
-            // Figma-Spec-v2 §02 §2.1：letterSpacing 1.2（对齐 0.12em at 10px）
-            Text("SESSIONS")
-                .font(.system(size: 10, weight: .semibold))
-                .tracking(1.2)
-                .foregroundColor(DesignTokens.Colors.textPrimary.opacity(0.30))
+            // Figma: text-sm font-medium text-[#1d1d1f] t('sidebar.sessions') = "会话"
+            Text("会话")
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 
@@ -114,11 +113,12 @@ struct SessionSidebarView: View {
             // 打开设置（macOS 14+ 使用 SettingsLink，13 回退到 sendAction）
             if #available(macOS 14.0, *) {
                 SettingsLink {
-                    Image(systemName: "gear")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Label("偏好设置", systemImage: "gear")
+                        .labelStyle(.iconOnly)
+                        .font(DesignTokens.Typography.iconLarge)
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
                         .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -134,20 +134,32 @@ struct SessionSidebarView: View {
         .padding(.trailing, DesignTokens.Spacing.sm)
         .frame(height: 44)
         .background {
-            // Void: bg-[#111420] border-b rgba(255,255,255,0.07)
+            // Figma: backdrop-blur-xl bg-white/40 border-b border-[#d2d2d7]/50
             Rectangle()
-                .fill(DesignTokens.Colors.surfacePanel)
+                .fill(.ultraThinMaterial)
+            Rectangle()
+                .fill(Color.white.opacity(0.40))
                 .overlay(alignment: .bottom) {
                     Rectangle()
-                        .fill(DesignTokens.Colors.borderPrimary)
+                        .fill(Color(hex: "#d2d2d7").opacity(0.50))
                         .frame(height: 0.5)
                 }
         }
     }
 
-    private func sidebarIconButton(systemImage: String, tooltip: String, action: @escaping () -> Void) -> some View {
-        HoverIconButton(systemImage: systemImage, size: DesignTokens.Sizes.iconButtonSize, action: action)
-            .help(tooltip)
+    private func sidebarIconButton(
+        systemImage: String,
+        tooltip: String,
+        accessibilityText: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        HoverIconButton(
+            systemImage: systemImage,
+            accessibilityText: accessibilityText ?? tooltip,
+            size: DesignTokens.Sizes.iconButtonSize,
+            action: action
+        )
+        .help(tooltip)
     }
 
     // MARK: - 加载中视图
@@ -216,7 +228,7 @@ struct SidebarToolbarView: View {
                 }
             } label: {
                 Image(systemName: "sidebar.squares.leading")
-                    .font(.system(size: 14))
+                    .font(DesignTokens.Typography.bodyLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .menuStyle(.borderlessButton)
@@ -231,7 +243,7 @@ struct SidebarToolbarView: View {
                 Button("按创建时间排序") { }
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
-                    .font(.system(size: 14))
+                    .font(DesignTokens.Typography.bodyLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             .menuStyle(.borderlessButton)
@@ -242,29 +254,28 @@ struct SidebarToolbarView: View {
     }
 }
 
-// MARK: - 悬停图标按钮（对齐 Figma h-7 w-7 rounded-lg hover:bg-black/5）
+// MARK: - 悬停图标按钮（薄壳，内部委托 PillButtonStyle）
+// 保留 HoverIconButton 名称用于现有调用点；新代码请直接用：
+//   Button { ... } label: { Label(...).labelStyle(.iconOnly) }
+//      .buttonStyle(PillButtonStyle(tone: .ghost, variant: .iconOnly))
 
-/// 带悬停背景的小图标按钮，用于侧边栏/工具栏
 struct HoverIconButton: View {
     let systemImage: String
+    /// VoiceOver 朗读文本（必填，缺省 fallback 到 systemImage 名）
+    var accessibilityText: String? = nil
     var size: CGFloat = 28
+    var iconSize: CGFloat = 16
+    var iconColor: Color = DesignTokens.Colors.textPrimary
     let action: () -> Void
-
-    @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: size, height: size)
-                .background(isHovering ? DesignTokens.Colors.surfaceHover : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Label(accessibilityText ?? systemImage, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+                .font(.system(size: iconSize, weight: .regular))
+                .foregroundColor(iconColor)
         }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }
-        }
+        .buttonStyle(PillButtonStyle(tone: .ghost, variant: .iconOnly))
     }
 }
 

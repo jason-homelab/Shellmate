@@ -19,10 +19,10 @@ enum CloudSyncStatus {
 
     var color: Color {
         switch self {
-        case .synced:   return Color(hex: "#2DCE7A")
-        case .syncing:  return Color.accentColor
-        case .failed:   return Color(hex: "#F04060")
-        case .disabled: return Color(hex: "#6B6A78")
+        case .synced:   return DesignTokens.Colors.statusConnected
+        case .syncing:  return DesignTokens.Colors.accentPrimary
+        case .failed:   return DesignTokens.Colors.statusError
+        case .disabled: return DesignTokens.Colors.textTertiary
         }
     }
 
@@ -137,11 +137,11 @@ struct CloudSyncSettingsView: View {
     // MARK: - 同步总开关
 
     private var syncToggleSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack {
                 Toggle(isOn: $syncEnabled) {
                     Text("通过 iCloud 同步会话配置")
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
                 .toggleStyle(.switch)
@@ -150,18 +150,18 @@ struct CloudSyncSettingsView: View {
                 Spacer()
 
                 Text(appleIDString)
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(iCloudAvailable
                         ? DesignTokens.Colors.textDisabled
                         : DesignTokens.Colors.statusError)
             }
 
             // 安全说明卡片
-            HStack(alignment: .top, spacing: 8) {
+            HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                 Image(systemName: "lock.fill")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
-                    .padding(.top, 1)
+                    .padding(.top, DesignTokens.Spacing.px)
 
                 Text("会话名称、主机地址、端口、用户名、分组等配置将加密同步至 iCloud。SSH 密码和私钥不参与同步，始终以 AES-256-GCM 加密存储于本设备本地数据库。")
                     .font(.system(size: 10.5))
@@ -207,14 +207,14 @@ struct CloudSyncSettingsView: View {
     }
 
     private func syncScopeToggle(isOn: Binding<Bool>, label: LocalizedStringKey, hint: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                     Text(label)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                     Text(hint)
-                        .font(.system(size: 9.5))
+                        .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                 }
                 Spacer()
@@ -230,9 +230,9 @@ struct CloudSyncSettingsView: View {
     private var syncStatusSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             // 状态卡片
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.Spacing.md) {
                 Image(systemName: syncStatus.iconName)
-                    .font(.system(size: 18))
+                    .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(syncStatus.color)
                     .rotationEffect(isSyncing ? .degrees(360) : .degrees(0))
                     .animation(
@@ -242,18 +242,18 @@ struct CloudSyncSettingsView: View {
                         value: isSyncing
                     )
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                     Text(syncStatus.label)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(syncStatus.color)
 
                     if case .synced(let date) = syncStatus {
                         Text("上次同步：\(relativeDateString(date))")
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.textDisabled)
                     } else if case .failed(let reason) = syncStatus {
                         Text(reason)
-                            .font(.system(size: 10))
+                            .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.textDisabled)
                     }
                 }
@@ -266,11 +266,11 @@ struct CloudSyncSettingsView: View {
 
             // 立即同步按钮
             Button(action: triggerSync) {
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "arrow.clockwise.icloud")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                     Text("立即同步")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                 }
             }
             .buttonStyle(.bordered)
@@ -292,8 +292,8 @@ struct CloudSyncSettingsView: View {
     private func conflictStrategyRow(_ strategy: CloudConflictStrategy) -> some View {
         let isSelected = conflictStrategy == strategy.rawValue
 
-        return VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 8) {
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
                 Circle()
                     .fill(isSelected ? Color.accentColor : Color.clear)
                     .frame(width: 6, height: 6)
@@ -304,7 +304,7 @@ struct CloudSyncSettingsView: View {
 
                 Button(action: { conflictStrategy = strategy.rawValue }) {
                     Text(strategy.title)
-                        .font(.system(size: 12))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(isSelected
                             ? DesignTokens.Colors.textPrimary
                             : DesignTokens.Colors.textSecondary)
@@ -313,7 +313,7 @@ struct CloudSyncSettingsView: View {
             }
 
             Text(strategy.subtitle)
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
                 .padding(.leading, 14)
         }
@@ -326,9 +326,9 @@ struct CloudSyncSettingsView: View {
         title: LocalizedStringKey,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             content()
         }

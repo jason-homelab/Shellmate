@@ -82,7 +82,7 @@ struct SessionAuthTab: View {
 
             HStack {
                 Text("记住密码（加密存储到本地）")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $saveCredential)
@@ -108,7 +108,7 @@ struct SessionAuthTab: View {
             }
 
             Text("支持 Ed25519、RSA、ECDSA 格式")
-                .font(.system(size: 9.5))
+                .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
 
             FormField(label: "私钥密码（Passphrase）") {
@@ -117,7 +117,7 @@ struct SessionAuthTab: View {
 
             HStack {
                 Text("记住密码（加密存储到本地）")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Spacer()
                 Toggle("", isOn: $saveCredential)
@@ -141,7 +141,7 @@ struct SessionAuthTab: View {
                     Image(systemName: agentAvailable
                           ? "checkmark.circle.fill"
                           : "xmark.circle.fill")
-                        .font(.system(size: 14))
+                        .font(DesignTokens.Typography.bodyLarge)
                         .foregroundColor(agentAvailable
                             ? DesignTokens.Colors.statusConnected
                             : DesignTokens.Colors.statusError)
@@ -150,7 +150,7 @@ struct SessionAuthTab: View {
                 Text(agentAvailable
                      ? "SSH Agent 已连接（SSH_AUTH_SOCK）"
                      : "未检测到 SSH Agent，请确认 ssh-agent 正在运行")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
@@ -158,13 +158,13 @@ struct SessionAuthTab: View {
             if !agentAvailable || AppVariant.isAppStoreBuild {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.statusConnecting)
 
                     Text(AppVariant.isAppStoreBuild
                          ? "Direct 版支持 SSH Agent，App Store 版受沙盒限制"
                          : "请先在终端运行 eval \"$(ssh-agent -s)\" 并用 ssh-add 添加密钥")
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.statusConnecting)
                 }
                 .padding(DesignTokens.Spacing.md)
@@ -183,11 +183,11 @@ struct SessionAuthTab: View {
     private var keyboardInteractiveSection: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             Image(systemName: "info.circle.fill")
-                .font(.system(size: 14))
+                .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 
             Text("服务器会在连接时逐步提示输入认证信息（如一次性密码、验证码等）。")
-                .font(.system(size: 11))
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
         }
         .padding(DesignTokens.Spacing.md)
@@ -255,21 +255,21 @@ struct AuthMethodCard: View {
                         .frame(width: 32, height: 32)
 
                     Image(systemName: method.iconName)
-                        .font(.system(size: 16))
+                        .font(DesignTokens.Typography.titleMedium)
                         .foregroundColor(isSelected
                             ? DesignTokens.Colors.accentPrimary
                             : DesignTokens.Colors.textSecondary)
                 }
 
                 Text(method.displayName)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(isSelected
                         ? DesignTokens.Colors.accentPrimary
                         : DesignTokens.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 70)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, DesignTokens.Spacing.md)
             .background(isSelected
                 ? DesignTokens.Colors.accentPrimary.opacity(0.08)
                 : DesignTokens.Colors.surfacePanel)
