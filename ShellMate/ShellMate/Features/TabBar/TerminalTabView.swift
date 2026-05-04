@@ -78,7 +78,7 @@ struct TerminalTabView: View {
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle())
                 .scaleEffect(0.45)
-                .frame(width: 6, height: 6)
+                .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
         } else {
             let dotColor = tab.connectionState.dotColor
             let isIdle = (tab.connectionState == .offline || tab.connectionState == .disconnecting)
@@ -88,7 +88,7 @@ struct TerminalTabView: View {
                 .fill(isIdle ? DesignTokens.Colors.textDisabled : dotColor)
                 // HTML: box-shadow: 0 0 5px rgba(52,211,153,0.6)（idle 无 glow）
                 .shadow(color: isIdle ? .clear : dotColor.opacity(0.60), radius: 3, x: 0, y: 0)
-                .frame(width: 6, height: 6)
+                .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
         }
     }
 

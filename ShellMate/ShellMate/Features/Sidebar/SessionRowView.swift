@@ -25,7 +25,7 @@ struct SessionRowView: View {
                 .fill(isConnected
                     ? DesignTokens.Colors.statusConnected
                     : DesignTokens.Colors.textDisabled)
-                .frame(width: 6, height: 6)
+                .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
                 .padding(.leading, 14)
                 .padding(.trailing, 9)
 

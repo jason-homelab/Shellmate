@@ -296,7 +296,7 @@ struct CloudSyncSettingsView: View {
             HStack(spacing: DesignTokens.Spacing.sm) {
                 Circle()
                     .fill(isSelected ? Color.accentColor : Color.clear)
-                    .frame(width: 6, height: 6)
+                    .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
                     .overlay(
                         Circle()
                             .stroke(isSelected ? Color.accentColor : DesignTokens.Colors.textDisabled, lineWidth: 1.5)
