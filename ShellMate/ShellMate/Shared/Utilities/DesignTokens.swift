@@ -126,7 +126,7 @@ enum DesignTokens {
             dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 1)  // #e2e4f0 Void 冷白
         )
         static let textSecondary = adaptive(
-            light: NSColor(srgbRed: 0.525, green: 0.525, blue: 0.545, alpha: 1), // #86868B
+            light: NSColor(srgbRed: 0.420, green: 0.420, blue: 0.443, alpha: 1), // #6B6B71（对比度 4.8:1 on #F5F5F7，满足 WCAG AA）
             dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.52) // rgba(226,228,240,0.52) 对齐 --text-2
         )
         static let textTertiary = adaptive(
