@@ -48,11 +48,22 @@ struct TerminalTabView: View {
             closeButton
                 .opacity(isHovering || isSelected ? 1 : 0)
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)  // Figma: px-4 = 16pt
-        .frame(height: 40)                              // Figma: h-10 = 40pt
-        .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: DesignTokens.Sizes.tabMaxWidth)
+        // Figma 9:5：px-leading 14px，tab h-[32px]，maxW 140px
+        .padding(.leading, 14)
+        .padding(.trailing, DesignTokens.Spacing.sm)
+        .frame(height: 32)
+        .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: 140)
         .background(tabBackground)
         .overlay(tabBorderRight)
+        // Figma 9:6：激活标签底部 2px × 60px 蓝色指示线（居中）
+        .overlay(alignment: .bottom) {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(DesignTokens.Colors.accentPrimary)
+                    .frame(width: 60, height: 2)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .onHover { isHovering = $0 }
@@ -108,13 +119,13 @@ struct TerminalTabView: View {
     @ViewBuilder
     private var tabBackground: some View {
         if isSelected {
-            // Figma: data-[state=active]:bg-white/90 data-[state=active]:backdrop-blur-xl data-[state=active]:shadow-sm
-            ZStack {
-                Color.white.opacity(0.90)
-            }
-            .shadow(color: .black.opacity(0.06), radius: 2, x: 0, y: 1)
+            // Figma 9:5：bg=rgba(255,255,255,0.92)，rounded-8px，shadow-sm
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(Color.white.opacity(0.92))
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 0, y: 1)
         } else if isHovering {
-            DesignTokens.Colors.glassUltraLight
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(DesignTokens.Colors.glassUltraLight)
         } else {
             Color.clear
         }

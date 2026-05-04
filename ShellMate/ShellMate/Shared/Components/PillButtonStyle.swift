@@ -41,6 +41,8 @@ struct PillButtonStyle: ButtonStyle {
         case primary
         /// 透明默认，仅 hover/press 显示背景
         case ghost
+        /// 透明蓝底 + 蓝字（Figma 连接按钮 rgba(7,122,255,0.08)/#077AFF）
+        case tinted
     }
 
     enum Variant {
@@ -69,29 +71,39 @@ private struct PillButtonContent: View {
     @State private var isHovering = false
     @FocusState private var isFocused: Bool
 
+    // Figma: 文字/混合按钮 6pt，图标按钮 8pt
+    private var cornerRadius: CGFloat {
+        variant == .iconOnly
+            ? DesignTokens.Sizes.cornerRadiusSmall   // 8pt — 右侧图标按钮
+            : DesignTokens.Sizes.cornerRadiusXSmall  // 6pt — 左侧文字/混合按钮
+    }
+
     var body: some View {
         configuration.label
             .font(DesignTokens.Typography.labelMedium)
             .foregroundColor(foregroundColor)
             .modifier(SizeModifier(variant: variant))
             .background(
-                RoundedRectangle(
-                    cornerRadius: DesignTokens.Sizes.cornerRadiusSmall,
-                    style: .continuous
-                )
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(backgroundColor)
+                // Figma: shadow-sm shadow-[#007aff]/30（仅 primary 有蓝色投影）
+                .shadow(
+                    color: tone == .primary
+                        ? DesignTokens.Colors.accentPrimary.opacity(0.30)
+                        : Color.clear,
+                    radius: 2, x: 0, y: 1
+                )
             )
             // Tab 键焦点环（HIG：accent 色 1.5pt 边框，2pt 偏移）
             .overlay {
                 if isFocused {
-                    RoundedRectangle(
-                        cornerRadius: DesignTokens.Sizes.cornerRadiusSmall + 2,
-                        style: .continuous
-                    )
+                    RoundedRectangle(cornerRadius: cornerRadius + 2, style: .continuous)
                     .strokeBorder(DesignTokens.Colors.accentPrimary, lineWidth: 1.5)
                     .padding(-2)
                 }
             }
+            // Figma: disabled:opacity-40（实心蓝/透明蓝按钮 disabled 降至 40%）
+            .opacity(!isEnabled && (tone == .primary || tone == .tinted) ? 0.40 : 1.0)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(DesignTokens.Animation.hover, value: isHovering)
             .animation(DesignTokens.Animation.fast, value: configuration.isPressed)
@@ -104,27 +116,41 @@ private struct PillButtonContent: View {
     // MARK: - 前景色
 
     private var foregroundColor: Color {
-        if !isEnabled { return DesignTokens.Colors.textDisabled }
         switch tone {
-        case .primary: return DesignTokens.Colors.accentPrimary
-        case .normal, .ghost: return DesignTokens.Colors.textSecondary
+        case .primary:
+            // Figma: text-white（实心蓝按钮白字，disabled 统一用 opacity 处理）
+            return .white
+        case .tinted:
+            // Figma: text-[#077AFF]（连接按钮蓝色文字）
+            return DesignTokens.Colors.accentPrimary
+        case .normal:
+            // Figma: text-[#6E6E73]（工具栏按钮次要灰色 textSecondary）
+            return DesignTokens.Colors.textSecondary
+        case .ghost:
+            return DesignTokens.Colors.textPrimary
         }
     }
 
     // MARK: - 背景色
 
     private var backgroundColor: Color {
-        guard isEnabled else { return Color.clear }
         let isPressed = configuration.isPressed
         switch tone {
         case .primary:
-            if isPressed  { return DesignTokens.Colors.accentPrimary.opacity(0.18) }
-            if isHovering { return DesignTokens.Colors.accentPrimary.opacity(0.14) }
-            return DesignTokens.Colors.accentPrimary.opacity(0.10)
+            // Figma: bg-[#007aff] hover:bg-[#0051d5]，disabled:opacity-40（由 opacity 统一处理）
+            if isPressed  { return DesignTokens.Colors.accentTertiary }  // #0051d5
+            if isHovering { return DesignTokens.Colors.accentTertiary }  // #0051d5
+            return DesignTokens.Colors.accentPrimary                     // #007aff
+        case .tinted:
+            // Figma: bg-[#077AFF]/8 hover:bg-[#077AFF]/12（连接按钮透明蓝底）
+            if isPressed  { return DesignTokens.Colors.accentPrimary.opacity(0.15) }
+            if isHovering { return DesignTokens.Colors.accentPrimary.opacity(0.12) }
+            return DesignTokens.Colors.accentPrimary.opacity(0.08)
         case .normal:
-            if isPressed  { return DesignTokens.Colors.glassPress }
-            if isHovering { return DesignTokens.Colors.glassMedium }
-            return DesignTokens.Colors.surfaceHover
+            // 亮色模式下 0.04 几乎透明，可辨识度不足；提升至 0.07 满足 WCAG AA
+            if isPressed  { return DesignTokens.Colors.glassPressStrong }   // rgba(0,0,0,0.10)
+            if isHovering { return Color.black.opacity(0.09) }
+            return Color.black.opacity(0.07)
         case .ghost:
             if isPressed  { return DesignTokens.Colors.glassPress }
             if isHovering { return DesignTokens.Colors.surfaceHover }
@@ -148,8 +174,8 @@ private struct SizeModifier: ViewModifier {
                 )
         case .text:
             content
-                .padding(.horizontal, DesignTokens.Spacing.md)
-                .frame(height: DesignTokens.Sizes.iconButtonSize)
+                .padding(.horizontal, DesignTokens.Spacing.sm)  // Figma: 按钮紧凑 8pt，原 12pt 过宽
+                .frame(height: 28)  // Figma h-7 = 28px（原 26px 偏小）
         }
     }
 }
