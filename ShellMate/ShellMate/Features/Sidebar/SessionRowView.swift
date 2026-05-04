@@ -33,6 +33,14 @@ struct SessionRowView: View {
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
         .background(rowBackground)
+        // 已连接（非选中）：左侧 2px 蓝色指示条，让连接中的会话在列表里视觉浮出
+        .overlay(alignment: .leading) {
+            if isConnected && !isSelected {
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(DesignTokens.Colors.accentPrimary)
+                    .frame(width: 2, height: 22)
+            }
+        }
         .contentShape(Rectangle())
         .opacity(isDragging ? 0.45 : 1.0)
         .scaleEffect(isDragging ? 0.97 : 1.0)
@@ -80,17 +88,21 @@ struct SessionRowView: View {
 
     private var sessionAvatar: some View {
         ZStack {
-            // Figma: selected=bg-white/20, unselected=bg-[#007aff]/10
+            // 已连接：蓝色容器（突出）；离线：灰色容器（退后）；选中：白色透明
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                 .fill(isSelected
                     ? Color.white.opacity(0.20)
-                    : DesignTokens.Colors.accentPrimary.opacity(0.10))
+                    : (isConnected
+                       ? DesignTokens.Colors.accentPrimary.opacity(0.10)
+                       : Color.black.opacity(0.06)))
 
             Image(systemName: "server.rack")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(isSelected
                     ? Color.white
-                    : DesignTokens.Colors.accentPrimary)
+                    : (isConnected
+                       ? DesignTokens.Colors.accentPrimary
+                       : DesignTokens.Colors.textSecondary))
         }
         .frame(width: 26, height: 26)
     }
@@ -99,16 +111,19 @@ struct SessionRowView: View {
 
     private var sessionInfo: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-            // Figma: text-sm font-medium truncate（14pt medium）
+            // 已连接：semibold 加重，颜色饱和；离线：medium 常规，颜色退后
             Text(session.name)
-                .font(DesignTokens.Typography.bodyLargeMedium)
+                .font(isConnected
+                    ? DesignTokens.Typography.bodyMediumStrong   // 13px semibold
+                    : DesignTokens.Typography.bodyLargeMedium)   // 14px medium
                 .foregroundColor(isSelected
                     ? Color.white
-                    : DesignTokens.Colors.textPrimary)
+                    : (isConnected
+                       ? DesignTokens.Colors.textPrimary
+                       : DesignTokens.Colors.textSecondary))
                 .lineLimit(1)
                 .truncationMode(.tail)
 
-            // Figma: text-xs truncate（12pt regular）
             Text("\(session.username)@\(session.host)")
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(isSelected
@@ -117,6 +132,12 @@ struct SessionRowView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
+    }
+
+    // MARK: - 辅助
+
+    private var isConnected: Bool {
+        session.connectionState == .connected
     }
 
 }

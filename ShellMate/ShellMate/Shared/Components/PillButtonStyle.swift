@@ -43,6 +43,8 @@ struct PillButtonStyle: ButtonStyle {
         case ghost
         /// 透明蓝底 + 蓝字（Figma 连接按钮 rgba(7,122,255,0.08)/#077AFF）
         case tinted
+        /// 透明红底 + 红字（析构操作：断开连接）
+        case destructive
     }
 
     enum Variant {
@@ -103,7 +105,7 @@ private struct PillButtonContent: View {
                 }
             }
             // Figma: disabled:opacity-40（实心蓝/透明蓝按钮 disabled 降至 40%）
-            .opacity(!isEnabled && (tone == .primary || tone == .tinted) ? 0.40 : 1.0)
+            .opacity(!isEnabled && (tone == .primary || tone == .tinted || tone == .destructive) ? 0.40 : 1.0)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(DesignTokens.Animation.hover, value: isHovering)
             .animation(DesignTokens.Animation.fast, value: configuration.isPressed)
@@ -121,8 +123,9 @@ private struct PillButtonContent: View {
             // Figma: text-white（实心蓝按钮白字，disabled 统一用 opacity 处理）
             return .white
         case .tinted:
-            // Figma: text-[#077AFF]（连接按钮蓝色文字）
             return DesignTokens.Colors.accentPrimary
+        case .destructive:
+            return DesignTokens.Colors.statusError
         case .normal:
             // Figma: text-[#6E6E73]（工具栏按钮次要灰色 textSecondary）
             return DesignTokens.Colors.textSecondary
@@ -142,10 +145,13 @@ private struct PillButtonContent: View {
             if isHovering { return DesignTokens.Colors.accentTertiary }  // #0051d5
             return DesignTokens.Colors.accentPrimary                     // #007aff
         case .tinted:
-            // Figma: bg-[#077AFF]/8 hover:bg-[#077AFF]/12（连接按钮透明蓝底）
             if isPressed  { return DesignTokens.Colors.accentPrimary.opacity(0.15) }
             if isHovering { return DesignTokens.Colors.accentPrimary.opacity(0.12) }
             return DesignTokens.Colors.accentPrimary.opacity(0.08)
+        case .destructive:
+            if isPressed  { return DesignTokens.Colors.statusError.opacity(0.15) }
+            if isHovering { return DesignTokens.Colors.statusError.opacity(0.12) }
+            return DesignTokens.Colors.statusError.opacity(0.08)
         case .normal:
             // 亮色模式下 0.04 几乎透明，可辨识度不足；提升至 0.07 满足 WCAG AA
             if isPressed  { return DesignTokens.Colors.glassPressStrong }   // rgba(0,0,0,0.10)
