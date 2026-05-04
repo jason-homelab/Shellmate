@@ -51,7 +51,24 @@ extension ContentView {
     private var leftToolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
 
-            // ⏻ 连接（Figma 7:4：bg rgba(7,122,255,0.08)，text #077AFF）
+            // ── 分组 1：连接管理（主操作 + 析构操作）──
+            connectionGroup
+
+            toolbarDivider
+
+            // ── 分组 2：功能工具（中性操作）──
+            toolGroup
+
+            // ── 溢出菜单（低频操作）──
+            overflowMenu
+        }
+    }
+
+    // MARK: - 连接管理分组（连接 + 断开）
+
+    @ViewBuilder
+    private var connectionGroup: some View {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             Button {
                 if let session = sessionStore.selectedSession { connectToSession(session) }
             } label: {
@@ -62,7 +79,6 @@ extension ContentView {
             .help("连接选中会话 (⌘↩)")
             .keyboardShortcut(.return, modifiers: .command)
 
-            // 断开（Figma 7:6：纯文字，bg rgba(0,0,0,0.04)）
             Button {
                 if let sessionId = tabBarStore.selectedTab?.sessionId {
                     NotificationCenter.default.post(
@@ -74,14 +90,23 @@ extension ContentView {
             } label: {
                 Text(verbatim: "断开")
             }
-            .buttonStyle(PillButtonStyle(tone: .normal))
+            .buttonStyle(PillButtonStyle(tone: .destructive))
             .disabled(tabBarStore.selectedTab == nil)
             .help("断开当前会话")
+        }
+        .padding(.horizontal, DesignTokens.Spacing.xs)
+        .padding(.vertical, DesignTokens.Spacing.xxs)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(Color.black.opacity(0.04))
+        )
+    }
 
-            // ── 分隔线（Figma 7:8）──
-            toolbarDivider
+    // MARK: - 功能工具分组（AI / 脚本 / 文件 / 分屏）
 
-            // ✦ AI（Figma 7:9：✦ 为 U+2726 四角星字符）
+    @ViewBuilder
+    private var toolGroup: some View {
+        HStack(spacing: DesignTokens.Spacing.xxs) {
             Button {
                 NotificationCenter.default.post(name: .aiPanelRequested, object: nil)
             } label: {
@@ -92,7 +117,6 @@ extension ContentView {
             .help("AI 助手 (⌘⇧A)")
             .keyboardShortcut("a", modifiers: [.command, .shift])
 
-            // </> 脚本（Figma 7:11：ASCII 字符 + 汉字）
             Button {
                 showScriptPanel = true
             } label: {
@@ -102,7 +126,6 @@ extension ContentView {
             .help("脚本自动化 (⌘⇧S)")
             .keyboardShortcut("s", modifiers: [.command, .shift])
 
-            // ⇅ 文件（Figma 7:13：U+21C5 上下箭头）
             Button {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             } label: {
@@ -112,12 +135,14 @@ extension ContentView {
             .disabled(tabBarStore.selectedTab == nil)
             .help("文件传输 (SFTP)")
 
-            // ⊡ 分屏（Figma 7:15：U+22A1 方框内点，Menu）
             splitMenu
-
-            // ── 溢出菜单：低频操作折叠（日志 / 命令 / 隧道）──
-            overflowMenu
         }
+        .padding(.horizontal, DesignTokens.Spacing.xs)
+        .padding(.vertical, DesignTokens.Spacing.xxs)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                .fill(Color.black.opacity(0.04))
+        )
     }
 
     // MARK: - 溢出菜单（低频操作：日志 / 命令 / 隧道）

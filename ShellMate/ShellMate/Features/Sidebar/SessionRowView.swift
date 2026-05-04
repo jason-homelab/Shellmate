@@ -22,7 +22,7 @@ struct SessionRowView: View {
 
             // ── 1. 状态点（Figma 8:16/8:21：6×6 px，left=14，top=19 → 垂直居中于 44pt 行）
             Circle()
-                .fill(session.connectionState == .connected
+                .fill(isConnected
                     ? DesignTokens.Colors.statusConnected
                     : DesignTokens.Colors.textDisabled)
                 .frame(width: 6, height: 6)
@@ -30,10 +30,13 @@ struct SessionRowView: View {
                 .padding(.trailing, 9)
 
             // ── 2. 空图标容器（Figma 8:17/8:22：26×26，rounded-6pt，无图标 SVG）
+            // Direction C：已连接=淡蓝底（accentPrimary/10），离线=灰底（black/6），选中=白色透明
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                 .fill(isSelected
                     ? Color.white.opacity(0.20)
-                    : Color.black.opacity(0.06))
+                    : (isConnected
+                       ? DesignTokens.Colors.accentPrimary.opacity(0.10)
+                       : Color.black.opacity(0.06)))
                 .frame(width: 26, height: 26)
                 .padding(.trailing, 9)
 
@@ -46,6 +49,14 @@ struct SessionRowView: View {
         .frame(height: DesignTokens.Sizes.sessionRowHeight)
         .padding(.trailing, DesignTokens.Spacing.md)
         .background(rowBackground)
+        // Direction C：已连接（非选中）左侧 2px 蓝色指示条，让连接中的会话在列表里视觉浮出
+        .overlay(alignment: .leading) {
+            if isConnected && !isSelected {
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(DesignTokens.Colors.accentPrimary)
+                    .frame(width: 2, height: 22)
+            }
+        }
         .contentShape(Rectangle())
         .opacity(isDragging ? 0.45 : 1.0)
         .scaleEffect(isDragging ? 0.97 : 1.0)
@@ -92,12 +103,16 @@ struct SessionRowView: View {
 
     private var sessionInfo: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Figma 8:18/8:23：13px medium，#1d1d1f / white
+            // Figma 8:18/8:23：13px，Direction C：已连接 semibold 加重，离线 medium 退后
             Text(session.name)
-                .font(DesignTokens.Typography.labelLarge)
+                .font(isConnected
+                    ? DesignTokens.Typography.bodyMediumStrong  // 13px semibold（已连接）
+                    : DesignTokens.Typography.labelLarge)       // 13px medium（离线）
                 .foregroundColor(isSelected
                     ? Color.white
-                    : DesignTokens.Colors.textPrimary)
+                    : (isConnected
+                       ? DesignTokens.Colors.textPrimary
+                       : DesignTokens.Colors.textSecondary))
                 .lineLimit(1)
                 .truncationMode(.tail)
 
@@ -110,6 +125,12 @@ struct SessionRowView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
+    }
+
+    // MARK: - 辅助
+
+    private var isConnected: Bool {
+        session.connectionState == .connected
     }
 
 }
