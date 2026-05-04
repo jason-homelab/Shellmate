@@ -44,7 +44,7 @@ struct SessionSidebarView: View {
                 )
             }
 
-            // 底部统计条：对齐 main-window.html .sidebar-footer
+            // 底部统计条（Figma 8:32：高度 36px，"N connected" + "N total"）
             SidebarFooterView(
                 connectedCount: connectedSessionCount,
                 totalCount: sessionStore.sessions.count
@@ -129,9 +129,8 @@ struct SessionSidebarView: View {
                 }
             }
         }
-        // HTML: .sidebar-header { padding: 0 8px 0 14px }（左 14px，右 8px）
-        .padding(.leading, 14)
-        .padding(.trailing, DesignTokens.Spacing.sm)
+        // Figma: p-3 = 12px 均匀 padding
+        .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 44)
         .background {
             // Figma: backdrop-blur-xl bg-white/40 border-b border-[#d2d2d7]/50
@@ -194,7 +193,6 @@ struct SessionSidebarView: View {
 
     // MARK: - 统计辅助
 
-    /// 当前已连接会话数（用于底部统计条）
     private var connectedSessionCount: Int {
         sessionStore.sessions.filter { $0.connectionState == .connected }.count
     }

@@ -126,7 +126,7 @@ enum DesignTokens {
             dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 1)  // #e2e4f0 Void 冷白
         )
         static let textSecondary = adaptive(
-            light: NSColor(srgbRed: 0.525, green: 0.525, blue: 0.545, alpha: 1), // #86868B
+            light: NSColor(srgbRed: 0.420, green: 0.420, blue: 0.443, alpha: 1), // #6B6B71（对比度 4.8:1 on #F5F5F7，满足 WCAG AA）
             dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.52) // rgba(226,228,240,0.52) 对齐 --text-2
         )
         static let textTertiary = adaptive(
@@ -249,14 +249,14 @@ enum DesignTokens {
     // MARK: - 尺寸
 
     enum Sizes {
-        static let sidebarWidth:    CGFloat = 240  // Void v3.1: 256 → 240
-        static let sidebarMinWidth: CGFloat = 180
+        static let sidebarWidth:    CGFloat = 256  // Figma 8:2：sidebar width=256px
+        static let sidebarMinWidth: CGFloat = 200
         static let sidebarMaxWidth: CGFloat = 320
 
-        static let sessionRowHeight: CGFloat = 46
-        static let groupRowHeight:   CGFloat = 30
+        static let sessionRowHeight: CGFloat = 44  // Figma 8:15：row h=44px
+        static let groupRowHeight:   CGFloat = 36  // Figma 8:30：folder row h=36px
 
-        static let statusDotSize:       CGFloat = 7
+        static let statusDotSize:       CGFloat = 6  // Figma 规范 6×6px（原 7 与实际使用不符）
         static let statusDotGlowRadius: CGFloat = 6
 
         static let buttonHeight:   CGFloat = 28
@@ -277,15 +277,15 @@ enum DesignTokens {
         static let cornerRadiusSmall:  CGFloat = 8   // radius-md：按钮、输入框
         static let cornerRadiusMedium: CGFloat = 12  // radius-xl：会话行、标签触发器
         static let cornerRadiusLarge:  CGFloat = 16  // radius-2xl：弹窗容器
-        static let cornerRadiusXLarge: CGFloat = 16  // 与 Large 对齐
+        static let cornerRadiusXLarge: CGFloat = 20  // radius-2xl+：大型容器（欢迎界面卡片）
         static let cornerRadiusPanel:  CGFloat = 24  // radius-3xl：欢迎界面英雄图标容器
         static let cornerRadiusFull:   CGFloat = 9999 // 胶囊形
 
         static let sheetWidth:    CGFloat = 540
         static let sheetMinHeight: CGFloat = 420
 
-        static let toolbarHeight:      CGFloat = 44  // Void v3.1: 48 → 44
-        static let tabBarHeight:       CGFloat = 38  // Void v3.1: 40 → 38
+        static let toolbarHeight:      CGFloat = 48  // Figma 7:2：toolbar h=48px
+        static let tabBarHeight:       CGFloat = 36  // Figma 9:3：tabBar h=36px
         static let tabMinWidth:        CGFloat = 100
         static let tabMaxWidth:        CGFloat = 200
         static let tabCloseButtonSize: CGFloat = 16
@@ -306,7 +306,8 @@ enum DesignTokens {
     // MARK: - 字体
 
     enum Typography {
-        // 显示级（欢迎界面、空状态大标题）
+
+        // MARK: 欢迎界面 / 展示级（WelcomeScreen only）
         static let heroHuge      = Font.system(size: 56, weight: .thin,     design: .rounded)
         static let heroXLarge    = Font.system(size: 52, weight: .thin,     design: .rounded)
         static let heroLarge     = Font.system(size: 48, weight: .thin,     design: .rounded)
@@ -318,13 +319,13 @@ enum DesignTokens {
         static let displaySmall  = Font.system(size: 22, weight: .medium,   design: .rounded)
         static let displayXSmall = Font.system(size: 18, weight: .medium,   design: .rounded)
 
-        // 标题级
+        // MARK: 标题级
         static let titleXLarge = Font.system(size: 20, weight: .semibold, design: .rounded)
         static let titleLarge  = Font.system(size: 20, weight: .semibold, design: .rounded)
         static let titleMedium = Font.system(size: 16, weight: .semibold, design: .rounded)
         static let titleSmall  = Font.system(size: 13, weight: .semibold, design: .rounded)
 
-        // 正文级
+        // MARK: 正文级
         static let bodyLargeStrong  = Font.system(size: 14, weight: .semibold)
         static let bodyLargeMedium  = Font.system(size: 14, weight: .medium)
         static let bodyLarge        = Font.system(size: 14, weight: .regular)
@@ -333,26 +334,25 @@ enum DesignTokens {
         static let bodySmallStrong  = Font.system(size: 12, weight: .semibold)
         static let bodySmall        = Font.system(size: 12, weight: .regular)
 
-        // 标签级（带中等字重）
-        /// 16pt regular（侧边栏头部图标 / 折叠箭头）
-        static let iconLarge    = Font.system(size: 16, weight: .regular)
-        static let labelXLarge = Font.system(size: 16, weight: .medium)
-        static let labelLargeAlt  = Font.system(size: 15, weight: .semibold, design: .rounded)
-        static let labelLargeMid  = Font.system(size: 15, weight: .medium)
-        static let labelLarge  = Font.system(size: 13, weight: .medium)
-        static let labelMedium = Font.system(size: 12, weight: .medium)
-        static let labelSmall  = Font.system(size: 11, weight: .medium)
+        // MARK: 标签级
+        static let iconLarge     = Font.system(size: 16, weight: .regular)
+        static let labelXLarge   = Font.system(size: 16, weight: .medium)
+        static let labelLargeAlt = Font.system(size: 15, weight: .semibold, design: .rounded)
+        static let labelLargeMid = Font.system(size: 15, weight: .medium)
+        static let labelLarge    = Font.system(size: 13, weight: .medium)
+        static let labelMedium   = Font.system(size: 12, weight: .medium)
+        static let labelSmall    = Font.system(size: 11, weight: .medium)
 
-        // 说明文字级（状态栏、角标、次要信息）
+        // MARK: 说明文字级
         static let captionLarge  = Font.system(size: 11, weight: .regular)
         static let captionMedium = Font.system(size: 10, weight: .regular)
         static let captionSmall  = Font.system(size: 9,  weight: .regular)
 
-        // 等宽代码级
-        static let codeLarge   = Font.system(size: 14, weight: .regular, design: .monospaced)
-        static let codeMedium  = Font.system(size: 13, weight: .regular, design: .monospaced)
-        static let codeSmall   = Font.system(size: 12, weight: .regular, design: .monospaced)
-        static let codeTiny    = Font.system(size: 11, weight: .regular, design: .monospaced)
+        // MARK: 等宽代码级
+        static let codeLarge  = Font.system(size: 14, weight: .regular, design: .monospaced)
+        static let codeMedium = Font.system(size: 13, weight: .regular, design: .monospaced)
+        static let codeSmall  = Font.system(size: 12, weight: .regular, design: .monospaced)
+        static let codeTiny   = Font.system(size: 11, weight: .regular, design: .monospaced)
     }
 
     // MARK: - 动画
