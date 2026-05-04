@@ -16,7 +16,6 @@ struct SidebarFooterView: View {
     // MARK: - 视图
 
     var body: some View {
-        // Figma 8:32：h=36px，bg=#f5f5f7，border-top 0.5px rgba(0,0,0,0.08)
         HStack {
             // Figma 8:34：10px regular，#8e8e93，left=14
             Text("\(connectedCount) connected")
@@ -31,7 +30,7 @@ struct SidebarFooterView: View {
                 .foregroundColor(DesignTokens.Colors.textSecondary)
         }
         .padding(.horizontal, 14)
-        .frame(height: 36)
+        .frame(height: DesignTokens.Sizes.statusBarHeight)
         .background(DesignTokens.Colors.surfaceWindow)
         .overlay(alignment: .top) {
             Rectangle()

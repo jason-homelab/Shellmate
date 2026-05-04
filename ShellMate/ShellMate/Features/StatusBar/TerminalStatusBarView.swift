@@ -47,8 +47,7 @@ struct TerminalStatusBarView: View {
                 disconnectedContent
             }
         }
-        // Figma: h-8 = 32pt
-        .frame(height: 32)
+        .frame(height: DesignTokens.Sizes.statusBarHeight)
         // Figma: bg-[#f5f5f7]/90 backdrop-blur-2xl
         .background {
             Rectangle().fill(.ultraThinMaterial)
