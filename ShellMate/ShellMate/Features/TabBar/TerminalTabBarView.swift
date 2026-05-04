@@ -27,17 +27,12 @@ struct TerminalTabBarView: View {
 
             Spacer()
         }
-        // Figma: h-10 = 40pt
-        .frame(height: 40)
-        .background {
-            // Figma: bg-[#f5f5f7]/80 backdrop-blur-xl
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(DesignTokens.Colors.surfaceWindow.opacity(0.80))
-        }
+        // Figma 9:3：h-[36px]，亮色 #f5f5f7 背景，底部 rgba(0,0,0,0.08) 0.5px 边线
+        .frame(height: 36)
+        .background(DesignTokens.Colors.surfaceWindow)
         .overlay(alignment: .bottom) {
-            // Figma: border-b border-[#d2d2d7]/50
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                .fill(Color.black.opacity(0.08))
                 .frame(height: 0.5)
         }
     }
@@ -70,6 +65,8 @@ struct TerminalTabBarView: View {
                     ))
                 }
             }
+            // Figma 9:5：首个标签 left=4px
+            .padding(.leading, DesignTokens.Spacing.xxs)
         }
         // 选中 Tab 变化时自动滚动到可视区域
         .onChange(of: store.selectedTabId) { _ in

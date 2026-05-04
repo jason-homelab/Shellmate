@@ -249,12 +249,12 @@ enum DesignTokens {
     // MARK: - 尺寸
 
     enum Sizes {
-        static let sidebarWidth:    CGFloat = 240  // Void v3.1: 256 → 240
-        static let sidebarMinWidth: CGFloat = 180
+        static let sidebarWidth:    CGFloat = 256  // Figma 8:2：sidebar width=256px
+        static let sidebarMinWidth: CGFloat = 200
         static let sidebarMaxWidth: CGFloat = 320
 
-        static let sessionRowHeight: CGFloat = 46
-        static let groupRowHeight:   CGFloat = 30
+        static let sessionRowHeight: CGFloat = 44  // Figma 8:15：row h=44px
+        static let groupRowHeight:   CGFloat = 36  // Figma 8:30：folder row h=36px
 
         static let statusDotSize:       CGFloat = 7
         static let statusDotGlowRadius: CGFloat = 6
@@ -284,8 +284,8 @@ enum DesignTokens {
         static let sheetWidth:    CGFloat = 540
         static let sheetMinHeight: CGFloat = 420
 
-        static let toolbarHeight:      CGFloat = 44  // Void v3.1: 48 → 44
-        static let tabBarHeight:       CGFloat = 38  // Void v3.1: 40 → 38
+        static let toolbarHeight:      CGFloat = 48  // Figma 7:2：toolbar h=48px
+        static let tabBarHeight:       CGFloat = 36  // Figma 9:3：tabBar h=36px
         static let tabMinWidth:        CGFloat = 100
         static let tabMaxWidth:        CGFloat = 200
         static let tabCloseButtonSize: CGFloat = 16

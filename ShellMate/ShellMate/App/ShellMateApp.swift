@@ -27,7 +27,7 @@ struct ShellMateApp: App {
                     configureAppearance()
                 }
         }
-        .windowToolbarStyle(.automatic)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             // 自定义菜单命令
             appCommands

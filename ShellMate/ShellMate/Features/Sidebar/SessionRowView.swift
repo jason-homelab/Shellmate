@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// 会话行视图 — 亮色 macOS 风格
-/// 激活状态：全宽 Apple Blue 胶囊背景 + 白色文字（对齐 Figma Make bg-[#007aff]）
-/// 图标：server.rack SF Symbol
+/// 会话行视图 — 1:1 对齐 Figma Desktop 节点 8:2
+/// 行高 44pt，状态点 6×6（left=14），空图标容器 26×26（left=29），文字起始 left=64
 struct SessionRowView: View {
 
     // MARK: - 属性
@@ -19,19 +18,33 @@ struct SessionRowView: View {
     // MARK: - 视图
 
     var body: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
+        HStack(spacing: 0) {
 
-            // ── 1. 服务器图标容器
-            sessionAvatar
+            // ── 1. 状态点（Figma 8:16/8:21：6×6 px，left=14，top=19 → 垂直居中于 44pt 行）
+            Circle()
+                .fill(session.connectionState == .connected
+                    ? DesignTokens.Colors.statusConnected
+                    : DesignTokens.Colors.textDisabled)
+                .frame(width: 6, height: 6)
+                .padding(.leading, 14)
+                .padding(.trailing, 9)
 
-            // ── 2. 会话信息
+            // ── 2. 空图标容器（Figma 8:17/8:22：26×26，rounded-6pt，无图标 SVG）
+            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
+                .fill(isSelected
+                    ? Color.white.opacity(0.20)
+                    : Color.black.opacity(0.06))
+                .frame(width: 26, height: 26)
+                .padding(.trailing, 9)
+
+            // ── 3. 会话信息（Figma：text left=64，name top=7，host top=25）
             sessionInfo
 
             Spacer(minLength: 0)
         }
-        // Figma: px-3 py-2 = 12pt horizontal, 8pt vertical
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
+        // Figma 8:15/8:20：h=44px，w=248px（行左边距 4px 由 SessionListView 控制）
+        .frame(height: DesignTokens.Sizes.sessionRowHeight)
+        .padding(.trailing, DesignTokens.Spacing.md)
         .background(rowBackground)
         .contentShape(Rectangle())
         .opacity(isDragging ? 0.45 : 1.0)
@@ -64,10 +77,9 @@ struct SessionRowView: View {
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
-            // Figma: bg-[#007aff] shadow-md shadow-[#007aff]/30
+            // Figma 8:15：bg-[#077aff] rounded-[8px]（无 shadow）
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.accentPrimary)
-                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
         } else if isHovering {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.surfaceHover)
@@ -76,43 +88,24 @@ struct SessionRowView: View {
         }
     }
 
-    // MARK: - 服务器图标容器
-
-    private var sessionAvatar: some View {
-        ZStack {
-            // Figma: selected=bg-white/20, unselected=bg-[#007aff]/10
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                .fill(isSelected
-                    ? Color.white.opacity(0.20)
-                    : DesignTokens.Colors.accentPrimary.opacity(0.10))
-
-            Image(systemName: "server.rack")
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(isSelected
-                    ? Color.white
-                    : DesignTokens.Colors.accentPrimary)
-        }
-        .frame(width: 26, height: 26)
-    }
-
     // MARK: - 会话信息
 
     private var sessionInfo: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-            // Figma: text-sm font-medium truncate（14pt medium）
+        VStack(alignment: .leading, spacing: 0) {
+            // Figma 8:18/8:23：13px medium，#1d1d1f / white
             Text(session.name)
-                .font(DesignTokens.Typography.bodyLargeMedium)
+                .font(DesignTokens.Typography.labelLarge)
                 .foregroundColor(isSelected
                     ? Color.white
                     : DesignTokens.Colors.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
 
-            // Figma: text-xs truncate（12pt regular）
+            // Figma 8:19/8:24：11px regular，rgba(255,255,255,0.7) / #8e8e93
             Text("\(session.username)@\(session.host)")
-                .font(DesignTokens.Typography.bodySmall)
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(isSelected
-                    ? Color.white.opacity(0.80)
+                    ? Color.white.opacity(0.70)
                     : DesignTokens.Colors.textSecondary)
                 .lineLimit(1)
                 .truncationMode(.tail)

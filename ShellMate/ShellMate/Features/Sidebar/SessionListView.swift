@@ -18,7 +18,7 @@ struct SessionListView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: DesignTokens.Spacing.xxxs, pinnedViews: []) {
+            LazyVStack(spacing: DesignTokens.Spacing.xxs, pinnedViews: []) {
                 // 未分组的会话
                 ungroupedSessionsSection
 
@@ -27,8 +27,9 @@ struct SessionListView: View {
                     groupSection(group)
                 }
             }
-            // Figma: p-2 = 8pt 四周
-            .padding(DesignTokens.Spacing.sm)
+            // Figma 8:2：行左边距=4px（行宽248 in 256），上间距=6px（rows start top=50，header ends top=44）
+            .padding(.horizontal, DesignTokens.Spacing.xxs)
+            .padding(.vertical, DesignTokens.Spacing.xs)
         }
     }
 
