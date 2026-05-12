@@ -60,13 +60,15 @@ struct SessionSidebarView: View {
                 totalCount: sessionStore.sessions.count
             )
         }
-        // maxWidth: .infinity 让 VStack 撑满 NavigationSplitView 列宽，消除左侧黑色间隙
-        .frame(maxWidth: .infinity)
-        .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
-        .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
-        .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
+        // 单一 frame：撑满列宽 + 撑满高度，列宽上下限由 ContentView 的
+        // navigationSplitViewColumnWidth(min:238 ideal:238 max:320) 统一约束。
+        // 不再叠加多个 .frame()——多层 FrameView 嵌套会导致各层尺寸不一致、
+        // 背景无法覆盖最外层与列边界之间的裂缝，形成左侧溢出区域。
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Figma §02: 亮色 bg-[#f5f5f7] = surfaceWindow，与主窗口背景同色
         .background(DesignTokens.Colors.surfaceWindow)
+        // 彻底裁剪任何子视图的视觉溢出（shadow/overlay 超出列边界）
+        .clipped()
         // Sheet 挂载在稳定容器上，避免附着在按钮视图上导致 identity 变化时 Sheet 无法弹出
         .sheet(isPresented: $vm.showGroupManager) {
             GroupManagerView(
