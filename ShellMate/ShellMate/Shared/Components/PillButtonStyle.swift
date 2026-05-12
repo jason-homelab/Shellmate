@@ -153,10 +153,10 @@ private struct PillButtonContent: View {
             if isHovering { return DesignTokens.Colors.statusError.opacity(0.12) }
             return DesignTokens.Colors.statusError.opacity(0.08)
         case .normal:
-            // 亮色模式下 0.04 几乎透明，可辨识度不足；提升至 0.07 满足 WCAG AA
-            if isPressed  { return DesignTokens.Colors.glassPressStrong }   // rgba(0,0,0,0.10)
-            if isHovering { return Color.black.opacity(0.09) }
-            return Color.black.opacity(0.07)
+            // Figma 7:6–7:21：bg = rgba(0,0,0,0.04)，hover/press 叠加
+            if isPressed  { return Color.black.opacity(0.08) }
+            if isHovering { return Color.black.opacity(0.06) }
+            return Color.black.opacity(0.04)
         case .ghost:
             if isPressed  { return DesignTokens.Colors.glassPress }
             if isHovering { return DesignTokens.Colors.surfaceHover }

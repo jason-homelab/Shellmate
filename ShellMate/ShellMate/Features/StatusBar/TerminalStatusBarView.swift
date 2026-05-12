@@ -78,7 +78,7 @@ struct TerminalStatusBarView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
-            Text(connectionState == .connecting ? "Connecting..." : "Not connected")
+            Text(connectionState == .connecting ? "连接中…" : "未连接")
                 .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
@@ -104,7 +104,7 @@ struct TerminalStatusBarView: View {
                 if let session {
                     // Figma: 整段文字统一 text-[11px] text-[#34d399]
                     Group {
-                        Text("Connected · \(session.username)@\(session.host)")
+                        Text("已连接 · \(session.username)@\(session.host)")
                         + (latency.map { Text(" · \($0)ms") } ?? Text(""))
                     }
                     // Figma 9:26: text-[11px] = captionLarge
@@ -173,7 +173,7 @@ struct TerminalStatusBarView: View {
         Circle()
             .fill(DesignTokens.Colors.statusConnected)
             .shadow(color: DesignTokens.Colors.statusConnected.opacity(0.60), radius: 3, x: 0, y: 0)
-            .frame(width: 8, height: 8)
+            .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
             .opacity(dotPulse ? 0.40 : 1.0)
             .onAppear {
                 withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {

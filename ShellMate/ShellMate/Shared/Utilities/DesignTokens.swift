@@ -297,7 +297,8 @@ enum DesignTokens {
         static let tabMaxWidth:        CGFloat = 200
         static let tabCloseButtonSize: CGFloat = 16
 
-        static let statusBarHeight:    CGFloat = 32  // Figma h-8 = 32pt（对齐 SidebarFooter 消除底部错位）
+        static let statusBarHeight:    CGFloat = 32  // Figma 9:24：终端状态栏 h=32pt
+        static let sidebarFooterHeight: CGFloat = 31 // Figma 8:32：侧边栏底栏 h=31pt（刻意与状态栏错开 1pt）
 
         static let aiPanelWidth:   CGFloat = 380  // Void v3.1: 400 → 380
         static let sftpPanelWidth: CGFloat = 480  // Void v3.1: 500 → 480

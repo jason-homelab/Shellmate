@@ -27,11 +27,12 @@ struct TerminalTabView: View {
 
             // ── 标题 ──
             // Figma: text-xs font-medium (12pt medium，非等宽)
+            // Figma 9:8：选中 text-[#1d1d1f]，非选中/悬停 text-[#8e8e93] = textSubtle
             Text(tab.title)
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(isSelected
                     ? DesignTokens.Colors.textPrimary
-                    : (isHovering ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSecondary))
+                    : (isHovering ? DesignTokens.Colors.textSecondary : DesignTokens.Colors.textSubtle))
                 .lineLimit(1)
                 .truncationMode(.tail)
 
@@ -54,7 +55,6 @@ struct TerminalTabView: View {
         .frame(height: 32)
         .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: 140)
         .background(tabBackground)
-        .overlay(tabBorderRight)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         // Figma 9:6：激活标签底部 2px × 60px 蓝色指示线（居中）
         // 注：必须在 clipShape 之后叠加，否则底部圆角会将指示线裁断
@@ -129,18 +129,6 @@ struct TerminalTabView: View {
                 .fill(DesignTokens.Colors.glassUltraLight)
         } else {
             Color.clear
-        }
-    }
-
-    // MARK: - 右侧边框
-
-    /// Figma: border-r border-[#d2d2d7]/50（右侧 1pt 分隔线）
-    private var tabBorderRight: some View {
-        HStack(spacing: 0) {
-            Spacer()
-            Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
-                .frame(width: 1)
         }
     }
 

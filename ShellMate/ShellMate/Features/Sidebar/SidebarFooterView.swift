@@ -17,20 +17,21 @@ struct SidebarFooterView: View {
 
     var body: some View {
         HStack {
-            // Figma 8:34：10px regular，#8e8e93，left=14
+            // Figma 8:34：10px regular，#8e8e93 = textSubtle，left=14
             Text("\(connectedCount) connected")
                 .font(DesignTokens.Typography.captionMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .foregroundColor(DesignTokens.Colors.textSubtle)
 
             Spacer()
 
-            // Figma 8:35：10px regular，#8e8e93，right-aligned
+            // Figma 8:35：10px regular，#8e8e93 = textSubtle，right-aligned
             Text("\(totalCount) total")
                 .font(DesignTokens.Typography.captionMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .foregroundColor(DesignTokens.Colors.textSubtle)
         }
         .padding(.horizontal, 14)
-        .frame(height: DesignTokens.Sizes.statusBarHeight)
+        // Figma 8:32：h=31（与终端状态栏 32pt 刻意错开，保留层次感）
+        .frame(height: DesignTokens.Sizes.sidebarFooterHeight)
         .background(DesignTokens.Colors.surfaceWindow)
         .overlay(alignment: .top) {
             Rectangle()
