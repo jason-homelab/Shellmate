@@ -67,6 +67,8 @@ struct ContentView: View {
                 ideal: DesignTokens.Sizes.sidebarWidth,
                 max: DesignTokens.Sizes.sidebarMaxWidth
             )
+            // 二次兜底：在 NavigationSplitView 列级别压制 sidebar vibrancy 穿透
+            .background(DesignTokens.Colors.surfaceWindow)
         } detail: {
             detailArea
         }

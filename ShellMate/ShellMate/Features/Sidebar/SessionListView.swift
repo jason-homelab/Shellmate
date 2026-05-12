@@ -34,9 +34,10 @@ struct SessionListView: View {
             .padding(.top, 14)
             .padding(.bottom, 4)
         }
-        // 移除 ScrollView 默认白色背景，让父层 surfaceWindow (#F5F5F7) 透出
+        // 压制 ScrollView 系统背景；.background 确保整个滚动区域不透明
         .scrollContentBackground(.hidden)
         .background(DesignTokens.Colors.surfaceWindow)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - 未分组会话

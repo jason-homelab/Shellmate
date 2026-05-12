@@ -51,6 +51,8 @@ struct SessionSidebarView: View {
                 }
             }
             .frame(maxHeight: .infinity)
+            // 阻断 NavigationSplitView sidebar material 穿透：明确设置不透明背景
+            .background(DesignTokens.Colors.surfaceWindow)
 
             // 底部统计条（固定于侧边栏底部，与对面 TerminalStatusBarView 同 Y 轴）
             SidebarFooterView(
