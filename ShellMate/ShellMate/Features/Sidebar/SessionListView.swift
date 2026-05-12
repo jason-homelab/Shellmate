@@ -39,7 +39,7 @@ struct SessionListView: View {
         .scrollIndicators(.never)           // 隐藏滚动指示器，防止其出现在左侧形成红线
         .background(DesignTokens.Colors.surfaceWindow)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()                          // 裁剪行 shadow 溢出（选中行 shadow radius:6 超出 LazyVStack 4pt padding）
+        .clipShape(Rectangle())             // 裁剪行 shadow CALayer 溢出；.clipShape 比 .clipped 更彻底
     }
 
     // MARK: - 未分组会话

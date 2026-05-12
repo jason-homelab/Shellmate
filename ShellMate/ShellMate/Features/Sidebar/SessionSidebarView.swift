@@ -67,8 +67,8 @@ struct SessionSidebarView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Figma §02: 亮色 bg-[#f5f5f7] = surfaceWindow，与主窗口背景同色
         .background(DesignTokens.Colors.surfaceWindow)
-        // 彻底裁剪任何子视图的视觉溢出（shadow/overlay 超出列边界）
-        .clipped()
+        // 彻底裁剪任何子视图的视觉溢出（包括 shadow CALayer）；.clipShape 比 .clipped 更彻底
+        .clipShape(Rectangle())
         // Sheet 挂载在稳定容器上，避免附着在按钮视图上导致 identity 变化时 Sheet 无法弹出
         .sheet(isPresented: $vm.showGroupManager) {
             GroupManagerView(

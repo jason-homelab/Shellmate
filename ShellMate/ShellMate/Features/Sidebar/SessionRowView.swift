@@ -65,10 +65,10 @@ struct SessionRowView: View {
         .frame(height: 44)
         .background(rowBackground)
         // shadow-md shadow-[#007aff]/30（仅选中时）
-        // radius 由 6 缩至 4，y 偏移保留向下，避免阴影向左溢出 4pt padding 形成左侧红线
+        // x:2 使阴影向右偏移，左扩散 = radius(3) - x(2) = 1pt，远小于 LazyVStack 4pt padding，不溢出列边界
         .shadow(
             color: isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.25) : .clear,
-            radius: 4, x: 0, y: 2
+            radius: 3, x: 2, y: 2
         )
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
