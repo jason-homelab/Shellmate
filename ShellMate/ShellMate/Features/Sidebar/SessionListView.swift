@@ -36,8 +36,10 @@ struct SessionListView: View {
         }
         // 压制 ScrollView 系统背景；.background 确保整个滚动区域不透明
         .scrollContentBackground(.hidden)
+        .scrollIndicators(.never)           // 隐藏滚动指示器，防止其出现在左侧形成红线
         .background(DesignTokens.Colors.surfaceWindow)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()                          // 裁剪行 shadow 溢出（选中行 shadow radius:6 超出 LazyVStack 4pt padding）
     }
 
     // MARK: - 未分组会话
