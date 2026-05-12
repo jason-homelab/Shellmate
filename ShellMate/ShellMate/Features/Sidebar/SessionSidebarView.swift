@@ -60,6 +60,8 @@ struct SessionSidebarView: View {
                 totalCount: sessionStore.sessions.count
             )
         }
+        // maxWidth: .infinity 让 VStack 撑满 NavigationSplitView 列宽，消除左侧黑色间隙
+        .frame(maxWidth: .infinity)
         .frame(minWidth: DesignTokens.Sizes.sidebarMinWidth)
         .frame(maxWidth: DesignTokens.Sizes.sidebarMaxWidth)
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
