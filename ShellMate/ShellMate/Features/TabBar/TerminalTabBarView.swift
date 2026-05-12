@@ -42,7 +42,7 @@ struct TerminalTabBarView: View {
     /// 标签页列表（超出宽度时横向滚动，避免 Tab 溢出截断）
     private var tabList: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignTokens.Spacing.px) {
+            HStack(spacing: DesignTokens.Spacing.xxs) {  // Figma 9:3: 4px gap between tabs
                 ForEach(store.tabs) { tab in
                     TerminalTabView(
                         tab: tab,

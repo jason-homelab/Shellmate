@@ -258,7 +258,8 @@ final class TmuxSessionStore: ObservableObject {
         sendTarget?.sendTmuxCommand(cmd)
         attachedSessionName = name.isEmpty ? nil : name
         // 稍后刷新列表
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
             self?.refreshSessions()
         }
     }

@@ -355,9 +355,10 @@ struct ComposePaneView: View {
 
         if sendLineByLine {
             let lines = content.components(separatedBy: "\n").filter { !$0.isEmpty }
-            for (index, line) in lines.enumerated() {
-                let delay = DispatchTime.now() + .milliseconds(lineDelay * index)
-                DispatchQueue.main.asyncAfter(deadline: delay) {
+            let delayMs = lineDelay
+            Task { @MainActor in
+                for (index, line) in lines.enumerated() {
+                    if index > 0 { try? await Task.sleep(nanoseconds: UInt64(delayMs) * 1_000_000) }
                     onSend(line + "\r")
                 }
             }

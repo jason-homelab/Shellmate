@@ -171,26 +171,22 @@ final class TabBarStore: ObservableObject {
 
     /// 选择下一个标签页
     func selectNextTab() {
+        guard !tabs.isEmpty else { return }  // BUG-001：防止 tabs 并发清空时 % 除零崩溃
         guard let currentIndex = selectedIndex else {
-            if !tabs.isEmpty {
-                selectedTabId = tabs[0].id
-            }
+            selectedTabId = tabs[0].id
             return
         }
-
         let nextIndex = (currentIndex + 1) % tabs.count
         selectedTabId = tabs[nextIndex].id
     }
 
     /// 选择上一个标签页
     func selectPreviousTab() {
+        guard !tabs.isEmpty else { return }  // BUG-001：同上
         guard let currentIndex = selectedIndex else {
-            if !tabs.isEmpty {
-                selectedTabId = tabs[tabs.count - 1].id
-            }
+            selectedTabId = tabs[tabs.count - 1].id
             return
         }
-
         let previousIndex = (currentIndex - 1 + tabs.count) % tabs.count
         selectedTabId = tabs[previousIndex].id
     }

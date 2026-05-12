@@ -30,6 +30,13 @@
         <attribute name="proxyJumpString" optional="YES" attributeType="String"/>
         <attribute name="reconnectInterval" attributeType="Integer 32" defaultValueString="5" usesScalarValueType="YES"/>
         <attribute name="startupCommand" optional="YES" attributeType="String"/>
+        <attribute name="connectionTypeRaw" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="serialPortPath" optional="YES" attributeType="String"/>
+        <attribute name="serialBaudRate" attributeType="Integer 32" defaultValueString="9600" usesScalarValueType="YES"/>
+        <attribute name="serialDataBits" attributeType="Integer 32" defaultValueString="8" usesScalarValueType="YES"/>
+        <attribute name="serialParity" attributeType="String" defaultValueString="none"/>
+        <attribute name="serialStopBits" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="serialFlowControl" attributeType="String" defaultValueString="none"/>
         <relationship name="group" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSessionGroup" inverseName="sessions" inverseEntity="CDSessionGroup"/>
         <relationship name="highlightSets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDHighlightSet" inverseName="sessions" inverseEntity="CDHighlightSet"/>
         <relationship name="jumpHosts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDJumpHost" inverseName="session" inverseEntity="CDJumpHost"/>

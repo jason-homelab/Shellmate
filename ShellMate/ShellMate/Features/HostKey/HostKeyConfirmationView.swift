@@ -125,6 +125,11 @@ struct HostKeyConfirmationView: View {
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Text("主机密钥是服务器的数字身份证，用于防止中间人攻击（MITM）。如果你是首次连接自己管理的服务器，通常可以直接信任。如不确定，请联系服务器管理员确认指纹。")
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(DesignTokens.Spacing.md)
@@ -254,7 +259,7 @@ struct HostKeyConfirmationView: View {
             }
             .keyboardShortcut(.cancelAction)
 
-            Button("确认连接") {
+            Button("信任并继续连接") {
                 if rememberHost {
                     saveHostKey()
                 }

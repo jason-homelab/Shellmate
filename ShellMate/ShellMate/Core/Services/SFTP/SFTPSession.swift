@@ -306,7 +306,7 @@ final class SFTPSession: @unchecked Sendable {
         let attrs = try bridge.sftpStatFile(sftp: sftp, path: remotePath)
         let remoteSize = attrs.filesize
 
-        DispatchQueue.main.async {
+        Task { @MainActor [transferItem] in
             transferItem.totalBytes = remoteSize
             transferItem.state = .inProgress
         }
@@ -359,7 +359,7 @@ final class SFTPSession: @unchecked Sendable {
                 if elapsed >= 1.0 {
                     let speed = Double(speedBytes) / elapsed
                     let t = transferred
-                    DispatchQueue.main.async {
+                    Task { @MainActor [transferItem] in
                         transferItem.transferredBytes = t
                         transferItem.bytesPerSecond = speed
                     }
@@ -377,7 +377,7 @@ final class SFTPSession: @unchecked Sendable {
 
         let finalState: SFTPTransferState = transferItem.isCancelled ? .cancelled : .completed
         let finalTransferred = transferred
-        DispatchQueue.main.async {
+        Task { @MainActor [transferItem] in
             transferItem.transferredBytes = finalTransferred
             transferItem.bytesPerSecond = 0
             transferItem.state = finalState
@@ -403,7 +403,7 @@ final class SFTPSession: @unchecked Sendable {
             throw SSHError.sftpTransferFailed(reason: "本地文件不存在或为空: \(localPath)")
         }
 
-        DispatchQueue.main.async {
+        Task { @MainActor [transferItem] in
             transferItem.totalBytes = localSize
             transferItem.state = .inProgress
         }
@@ -469,7 +469,7 @@ final class SFTPSession: @unchecked Sendable {
             if elapsed >= 1.0 {
                 let speed = Double(speedBytes) / elapsed
                 let t = transferred
-                DispatchQueue.main.async {
+                Task { @MainActor [transferItem] in
                     transferItem.transferredBytes = t
                     transferItem.bytesPerSecond = speed
                 }
@@ -480,7 +480,7 @@ final class SFTPSession: @unchecked Sendable {
 
         let finalState: SFTPTransferState = transferItem.isCancelled ? .cancelled : .completed
         let finalTransferred = transferred
-        DispatchQueue.main.async {
+        Task { @MainActor [transferItem] in
             transferItem.transferredBytes = finalTransferred
             transferItem.bytesPerSecond = 0
             transferItem.state = finalState

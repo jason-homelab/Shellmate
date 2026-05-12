@@ -175,7 +175,7 @@ struct AISummaryView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(summaryText, forType: .string)
                     isCopied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
+                    Task { try? await Task.sleep(nanoseconds: 2_000_000_000); isCopied = false }
                 } label: {
                     Label(isCopied ? "已复制" : "复制摘要", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                 }

@@ -23,6 +23,9 @@ final class GroupStore: ObservableObject {
     /// 是否显示新建/编辑分组弹窗
     @Published var isShowingGroupForm: Bool = false
 
+    /// 新建子分组时预设的父分组 ID（来自右键"新建子分组"）
+    @Published var defaultParentId: UUID? = nil
+
     /// 是否正在加载
     @Published private(set) var isLoading: Bool = false
 
@@ -56,8 +59,11 @@ final class GroupStore: ObservableObject {
         errorMessage = nil
 
         do {
-            groups = try await repository.fetchAll()
-            topLevelGroups = try await repository.fetchTopLevel()
+            // 两步 fetch 全部成功后再原子赋值，防止 fetchAll 成功而 fetchTopLevel 失败时产生不一致状态
+            let allGroups = try await repository.fetchAll()
+            let topGroups = try await repository.fetchTopLevel()
+            groups = allGroups
+            topLevelGroups = topGroups
         } catch {
             errorMessage = "加载分组失败: \(error.localizedDescription)"
         }
@@ -125,26 +131,22 @@ final class GroupStore: ObservableObject {
 
     /// 展开所有分组
     func expandAll() async {
-        for group in groups where !group.isExpanded {
-            do {
-                try await repository.setExpanded(group, isExpanded: true)
-            } catch {
-                errorMessage = "展开所有分组失败: \(error.localizedDescription)"
-                return
-            }
+        // BUG-004：改为调用 repository 批量方法（一次 Core Data save），不再 N 次逐条写入
+        do {
+            try await repository.expandAll()
+        } catch {
+            errorMessage = "展开所有分组失败: \(error.localizedDescription)"
         }
         await loadGroups()
     }
 
     /// 折叠所有分组
     func collapseAll() async {
-        for group in groups where group.isExpanded {
-            do {
-                try await repository.setExpanded(group, isExpanded: false)
-            } catch {
-                errorMessage = "折叠所有分组失败: \(error.localizedDescription)"
-                return
-            }
+        // BUG-004：同上，批量折叠
+        do {
+            try await repository.collapseAll()
+        } catch {
+            errorMessage = "折叠所有分组失败: \(error.localizedDescription)"
         }
         await loadGroups()
     }
@@ -173,8 +175,10 @@ final class GroupStore: ObservableObject {
     // MARK: - 弹窗方法
 
     /// 显示新建分组弹窗
-    func showNewGroupForm() {
+    /// - Parameter parentId: 可选，预设父分组（来自分组右键菜单"新建子分组"）
+    func showNewGroupForm(parentId: UUID? = nil) {
         editingGroup = nil
+        defaultParentId = parentId
         isShowingGroupForm = true
     }
 
@@ -188,5 +192,6 @@ final class GroupStore: ObservableObject {
     func dismissGroupForm() {
         isShowingGroupForm = false
         editingGroup = nil
+        defaultParentId = nil
     }
 }

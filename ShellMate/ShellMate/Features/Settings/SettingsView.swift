@@ -1,34 +1,21 @@
 import SwiftUI
 
-// MARK: - 设置面板主窗口（Screen 07 — Figma-Spec-v2 §07，2026-04-27 更新至 6 Tab）
+// MARK: - 设置面板主窗口（对齐 Figma Desktop 设计，600×580pt，3 Tab）
 
 /// 设置窗口主容器
-/// 顶部 Segmented Picker（通用/外观/终端/颜色/AI助手/自动化），共 640×520pt
-/// 对齐 Figma-Spec-v2 §07：grid-cols-6，bg-black/5，backdrop-blur-sm，rounded-xl，p-1
+/// 顶部文本 Tab 栏（通用 / 外观 / 终端），共 600×580pt
+/// Tab 栏：bg=rgba(0,0,0,0.02)，h=44，左侧 padding=16；每个 Tab width=72，height=32，cornerRadius=8
 struct SettingsView: View {
 
-    // MARK: - 导航项（六主 Tab，W26 新增自动化 Tab）
+    // MARK: - 导航项（3 个 Tab：通用 / 外观 / 终端）
 
     enum SettingsTab: String, CaseIterable, Identifiable {
-        case general     = "通用"
-        case appearance  = "外观"
-        case terminal    = "终端"
-        case colors      = "颜色"
-        case aiAssistant = "AI 助手"
-        case automation  = "自动化"
+        case general    = "通用"
+        case appearance = "外观"
+        case terminal   = "终端"
 
         var id: String { rawValue }
-
-        var iconName: String {
-            switch self {
-            case .general:     return "gearshape"
-            case .appearance:  return "paintpalette"
-            case .terminal:    return "terminal"
-            case .colors:      return "circle.hexagongrid.fill"
-            case .aiAssistant: return "sparkles"
-            case .automation:  return "bolt"
-            }
-        }
+        var localizedLabel: LocalizedStringKey { LocalizedStringKey(rawValue) }
     }
 
     // MARK: - 状态
@@ -48,79 +35,72 @@ struct SettingsView: View {
             contentPanel
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 600, height: 520)
-        // Figma: bg-white/95 backdrop-blur-2xl
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        .frame(width: 600, height: 580)
+        // Figma Desktop: #fafafb 背景，rounded-16px，shadow
+        .background(Color(hex: "#fafafb"))
     }
 
-    // MARK: - 顶部选择器
+    // MARK: - 顶部选择器（Figma Desktop 规格）
 
     private var tabPickerBar: some View {
-        HStack(spacing: DesignTokens.Spacing.xxxs) {
+        HStack(spacing: 8) {
             ForEach(SettingsTab.allCases) { tab in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        selectedTab = tab
-                    }
+                    withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
                 } label: {
-                    HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: tab.iconName)
-                            .font(DesignTokens.Typography.captionLarge)
-                        // Figma: text-xs = 11pt
-                        Text(tab.rawValue)
-                            .font(.system(size: 11, weight: selectedTab == tab ? .medium : .regular))
-                    }
-                    // Figma: active=text-primary, inactive=text-secondary, text-xs
-                    .foregroundColor(
-                        selectedTab == tab
-                            ? DesignTokens.Colors.textPrimary
-                            : DesignTokens.Colors.textSecondary
-                    )
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 30)
-                    // Figma: active=bg-white shadow-sm, inactive=transparent
-                    .background(
-                        selectedTab == tab
-                            ? Color.white
-                            : Color.clear
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                    .shadow(color: selectedTab == tab ? Color.black.opacity(0.08) : Color.clear, radius: 3, x: 0, y: 1)
+                    Text(tab.localizedLabel)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(selectedTab == tab ? Color(hex: "#1d1d1f") : Color(hex: "#8e8e93"))
+                        .frame(width: 72, height: 32)
+                        .background(selectedTab == tab ? Color.white : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .shadow(color: selectedTab == tab ? Color.black.opacity(0.06) : .clear,
+                                radius: 2, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(DesignTokens.Spacing.xxs)
-        // Figma: bg-black/5 backdrop-blur-sm rounded-xl p-1（无边框）
-        .background(Color.black.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-        .padding(.horizontal, DesignTokens.Spacing.xl)
-        .padding(.vertical, DesignTokens.Spacing.md)
-        .frame(maxWidth: .infinity)
+        .padding(.leading, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 44)
+        .background(Color.black.opacity(0.02))
     }
 
-    // MARK: - 内容区
+    // MARK: - 内容区（3 Tab 合并策略）
 
     @ViewBuilder
     private var contentPanel: some View {
         switch selectedTab {
         case .general:
-            GeneralSettingsView()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    generalContent
+                    Divider().padding(.horizontal, 20).padding(.vertical, 4)
+                    aiContent
+                    Divider().padding(.horizontal, 20).padding(.vertical, 4)
+                    automationContent
+                }
+            }
         case .appearance:
-            AppearanceSettingsView()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    appearanceContent
+                    Divider().padding(.horizontal, 20).padding(.vertical, 4)
+                    colorsContent
+                }
+            }
         case .terminal:
             TerminalSettingsView()
-        case .colors:
-            ColorsSettingsView()
-        case .aiAssistant:
-            AISettingsView()
-        case .automation:
-            AutomationTriggersSettingsView()
         }
     }
+
+    // MARK: - 内容属性
+
+    private var generalContent: some View    { GeneralSettingsView().settingsContent }
+    private var aiContent: some View         { AISettingsView().settingsContent }
+    private var automationContent: some View { AutomationTriggersSettingsView() }
+    private var appearanceContent: some View { AppearanceSettingsView().settingsContent }
+    private var colorsContent: some View     { ColorsSettingsView().settingsContent }
 }
 
 // MARK: - Vibrancy 效果包装（NSVisualEffectView）

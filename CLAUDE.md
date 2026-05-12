@@ -22,50 +22,46 @@ ShellMate 是一款面向专业开发者/运维工程师的 macOS 原生 SSH 会
 * 📄 **[ShellMate PRD](./ShellMate_PRD.md)** - 详细的功能模块定义、数据模型（10章）、错误处理规范和 10 个 P0 级验收用例。
 
 ### 2.2 技术架构层 (Tech Spec/DB)
-* 📄 **[技术方案](./技术方案.md)**（v3.0）- 涵盖 4 层架构图、SSH 连接状态机、AI 服务层、系统性能监控、欢迎引导、脚本自动化、录制回放、日志面板、导入导出等新模块设计，以及 Figma-Spec-v2 UI 令牌系统（§3.16）。
+* 📄 **[技术方案](./技术方案.md)**（v3.0）- 涵盖 4 层架构图、SSH 连接状态机、AI 服务层、系统性能监控、欢迎引导、脚本自动化、录制回放、日志面板、导入导出等新模块设计。
 * 📄 **[数据库设计文档](./数据库设计文档.md)** - 详述 10 个 Core Data Entity（基于 SQLite）、枚举对应关系、关联层级以及 Keychain 桥接策略。
 
 ### 2.3 进度与管理层
 * 📄 **[开发进度](./开发进度.md)** - 17 周项目详细 WBS 与 RACI 矩阵，追踪当前项目进展。
 
-### 2.4 UI 设计规范层（Figma Make 直接实现）
+### 2.4 UI 设计规范层（Figma Desktop）
 
-> **⚠️ UI 规范唯一来源：Figma Make 原型 `upl5OBUkpLGnOe1u5aQRZ5`（2026-04-26 起）。**
-> 所有 UI 实现必须通过 Figma MCP 读取原型源码（`WelcomeScreen.tsx`、`Sidebar.tsx` 等）1:1 实现，不再维护任何本地 Markdown 规范文档。
+> **⚠️ UI 规范唯一来源：Figma Desktop 设计文件 `OBPyCWFtlCx5OEIXwrckZm`（2026-05-06 起）。**
+> 所有 UI 细节（间距、颜色、字体、圆角、布局）必须通过 Figma MCP 读取该文件实现 1:1 对齐，不再维护任何本地 Markdown 规范文档。
 
-**Figma Make 文件访问方式：**
+**Figma Desktop 文件访问方式：**
 ```
-fileKey: upl5OBUkpLGnOe1u5aQRZ5
-MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
-组件路径: file://figma/make/source/upl5OBUkpLGnOe1u5aQRZ5/src/app/components/
+fileKey:  OBPyCWFtlCx5OEIXwrckZm
+文件链接: https://www.figma.com/design/OBPyCWFtlCx5OEIXwrckZm/ShellMate
+MCP 工具: mcp__figma__get_design_context  （主要）
+          mcp__figma__get_metadata        （结构概览）
+          mcp__figma__get_screenshot      （视觉参考）
+节点 ID:  从 URL ?node-id=X-Y 提取，转为 X:Y 格式后传入 MCP
 ```
 
-**已完成 1:1 实现的组件（按 Figma 组件文件对应）：**
-* ✅ `WelcomeScreen.tsx` → `Features/Welcome/WelcomeScreenView.swift`
-* ✅ `Toolbar.tsx` → `App/ContentViewToolbar.swift`
-* ✅ `Sidebar.tsx` → `Features/Sidebar/SessionSidebarView.swift` + `SessionRowView.swift` + `GroupHeaderView.swift`
-* ✅ `Terminal.tsx` → `Features/Terminal/TerminalView.swift`（SwiftTerm 渲染层无法 1:1 映射，已对齐 ToolbarButton hover/圆角样式）
-* ✅ `StatusBar.tsx` → `Features/StatusBar/TerminalStatusBarView.swift`
-* ✅ `NewSessionDialog.tsx` → `Features/SessionForm/SessionFormSheet.swift` + `Shared/Components/FormComponents.swift`
-* ✅ `SettingsDialog.tsx` → `Features/Settings/SettingsView.swift`（Tab bar bg-black/5、active tab bg-white、容器 white/95 backdrop-blur）
-* ✅ `AIAssistantPanel.tsx` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
-* ✅ `FileTransferPanel.tsx` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
-* ✅ `TmuxManager.tsx` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
-* ✅ `TunnelManager.tsx` → `Features/Tunnel/TunnelManagerView.swift`
-* ✅ `QuickCommandManager.tsx` → `Features/QuickCommand/QuickCommandManagerView.swift`
-* ✅ `ScriptAutomationPanel.tsx` → `Features/Scripts/ScriptLibraryView.swift`
-
-* ✅ `RecordingDialog.tsx` → `Features/Recording/RecordingDialogView.swift`
-
-* ✅ `LogViewerDialog.tsx` → `Features/Logs/LogPanelView.swift`
-
-* ✅ `GroupManagementDialog.tsx` → `Features/Sidebar/GroupManagerView.swift`
-
-* ✅ `PasswordManagerDialog.tsx` → `Features/Settings/PasswordManagerView.swift`
-
-* ✅ `SessionImportExportDialog.tsx` → `Features/SessionForm/SessionImportExportView.swift`
-
-**所有 Figma Make 组件均已完成 1:1 实现。**
+**已对齐 Figma Desktop 的 Swift 实现映射：**
+* `Sidebar`（8:2）→ `Features/Sidebar/SessionSidebarView.swift` + `SessionRowView.swift` + `GroupHeaderView.swift`
+* `Toolbar` → `App/ContentViewToolbar.swift`
+* `Terminal` → `Features/Terminal/TerminalView.swift`（SwiftTerm 渲染层限制，已对齐 hover/圆角样式）
+* `StatusBar` → `Features/StatusBar/TerminalStatusBarView.swift`
+* `NewSessionDialog` → `Features/SessionForm/SessionFormSheet.swift` + `Shared/Components/FormComponents.swift`
+* `SettingsDialog` → `Features/Settings/SettingsView.swift`
+* `AIAssistantPanel` → `Features/AI/AIAssistantPanelView.swift` + `AICodeBlockView.swift`
+* `FileTransferPanel` → `Features/SFTP/SFTPPanelView.swift` + `SFTPFileRowViews.swift`
+* `TmuxManager` → `Features/Tmux/TmuxManagerView.swift` + `TmuxNewSessionSheet.swift`
+* `TunnelManager` → `Features/Tunnel/TunnelManagerView.swift`
+* `QuickCommandManager` → `Features/QuickCommand/QuickCommandManagerView.swift`
+* `ScriptAutomationPanel` → `Features/Scripts/ScriptLibraryView.swift`
+* `RecordingDialog` → `Features/Recording/RecordingDialogView.swift`
+* `LogViewerDialog` → `Features/Logs/LogPanelView.swift`
+* `GroupManagementDialog` → `Features/Sidebar/GroupManagerView.swift`
+* `PasswordManagerDialog` → `Features/Settings/PasswordManagerView.swift`
+* `SessionImportExportDialog` → `Features/SessionForm/SessionImportExportView.swift`
+* `WelcomeScreen` → `Features/Welcome/WelcomeScreenView.swift`
 
 ---
 
@@ -119,9 +115,9 @@ MCP 工具: mcp__figma__get_design_context / ReadMcpResourceTool
 ### 4.1 真机测试服务器
 | 字段 | 值 |
 |------|-----|
-| IP 地址 | 192.168.100.167 |
+| IP 地址 | 192.168.100.90 |
 | 用户名 | ubuntu |
 | 密码 | Int3l@123 |
-| IP 地址 | 192.168.100.120|
+| IP 地址 | 192.168.100.91|
 | 用户名 | ubuntu |
 | 密码 | Int3l@123 |

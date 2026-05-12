@@ -188,7 +188,18 @@
       "Read(//Users/jason/**)",
       "Read(//Users/jason/Desktop/**)",
       "Read(//Users/jason/Downloads/**)",
-      "Bash(git -C /Users/jason/shellmate-app add ShellMate/ShellMate/App/ContentViewToolbar.swift ShellMate/ShellMate/Features/TabBar/TerminalTabView.swift ShellMate/ShellMate/Shared/Components/PillButtonStyle.swift)"
+      "Bash(git -C /Users/jason/shellmate-app add ShellMate/ShellMate/App/ContentViewToolbar.swift ShellMate/ShellMate/Features/TabBar/TerminalTabView.swift ShellMate/ShellMate/Shared/Components/PillButtonStyle.swift)",
+      "Bash(git branch *)",
+      "Bash(git -C /Users/jason/shellmate-app add ShellMate/ShellMate/Features/Terminal/TerminalPlaceholderView.swift ShellMate/ShellMate.xcodeproj/project.pbxproj)",
+      "Bash(git -C /Users/jason/shellmate-app status --short)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -destination 'platform=macOS' -only-testing:'' build)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -destination 'platform=macOS,arch=arm64' build)",
+      "Bash(xcodebuild -project /Users/jason/shellmate-app/ShellMate/ShellMate.xcodeproj -scheme ShellMate -destination 'platform=macOS,arch=arm64' build)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -destination \"platform=macOS\" build)",
+      "Bash(xcodebuild -scheme ShellMate -destination 'platform=macOS' -configuration Debug build)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -configuration Debug -quiet)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -configuration Debug)",
+      "Bash(xcodebuild -project ShellMate/ShellMate.xcodeproj -scheme ShellMate -configuration Debug -destination 'platform=macOS' build)"
     ]
   }
 }

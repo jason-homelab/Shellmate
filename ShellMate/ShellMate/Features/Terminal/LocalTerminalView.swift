@@ -141,7 +141,7 @@ struct LocalSwiftTermRepresentable: NSViewRepresentable {
         view.optionAsMetaKey = optionAsMeta
         applyTheme(themeId, to: view)
         // 通知控制器持有视图引用（用于 feed 数据）
-        DispatchQueue.main.async {
+        Task { @MainActor in
             viewRef = view
             controller.terminalView = view
         }

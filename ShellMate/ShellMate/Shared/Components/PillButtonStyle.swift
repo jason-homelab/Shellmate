@@ -180,8 +180,8 @@ private struct SizeModifier: ViewModifier {
                 )
         case .text:
             content
-                .padding(.horizontal, DesignTokens.Spacing.sm)  // Figma: 按钮紧凑 8pt，原 12pt 过宽
-                .frame(height: 28)  // Figma h-7 = 28px（原 26px 偏小）
+                .padding(.horizontal, DesignTokens.Spacing.sm)  // Figma 7:4–7:21: px-8
+                .frame(height: 26)  // Figma 7:4: h-[26px]（所有工具栏文字按钮统一高度）
         }
     }
 }

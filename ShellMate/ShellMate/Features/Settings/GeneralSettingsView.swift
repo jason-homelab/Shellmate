@@ -24,78 +24,81 @@ struct GeneralSettingsView: View {
     // MARK: - 视图
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+        ScrollView { settingsContent }
+            .alert("需重启以应用语言更改", isPresented: $showLanguageRestartAlert) {
+                Button("稍后重启", role: .cancel) { }
+                Button("立即退出", role: .destructive) {
+                    NSApp.terminate(nil)
+                }
+            } message: {
+                Text("语言更改将在重启应用后完全生效。菜单栏将立即更新。")
+            }
+    }
 
-                // 语言
-                settingRow(
-                    title: "语言",
-                    subtitle: nil
-                ) {
-                    Picker("", selection: $language) {
-                        ForEach(languages, id: \.0) { lang in
-                            Text(lang.1).tag(lang.0)
-                        }
-                    }
-                    .labelsHidden()
-                    .frame(width: 160)
-                    .onChange(of: language) { newLang in
-                        applyLanguageSetting(newLang)
+    /// 可供父视图直接嵌入的内容（不含 ScrollView 包装）
+    var settingsContent: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+
+            // 语言
+            settingRow(
+                title: "语言",
+                subtitle: nil
+            ) {
+                Picker("", selection: $language) {
+                    ForEach(languages, id: \.0) { lang in
+                        Text(lang.1).tag(lang.0)
                     }
                 }
-
-                Divider()
-
-                // 启动时自动重连
-                toggleRow(
-                    title: "启动时自动重连",
-                    subtitle: "应用重启后自动建立上次活动会话",
-                    binding: $autoReconnect
-                )
-
-                Divider()
-
-                // 关闭标签确认
-                toggleRow(
-                    title: "关闭标签时需确认",
-                    subtitle: "防止误关闭正在运行的会话",
-                    binding: $confirmCloseTab
-                )
-
-                Divider()
-
-                // 保存会话日志
-                toggleRow(
-                    title: "保存会话日志",
-                    subtitle: "将终端输出保存至本地文件",
-                    binding: $saveSessionLog
-                )
-
-                Divider()
-
-                // 默认协议
-                settingRow(
-                    title: "默认连接协议",
-                    subtitle: nil
-                ) {
-                    Picker("", selection: $defaultProtocol) {
-                        ForEach(protocols, id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .frame(width: 200)
+                .labelsHidden()
+                .frame(width: 160)
+                .onChange(of: language) { newLang in
+                    applyLanguageSetting(newLang)
                 }
             }
-            .padding(DesignTokens.Spacing.lg)
-        }
-        .alert("需重启以应用语言更改", isPresented: $showLanguageRestartAlert) {
-            Button("稍后重启", role: .cancel) { }
-            Button("立即退出", role: .destructive) {
-                NSApp.terminate(nil)
+
+            Divider()
+
+            // 启动时自动重连
+            toggleRow(
+                title: "启动时自动重连",
+                subtitle: "应用重启后自动建立上次活动会话",
+                binding: $autoReconnect
+            )
+
+            Divider()
+
+            // 关闭标签确认
+            toggleRow(
+                title: "关闭标签时需确认",
+                subtitle: "防止误关闭正在运行的会话",
+                binding: $confirmCloseTab
+            )
+
+            Divider()
+
+            // 保存会话日志
+            toggleRow(
+                title: "保存会话日志",
+                subtitle: "将终端输出保存至本地文件",
+                binding: $saveSessionLog
+            )
+
+            Divider()
+
+            // 默认协议
+            settingRow(
+                title: "默认连接协议",
+                subtitle: nil
+            ) {
+                Picker("", selection: $defaultProtocol) {
+                    ForEach(protocols, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 200)
             }
-        } message: {
-            Text("语言更改将在重启应用后完全生效。菜单栏将立即更新。")
         }
+        .padding(DesignTokens.Spacing.lg)
     }
 
     // MARK: - 语言应用

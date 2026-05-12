@@ -59,6 +59,26 @@ struct Session: Identifiable, Hashable {
     /// 覆盖全局字号（0 表示跟随全局）
     var overrideFontSize: Int32
 
+    // MARK: - 连接协议
+
+    /// 连接协议类型（SSH / Telnet / Serial）
+    var connectionType: ConnectionType
+
+    // MARK: - 串口参数（connectionType == .serial 时有效）
+
+    /// 串口设备路径（如 /dev/cu.usbserial-1）
+    var serialPortPath: String?
+    /// 波特率（默认 9600）
+    var serialBaudRate: Int32
+    /// 数据位（5/6/7/8，默认 8）
+    var serialDataBits: Int32
+    /// 奇偶校验（none/odd/even）
+    var serialParity: String
+    /// 停止位（1/2）
+    var serialStopBits: Int32
+    /// 流控（none/hardware/software）
+    var serialFlowControl: String
+
     /// 跳板机链配置（运行时从 CDJumpHost 加载，不单独存 Keychain）
     var jumpHosts: [ProxyJumpConfig]
 
@@ -97,6 +117,13 @@ struct Session: Identifiable, Hashable {
         startupCommand: String? = nil,
         overrideThemeId: String? = nil,
         overrideFontSize: Int32 = 0,
+        connectionType: ConnectionType = .ssh,
+        serialPortPath: String? = nil,
+        serialBaudRate: Int32 = 9600,
+        serialDataBits: Int32 = 8,
+        serialParity: String = "none",
+        serialStopBits: Int32 = 1,
+        serialFlowControl: String = "none",
         jumpHosts: [ProxyJumpConfig] = []
     ) {
         self.id = id
@@ -126,6 +153,13 @@ struct Session: Identifiable, Hashable {
         self.startupCommand = startupCommand
         self.overrideThemeId = overrideThemeId
         self.overrideFontSize = overrideFontSize
+        self.connectionType = connectionType
+        self.serialPortPath = serialPortPath
+        self.serialBaudRate = serialBaudRate
+        self.serialDataBits = serialDataBits
+        self.serialParity = serialParity
+        self.serialStopBits = serialStopBits
+        self.serialFlowControl = serialFlowControl
         self.jumpHosts = jumpHosts
     }
 
@@ -159,6 +193,13 @@ struct Session: Identifiable, Hashable {
         self.startupCommand = entity.startupCommand
         self.overrideThemeId = entity.overrideThemeId
         self.overrideFontSize = entity.overrideFontSize
+        self.connectionType = ConnectionType(rawValue: entity.connectionTypeRaw) ?? .ssh
+        self.serialPortPath = entity.serialPortPath
+        self.serialBaudRate = entity.serialBaudRate == 0 ? 9600 : entity.serialBaudRate
+        self.serialDataBits = entity.serialDataBits == 0 ? 8 : entity.serialDataBits
+        self.serialParity = (entity.serialParity ?? "").isEmpty ? "none" : (entity.serialParity ?? "none")
+        self.serialStopBits = entity.serialStopBits == 0 ? 1 : entity.serialStopBits
+        self.serialFlowControl = (entity.serialFlowControl ?? "").isEmpty ? "none" : (entity.serialFlowControl ?? "none")
 
         // 从 CDJumpHost 关系加载跳板机链（按 sortOrder 排序）
         let jumpHostEntities = (entity.jumpHosts as? Set<CDJumpHost>)?
@@ -244,6 +285,13 @@ struct Session: Identifiable, Hashable {
         entity.startupCommand = startupCommand
         entity.overrideThemeId = overrideThemeId
         entity.overrideFontSize = overrideFontSize
+        entity.connectionTypeRaw = connectionType.rawValue
+        entity.serialPortPath = serialPortPath
+        entity.serialBaudRate = serialBaudRate
+        entity.serialDataBits = serialDataBits
+        entity.serialParity = serialParity
+        entity.serialStopBits = serialStopBits
+        entity.serialFlowControl = serialFlowControl
     }
 
     // MARK: - Hashable

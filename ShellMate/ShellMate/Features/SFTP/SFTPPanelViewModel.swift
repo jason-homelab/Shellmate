@@ -339,7 +339,7 @@ final class SFTPPanelViewModel: BaseViewModel {
                 let dest = self.remotePath.hasSuffix("/")
                     ? "\(self.remotePath)\(url.lastPathComponent)"
                     : "\(self.remotePath)/\(url.lastPathComponent)"
-                DispatchQueue.main.async {
+                Task { @MainActor [self] in
                     self.transferQueue.enqueueUpload(localPath: url.path, remotePath: dest)
                     self.showTransferPanel = true
                 }

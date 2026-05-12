@@ -27,8 +27,10 @@ final class _WindowTabbingDisablerView: NSView {
 
     private func scheduleToolbarBorderDisable() {
         // 多次延迟覆盖 SwiftUI 的异步 toolbar 填充
-        for delay in [0.0, 0.05, 0.2, 0.5, 1.0] {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        Task { @MainActor [weak self] in
+            let delaysNs: [UInt64] = [0, 50_000_000, 200_000_000, 500_000_000, 1_000_000_000]
+            for ns in delaysNs {
+                if ns > 0 { try? await Task.sleep(nanoseconds: ns) }
                 self?.disableToolbarItemBorders()
             }
         }

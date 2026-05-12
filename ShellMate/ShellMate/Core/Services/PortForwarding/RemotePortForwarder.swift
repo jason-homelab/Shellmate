@@ -38,7 +38,7 @@ final class RemotePortForwarder {
         guard !isRunning else { return }
         isRunning = true
 
-        DispatchQueue.main.async { self.rule.status = .starting }
+        Task { @MainActor [self] in self.rule.status = .starting }
 
         queue.async { [weak self] in
             guard let self = self else { return }
@@ -46,7 +46,7 @@ final class RemotePortForwarder {
                 try self.runRemoteForward()
             } catch {
                 AppLogger.tunnel.debug("[RemoteForward] 运行失败: \(error.localizedDescription)")
-                DispatchQueue.main.async {
+                Task { @MainActor [self] in
                     self.rule.status = .failed(error.localizedDescription)
                 }
             }
@@ -64,7 +64,7 @@ final class RemotePortForwarder {
         }
         bridge?.disconnect()
         bridge = nil
-        DispatchQueue.main.async { self.rule.status = .stopped }
+        Task { @MainActor [self] in self.rule.status = .stopped }
     }
 
     // MARK: - 内部实现
@@ -96,7 +96,7 @@ final class RemotePortForwarder {
         listener = lst
 
         AppLogger.tunnel.debug("[RemoteForward] 服务器已在端口 \(boundPort) 开始监听")
-        DispatchQueue.main.async { self.rule.status = .active }
+        Task { @MainActor [self] in self.rule.status = .active }
 
         // 接受远端入站连接
         while isRunning {

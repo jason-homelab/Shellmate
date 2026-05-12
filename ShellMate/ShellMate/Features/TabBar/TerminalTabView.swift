@@ -55,7 +55,9 @@ struct TerminalTabView: View {
         .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: 140)
         .background(tabBackground)
         .overlay(tabBorderRight)
+        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         // Figma 9:6：激活标签底部 2px × 60px 蓝色指示线（居中）
+        // 注：必须在 clipShape 之后叠加，否则底部圆角会将指示线裁断
         .overlay(alignment: .bottom) {
             if isSelected {
                 RoundedRectangle(cornerRadius: 1, style: .continuous)
@@ -63,7 +65,6 @@ struct TerminalTabView: View {
                     .frame(width: 60, height: 2)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .onHover { isHovering = $0 }

@@ -509,10 +509,8 @@ struct SecuritySettingsView: View {
             // 校验是否为 PEM 格式私钥
             let content = try String(contentsOf: url, encoding: .utf8)
             guard content.contains("-----BEGIN ") else {
-                DispatchQueue.main.async {
-                    importErrorMessage = "所选文件不是有效的 PEM 格式私钥，请重新选择。"
-                    showImportError = true
-                }
+                importErrorMessage = "所选文件不是有效的 PEM 格式私钥，请重新选择。"
+                showImportError = true
                 return
             }
 
@@ -529,14 +527,10 @@ struct SecuritySettingsView: View {
                                      ofItemAtPath: destURL.path)
             }
 
-            DispatchQueue.main.async {
-                store.refresh()
-            }
+            store.refresh()
         } catch {
-            DispatchQueue.main.async {
-                importErrorMessage = error.localizedDescription
-                showImportError = true
-            }
+            importErrorMessage = error.localizedDescription
+            showImportError = true
         }
     }
 }
@@ -650,10 +644,7 @@ struct KeyGenSheet: View {
     private func generateKey() {
         isGenerating = true
         // W14: 实际密钥生成逻辑（libssh2 keygen）
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isGenerating = false
-            isPresented = false
-        }
+        Task { try? await Task.sleep(nanoseconds: 500_000_000); isGenerating = false; isPresented = false }
     }
 }
 

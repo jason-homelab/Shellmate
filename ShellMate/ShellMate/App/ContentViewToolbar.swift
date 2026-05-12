@@ -21,7 +21,7 @@ extension ContentView {
         }
 
         // .principal 插槽始终占位（macOS 据此在两侧插入 flexible space，使右侧按钮贴右端）
-        // 有活跃会话 → 显示会话名胶囊徽章；无活跃会话 → 不可见占位（Color.clear，不渲染任何内容）
+        // 有活跃会话 → 显示会话名胶囊徽章；无活跃会话 → 透明占位（不显示任何内容）
         ToolbarItem(placement: .principal) {
             if let session = activeSession {
                 Text(verbatim: "· \(session.name) ·")
@@ -32,9 +32,7 @@ extension ContentView {
                     .padding(.vertical, DesignTokens.Spacing.xxs)
                     .background(Capsule(style: .continuous).fill(DesignTokens.Colors.surfaceHover))
             } else {
-                Text("ShellMate")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                Color.clear.frame(width: 1, height: 1)
             }
         }
 
@@ -58,9 +56,6 @@ extension ContentView {
 
             // ── 分组 2：功能工具（中性操作）──
             toolGroup
-
-            // ── 溢出菜单（低频操作）──
-            overflowMenu
         }
     }
 
@@ -72,7 +67,7 @@ extension ContentView {
             Button {
                 if let session = sessionStore.selectedSession { connectToSession(session) }
             } label: {
-                Text(verbatim: "⏻ 连接")
+                Text("⏻ 连接")
             }
             .buttonStyle(PillButtonStyle(tone: .tinted))
             .disabled(sessionStore.selectedSession == nil)
@@ -88,18 +83,13 @@ extension ContentView {
                     )
                 }
             } label: {
-                Text(verbatim: "断开")
+                Text("断开")
             }
-            .buttonStyle(PillButtonStyle(tone: .destructive))
+            // Figma 7:6: 断开与功能按钮同级——rgba(0,0,0,0.04) 中性灰，无红色
+            .buttonStyle(PillButtonStyle(tone: .normal))
             .disabled(tabBarStore.selectedTab == nil)
             .help("断开当前会话")
         }
-        .padding(.horizontal, DesignTokens.Spacing.xs)
-        .padding(.vertical, DesignTokens.Spacing.xxs)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .fill(Color.black.opacity(0.04))
-        )
     }
 
     // MARK: - 功能工具分组（AI / 脚本 / 文件 / 分屏）
@@ -118,9 +108,9 @@ extension ContentView {
             .keyboardShortcut("a", modifiers: [.command, .shift])
 
             Button {
-                showScriptPanel = true
+                panels.showScriptPanel = true
             } label: {
-                Text(verbatim: "</> 脚本")
+                Text("</> 脚本")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
             .help("脚本自动化 (⌘⇧S)")
@@ -129,29 +119,38 @@ extension ContentView {
             Button {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             } label: {
-                Text(verbatim: "⇅ 文件")
+                Text("⇅ 文件")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
             .disabled(tabBarStore.selectedTab == nil)
             .help("文件传输 (SFTP)")
 
             splitMenu
+
+            Button { panels.showLogPanel = true } label: {
+                Text("日志")
+            }
+            .buttonStyle(PillButtonStyle(tone: .normal))
+            .help("会话日志")
+
+            Button {
+                NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
+            } label: {
+                Text("命令")
+            }
+            .buttonStyle(PillButtonStyle(tone: .normal))
+            .help("快捷命令 (⌘⇧K)")
+            .keyboardShortcut("k", modifiers: [.command, .shift])
+
+            Button {
+                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
+            } label: {
+                Text("隧道")
+            }
+            .buttonStyle(PillButtonStyle(tone: .normal))
+            .help("隧道管理器 (⌘⇧U)")
+            .keyboardShortcut("u", modifiers: [.command, .shift])
         }
-        .padding(.horizontal, DesignTokens.Spacing.xs)
-        .padding(.vertical, DesignTokens.Spacing.xxs)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .fill(Color.black.opacity(0.04))
-        )
-    }
-
-    // MARK: - 溢出菜单（低频操作：日志 / 命令 / 隧道）
-
-    @ViewBuilder
-    private var overflowMenu: some View {
-        OverflowMenuButton(
-            showLogPanel: $showLogPanel
-        )
     }
 
     // MARK: - 分屏 Menu（Figma 7:15：⊡ 分屏，与其他按钮样式完全一致）
@@ -159,10 +158,10 @@ extension ContentView {
     @ViewBuilder
     private var splitMenu: some View {
         SplitScreenMenuButton(
-            splitLayout: $splitLayout,
-            showSplitSessionPicker: $showSplitSessionPicker,
-            splitSessionId: $splitSessionId,
-            gridSessionIds: $gridSessionIds
+            splitLayout: $panels.splitLayout,
+            showSplitSessionPicker: $panels.showSplitSessionPicker,
+            splitSessionId: $panels.splitSessionId,
+            gridSessionIds: $panels.gridSessionIds
         )
     }
 
@@ -172,7 +171,7 @@ extension ContentView {
     private var rightToolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
 
-            Button { showImportExportDialog = true } label: {
+            Button { panels.showImportExportDialog = true } label: {
                 Label("导入导出", systemImage: "shippingbox").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
@@ -186,7 +185,7 @@ extension ContentView {
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("终端内搜索 (⌘F)")
 
-            Button { showRecordingDialog = true } label: {
+            Button { panels.showRecordingDialog = true } label: {
                 Label("录制", systemImage: "record.circle").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
@@ -255,7 +254,7 @@ private struct SplitScreenMenuButton: View {
         Button {
             showPopover.toggle()
         } label: {
-            Text(verbatim: "⊡ 分屏")
+            Text("⊡ 分屏")
         }
         .buttonStyle(PillButtonStyle(tone: isActive ? .tinted : .normal))
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
@@ -310,14 +309,14 @@ private struct SplitScreenMenuButton: View {
 
 private struct SplitOptionRow: View {
 
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     var isDestructive: Bool = false
     let action: () -> Void
 
     @State private var isHovering = false
 
-    init(_ title: String, icon: String, isDestructive: Bool = false, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, icon: String, isDestructive: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.icon = icon
         self.isDestructive = isDestructive
@@ -346,43 +345,3 @@ private struct SplitOptionRow: View {
     }
 }
 
-// MARK: - 溢出菜单按钮（日志 / 命令 / 隧道）
-
-private struct OverflowMenuButton: View {
-
-    @Binding var showLogPanel: Bool
-    @State private var showPopover = false
-
-    var body: some View {
-        Button {
-            showPopover.toggle()
-        } label: {
-            Text(verbatim: "··· 更多")
-        }
-        .buttonStyle(PillButtonStyle(tone: .normal))
-        .help("更多工具")
-        .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-            popoverContent
-        }
-    }
-
-    @ViewBuilder
-    private var popoverContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SplitOptionRow("会话日志", icon: "doc.text.magnifyingglass") {
-                showLogPanel = true
-                showPopover = false
-            }
-            SplitOptionRow("快捷命令", icon: "terminal") {
-                NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
-                showPopover = false
-            }
-            SplitOptionRow("隧道管理", icon: "network") {
-                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
-                showPopover = false
-            }
-        }
-        .padding(.vertical, 4)
-        .frame(minWidth: 160)
-    }
-}

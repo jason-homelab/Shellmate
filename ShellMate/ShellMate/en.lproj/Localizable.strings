@@ -92,6 +92,7 @@
 "通用" = "General";
 "终端" = "Terminal";
 "AI 助手" = "AI Assistant";
+"自动化" = "Automation";
 "关键词高亮" = "Keyword Highlight";
 "安全" = "Security";
 "iCloud 同步" = "iCloud Sync";
@@ -258,6 +259,9 @@
 "连接出错，请检查网络或服务器状态" = "Connection error, please check network or server status";
 "正在断开连接..." = "Disconnecting...";
 "未连接到远程服务器" = "Not connected to remote server";
+"Connected" = "Connected";
+"Not connected" = "Not connected";
+"Connecting..." = "Connecting...";
 
 // MARK: - 标签栏
 "新建标签页" = "New Tab";
@@ -571,4 +575,42 @@
 
 // --- 工具栏提示 ---
 "tmux 会话管理器 (⌘⇧T)" = "tmux Session Manager (⌘⇧T)";
+
+// MARK: - 侧边栏（SessionSidebarView）
+"搜索会话 (⌘F)" = "Search Sessions (⌘F)";
+"%lld 个已连接" = "%lld connected";
+
+// MARK: - 侧边栏分屏菜单（SessionListView）
+"分屏打开" = "Open in Split View";
+"左右分屏" = "Side by Side";
+"上下分屏" = "Top and Bottom";
+
+// MARK: - 工具栏按钮标签（ContentViewToolbar）
+"⏻ 连接" = "⏻ Connect";
+"</> 脚本" = "</> Script";
+"⇅ 文件" = "⇅ Files";
+"⊡ 分屏" = "⊡ Split";
+"日志" = "Logs";
+"命令" = "Commands";
+"隧道" = "Tunnel";
+"四格分屏 (2×2)" = "2×2 Grid";
+"切换为左右分屏" = "Switch to Side by Side";
+"切换为上下分屏" = "Switch to Top and Bottom";
+"切换为四格分屏" = "Switch to 2×2 Grid";
+"关闭分屏" = "Close Split";
+"隧道管理" = "Tunnel Manager";
+
+// MARK: - 主机密钥确认（HostKeyConfirmationView）
+"信任并继续连接" = "Trust and Connect";
+"主机密钥是服务器的数字身份证，用于防止中间人攻击（MITM）。如果你是首次连接自己管理的服务器，通常可以直接信任。如不确定，请联系服务器管理员确认指纹。" = "The host key is your server's digital identity — it prevents man-in-the-middle (MITM) attacks. If you are connecting to a server you manage for the first time, you can generally trust it. When in doubt, ask your administrator to verify the fingerprint.";
+
+// MARK: - 脚本库执行日志（ScriptLibraryView）
+"▶ 已发送：%@" = "▶ Sent: %@";
+"脚本内容已写入当前终端会话，执行输出请切换到终端窗口查看。" = "Script content sent to the active terminal session. Switch to the terminal window to view execution output.";
+"提示：若当前无活跃终端连接，请先在侧边栏连接到目标服务器。" = "Tip: If no terminal session is active, connect to a server from the sidebar first.";
+
+// MARK: - 终端占位视图（TerminalPlaceholderView）
+"从侧边栏选择一个已有会话，\n或新建一个 SSH 连接开始工作。" = "Select an existing session from the sidebar,\nor create a new SSH connection to get started.";
+"新建" = "New";
+"搜索" = "Search";
 

@@ -241,7 +241,7 @@ struct TerminalPlaceholderView: View {
             let connection = SSH2Connection()
 
             connection.onDataReceived = { data in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     terminalViewRef?.feed(data)
 
                     if connectionState == .connecting,
@@ -255,7 +255,7 @@ struct TerminalPlaceholderView: View {
             }
 
             connection.onDisconnected = {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     if connectionState == .connecting {
                         connectionState = .error
                     } else {
@@ -283,7 +283,7 @@ struct TerminalPlaceholderView: View {
                     )
                 }
 
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     ssh2Connection = connection
                     terminalDelegate.sshWriter = { [weak connection] text in
                         try? connection?.write(text)
@@ -294,7 +294,7 @@ struct TerminalPlaceholderView: View {
                 }
 
             } catch {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     connectionState = .error
                     terminalViewRef?.feed("连接失败: \(error.localizedDescription)\r\n".data(using: .utf8) ?? Data())
                 }
@@ -347,12 +347,13 @@ struct TerminalPlaceholderView: View {
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
 
-                Text("从侧边栏选择会话，或新建一个 SSH 连接")
+                Text("从侧边栏选择一个已有会话，\n或新建一个 SSH 连接开始工作。")
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
+            // 主 CTA：新建会话
             Button(action: { onNewSession?() }) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "plus")
@@ -369,8 +370,35 @@ struct TerminalPlaceholderView: View {
             }
             .buttonStyle(.plain)
             .padding(.top, DesignTokens.Spacing.xxs)
+
+            // 快捷键提示
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                keyHint("⌘N")
+                Text("新建")
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Text("·")
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                keyHint("⌘F")
+                Text("搜索")
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+            }
+            .font(DesignTokens.Typography.captionLarge)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func keyHint(_ key: String) -> some View {
+        Text(key)
+            .font(DesignTokens.Typography.codeTiny)
+            .foregroundColor(DesignTokens.Colors.textSecondary)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(DesignTokens.Colors.surfaceCard)
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .stroke(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
     }
 }
 

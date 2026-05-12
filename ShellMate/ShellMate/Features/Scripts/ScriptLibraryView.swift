@@ -568,29 +568,18 @@ struct ScriptLibraryView: View {
 
     private func runScript(_ script: Script) {
         guard !isRunning else { return }
-
-        isRunning = true
         executionLogs = []
 
-        // 追加开始日志
-        appendLog("$ \(script.name)")
-        appendLog("Sending script to active terminal session...")
-
-        // 通过通知发送脚本到活跃终端
+        // 将脚本内容通过通知写入当前活跃终端
         NotificationCenter.default.post(
             name: .runScriptRequested,
             object: nil,
             userInfo: ["scriptContent": script.content, "scriptName": script.name]
         )
 
-        // 模拟执行反馈
-        Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            await MainActor.run {
-                appendLog("Script sent to terminal. Check the terminal for output.")
-                isRunning = false
-            }
-        }
+        appendLog(String(format: NSLocalizedString("▶ 已发送：%@", comment: ""), script.name))
+        appendLog(NSLocalizedString("脚本内容已写入当前终端会话，执行输出请切换到终端窗口查看。", comment: ""))
+        appendLog(NSLocalizedString("提示：若当前无活跃终端连接，请先在侧边栏连接到目标服务器。", comment: ""))
     }
 
     private func appendLog(_ text: String, isError: Bool = false) {

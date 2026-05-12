@@ -34,6 +34,8 @@
 		0001000100010019 /* SidebarSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001A /* SidebarSearchView.swift */; };
 		000100010001001A /* SidebarFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001B /* SidebarFooterView.swift */; };
 		000100010001001B /* SessionFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001C /* SessionFormSheet.swift */; };
+		SFVM_BLD_01 /* SessionFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SFVM_REF_01 /* SessionFormViewModel.swift */; };
+		CNTVM_BLD_01 /* ContentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNTVM_REF_01 /* ContentViewModel.swift */; };
 		000100010001001C /* SessionBasicTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001D /* SessionBasicTab.swift */; };
 		000100010001001D /* SessionAuthTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001E /* SessionAuthTab.swift */; };
 		000100010001001E /* SessionAdvancedTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000200020002001F /* SessionAdvancedTab.swift */; };
@@ -146,6 +148,7 @@
 		SL010003 /* ScriptLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020003 /* ScriptLibraryView.swift */; };
 		SL010004 /* ScriptEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020004 /* ScriptEditorSheet.swift */; };
 		SLS010001 /* SessionLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SLS020001 /* SessionLogStore.swift */; };
+		ATS010001 /* ActiveTerminalStatusStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ATS020001 /* ActiveTerminalStatusStore.swift */; };
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
 		SP010001 /* SplitSessionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SP020001 /* SplitSessionPickerView.swift */; };
@@ -180,6 +183,10 @@
 		W30_BLD_01 /* SessionLogStressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_01 /* SessionLogStressTests.swift */; };
 		W30_BLD_02 /* SFTPRenderPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_02 /* SFTPRenderPerformanceTests.swift */; };
 		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
+		CONN_BLD_01 /* ConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONN_REF_01 /* ConnectionType.swift */; };
+		TELNET_BLD_01 /* TelnetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = TELNET_REF_01 /* TelnetConnection.swift */; };
+		SERIAL_BLD_01 /* SerialConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = SERIAL_REF_01 /* SerialConnection.swift */; };
+		SERIAL_BLD_02 /* SerialPortScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = SERIAL_REF_02 /* SerialPortScanner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -234,6 +241,8 @@
 		000200020002001A /* SidebarSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSearchView.swift; sourceTree = "<group>"; };
 		000200020002001B /* SidebarFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarFooterView.swift; sourceTree = "<group>"; };
 		000200020002001C /* SessionFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormSheet.swift; sourceTree = "<group>"; };
+		SFVM_REF_01 /* SessionFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormViewModel.swift; sourceTree = "<group>"; };
+		CNTVM_REF_01 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
 		000200020002001D /* SessionBasicTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBasicTab.swift; sourceTree = "<group>"; };
 		000200020002001E /* SessionAuthTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAuthTab.swift; sourceTree = "<group>"; };
 		000200020002001F /* SessionAdvancedTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAdvancedTab.swift; sourceTree = "<group>"; };
@@ -336,6 +345,7 @@
 		HW020001 /* HotkeyWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyWindowManager.swift; sourceTree = "<group>"; };
 		IEX020001 /* SessionImportExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionImportExportView.swift; sourceTree = "<group>"; };
 		L0020002 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		L0020003 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		LOG020001 /* LogPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogPanelView.swift; sourceTree = "<group>"; };
 		MOCK_REF_01 /* MockSFTPSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSFTPSession.swift; sourceTree = "<group>"; };
 		MON020001 /* ServerMonitorPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMonitorPanelView.swift; sourceTree = "<group>"; };
@@ -349,6 +359,7 @@
 		SL020003 /* ScriptLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptLibraryView.swift; sourceTree = "<group>"; };
 		SL020004 /* ScriptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditorSheet.swift; sourceTree = "<group>"; };
 		SLS020001 /* SessionLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStore.swift; sourceTree = "<group>"; };
+		ATS020001 /* ActiveTerminalStatusStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTerminalStatusStore.swift; sourceTree = "<group>"; };
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
 		SP020001 /* SplitSessionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitSessionPickerView.swift; sourceTree = "<group>"; };
@@ -383,6 +394,10 @@
 		W30_REF_01 /* SessionLogStressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStressTests.swift; sourceTree = "<group>"; };
 		W30_REF_02 /* SFTPRenderPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRenderPerformanceTests.swift; sourceTree = "<group>"; };
 		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
+		CONN_REF_01 /* ConnectionType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionType.swift; sourceTree = "<group>"; };
+		TELNET_REF_01 /* TelnetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelnetConnection.swift; sourceTree = "<group>"; };
+		SERIAL_REF_01 /* SerialConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialConnection.swift; sourceTree = "<group>"; };
+		SERIAL_REF_02 /* SerialPortScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialPortScanner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -448,6 +463,7 @@
 				0002000200020002 /* ShellMateApp.swift */,
 				0002000200020004 /* AppDelegate.swift */,
 				0002000200020003 /* ContentView.swift */,
+				CNTVM_REF_01 /* ContentViewModel.swift */,
 				CV020001 /* ContentViewActions.swift */,
 				CV020002 /* ContentViewToolbar.swift */,
 				CV020003 /* ContentViewSheets.swift */,
@@ -553,6 +569,7 @@
 				TM020003 /* TmuxSessionStore.swift */,
 				AT020002 /* AutomationTriggerStore.swift */,
 				SLS020001 /* SessionLogStore.swift */,
+				ATS020001 /* ActiveTerminalStatusStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -576,6 +593,7 @@
 			isa = PBXGroup;
 			children = (
 				000200020002001C /* SessionFormSheet.swift */,
+				SFVM_REF_01 /* SessionFormViewModel.swift */,
 				GF020001 /* GroupFormSheet.swift */,
 				000200020002001D /* SessionBasicTab.swift */,
 				000200020002001E /* SessionAuthTab.swift */,
@@ -646,6 +664,7 @@
 			children = (
 				0002000200020009 /* AuthMethod.swift */,
 				000200020002000A /* ConnectionState.swift */,
+				CONN_REF_01 /* ConnectionType.swift */,
 			);
 			path = Enums;
 			sourceTree = "<group>";
@@ -676,8 +695,27 @@
 				DD030001 /* SFTP */,
 				EE030001 /* PortForwarding */,
 				REC030002 /* Recording */,
+				TELNET_GRP_01 /* Telnet */,
+				SERIAL_GRP_01 /* Serial */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		TELNET_GRP_01 /* Telnet */ = {
+			isa = PBXGroup;
+			children = (
+				TELNET_REF_01 /* TelnetConnection.swift */,
+			);
+			path = Telnet;
+			sourceTree = "<group>";
+		};
+		SERIAL_GRP_01 /* Serial */ = {
+			isa = PBXGroup;
+			children = (
+				SERIAL_REF_01 /* SerialConnection.swift */,
+				SERIAL_REF_02 /* SerialPortScanner.swift */,
+			);
+			path = Serial;
 			sourceTree = "<group>";
 		};
 		0004000400040015 /* TabBar */ = {
@@ -1088,11 +1126,16 @@
 				CV010002 /* ContentViewToolbar.swift in Sources */,
 				CV010003 /* ContentViewSheets.swift in Sources */,
 				CV010004 /* ContentViewLifecycleModifier.swift in Sources */,
+				CNTVM_BLD_01 /* ContentViewModel.swift in Sources */,
 				CV010005 /* WindowAppKitHelpers.swift in Sources */,
 				0001000100010006 /* ShellMate.xcdatamodeld in Sources */,
 				0001000100010007 /* PersistenceController.swift in Sources */,
 				0001000100010008 /* AuthMethod.swift in Sources */,
 				0001000100010009 /* ConnectionState.swift in Sources */,
+				CONN_BLD_01 /* ConnectionType.swift in Sources */,
+				TELNET_BLD_01 /* TelnetConnection.swift in Sources */,
+				SERIAL_BLD_01 /* SerialConnection.swift in Sources */,
+				SERIAL_BLD_02 /* SerialPortScanner.swift in Sources */,
 				000100010001000A /* Session.swift in Sources */,
 				000100010001000B /* SessionGroup.swift in Sources */,
 				000100010001000C /* SessionRepository.swift in Sources */,
@@ -1115,6 +1158,7 @@
 				0001000100010019 /* SidebarSearchView.swift in Sources */,
 				000100010001001A /* SidebarFooterView.swift in Sources */,
 				000100010001001B /* SessionFormSheet.swift in Sources */,
+				SFVM_BLD_01 /* SessionFormViewModel.swift in Sources */,
 				GF010001 /* GroupFormSheet.swift in Sources */,
 				000100010001001C /* SessionBasicTab.swift in Sources */,
 				000100010001001D /* SessionAuthTab.swift in Sources */,
@@ -1205,6 +1249,7 @@
 				REC010002 /* RecordingDialogView.swift in Sources */,
 				LOG010001 /* LogPanelView.swift in Sources */,
 				SLS010001 /* SessionLogStore.swift in Sources */,
+				ATS010001 /* ActiveTerminalStatusStore.swift in Sources */,
 				W2701_BUILD /* BaseViewModel.swift in Sources */,
 				W2702_BUILD /* ServiceProtocols.swift in Sources */,
 				W28_BLD_01 /* WelcomeViewModel.swift in Sources */,
@@ -1272,6 +1317,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				L0020002 /* en */,
+				L0020003 /* zh-Hans */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

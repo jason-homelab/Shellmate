@@ -34,55 +34,59 @@ struct ColorsSettingsView: View {
     // MARK: - 视图
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+        ScrollView { settingsContent }
+    }
 
-                // ① 终端背景色
-                settingsSection(title: "终端背景色") {
-                    colorRow(
-                        label: "Background Color",
-                        description: "终端主背景颜色",
-                        hex: $backgroundHex
-                    )
-                }
+    /// 可供父视图直接嵌入的内容（不含 ScrollView 包装）
+    /// 注意：已在内部附加 onAppear 以确保嵌入场景下 ANSI 数据同样可以加载
+    var settingsContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
 
-                Divider().padding(.vertical, 14)
-
-                // ② 前景/文字色
-                settingsSection(title: "前景 / 文字色") {
-                    colorRow(
-                        label: "Foreground Color",
-                        description: "终端文字默认颜色",
-                        hex: $foregroundHex
-                    )
-                }
-
-                Divider().padding(.vertical, 14)
-
-                // ③ ANSI 16 色调色板
-                settingsSection(title: "高亮颜色（ANSI 16色）") {
-                    ansiPaletteGrid
-                }
-
-                Divider().padding(.vertical, 14)
-
-                // ④ 重置按钮
-                HStack {
-                    Spacer()
-                    Button(action: resetToDefault) {
-                        Text("重置为默认")
-                            .font(DesignTokens.Typography.labelLarge)
-                            .foregroundColor(DesignTokens.Colors.textSecondary)
-                            .padding(.horizontal, DesignTokens.Spacing.lg)
-                            .padding(.vertical, DesignTokens.Spacing.xs)
-                            .background(DesignTokens.Colors.surfaceHover)
-                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                }
+            // ① 终端背景色
+            settingsSection(title: "终端背景色") {
+                colorRow(
+                    label: "Background Color",
+                    description: "终端主背景颜色",
+                    hex: $backgroundHex
+                )
             }
-            .padding(DesignTokens.Spacing.lg)
+
+            Divider().padding(.vertical, 14)
+
+            // ② 前景/文字色
+            settingsSection(title: "前景 / 文字色") {
+                colorRow(
+                    label: "Foreground Color",
+                    description: "终端文字默认颜色",
+                    hex: $foregroundHex
+                )
+            }
+
+            Divider().padding(.vertical, 14)
+
+            // ③ ANSI 16 色调色板
+            settingsSection(title: "高亮颜色（ANSI 16色）") {
+                ansiPaletteGrid
+            }
+
+            Divider().padding(.vertical, 14)
+
+            // ④ 重置按钮
+            HStack {
+                Spacer()
+                Button(action: resetToDefault) {
+                    Text("重置为默认")
+                        .font(DesignTokens.Typography.labelLarge)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .padding(.horizontal, DesignTokens.Spacing.lg)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(DesignTokens.Colors.surfaceHover)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
         }
+        .padding(DesignTokens.Spacing.lg)
         .onAppear { loadANSI() }
     }
 

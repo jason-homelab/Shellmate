@@ -29,6 +29,7 @@ struct SessionLogEntry: Identifiable {
 // MARK: - 日志 Store
 
 /// 全局会话日志 Store（内存中保留最近 5000 条）
+@MainActor
 final class SessionLogStore: ObservableObject {
     static let shared = SessionLogStore()
     private init() {}
@@ -37,23 +38,18 @@ final class SessionLogStore: ObservableObject {
     private let maxEntries = 5000
 
     func append(_ entry: SessionLogEntry) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.entries.append(entry)
-            if self.entries.count > self.maxEntries {
-                self.entries.removeFirst(self.entries.count - self.maxEntries)
-            }
+        entries.append(entry)
+        if entries.count > maxEntries {
+            entries.removeFirst(entries.count - maxEntries)
         }
     }
 
     func clear() {
-        DispatchQueue.main.async { self.entries.removeAll() }
+        entries.removeAll()
     }
 
     func clearSession(_ name: String) {
-        DispatchQueue.main.async {
-            self.entries.removeAll { $0.sessionName == name }
-        }
+        entries.removeAll { $0.sessionName == name }
     }
 
     /// 将日志导出为 txt 文本

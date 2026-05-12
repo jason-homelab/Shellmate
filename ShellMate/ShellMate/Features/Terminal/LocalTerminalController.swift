@@ -266,9 +266,7 @@ extension LocalTerminalController: SwiftTerm.TerminalViewDelegate {
         if visual {
             Task { @MainActor in
                 source.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    source.layer?.backgroundColor = .clear
-                }
+                Task { try? await Task.sleep(nanoseconds: 120_000_000); source.layer?.backgroundColor = .clear }
             }
         } else {
             NSSound.beep()

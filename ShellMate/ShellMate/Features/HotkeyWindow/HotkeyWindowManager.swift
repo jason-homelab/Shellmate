@@ -41,13 +41,13 @@ final class HotkeyWindowManager {
         // 全局监听：任意 App 激活时响应（需 Input Monitoring 权限，Sandbox 版降级处理）
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.isHotkey(event) else { return }
-            DispatchQueue.main.async { self.toggle() }
+            Task { @MainActor [weak self] in self?.toggle() }
         }
 
         // 本地监听：ShellMate 自身为 frontmost 时响应（Sandbox 无需额外权限）
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.isHotkey(event) else { return event }
-            DispatchQueue.main.async { self.toggle() }
+            Task { @MainActor [weak self] in self?.toggle() }
             return nil   // 消费事件，不传递给当前 firstResponder
         }
     }

@@ -30,6 +30,7 @@ extension ContentView {
     var groupFormSheet: some View {
         GroupFormSheet(
             editingGroup: groupStore.editingGroup,
+            defaultParentId: groupStore.defaultParentId,
             onSave: { group in
                 Task {
                     await groupStore.saveGroup(group)
@@ -54,8 +55,8 @@ extension ContentView {
                 .padding(.bottom, DesignTokens.Spacing.xxxs)
 
             Button {
-                showSharePopover = false
-                showImportExportDialog = true
+                panels.showSharePopover = false
+                panels.showImportExportDialog = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "arrow.up.arrow.down.square")
@@ -82,8 +83,8 @@ extension ContentView {
                 .padding(.bottom, DesignTokens.Spacing.xxxs)
 
             Button {
-                showSharePopover = false
-                showSSHConfigImport = true
+                panels.showSharePopover = false
+                panels.showSSHConfigImport = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "terminal")
@@ -117,7 +118,7 @@ extension ContentView {
     var sshConfigImportSheet: some View {
         SSHConfigImportView(
             onImport: { sessions in
-                showSSHConfigImport = false
+                panels.showSSHConfigImport = false
                 Task {
                     for session in sessions {
                         await sessionStore.saveSession(session)
@@ -125,7 +126,7 @@ extension ContentView {
                 }
             },
             onCancel: {
-                showSSHConfigImport = false
+                panels.showSSHConfigImport = false
             }
         )
     }
@@ -144,7 +145,7 @@ extension ContentView {
     func languageOption(label: String, tag: String) -> some View {
         Button(action: {
             appLanguage = tag
-            showLanguagePicker = false
+            panels.showLanguagePicker = false
         }) {
             HStack {
                 Text(label)

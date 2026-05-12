@@ -74,7 +74,7 @@ final class Socks5Proxy {
         }
 
         isRunning = true
-        DispatchQueue.main.async { self.rule.status = .active }
+        Task { @MainActor [self] in self.rule.status = .active }
 
         let fd = listenerFD
         listenerQueue.async { [weak self] in
@@ -92,7 +92,7 @@ final class Socks5Proxy {
             Darwin.close(listenerFD)
             listenerFD = -1
         }
-        DispatchQueue.main.async { self.rule.status = .stopped }
+        Task { @MainActor [self] in self.rule.status = .stopped }
         AppLogger.tunnel.debug("[SOCKS5] 已停止监听端口 \(self.rule.localPort)")
     }
 

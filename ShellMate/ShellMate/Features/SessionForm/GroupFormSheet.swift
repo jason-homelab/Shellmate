@@ -7,6 +7,8 @@ struct GroupFormSheet: View {
     // MARK: - 属性
 
     var editingGroup: SessionGroup?
+    /// 新建子分组时预设的父分组 ID
+    var defaultParentId: UUID? = nil
     var onSave: ((SessionGroup) -> Void)?
     var onCancel: (() -> Void)?
 
@@ -123,7 +125,8 @@ struct GroupFormSheet: View {
         } else {
             group = SessionGroup(
                 name: name.trimmingCharacters(in: .whitespaces),
-                colorHex: colorHex
+                colorHex: colorHex,
+                parentId: defaultParentId
             )
         }
         onSave?(group)

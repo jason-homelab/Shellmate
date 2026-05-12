@@ -41,7 +41,7 @@ enum ConnectionState: Int, CaseIterable, Identifiable {
         case .connecting:
             return Color(hex: "#F0A500") // 黄色
         case .connected:
-            return Color(hex: "#2DCE7A") // 绿色
+            return Color(hex: "#34D399") // Figma #34d399 connected green
         case .error:
             return Color(hex: "#F04060") // 红色
         case .disconnecting:

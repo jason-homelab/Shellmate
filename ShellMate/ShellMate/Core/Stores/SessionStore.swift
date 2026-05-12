@@ -17,9 +17,14 @@ final class SessionStore: ObservableObject {
     /// 搜索关键词
     @Published var searchQuery: String = "" {
         didSet {
-            Task { await performSearch() }
+            // BUG-003：取消前一个搜索 Task，防止多个并发任务以不确定顺序覆盖 filteredSessions
+            searchTask?.cancel()
+            searchTask = Task { await performSearch() }
         }
     }
+
+    /// 当前搜索任务（用于取消旧任务）
+    private var searchTask: Task<Void, Never>?
 
     /// 当前选中的会话 ID
     @Published var selectedSessionId: UUID?
@@ -44,6 +49,10 @@ final class SessionStore: ObservableObject {
     private let repository: SessionRepository
     private var cancellables = Set<AnyCancellable>()
 
+    /// BUG-005：拖拽进行中的本地排序快照（UUID → sortOrder）
+    /// loadSessions() 检测到此快照非 nil 时会恢复拖拽顺序，防止 Core Data 刷新回弹
+    private var dragSortOrders: [UUID: Int32]?
+
     // MARK: - 计算属性
 
     /// 当前选中的会话
@@ -65,9 +74,32 @@ final class SessionStore: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        // BUG-005：快照拖拽中的本地排序，防止 Core Data 刷新覆盖尚未持久化的重排
+        let liveDragOrder = dragSortOrders
+
         do {
-            sessions = try await repository.fetchAll()
+            var fetched = try await repository.fetchAll()
                 .sorted { $0.sortOrder < $1.sortOrder }
+
+            // 在 await 返回后从当前 sessions 读取最新连接状态：
+            // SSH 连接可能在 repository.fetchAll() 挂起期间完成，此时 updateConnectionState 已
+            // 将 sessions[i].connectionState 置为 .connected。若在 await 前快照，则会错过这次更新，
+            // 导致 sessions = fetched 将状态覆盖回 .offline，引发侧边栏计数器永远显示 0。
+            for i in fetched.indices {
+                if let current = sessions.first(where: { $0.id == fetched[i].id }),
+                   current.connectionState != .offline {
+                    fetched[i].connectionState = current.connectionState
+                }
+                // 恢复拖拽排序（拖拽结束前 persistSortOrder 未调用时保持本地顺序）
+                if let dragOrder = liveDragOrder?[fetched[i].id] {
+                    fetched[i].sortOrder = dragOrder
+                }
+            }
+            // 若拖拽进行中，按本地排序重新排列
+            if liveDragOrder != nil {
+                fetched.sort { $0.sortOrder < $1.sortOrder }
+            }
+            sessions = fetched
             await performSearch()
         } catch {
             errorMessage = "加载会话失败: \(error.localizedDescription)"
@@ -90,6 +122,7 @@ final class SessionStore: ObservableObject {
 
     /// 执行搜索
     private func performSearch() async {
+        guard !Task.isCancelled else { return }  // BUG-003：被新搜索任务取消时提前退出
         let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if query.isEmpty {
@@ -174,6 +207,9 @@ final class SessionStore: ObservableObject {
         let updatedIds = Dictionary(uniqueKeysWithValues: groupSessions.map { ($0.id, $0) })
         sessions = sessions.map { updatedIds[$0.id] ?? $0 }
         filteredSessions = filteredSessions.map { updatedIds[$0.id] ?? $0 }
+
+        // BUG-005：记录拖拽中的排序快照，供 loadSessions() 恢复使用，防止 Core Data 刷新回弹
+        dragSortOrders = Dictionary(uniqueKeysWithValues: groupSessions.map { ($0.id, $0.sortOrder) })
     }
 
     /// 将当前内存中的排序持久化到 Core Data（拖拽结束时调用）
@@ -183,8 +219,10 @@ final class SessionStore: ObservableObject {
 
         do {
             try await repository.updateSortOrder(sessions: groupSessions)
+            dragSortOrders = nil  // BUG-005：持久化成功后清除快照
         } catch {
             errorMessage = "更新排序失败: \(error.localizedDescription)"
+            dragSortOrders = nil
             await loadSessions()
         }
     }
@@ -196,9 +234,11 @@ final class SessionStore: ObservableObject {
         do {
             let groupSessions = sessions.filter { $0.groupId == groupId }
             try await repository.updateSortOrder(sessions: groupSessions)
+            dragSortOrders = nil  // 持久化成功后清除快照，防止后续 loadSessions 重复叠加旧排序
             await loadSessions()
         } catch {
             errorMessage = "更新排序失败: \(error.localizedDescription)"
+            dragSortOrders = nil
             await loadSessions()
         }
     }
@@ -229,11 +269,14 @@ final class SessionStore: ObservableObject {
 
     /// 更新会话连接状态
     func updateConnectionState(for sessionId: UUID, state: ConnectionState) {
-        if let index = sessions.firstIndex(where: { $0.id == sessionId }) {
-            sessions[index].connectionState = state
+        // 使用 map 整体替换数组，确保 @Published 的 objectWillChange 一定触发
+        sessions = sessions.map { s in
+            guard s.id == sessionId else { return s }
+            var copy = s; copy.connectionState = state; return copy
         }
-        if let index = filteredSessions.firstIndex(where: { $0.id == sessionId }) {
-            filteredSessions[index].connectionState = state
+        filteredSessions = filteredSessions.map { s in
+            guard s.id == sessionId else { return s }
+            var copy = s; copy.connectionState = state; return copy
         }
     }
 

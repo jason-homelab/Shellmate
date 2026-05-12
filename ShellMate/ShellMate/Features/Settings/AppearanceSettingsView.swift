@@ -143,32 +143,35 @@ struct AppearanceSettingsView: View {
     // MARK: - 视图
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // S02-B：颜色主题
-                themeSectionView
+        ScrollView { settingsContent }
+    }
 
-                Divider().padding(.vertical, DesignTokens.Spacing.xl)
+    /// 可供父视图直接嵌入的内容（不含 ScrollView 包装）
+    var settingsContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // S02-B：颜色主题
+            themeSectionView
 
-                // S02-C：字体配置
-                fontSectionView
+            Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
-                Divider().padding(.vertical, DesignTokens.Spacing.xl)
+            // S02-C：字体配置
+            fontSectionView
 
-                // S02-E：光标配置
-                cursorSectionView
+            Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
-                Divider().padding(.vertical, DesignTokens.Spacing.xl)
+            // S02-E：光标配置
+            cursorSectionView
 
-                // S02-F：窗口配置
-                windowSectionView
+            Divider().padding(.vertical, DesignTokens.Spacing.xl)
 
-                Spacer().frame(height: 16)
-            }
-            .padding(.horizontal, DesignTokens.Spacing.xl)
-            .padding(.top, DesignTokens.Spacing.xl)
-            .padding(.bottom, DesignTokens.Spacing.sm)
+            // S02-F：窗口配置
+            windowSectionView
+
+            Spacer().frame(height: 16)
         }
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.top, DesignTokens.Spacing.xl)
+        .padding(.bottom, DesignTokens.Spacing.sm)
     }
 
     // MARK: - 颜色主题 Section
@@ -309,10 +312,8 @@ struct AppearanceSettingsView: View {
                   url.pathExtension.lowercased() == "itermcolors" else { return }
             guard let theme = parseItermColors(url: url) else { return }
             AppTheme.saveCustomTheme(theme)
-            DispatchQueue.main.async {
-                availableThemes = AppTheme.allThemes
-                selectedThemeId = theme.id
-            }
+            availableThemes = AppTheme.allThemes
+            selectedThemeId = theme.id
         }
     }
 

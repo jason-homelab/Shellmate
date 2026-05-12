@@ -214,7 +214,7 @@ final class LocalPortForwarder {
     }
 
     private func notifyStatus(_ status: TunnelStatus) {
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.rule.status = status
             self?.onStatusChange?(status)
         }

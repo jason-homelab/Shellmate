@@ -43,7 +43,8 @@ struct ShellMateApp: App {
 
     @CommandsBuilder
     private var appCommands: some Commands {
-        // 文件菜单
+
+        // ── File 菜单 ──────────────────────────────────────────────────────────
         CommandGroup(replacing: .newItem) {
             Button("新建会话") {
                 NotificationCenter.default.post(name: .newSessionRequested, object: nil)
@@ -58,11 +59,9 @@ struct ShellMateApp: App {
             Divider()
 
             Button("新建标签页") {
-                // 与侧边栏双击/Tab栏+按钮保持一致：连接选中会话或打开新建会话表单
                 NotificationCenter.default.post(name: .newTabRequested, object: nil)
             }
             .keyboardShortcut("t", modifiers: .command)
-            // 说明：⌘T 触发与 Tab 栏 + 按钮相同的逻辑，工具栏不再重复展示该按钮
 
             Button("关闭标签页") {
                 NotificationCenter.default.post(name: .closeTabRequested, object: nil)
@@ -77,8 +76,9 @@ struct ShellMateApp: App {
             .keyboardShortcut("n", modifiers: [.command, .option])
         }
 
-        // 连接菜单
-        CommandMenu("连接") {
+        // ── Session 菜单（原"连接" + 原"Tools" Hotkey）────────────────────────
+        // 使用名词"Session"符合 macOS HIG 菜单命名惯例
+        CommandMenu("Session") {
             Button("连接选中会话") {
                 NotificationCenter.default.post(name: .connectSessionRequested, object: nil)
             }
@@ -89,16 +89,36 @@ struct ShellMateApp: App {
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
 
-            Divider()
-
             Button("断开所有连接") {
                 NotificationCenter.default.post(name: .disconnectAllRequested, object: nil)
             }
+
+            Divider()
+
+            // 导入 / 导出（原分散在工具栏）
+            Button("导入会话...") {
+                NotificationCenter.default.post(name: .importSessionsRequested, object: nil)
+            }
+
+            Button("导出会话...") {
+                NotificationCenter.default.post(name: .exportSessionsRequested, object: nil)
+            }
+
+            Divider()
+
+            // Hotkey Window（原 Tools 菜单，合并至此）
+            // ⌥Space 由全局 NSEvent monitor 直接捕获，此处为发现性入口
+            Button("呼出 / 隐藏 Hotkey 终端") {
+                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
+            }
         }
 
-        // 视图菜单
-        CommandMenu("视图") {
-            // 外观模式子菜单
+        // ── View 菜单：注入系统已有 View 菜单，消除重复 ──────────────────────
+        // CommandGroup(after: .toolbar) 将条目追加到系统 View 菜单的工具栏区块之后，
+        // 不会创建新的顶级菜单，从而修复"View"重复出现的问题。
+        CommandGroup(after: .toolbar) {
+            Divider()
+
             Menu("外观模式") {
                 Button(action: { windowMode = "auto" }) {
                     Label(
@@ -151,9 +171,7 @@ struct ShellMateApp: App {
 
             Divider()
 
-            // 直接选择标签页 (Cmd+1 到 Cmd+9)
             ForEach(1...9, id: \.self) { index in
-                // 使用 NSLocalizedString + String.localizedStringWithFormat 以支持菜单栏多语言
                 Button(String.localizedStringWithFormat(
                     NSLocalizedString("标签页 %d", comment: "Tab selection menu item"), index
                 )) {
@@ -167,8 +185,8 @@ struct ShellMateApp: App {
             }
         }
 
-        // 终端菜单
-        CommandMenu("终端") {
+        // ── Terminal 菜单 ──────────────────────────────────────────────────────
+        CommandMenu("Terminal") {
             Button("清屏") {
                 NotificationCenter.default.post(name: .clearTerminalRequested, object: nil)
             }
@@ -219,19 +237,9 @@ struct ShellMateApp: App {
             .keyboardShortcut("e", modifiers: [.command, .shift])
         }
 
-        // 工具菜单（Hotkey Window 等快捷工具）
-        CommandMenu("工具") {
-            Button("呼出 / 隐藏 Hotkey 终端") {
-                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
-            }
-            // 注意：⌥Space 由全局 NSEvent monitor 直接捕获，菜单此处仅作发现性入口
-            // （.option + .space 在 SwiftUI Commands 中无法可靠绑定）
-        }
-
-        // 帮助菜单扩展
+        // ── Help 菜单 ──────────────────────────────────────────────────────────
         CommandGroup(replacing: .help) {
             Button("ShellMate 帮助") {
-                // 打开帮助文档
                 if let url = URL(string: "https://shellmate.app/docs") {
                     NSWorkspace.shared.open(url)
                 }
@@ -254,9 +262,7 @@ struct ShellMateApp: App {
 
             Divider()
 
-            Button("检查更新...") {
-                // 检查更新逻辑
-            }
+            Button("检查更新...") { }
         }
     }
 

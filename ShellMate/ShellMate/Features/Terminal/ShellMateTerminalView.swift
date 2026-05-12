@@ -822,9 +822,7 @@ struct ShellMateTerminalViewRepresentable: NSViewRepresentable {
         view.setTheme(theme)
         view.delegate = delegate
 
-        DispatchQueue.main.async {
-            self.terminalView = view
-        }
+        Task { @MainActor [self] in self.terminalView = view }
 
         return view
     }

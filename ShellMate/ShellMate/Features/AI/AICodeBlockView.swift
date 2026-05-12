@@ -72,9 +72,7 @@ struct AICodeBlockView: View {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(code, forType: .string)
             withAnimation(.easeInOut(duration: 0.15)) { isCopied = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation { isCopied = false }
-            }
+            Task { try? await Task.sleep(nanoseconds: 2_000_000_000); withAnimation { isCopied = false } }
         } label: {
             HStack(spacing: DesignTokens.Spacing.nano) {
                 Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
@@ -95,9 +93,7 @@ struct AICodeBlockView: View {
         Button {
             onInsert?(cleanCommand)
             withAnimation(.easeInOut(duration: 0.15)) { isInserted = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation { isInserted = false }
-            }
+            Task { try? await Task.sleep(nanoseconds: 1_500_000_000); withAnimation { isInserted = false } }
         } label: {
             HStack(spacing: DesignTokens.Spacing.nano) {
                 Image(systemName: isInserted ? "checkmark.circle.fill" : "terminal")

@@ -14,24 +14,28 @@ struct AISettingsView: View {
     enum SaveResult { case success, empty }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
-                // 启用开关
-                enableSection
+        ScrollView { settingsContent }
+    }
 
-                if store.isEnabled {
-                    Divider().opacity(0.5)
-                    providerSection
-                    Divider().opacity(0.5)
-                    apiKeySection
-                    Divider().opacity(0.5)
-                    modelSection
-                    Divider().opacity(0.5)
-                    featuresSection
-                }
+    /// 可供父视图直接嵌入的内容（不含 ScrollView 包装）
+    /// 注意：已在内部附加 onAppear / onChange 以确保嵌入场景下数据同样可以加载
+    var settingsContent: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
+            // 启用开关
+            enableSection
+
+            if store.isEnabled {
+                Divider().opacity(0.5)
+                providerSection
+                Divider().opacity(0.5)
+                apiKeySection
+                Divider().opacity(0.5)
+                modelSection
+                Divider().opacity(0.5)
+                featuresSection
             }
-            .padding(DesignTokens.Spacing.xl)
         }
+        .padding(DesignTokens.Spacing.xl)
         .onAppear {
             apiKeyInput = store.loadAPIKey(for: store.provider)
         }
@@ -182,9 +186,7 @@ struct AISettingsView: View {
                         // 保存后立即清零 @State 内存中的明文 API Key
                         apiKeyInput.removeAll(keepingCapacity: false)
                         withAnimation { saveKeyResult = keyToSave.isEmpty ? .empty : .success }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            withAnimation { saveKeyResult = nil }
-                        }
+                        Task { try? await Task.sleep(nanoseconds: 2_000_000_000); withAnimation { saveKeyResult = nil } }
                     } label: {
                         Text("保存")
                             .font(DesignTokens.Typography.labelMedium)

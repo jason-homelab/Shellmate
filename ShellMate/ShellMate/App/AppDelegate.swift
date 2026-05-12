@@ -12,7 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // ① 类级别：在 WindowGroup 创建任何 NSWindow 之前禁用自动标签合并
         NSWindow.allowsAutomaticWindowTabbing = false
 
-        // ② 启动时读取用户保存的外观模式并应用（保留用户选择，默认 "dark"）
+        // ② 启动时读取用户保存的外观模式并应用（保留用户选择，默认 "light"）
         let savedMode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "light"
         applyWindowMode(savedMode)
     }
@@ -36,7 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: UserDefaults.standard,
             queue: .main
         ) { [weak self] _ in
-            let mode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "auto"
+            let mode = UserDefaults.standard.string(forKey: Self.windowModeKey) ?? "light"
             self?.applyWindowMode(mode)
         }
 
@@ -64,11 +64,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 外观模式
 
     private func applyWindowMode(_ mode: String) {
-        // "light" = 浅色；其余（dark / auto）= 深色优先
-        if mode == "light" {
+        switch mode {
+        case "light":
             NSApp.appearance = NSAppearance(named: .aqua)
-        } else {
+        case "dark":
             NSApp.appearance = NSAppearance(named: .darkAqua)
+        default:
+            // "auto" 或未知值：置 nil 表示跟随系统外观，不强制覆盖
+            NSApp.appearance = nil
         }
     }
 
@@ -184,4 +187,14 @@ extension Notification.Name {
 
     // Hotkey Window（任务 13.8）
     static let hotkeyWindowToggleRequested = Notification.Name("hotkeyWindowToggleRequested")
+
+    // 会话连接状态同步（TerminalController → SessionStore）
+    static let sessionConnectionStateChanged = Notification.Name("app.shellmate.sessionConnectionStateChanged")
+
+    // 侧边栏右键分屏（SessionListView → ContentView）
+    static let splitSessionRequested = Notification.Name("app.shellmate.splitSessionRequested")
+
+    // 导入 / 导出会话（Session 菜单）
+    static let importSessionsRequested = Notification.Name("app.shellmate.importSessionsRequested")
+    static let exportSessionsRequested = Notification.Name("app.shellmate.exportSessionsRequested")
 }

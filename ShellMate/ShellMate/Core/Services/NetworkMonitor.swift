@@ -36,7 +36,7 @@ final class NetworkMonitor: ObservableObject {
 
     private init() {
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.isConnected = path.status == .satisfied
                 self.connectionType = self.detectType(from: path)
