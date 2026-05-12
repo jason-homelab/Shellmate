@@ -37,6 +37,9 @@ final class SSH2Connection {
     /// 是否正在读取
     private var isReading = false
 
+    /// TCP 握手延迟（毫秒），连接成功后设置，nil 表示尚未连接
+    private(set) var connectionLatencyMs: Int? = nil
+
     /// libssh2 线程互斥锁：防止 readLoop 与 write() 并发调用 libssh2 导致内部状态损坏
     private let libssh2Lock = NSLock()
 
@@ -74,8 +77,10 @@ final class SSH2Connection {
         // 设置超时
         bridge.setTimeout(30000)
 
-        // TCP 连接
+        // TCP 连接（计时以近似网络 RTT）
+        let tcpStart = Date()
         try bridge.tcpConnect(host: host, port: port)
+        connectionLatencyMs = max(1, Int(Date().timeIntervalSince(tcpStart) * 1000))
 
         // SSH 握手
         try bridge.handshake()
@@ -126,8 +131,10 @@ final class SSH2Connection {
         // 设置超时
         bridge.setTimeout(30000)
 
-        // TCP 连接
+        // TCP 连接（计时以近似网络 RTT）
+        let tcpStart = Date()
         try bridge.tcpConnect(host: host, port: port)
+        connectionLatencyMs = max(1, Int(Date().timeIntervalSince(tcpStart) * 1000))
 
         // SSH 握手
         try bridge.handshake()
@@ -179,8 +186,10 @@ final class SSH2Connection {
         // 设置超时
         bridge.setTimeout(30000)
 
-        // TCP 连接
+        // TCP 连接（计时以近似网络 RTT）
+        let tcpStart = Date()
         try bridge.tcpConnect(host: host, port: port)
+        connectionLatencyMs = max(1, Int(Date().timeIntervalSince(tcpStart) * 1000))
 
         // SSH 握手
         try bridge.handshake()
@@ -277,7 +286,7 @@ final class SSH2Connection {
 
         bridge.disconnect()
 
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.onDisconnected?()
         }
     }
@@ -327,7 +336,7 @@ final class SSH2Connection {
         // 读取结束，断开连接
         if isReading {
             isReading = false
-            DispatchQueue.main.async { [weak self] in
+            Task { @MainActor [weak self] in
                 self?.onDisconnected?()
             }
         }

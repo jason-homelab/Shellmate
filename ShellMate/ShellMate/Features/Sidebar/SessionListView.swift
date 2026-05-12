@@ -27,10 +27,16 @@ struct SessionListView: View {
                     groupSection(group)
                 }
             }
-            // Figma 8:2：行左边距=4px（行宽248 in 256），上间距=6px（rows start top=50，header ends top=44）
-            .padding(.horizontal, DesignTokens.Spacing.xxs)
-            .padding(.vertical, DesignTokens.Spacing.xs)
+            // Figma 8:15/8:20: left=4, trailing=4 → 行容器230pt，选中行再加6pt trailing → 蓝色背景224pt
+            // 非选中行填满230pt，悬停背景更贴近 Figma（8:20 rows overflow to ~248px in 256px frame）
+            .padding(.leading, 4)
+            .padding(.trailing, 4)
+            .padding(.top, 14)
+            .padding(.bottom, 4)
         }
+        // 移除 ScrollView 默认白色背景，让父层 surfaceWindow (#F5F5F7) 透出
+        .scrollContentBackground(.hidden)
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     // MARK: - 未分组会话
@@ -69,7 +75,6 @@ struct SessionListView: View {
         VStack(spacing: 0) {
             GroupHeaderView(
                 group: group,
-                sessionCount: sessionsInGroup.count,
                 onToggle: {
                     Task {
                         await groupStore.toggleExpanded(group)
@@ -106,7 +111,6 @@ struct SessionListView: View {
         if group.isExpanded {
             ForEach(sessionsInGroup) { session in
                 sessionRow(session)
-                    .padding(.leading, DesignTokens.Spacing.lg)
             }
         }
     }
@@ -135,15 +139,16 @@ struct SessionListView: View {
 
             SessionRowView(
                 session: session,
-                isSelected: sessionStore.selectedSessionId == session.id,
-                onDoubleClick: {
-                    onConnect?(session)
-                }
+                isSelected: sessionStore.selectedSessionId == session.id
             )
             .opacity(draggedSessionId == session.id ? 0.4 : 1.0)
+            // 选中行收窄至 224pt（非选中行填满 230pt 更接近 Figma 8:15/8:20 比例）
+            .padding(.trailing, sessionStore.selectedSessionId == session.id ? 6 : 0)
+            .animation(DesignTokens.Animation.hover, value: sessionStore.selectedSessionId == session.id)
         }
         .onTapGesture {
-            // Figma-Spec-v2 §02：单击侧边栏会话行即切换/连接（无需双击）
+            // Figma-Spec-v2 §02：单击即连接；onDoubleClick 已移除（BUG-002：双击会触发父级
+            // 单击手势导致 onConnect 调用两次，创建重复标签页）
             onConnect?(session)
         }
         .contextMenu {
@@ -176,15 +181,27 @@ struct SessionListView: View {
             openWindow(id: "main")
         }
 
+        Menu("分屏打开") {
+            Button("左右分屏") {
+                NotificationCenter.default.post(
+                    name: .splitSessionRequested,
+                    object: nil,
+                    userInfo: ["sessionId": session.id, "layout": "horizontal"]
+                )
+            }
+            Button("上下分屏") {
+                NotificationCenter.default.post(
+                    name: .splitSessionRequested,
+                    object: nil,
+                    userInfo: ["sessionId": session.id, "layout": "vertical"]
+                )
+            }
+        }
+
         Divider()
 
         Button("编辑") {
             // 从 store 取最新快照：拖拽后 session 闭包参数可能已过期（groupId 为旧值）
-            let fresh = sessionStore.sessions.first(where: { $0.id == session.id }) ?? session
-            sessionStore.showEditSessionForm(for: fresh)
-        }
-
-        Button("重命名") {
             let fresh = sessionStore.sessions.first(where: { $0.id == session.id }) ?? session
             sessionStore.showEditSessionForm(for: fresh)
         }
@@ -240,8 +257,7 @@ struct SessionListView: View {
         }
 
         Button("新建子分组") {
-            // 创建子分组时设置父分组
-            groupStore.showNewGroupForm()
+            groupStore.showNewGroupForm(parentId: group.id)
         }
 
         Divider()

@@ -102,6 +102,10 @@ final class TerminalController: ObservableObject {
 
     /// libssh2 SSH 连接
     private var sshConnection: SSH2Connection?
+    /// Telnet 连接（connectionType == .telnet 时使用）
+    private var telnetConnection: TelnetConnection?
+    /// 串口连接（connectionType == .serial 时使用）
+    private var serialConnection: SerialConnection?
 
     /// SwiftTerm 终端视图（弱引用，由 TerminalView 持有）
     weak var terminalView: SwiftTerm.TerminalView?
@@ -109,6 +113,8 @@ final class TerminalController: ObservableObject {
     @Published private(set) var state: State = .disconnected
     /// 连接成功时间（用于状态栏显示已连接时长）
     @Published private(set) var connectedAt: Date? = nil
+    /// TCP 握手延迟（毫秒），用于状态栏显示网络 RTT；nil 表示未测量或已断开
+    @Published private(set) var latencyMs: Int? = nil
     var reconnectConfig = ReconnectConfig()
     @Published var terminalSize: TerminalSize = .default
     @Published var terminalTitle: String = ""
@@ -214,9 +220,8 @@ final class TerminalController: ObservableObject {
         Task { @MainActor in
             SyncInputStore.shared.unregister(sessionId: id)
         }
-        Task { [weak self] in
-            await self?.disconnect()
-        }
+        // 注意：disconnect() 不在此处调用——deinit 中 [weak self] 捕获到的 self 已为 nil，
+        // 实际断连由 TerminalView.onDisappear 负责，确保 SSH 连接在对象释放前关闭。
     }
 
     /// W12.6：供外部查询的会话标题（用于 SyncInputStore.SessionInfo）
@@ -234,12 +239,32 @@ final class TerminalController: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        // 将 TerminalViewModel 的 @Published 变化（serverMetrics 等）转发到本 controller 的
+        // objectWillChange，确保 TerminalView 在指标更新时重渲染，onChange(of:) 能正确触发
+        terminalVM.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     // MARK: - 连接管理
 
     func connect() async throws {
         guard state == .disconnected || state.isFailed else { return }
+        // SEC-002：所有退出路径（正常 return / throw）都清除临时密码，防止明文凭证在内存中残留
+        defer { temporaryPassword = nil }
+
+        // Telnet / Serial 走独立连接路径（无主机密钥校验、无凭据金库查询）
+        switch session.connectionType {
+        case .telnet:
+            try await connectTelnet()
+            return
+        case .serial:
+            try await connectSerial()
+            return
+        case .ssh:
+            break
+        }
 
         // 凭据预检查：根据认证方式决定是否需要向导或编辑
         switch session.authMethod {
@@ -396,7 +421,9 @@ final class TerminalController: ObservableObject {
                     newFingerprint: fingerprint
                 )
             case .failure:
-                return // 校验失败时放行，不阻止连接
+                // SEC-001：KnownHostsManager 查询失败时拒绝连接，不静默放行
+                // 放行将允许 MITM 攻击者通过诱导数据库损坏绕过主机密钥验证
+                throw SSHError.hostKeyVerificationFailed(fingerprint: fingerprint.sha256Display)
             }
         }
 
@@ -442,6 +469,7 @@ final class TerminalController: ObservableObject {
 
             state = .connected
             connectedAt = Date()
+            latencyMs = sshConnection?.connectionLatencyMs
             delegate?.terminalController(self, didChangeState: state)
             logSystemEvent("已连接至 \(session.host):\(session.port)（用户：\(session.username)）")
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
@@ -455,7 +483,11 @@ final class TerminalController: ObservableObject {
             if tmuxCfg.enabled {
                 Task { [weak self] in
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    await MainActor.run { self?.tmuxStore.detectTmux() }
+                    await MainActor.run {
+                        // 守卫：用户可能在 1.5s 内已主动断开，不向已断连的连接发送探测命令
+                        guard self?.state == .connected else { return }
+                        self?.tmuxStore.detectTmux()
+                    }
                 }
             }
             // §3.19：触发 onConnect 自动化规则
@@ -511,6 +543,10 @@ final class TerminalController: ObservableObject {
         reconnectTask = nil
         sshConnection?.disconnect()
         sshConnection = nil
+        if let conn = telnetConnection { await conn.disconnect() }
+        telnetConnection = nil
+        if let conn = serialConnection { await conn.disconnect() }
+        serialConnection = nil
         if let pm = proxyJumpManager {
             await pm.disconnect()
             proxyJumpManager = nil
@@ -532,6 +568,7 @@ final class TerminalController: ObservableObject {
         logSystemEvent("连接已正常断开")
         state = .disconnected
         connectedAt = nil
+        latencyMs = nil
         delegate?.terminalController(self, didChangeState: state)
     }
 
@@ -632,6 +669,150 @@ final class TerminalController: ObservableObject {
         delegate?.terminalController(self, didChangeState: state)
     }
 
+    // MARK: - Telnet 连接
+
+    private func connectTelnet() async throws {
+        userDisconnected = false
+        pendingHostKeyState = nil
+        state = .connecting
+        delegate?.terminalController(self, didChangeState: state)
+
+        let conn = TelnetConnection()
+        let coalescer = TerminalDataCoalescer()
+
+        await conn.configure(
+            onDataReceived: { [weak self] data in
+                let bytes = [UInt8](data)
+                Task { [weak self] in
+                    let shouldFlush = await coalescer.append(bytes)
+                    guard shouldFlush else { return }
+                    try? await Task.sleep(nanoseconds: AppConstants.terminalCoalescerIntervalNs)
+                    let flushed = await coalescer.drain()
+                    guard !flushed.isEmpty else { return }
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        let processed = HighlightEngine.shared.process(Data(flushed))
+                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                        self.appendToSessionLog(flushed)
+                        let decoded = String(bytes: flushed, encoding: .utf8) ?? ""
+                        self.terminalVM.updateOutputBuffer(decoded)
+                        self.logOutputLines(decoded)
+                        Task { await self.recorder.appendOutput(decoded) }
+                        if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
+                            self.terminalVM.detectErrors(in: decoded)
+                        }
+                        AutomationTriggerEngine.shared.process(output: decoded, sessionId: self.sessionId, controller: self)
+                    }
+                }
+            },
+            onDisconnected: { [weak self] in
+                Task { @MainActor [weak self] in self?.handleConnectionLost() }
+            }
+        )
+
+        self.telnetConnection = conn
+
+        do {
+            let port = UInt16(clamping: max(1, session.port))
+            try await conn.connect(host: session.host, port: port)
+            await conn.updateWindowSize(columns: terminalSize.columns, rows: terminalSize.rows)
+
+            state = .connected
+            connectedAt = Date()
+            delegate?.terminalController(self, didChangeState: state)
+            logSystemEvent("已通过 Telnet 连接至 \(session.host):\(session.port)")
+            executeStartupCommandIfNeeded()
+            AutomationTriggerEngine.shared.processEvent(.onConnect, sessionId: sessionId, controller: self)
+
+        } catch {
+            self.telnetConnection = nil
+            state = .failed(error.localizedDescription)
+            delegate?.terminalController(self, didChangeState: state)
+            let wrapped = SSHError.connectionFailed(host: session.host, port: session.port, underlying: error)
+            delegate?.terminalController(self, didFailWithError: wrapped)
+            throw error
+        }
+    }
+
+    // MARK: - Serial 连接
+
+    private func connectSerial() async throws {
+        guard let portPath = session.serialPortPath, !portPath.isEmpty else {
+            let err = SerialError.portOpenFailed(path: "(未配置)", code: 0)
+            state = .failed(err.localizedDescription ?? "串口路径未设置")
+            delegate?.terminalController(self, didChangeState: state)
+            throw err
+        }
+
+        userDisconnected = false
+        pendingHostKeyState = nil
+        state = .connecting
+        delegate?.terminalController(self, didChangeState: state)
+
+        let conn = SerialConnection()
+        let coalescer = TerminalDataCoalescer()
+
+        await conn.configure(
+            onDataReceived: { [weak self] data in
+                let bytes = [UInt8](data)
+                Task { [weak self] in
+                    let shouldFlush = await coalescer.append(bytes)
+                    guard shouldFlush else { return }
+                    try? await Task.sleep(nanoseconds: AppConstants.terminalCoalescerIntervalNs)
+                    let flushed = await coalescer.drain()
+                    guard !flushed.isEmpty else { return }
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        let processed = HighlightEngine.shared.process(Data(flushed))
+                        self.terminalView?.feed(byteArray: [UInt8](processed)[...])
+                        self.delegate?.terminalController(self, didReceiveData: Data(flushed))
+                        self.appendToSessionLog(flushed)
+                        let decoded = String(bytes: flushed, encoding: .utf8) ?? ""
+                        self.terminalVM.updateOutputBuffer(decoded)
+                        self.logOutputLines(decoded)
+                        Task { await self.recorder.appendOutput(decoded) }
+                        if AISettingsStore.shared.isEnabled && AISettingsStore.shared.errorDetectiveEnabled {
+                            self.terminalVM.detectErrors(in: decoded)
+                        }
+                        AutomationTriggerEngine.shared.process(output: decoded, sessionId: self.sessionId, controller: self)
+                    }
+                }
+            },
+            onDisconnected: { [weak self] in
+                Task { @MainActor [weak self] in self?.handleConnectionLost() }
+            }
+        )
+
+        self.serialConnection = conn
+
+        do {
+            try await conn.connect(
+                portPath:    portPath,
+                baudRate:    session.serialBaudRate,
+                dataBits:    session.serialDataBits,
+                parity:      session.serialParity,
+                stopBits:    session.serialStopBits,
+                flowControl: session.serialFlowControl
+            )
+
+            state = .connected
+            connectedAt = Date()
+            delegate?.terminalController(self, didChangeState: state)
+            logSystemEvent("已连接串口 \(portPath) @ \(session.serialBaudRate) bps")
+            executeStartupCommandIfNeeded()
+            AutomationTriggerEngine.shared.processEvent(.onConnect, sessionId: sessionId, controller: self)
+
+        } catch {
+            self.serialConnection = nil
+            state = .failed(error.localizedDescription)
+            delegate?.terminalController(self, didChangeState: state)
+            let wrapped = SSHError.connectionFailed(host: portPath, port: 0, underlying: error)
+            delegate?.terminalController(self, didFailWithError: wrapped)
+            throw error
+        }
+    }
+
     // MARK: - ProxyJump 连接
 
     /// 通过跳板机链连接目标服务器（9.1/9.2 ProxyJump）
@@ -727,6 +908,7 @@ final class TerminalController: ObservableObject {
 
         state = .connected
         connectedAt = Date()
+        latencyMs = sshConnection?.connectionLatencyMs
         delegate?.terminalController(self, didChangeState: state)
         // 启动性能指标轮询（ProxyJump 路径）
         startMetricsMonitor()
@@ -737,7 +919,10 @@ final class TerminalController: ObservableObject {
         if tmuxCfgPJ.enabled {
             Task { [weak self] in
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
-                await MainActor.run { self?.tmuxStore.detectTmux() }
+                await MainActor.run {
+                    guard self?.state == .connected else { return }
+                    self?.tmuxStore.detectTmux()
+                }
             }
         }
     }
@@ -750,13 +935,16 @@ final class TerminalController: ObservableObject {
         }
         if let pm = proxyJumpManager {
             try await pm.write(data)
-        } else {
-            guard let conn = sshConnection else {
-                throw SSHError.sessionClosed
-            }
+        } else if let conn = sshConnection {
             try await Task.detached(priority: .userInitiated) {
                 try conn.write(data)
             }.value
+        } else if let conn = telnetConnection {
+            await conn.write(data)
+        } else if let conn = serialConnection {
+            try await conn.write(data)
+        } else {
+            throw SSHError.sessionClosed
         }
         // W12.6：将输入广播到同步组中的其他终端
         SyncInputStore.shared.broadcast(data: data, from: sessionId)
@@ -787,8 +975,8 @@ final class TerminalController: ObservableObject {
 
     /// W12.6：接收来自同步组其他终端的广播输入，直接写入 SSH（不再二次广播）
     func broadcastReceive(data: Data) {
-        Task {
-            guard state == .connected else { return }
+        Task { [weak self] in  // BUG-006：避免强引用导致 TerminalController 断开后无法释放
+            guard let self, state == .connected else { return }
             do {
                 if let pm = proxyJumpManager {
                     try await pm.write(data)
@@ -819,7 +1007,8 @@ final class TerminalController: ObservableObject {
     /// 发送 Compose Pane 中的命令内容到当前终端
     func sendComposeContent(_ text: String) {
         logInputEntry(text)
-        Task {
+        Task { [weak self] in  // BUG-006：避免强引用持有 TerminalController
+            guard let self else { return }
             await recorder.appendInput(text)
             try? await send(text)
         }
@@ -872,6 +1061,9 @@ final class TerminalController: ObservableObject {
         sshConnection?.resizeTerminal(cols: columns, rows: rows)
         if let pm = proxyJumpManager {
             Task { await pm.resizeTerminal(cols: columns, rows: rows) }
+        }
+        if let conn = telnetConnection {
+            Task { await conn.updateWindowSize(columns: columns, rows: rows) }
         }
         terminalSize = TerminalSize(columns: columns, rows: rows)
     }

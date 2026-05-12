@@ -17,6 +17,11 @@ struct SessionSidebarView: View {
 
     // MARK: - 视图
 
+    /// 已连接会话数（用于底部统计条）
+    private var connectedCount: Int {
+        sessionStore.sessions.filter { $0.connectionState == .connected }.count
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // 顶部操作头部：标题 + 操作图标按钮
@@ -31,22 +36,25 @@ struct SessionSidebarView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            // 会话列表（flex:1）
-            if sessionStore.isLoading {
-                loadingView
-            } else if sessionStore.filteredSessions.isEmpty {
-                emptyStateView
-            } else {
-                SessionListView(
-                    sessionStore: sessionStore,
-                    groupStore: groupStore,
-                    onConnect: onConnect
-                )
+            // 会话列表（填满剩余空间）
+            Group {
+                if sessionStore.isLoading {
+                    loadingView
+                } else if sessionStore.filteredSessions.isEmpty {
+                    emptyStateView
+                } else {
+                    SessionListView(
+                        sessionStore: sessionStore,
+                        groupStore: groupStore,
+                        onConnect: onConnect
+                    )
+                }
             }
+            .frame(maxHeight: .infinity)
 
-            // 底部统计条（Figma 8:32：高度 36px，"N connected" + "N total"）
+            // 底部统计条（固定于侧边栏底部，与对面 TerminalStatusBarView 同 Y 轴）
             SidebarFooterView(
-                connectedCount: connectedSessionCount,
+                connectedCount: connectedCount,
                 totalCount: sessionStore.sessions.count
             )
         }
@@ -55,6 +63,19 @@ struct SessionSidebarView: View {
         .frame(idealWidth: DesignTokens.Sizes.sidebarWidth)
         // Figma §02: 亮色 bg-[#f5f5f7] = surfaceWindow，与主窗口背景同色
         .background(DesignTokens.Colors.surfaceWindow)
+        // Sheet 挂载在稳定容器上，避免附着在按钮视图上导致 identity 变化时 Sheet 无法弹出
+        .sheet(isPresented: $vm.showGroupManager) {
+            GroupManagerView(
+                groupStore: groupStore,
+                onClose: { vm.showGroupManager = false }
+            )
+        }
+        .sheet(isPresented: $vm.showPasswordManager) {
+            PasswordManagerView(
+                sessions: sessionStore.sessions,
+                onClose: { vm.showPasswordManager = false }
+            )
+        }
         .task {
             await vm.loadData(sessionStore: sessionStore, groupStore: groupStore)
         }
@@ -74,51 +95,39 @@ struct SessionSidebarView: View {
 
     /// 顶部操作头部：显示标题 + 新建会话、分组、设置快捷按钮
     private var sidebarHeader: some View {
-        HStack(spacing: DesignTokens.Spacing.xxs) {
-            // Figma: text-sm font-medium text-[#1d1d1f] t('sidebar.sessions') = "会话"
+        HStack(spacing: 2) {
+            // Figma 8:5: text-[13px] font-medium text-[#1d1d1f] left=14
             Text("会话")
-                .font(DesignTokens.Typography.bodyLargeMedium)
+                .font(DesignTokens.Typography.labelLarge)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 
-            // 新建会话
+            // 新建会话（Figma 8:6: ＋，28×28, rounded-8, icon color #6e6e73）
             sidebarIconButton(systemImage: "plus", tooltip: "新建会话 (⌘N)") {
                 sessionStore.showNewSessionForm()
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            // 分组管理（FolderCog，对齐 Figma-Spec-v2 §02）
-            sidebarIconButton(systemImage: "folder.badge.gearshape", tooltip: "分组管理 (⌘⇧N)") {
+            // 分组管理（Figma 8:8: ⊞）
+            sidebarIconButton(systemImage: "folder.badge.gearshape", tooltip: "分组管理") {
                 vm.showGroupManager = true
             }
-            .sheet(isPresented: $vm.showGroupManager) {
-                GroupManagerView(
-                    groupStore: groupStore,
-                    onClose: { vm.showGroupManager = false }
-                )
-            }
 
-            // 密码管理（KeyRound，对齐 Figma-Spec-v2 §02）
+            // 密码管理（Figma 8:10: ⚿）
             sidebarIconButton(systemImage: "key.fill", tooltip: "密码管理") {
                 vm.showPasswordManager = true
             }
-            .sheet(isPresented: $vm.showPasswordManager) {
-                PasswordManagerView(
-                    sessions: sessionStore.sessions,
-                    onClose: { vm.showPasswordManager = false }
-                )
-            }
 
-            // 打开设置（macOS 14+ 使用 SettingsLink，13 回退到 sendAction）
+            // 打开设置（Figma 8:12: ⚙，macOS 14+ 用 SettingsLink）
             if #available(macOS 14.0, *) {
                 SettingsLink {
                     Label("偏好设置", systemImage: "gear")
                         .labelStyle(.iconOnly)
                         .font(DesignTokens.Typography.iconLarge)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
-                        .frame(width: DesignTokens.Sizes.iconButtonSize, height: DesignTokens.Sizes.iconButtonSize)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -129,20 +138,18 @@ struct SessionSidebarView: View {
                 }
             }
         }
-        // Figma: p-3 = 12px 均匀 padding
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .frame(height: 44)
-        .background {
-            // Figma: backdrop-blur-xl bg-white/40 border-b border-[#d2d2d7]/50
+        // Figma 8:4: left=14, height=36
+        // Figma 8:6-8:13: 按钮组距右边 2px，左侧标题保持 14px
+        .padding(.leading, 14)
+        .padding(.trailing, 2)
+        .frame(height: 36)
+        // Figma 8:32: 实色 #f5f5f7，无毛玻璃
+        .background(DesignTokens.Colors.surfaceWindow)
+        // Figma 8:14: border-b rgba(0,0,0,0.08) 0.5pt
+        .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(.ultraThinMaterial)
-            Rectangle()
-                .fill(Color.white.opacity(0.40))
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(Color(hex: "#d2d2d7").opacity(0.50))
-                        .frame(height: 0.5)
-                }
+                .fill(Color.black.opacity(0.08))
+                .frame(height: 0.5)
         }
     }
 
@@ -152,10 +159,12 @@ struct SessionSidebarView: View {
         accessibilityText: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
+        // Figma 8:6–8:13: icon color #6e6e73 = textSecondary
         HoverIconButton(
             systemImage: systemImage,
             accessibilityText: accessibilityText ?? tooltip,
             size: DesignTokens.Sizes.iconButtonSize,
+            iconColor: DesignTokens.Colors.textSecondary,
             action: action
         )
         .help(tooltip)
@@ -189,12 +198,6 @@ struct SessionSidebarView: View {
                 EmptyStateView.noSearchResults(query: sessionStore.searchQuery)
             }
         }
-    }
-
-    // MARK: - 统计辅助
-
-    private var connectedSessionCount: Int {
-        sessionStore.sessions.filter { $0.connectionState == .connected }.count
     }
 
 }

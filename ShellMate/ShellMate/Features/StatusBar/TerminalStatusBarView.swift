@@ -17,6 +17,9 @@ struct TerminalStatusBarView: View {
     var encoding: String = "UTF-8"
     var connectedAt: Date? = nil
 
+    /// SSH 连接延迟（ms），nil 表示未测量
+    var latency: Int? = nil
+
     /// tmux 状态：附加的会话名（nil 表示未附加）
     var tmuxAttachedSession: String? = nil
     /// tmux 状态：已知会话总数（0 表示无会话或 tmux 不可用）
@@ -48,15 +51,11 @@ struct TerminalStatusBarView: View {
             }
         }
         .frame(height: DesignTokens.Sizes.statusBarHeight)
-        // Figma: bg-[#f5f5f7]/90 backdrop-blur-2xl
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color(hex: "#f5f5f7").opacity(0.90))
-        }
-        // Figma: border-t border-[#d2d2d7]/50
+        // Figma 9:24: bg-[rgba(245,245,247,0.95)]
+        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
         .overlay(alignment: .top) {
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                .fill(Color.black.opacity(0.08))
                 .frame(height: 0.5)
         }
         // CPU 历史记录：每次 metrics 更新时追加，保留最近 8 条
@@ -70,17 +69,17 @@ struct TerminalStatusBarView: View {
     // MARK: - 未连接状态
 
     private var disconnectedContent: some View {
-        // Figma: gap-1.5 = 6pt, WifiOff h-3 w-3 = 12pt, text-xs = 12pt, text-[#86868b]
+        // Figma 9:26: gap-1.5 = 6pt, text-[11px] = captionLarge, text-[#86868b]
         HStack(spacing: 6) {
             if connectionState == .connecting {
                 GlowingStatusDot(color: connectionState.dotColor, size: 3)
             } else {
                 Image(systemName: "wifi.slash")
-                    .font(DesignTokens.Typography.bodySmall)
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
             Text(connectionState == .connecting ? "Connecting..." : "Not connected")
-                .font(DesignTokens.Typography.bodySmall)
+                .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             // W12.6：同步输入状态
@@ -98,23 +97,20 @@ struct TerminalStatusBarView: View {
     private var connectedContent: some View {
         // Figma: gap-4 = 16pt 顶层间距
         HStack(spacing: DesignTokens.Spacing.lg) {
-            // ── 左侧：会话标识 — Figma: green dot + name(textPrimary) + • + user@host(textSecondary)
+            // ── 左侧：Figma 9:26 — "● Connected · user@host · Xms"，整行 #34d399
             HStack(spacing: 6) {
                 statusDotView
 
                 if let session {
-                    // Figma: text-xs font-medium text-[#1d1d1f]
-                    Text(session.name)
-                        .font(DesignTokens.Typography.labelMedium)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
-                        .lineLimit(1)
-                    Text("•")
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                    Text("\(session.username)@\(session.host)")
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .lineLimit(1)
+                    // Figma: 整段文字统一 text-[11px] text-[#34d399]
+                    Group {
+                        Text("Connected · \(session.username)@\(session.host)")
+                        + (latency.map { Text(" · \($0)ms") } ?? Text(""))
+                    }
+                    // Figma 9:26: text-[11px] = captionLarge
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.statusConnected)
+                    .lineLimit(1)
                 }
             }
 
@@ -208,11 +204,6 @@ struct TerminalStatusBarView: View {
         }
     }
 
-    private var statusSepV: some View {
-        Rectangle()
-            .fill(DesignTokens.Colors.borderPrimary)
-            .frame(width: 1, height: 12)
-    }
 
     // MARK: - CPU（对齐 main-window.html .status-metric）
 
@@ -335,10 +326,19 @@ struct TerminalStatusBarView: View {
                 Text("Disk")
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
-                Text(ServerMetrics.formatBytes(m.diskUsed))
-                    .font(DesignTokens.Typography.bodySmallStrong)
-                    .monospacedDigit()
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                HStack(spacing: 2) {
+                    Text(ServerMetrics.formatBytes(m.diskUsed))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                    Text("/")
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                    Text(ServerMetrics.formatBytes(m.diskTotal))
+                        .font(DesignTokens.Typography.bodySmallStrong)
+                        .monospacedDigit()
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                }
             }
         }
     }
@@ -382,17 +382,6 @@ struct TerminalStatusBarView: View {
 
     // MARK: - 共用组件
 
-    /// 使用 DateComponentsFormatter 本地化输出连接时长
-    private func connectionDuration(from date: Date) -> String {
-        let formatter = DateComponentsFormatter()
-        formatter.unitsStyle = .abbreviated
-        formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.maximumUnitCount = 2
-        return formatter.string(from: date, to: Date()) ?? ""
-    }
-
-    // 保留旧 divider 供其他地方调用（已改为 statusSepV，此处保留兼容）
-    private var divider: some View { statusSepV }
 
     private var syncBadge: some View {
         HStack(spacing: DesignTokens.Spacing.nano) {

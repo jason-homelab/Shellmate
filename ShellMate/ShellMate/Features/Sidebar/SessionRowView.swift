@@ -1,84 +1,81 @@
 import SwiftUI
 
-/// 会话行视图 — 1:1 对齐 Figma Desktop 节点 8:2
-/// 行高 44pt，状态点 6×6（left=14），空图标容器 26×26（left=29），文字起始 left=64
+/// 会话行视图 — 1:1 对齐 Figma Make Sidebar.tsx session button
+/// px-3 py-2 rounded-lg gap-2 mb-1
+/// 选中：bg-[#007aff] text-white shadow-md shadow-[#007aff]/30
+/// 悬停：hover:bg-black/5
 struct SessionRowView: View {
 
     // MARK: - 属性
 
     let session: Session
     var isSelected: Bool = false
-    var onDoubleClick: (() -> Void)?
 
     // MARK: - 状态
 
     @State private var isHovering: Bool = false
-    @State private var isDragging: Bool = false
 
     // MARK: - 视图
 
     var body: some View {
         HStack(spacing: 0) {
-
-            // ── 1. 状态点（Figma 8:16/8:21：6×6 px，left=14，top=19 → 垂直居中于 44pt 行）
+            // Figma 8:16/8:21: 状态点 6×6，left=14 within row（行左边距4 + 点14 = 18px from sidebar）
+            // 所有状态均显示点：连接=绿，离线=灰，连接中=黄，错误=红
             Circle()
-                .fill(isConnected
-                    ? DesignTokens.Colors.statusConnected
-                    : DesignTokens.Colors.textDisabled)
-                .frame(width: DesignTokens.Sizes.statusDotSize, height: DesignTokens.Sizes.statusDotSize)
+                .fill(session.connectionState.dotColor)
+                .frame(width: 6, height: 6)
                 .padding(.leading, 14)
-                .padding(.trailing, 9)
 
-            // ── 2. 空图标容器（Figma 8:17/8:22：26×26，rounded-6pt，无图标 SVG）
-            // Direction C：已连接=淡蓝底（accentPrimary/10），离线=灰底（black/6），选中=白色透明
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                .fill(isSelected
-                    ? Color.white.opacity(0.20)
-                    : (isConnected
-                       ? DesignTokens.Colors.accentPrimary.opacity(0.10)
-                       : Color.black.opacity(0.06)))
-                .frame(width: 26, height: 26)
-                .padding(.trailing, 9)
+            // Figma 8:17/8:22: 图标容器 26×26 rounded-6，left=29 within row（dot 14 + 6 + 9 = 29）
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(isSelected
+                        ? Color.white.opacity(0.20)
+                        : Color.black.opacity(0.06))
+                Image(systemName: session.connectionType.iconName)
+                    .font(.system(size: 13))
+                    .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
+            }
+            .frame(width: 26, height: 26)
+            .padding(.leading, 9)
 
-            // ── 3. 会话信息（Figma：text left=64，name top=7，host top=25）
-            sessionInfo
+            // Figma 8:18/8:23+24: 名称 13px medium + 子标题 11px，left=64 within row
+            VStack(alignment: .leading, spacing: 1) {
+                Text(session.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                // Figma 8:24: 副标题选中白色70%，未选中 #8e8e93 = textSubtle
+                Text("\(session.username)@\(session.host)")
+                    .font(.system(size: 11))
+                    .foregroundColor(isSelected
+                        ? Color.white.opacity(0.70)
+                        : DesignTokens.Colors.textSubtle)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .padding(.leading, 9)
 
             Spacer(minLength: 0)
         }
-        // Figma 8:15/8:20：h=44px，w=248px（行左边距 4px 由 SessionListView 控制）
-        .frame(height: DesignTokens.Sizes.sessionRowHeight)
-        .padding(.trailing, DesignTokens.Spacing.md)
+        .padding(.trailing, 10)
+        // Figma: h-[44px]
+        .frame(height: 44)
         .background(rowBackground)
-        // Direction C：已连接（非选中）左侧 2px 蓝色指示条，让连接中的会话在列表里视觉浮出
-        .overlay(alignment: .leading) {
-            if isConnected && !isSelected {
-                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                    .fill(DesignTokens.Colors.accentPrimary)
-                    .frame(width: 2, height: 22)
-            }
-        }
+        // shadow-md shadow-[#007aff]/30（仅选中时）
+        .shadow(
+            color: isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.30) : .clear,
+            radius: 6, x: 0, y: 3
+        )
         .contentShape(Rectangle())
-        .opacity(isDragging ? 0.45 : 1.0)
-        .scaleEffect(isDragging ? 0.97 : 1.0)
-        .animation(DesignTokens.Animation.hover, value: isDragging)
-        .animation(DesignTokens.Animation.hover, value: isHovering)
+        .onHover { isHovering = $0 }
         .animation(DesignTokens.Animation.hover, value: isSelected)
-        .onDrag {
-            withAnimation(DesignTokens.Animation.hover) { isDragging = true }
-            return NSItemProvider(object: session.id.uuidString as NSString)
-        }
-        .onHover { hovering in
-            withAnimation(DesignTokens.Animation.hover) {
-                isHovering = hovering
-                if !hovering { isDragging = false }
-            }
-        }
-        .onTapGesture(count: 2) {
-            onDoubleClick?()
-        }
+        .animation(DesignTokens.Animation.hover, value: isHovering)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(session.name)，\(session.username)@\(session.host)")
-        .accessibilityHint(isSelected ? "已选中，双击连接" : "双击连接此会话")
+        .accessibilityHint(isSelected ? "已选中，单击连接" : "单击连接此会话")
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
         .accessibilityValue(session.connectionState.displayName)
     }
@@ -88,58 +85,23 @@ struct SessionRowView: View {
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
-            // Figma 8:15：bg-[#077aff] rounded-[8px]（无 shadow）
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(DesignTokens.Colors.accentPrimary)
         } else if isHovering {
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .fill(DesignTokens.Colors.surfaceHover)
+            // hover:bg-black/5
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.black.opacity(0.05))
         } else {
             Color.clear
         }
     }
-
-    // MARK: - 会话信息
-
-    private var sessionInfo: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Figma 8:18/8:23：13px，Direction C：已连接 semibold 加重，离线 medium 退后
-            Text(session.name)
-                .font(isConnected
-                    ? DesignTokens.Typography.bodyMediumStrong  // 13px semibold（已连接）
-                    : DesignTokens.Typography.labelLarge)       // 13px medium（离线）
-                .foregroundColor(isSelected
-                    ? Color.white
-                    : (isConnected
-                       ? DesignTokens.Colors.textPrimary
-                       : DesignTokens.Colors.textSecondary))
-                .lineLimit(1)
-                .truncationMode(.tail)
-
-            // Figma 8:19/8:24：11px regular，rgba(255,255,255,0.7) / #8e8e93
-            Text("\(session.username)@\(session.host)")
-                .font(DesignTokens.Typography.captionLarge)
-                .foregroundColor(isSelected
-                    ? Color.white.opacity(0.70)
-                    : DesignTokens.Colors.textSecondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-        }
-    }
-
-    // MARK: - 辅助
-
-    private var isConnected: Bool {
-        session.connectionState == .connected
-    }
-
 }
 
 
 // MARK: - 预览
 
 #Preview("会话行状态") {
-    VStack(spacing: DesignTokens.Spacing.px) {
+    VStack(spacing: 4) {
         SessionRowView(session: {
             var s = Session.preview; s.connectionState = .connected; return s
         }(), isSelected: true)
@@ -156,8 +118,7 @@ struct SessionRowView: View {
             var s = Session.preview; s.connectionState = .offline; return s
         }())
     }
-    .padding(.horizontal, DesignTokens.Spacing.xs)
-    .padding(.vertical, DesignTokens.Spacing.xs)
+    .padding(8)
     .background(DesignTokens.Colors.surfacePanel)
     .frame(width: 240)
 }

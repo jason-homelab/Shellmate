@@ -27,7 +27,7 @@ struct SwiftTermViewRepresentable: NSViewRepresentable {
         view.optionAsMetaKey = optionAsMeta
         applyTheme(themeId, to: view)
         // 延迟赋值避免 SwiftUI 状态更新循环
-        DispatchQueue.main.async { viewRef = view }
+        Task { @MainActor in viewRef = view }
         return view
     }
 
@@ -85,7 +85,14 @@ struct TerminalView: View {
 
     let session: Session
 
+    /// 此终端是否为当前选中 Tab（由 ContentView 注入）
+    /// 仅选中的 TerminalView 向 ActiveTerminalStatusStore 推送状态
+    var isSelected: Bool = true
+
     @StateObject private var controller: TerminalController
+
+    /// 共享底栏状态（用于消费 shouldShowMonitorPanel 信号）
+    @ObservedObject private var terminalStatus = ActiveTerminalStatusStore.shared
 
     /// SwiftTerm TerminalView 引用
     @State private var terminalViewRef: SwiftTerm.TerminalView?
@@ -155,8 +162,9 @@ struct TerminalView: View {
 
     // MARK: - 初始化
 
-    init(session: Session) {
+    init(session: Session, isSelected: Bool = true) {
         self.session = session
+        self.isSelected = isSelected
         _controller = StateObject(wrappedValue: TerminalController(session: session))
     }
 
@@ -173,26 +181,6 @@ struct TerminalView: View {
 
             // 终端主区域（含 Compose Pane 纵向布局）
             terminalAndComposeView
-
-            // 底部状态栏（连接状态 + 主机指标，点击指标打开监控面板）
-            TerminalStatusBarView(
-                connectionState: controller.state.stateColor,
-                session: session,
-                serverMetrics: controller.serverMetrics,
-                columns: controller.terminalSize.columns,
-                rows: controller.terminalSize.rows,
-                encoding: session.encoding,
-                connectedAt: controller.connectedAt,
-                tmuxAttachedSession: controller.tmuxStore.attachedSessionName,
-                tmuxSessionCount: controller.tmuxStore.sessions.count,
-                // 23.5：传入已附加会话的窗口列表供 Popover 快切
-                tmuxWindows: {
-                    guard let name = controller.tmuxStore.attachedSessionName else { return [] }
-                    return controller.tmuxStore.sessions.first(where: { $0.name == name })?.windows ?? []
-                }(),
-                onSelectTmuxWindow: { index in controller.tmuxStore.selectWindow(index: index) },
-                onMetricsTap: controller.serverMetrics != nil ? { showMonitorPanel = true } : nil
-            )
 
             // 隧道管理器浮动面板（⌘⇧U）
             if controller.isTunnelManagerOpen {
@@ -240,7 +228,7 @@ struct TerminalView: View {
                     .allowsHitTesting(true)
             }
         }
-        .background(DesignTokens.Colors.surfaceWindow)
+        .background(DesignTokens.Colors.terminalBackground)
         .onAppear {
             // 初始化会话字号：有覆盖则用覆盖值，否则跟随全局
             sessionFontSize = session.overrideFontSize > 0
@@ -251,9 +239,20 @@ struct TerminalView: View {
             Task { @MainActor in
                 connect()
             }
+            pushToStatusStore()
         }
         .onDisappear {
             TerminalControllerRegistry.shared.unregister(sessionId: session.id)
+            // Tab 关闭时显式断开 SSH 连接，确保资源正常释放。
+            // TerminalController.deinit 中无法可靠调用 disconnect（weak self 在 deinit 时已为 nil），
+            // 因此必须在视图消失时主动断连。
+            Task { await controller.disconnect() }
+            // 重置 SessionStore 连接状态，避免侧边栏计数器不归零
+            NotificationCenter.default.post(
+                name: .sessionConnectionStateChanged,
+                object: nil,
+                userInfo: ["sessionId": session.id, "connectionState": ConnectionState.offline.rawValue]
+            )
         }
         .onChange(of: globalFontSize) { newVal in
             // 无会话覆盖时同步全局变化，不覆盖有独立字号的会话
@@ -261,10 +260,42 @@ struct TerminalView: View {
                 sessionFontSize = newVal
             }
         }
+        // 当此 Tab 被选中时，将本终端状态推送到共享底栏
+        .onChange(of: isSelected) { selected in
+            if selected { pushToStatusStore() }
+        }
+        // controller 关键状态变化时同步推送
+        .onChange(of: controller.state) { _ in pushToStatusStore() }
+        .onChange(of: controller.serverMetrics) { _ in
+            guard isSelected else { return }
+            ActiveTerminalStatusStore.shared.serverMetrics = controller.serverMetrics
+        }
+        .onChange(of: controller.terminalSize) { _ in
+            guard isSelected else { return }
+            ActiveTerminalStatusStore.shared.terminalColumns = controller.terminalSize.columns
+            ActiveTerminalStatusStore.shared.terminalRows = controller.terminalSize.rows
+        }
+        .onChange(of: controller.connectedAt) { _ in
+            guard isSelected else { return }
+            ActiveTerminalStatusStore.shared.connectedAt = controller.connectedAt
+        }
+        // 底栏触发"打开服务器监控"信号：由活跃 TerminalView 响应并显示 sheet
+        .onChange(of: terminalStatus.shouldShowMonitorPanel) { should in
+            if should && isSelected {
+                showMonitorPanel = true
+                terminalStatus.shouldShowMonitorPanel = false
+            }
+        }
         .onChange(of: terminalViewRef) { newView in
             controller.terminalView = newView
         }
         .onChange(of: controller.state) { newState in
+            // 将 TerminalController 的实际连接状态同步回 SessionStore
+            NotificationCenter.default.post(
+                name: .sessionConnectionStateChanged,
+                object: nil,
+                userInfo: ["sessionId": session.id, "connectionState": newState.stateColor.rawValue]
+            )
             if case .failed(let reason) = newState {
                 connectionErrorMessage = reason
                 showConnectionError = true
@@ -517,6 +548,9 @@ struct TerminalView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        // 移除 TerminalStatusBarView 后，SwiftTerm NSView 会按 intrinsicContentSize 定高。
+        // 必须显式声明 maxHeight: .infinity，确保终端区域填满 VStack 中的剩余空间。
+        .frame(maxHeight: .infinity)
     }
 
     @ViewBuilder
@@ -814,6 +848,7 @@ struct TerminalView: View {
                 themeId: effectiveThemeId,
                 optionAsMeta: optionAsMeta
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             stateOverlay
 
@@ -824,6 +859,7 @@ struct TerminalView: View {
                     .allowsHitTesting(false)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
@@ -919,7 +955,10 @@ struct TerminalView: View {
 
             HStack(spacing: DesignTokens.Spacing.md) {
                 Button("重试") { connect() }.buttonStyle(.borderedProminent)
-                Button("关闭") {}.buttonStyle(.bordered)
+                Button("关闭") {
+                    showConnectionError = false
+                    Task { await controller.disconnect() }
+                }.buttonStyle(.bordered)
             }
             .padding(.top, DesignTokens.Spacing.sm)
         }
@@ -1034,6 +1073,28 @@ struct TerminalView: View {
     }
 
     // MARK: - 方法
+
+    /// 将本终端当前状态推送到共享底栏 store（仅 isSelected 时有效）
+    private func pushToStatusStore() {
+        guard isSelected else { return }
+        let store = ActiveTerminalStatusStore.shared
+        let ctrl = controller
+        store.connectionState = ctrl.state.stateColor
+        store.session = session
+        store.serverMetrics = ctrl.serverMetrics
+        store.terminalColumns = ctrl.terminalSize.columns
+        store.terminalRows = ctrl.terminalSize.rows
+        store.encoding = session.encoding
+        store.connectedAt = ctrl.connectedAt
+        store.latencyMs = ctrl.latencyMs
+        store.tmuxAttachedSession = ctrl.tmuxStore.attachedSessionName
+        store.tmuxSessionCount = ctrl.tmuxStore.sessions.count
+        store.tmuxWindows = {
+            guard let name = ctrl.tmuxStore.attachedSessionName else { return [] }
+            return ctrl.tmuxStore.sessions.first(where: { $0.name == name })?.windows ?? []
+        }()
+        store.onSelectTmuxWindow = { index in ctrl.tmuxStore.selectWindow(index: index) }
+    }
 
     private func connect() {
         Task {

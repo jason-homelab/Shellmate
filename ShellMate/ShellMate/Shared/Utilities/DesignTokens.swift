@@ -137,11 +137,17 @@ enum DesignTokens {
             light: NSColor(srgbRed: 0.780, green: 0.780, blue: 0.800, alpha: 1), // #C7C7CC
             dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.18) // rgba(226,228,240,0.18)
         )
+        /// Figma 8:24/8:34 副标题与底栏文字色：#8E8E93（Apple Secondary Label）
+        /// 亮色比 textSecondary 更浅，用于行副标题、侧边栏底栏计数文字
+        static let textSubtle = adaptive(
+            light: NSColor(srgbRed: 0.557, green: 0.557, blue: 0.576, alpha: 1), // #8E8E93
+            dark:  NSColor(srgbRed: 0.886, green: 0.894, blue: 0.941, alpha: 0.40) // 深色适配
+        )
 
         // ── 状态色（Void 宝石调色板）────────────────────────────
 
         static let statusConnected = adaptive(
-            light: NSColor(srgbRed: 0.204, green: 0.780, blue: 0.349, alpha: 1), // #34C759（Apple 绿）
+            light: NSColor(srgbRed: 0.204, green: 0.831, blue: 0.600, alpha: 1), // #34D399 Figma 9:26 connected text
             dark:  NSColor(srgbRed: 0.204, green: 0.831, blue: 0.600, alpha: 1)  // #34D399 宝石绿
         )
         static let statusConnecting = adaptive(
@@ -190,8 +196,9 @@ enum DesignTokens {
         static let surfaceToolbar     = surfacePanel
         static let borderDefault      = borderPrimary
         static let borderFaint        = borderSecondary
-        /// 终端背景 = Void 最深层 #0a0c12
-        static let terminalBackground    = surfaceWindow
+        /// 终端画布背景：始终深色，与 SwiftTerm 暗色主题对齐，不随 light/dark 系统模式切换
+        /// 修复：亮色模式下空行透出 #F5F5F7（surfaceWindow）导致终端出现大片浅灰空白区域
+        static let terminalBackground    = Color(hex: "#0d1117")
         static let terminalText          = textPrimary
         /// 终端字体预览区背景（Operator Dark 深空黑）
         static let terminalPreviewBg     = Color(hex: "#070a11")
@@ -249,8 +256,8 @@ enum DesignTokens {
     // MARK: - 尺寸
 
     enum Sizes {
-        static let sidebarWidth:    CGFloat = 256  // Figma 8:2：sidebar width=256px
-        static let sidebarMinWidth: CGFloat = 200
+        static let sidebarWidth:    CGFloat = 238  // Figma 8:2：sidebar width=238px
+        static let sidebarMinWidth: CGFloat = 238  // 与 ideal 一致，防止 NavigationSplitView 从旧 UserDefaults 读取更窄的值
         static let sidebarMaxWidth: CGFloat = 320
 
         static let sessionRowHeight: CGFloat = 44  // Figma 8:15：row h=44px
