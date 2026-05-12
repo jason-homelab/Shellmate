@@ -293,6 +293,7 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.Colors.terminalBackground)
+        .clipShape(Rectangle())
     }
 
     @ViewBuilder
@@ -374,6 +375,7 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // 终端区域使用纯色背景，零毛玻璃，降低 GPU 渲染压力（W27 Sprint-01 §修改意见3）
         .background(DesignTokens.Colors.terminalBackground)
+        .clipShape(Rectangle())
     }
 
 }
