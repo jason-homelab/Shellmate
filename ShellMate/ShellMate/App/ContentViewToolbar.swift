@@ -88,11 +88,12 @@ extension ContentView {
         }
     }
 
-    // MARK: - 功能工具分组（AI / 脚本 / 文件 / 分屏）
+    // MARK: - 功能工具分组（高频：AI / 文件 / 分屏 / 日志 / 命令；低频收入"更多"）
 
     @ViewBuilder
     private var toolGroup: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
+
             Button {
                 NotificationCenter.default.post(name: .aiPanelRequested, object: nil)
             } label: {
@@ -104,18 +105,9 @@ extension ContentView {
             .keyboardShortcut("a", modifiers: [.command, .shift])
 
             Button {
-                panels.showScriptPanel = true
-            } label: {
-                Text("</> 脚本")
-            }
-            .buttonStyle(PillButtonStyle(tone: .normal))
-            .help("脚本自动化 (⌘⇧S)")
-            .keyboardShortcut("s", modifiers: [.command, .shift])
-
-            Button {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             } label: {
-                Text("⇅ 文件")
+                Text(verbatim: "⇅ 文件")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
             .disabled(tabBarStore.selectedTab == nil)
@@ -124,7 +116,7 @@ extension ContentView {
             splitMenu
 
             Button { panels.showLogPanel = true } label: {
-                Text("日志")
+                Text(verbatim: "日志")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
             .help("会话日志")
@@ -132,20 +124,14 @@ extension ContentView {
             Button {
                 NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
             } label: {
-                Text("命令")
+                Text(verbatim: "命令")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
             .help("快捷命令 (⌘⇧K)")
             .keyboardShortcut("k", modifiers: [.command, .shift])
 
-            Button {
-                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
-            } label: {
-                Text("隧道")
-            }
-            .buttonStyle(PillButtonStyle(tone: .normal))
-            .help("隧道管理器 (⌘⇧U)")
-            .keyboardShortcut("u", modifiers: [.command, .shift])
+            // 低频工具收入"更多"下拉菜单（脚本 / 隧道 / 录制 / 导入导出）
+            MoreToolsMenuButton(panels: panels)
         }
     }
 
@@ -161,17 +147,11 @@ extension ContentView {
         )
     }
 
-    // MARK: - 右侧图标按钮区（Figma Make Toolbar.tsx 右侧：导出 搜索 录制 | 设置）
+    // MARK: - 右侧图标按钮区（精简为：终端搜索 | 设置）
 
     @ViewBuilder
     private var rightToolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {
-
-            Button { panels.showImportExportDialog = true } label: {
-                Label("导入导出", systemImage: "shippingbox").labelStyle(.iconOnly)
-            }
-            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("导入 / 导出会话")
 
             Button {
                 NotificationCenter.default.post(name: .searchTerminalRequested, object: nil)
@@ -181,13 +161,6 @@ extension ContentView {
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
             .help("终端内搜索 (⌘F)")
 
-            Button { panels.showRecordingDialog = true } label: {
-                Label("录制", systemImage: "record.circle").labelStyle(.iconOnly)
-            }
-            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("录制会话")
-
-            // Figma Make: Separator before Settings (h-5 mx-1 bg-[#d2d2d7]/50)
             toolbarDivider
 
             Button {
@@ -196,7 +169,7 @@ extension ContentView {
                 Label("设置", systemImage: "gearshape").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("设置 (⌘,")
+            .help("设置 (⌘,)")
         }
     }
 
@@ -338,6 +311,49 @@ private struct SplitOptionRow: View {
                 .padding(.horizontal, 4)
         )
         .onHover { isHovering = $0 }
+    }
+}
+
+// MARK: - 更多工具菜单（低频操作：脚本 / 隧道 / 录制 / 导入导出）
+//
+// 将这 4 项从主工具栏移除，收入 popover，保持主工具栏聚焦于高频操作。
+
+private struct MoreToolsMenuButton: View {
+
+    @ObservedObject var panels: ContentViewModel
+    @State private var showPopover = false
+
+    var body: some View {
+        Button { showPopover.toggle() } label: {
+            Text(verbatim: "更多")
+        }
+        .buttonStyle(PillButtonStyle(tone: .normal))
+        .popover(isPresented: $showPopover, arrowEdge: .bottom) {
+            moreMenuContent
+        }
+        .help("更多工具")
+    }
+
+    @ViewBuilder
+    private var moreMenuContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SplitOptionRow("脚本自动化", icon: "chevron.left.forwardslash.chevron.right") {
+                panels.showScriptPanel = true; showPopover = false
+            }
+            SplitOptionRow("隧道管理", icon: "network") {
+                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
+                showPopover = false
+            }
+            SplitOptionRow("录制会话", icon: "record.circle") {
+                panels.showRecordingDialog = true; showPopover = false
+            }
+            Divider().padding(.horizontal, 8)
+            SplitOptionRow("导入 / 导出会话", icon: "shippingbox") {
+                panels.showImportExportDialog = true; showPopover = false
+            }
+        }
+        .padding(.vertical, 4)
+        .frame(minWidth: 180)
     }
 }
 

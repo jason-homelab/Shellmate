@@ -261,6 +261,9 @@ struct ContentView: View {
                     })
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .shadow(color: Color.black.opacity(0.18), radius: 20, x: 0, y: 8)
+                    .onExitCommand {
+                        withAnimation(.easeInOut(duration: 0.2)) { panels.showSettingsPanel = false }
+                    }
                 }
                 .transition(.opacity)
             }
