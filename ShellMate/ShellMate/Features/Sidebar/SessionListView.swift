@@ -47,7 +47,7 @@ struct SessionListView: View {
         .clipShape(Rectangle())             // 裁剪行 shadow CALayer 溢出；.clipShape 比 .clipped 更彻底
         // 会话删除确认（不可逆，需用户主动确认）
         .confirmationDialog(
-            "删除会话"\(sessionToDelete?.name ?? "")"？",
+            "删除会话「\(sessionToDelete?.name ?? "")」？",
             isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
             titleVisibility: .visible
         ) {
@@ -62,7 +62,7 @@ struct SessionListView: View {
         }
         // 分组删除确认
         .confirmationDialog(
-            "删除分组"\(groupToDelete?.name ?? "")"？",
+            "删除分组「\(groupToDelete?.name ?? "")」？",
             isPresented: Binding(get: { groupToDelete != nil }, set: { if !$0 { groupToDelete = nil } }),
             titleVisibility: .visible
         ) {

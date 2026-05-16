@@ -140,7 +140,7 @@ struct SyncInputConfirmView: View {
             }
 
             Circle()
-                .fill(info.state.stateColor.dotColor)
+                .fill(info.state.toConnectionState.dotColor)
                 .frame(width: 7, height: 7)
 
             Text(info.title)

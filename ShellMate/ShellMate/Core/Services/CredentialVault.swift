@@ -44,13 +44,20 @@ actor CredentialVault {
     private let vaultService = "app.shellmate.vault"
     private let masterKeyAccount = "master-key"
 
+    // MARK: - 依赖
+
+    private let persistence: PersistenceController
+
     // MARK: - 内存缓存主密钥（进程生命周期内）
 
     private var cachedMasterKey: SymmetricKey?
 
     // MARK: - 初始化
 
-    private init() {}
+    private init() { self.persistence = .shared }
+
+    /// 测试专用初始化器（注入自定义 PersistenceController，如内存数据库）
+    init(persistence: PersistenceController) { self.persistence = persistence }
 
     // MARK: - 公开接口
 
@@ -61,7 +68,7 @@ actor CredentialVault {
         }
         let payload = try encrypt(data)
 
-        let context = PersistenceController.shared.newBackgroundContext()
+        let context = persistence.newBackgroundContext()
         try await context.perform {
             // 删除已有同类凭据，保证唯一
             let request = CDCredential.fetchRequest()
@@ -90,7 +97,7 @@ actor CredentialVault {
     /// 若金库中不存在，自动从旧版 Keychain 迁移（懒加载迁移，透明无感知）
     func load(sessionId: UUID, type: CredentialType) async throws -> String {
         // 第一步：在 Core Data context 中读取加密载荷
-        let context = PersistenceController.shared.newBackgroundContext()
+        let context = persistence.newBackgroundContext()
         let encryptedPayload: Data? = try? await context.perform {
             let request = CDCredential.fetchRequest()
             request.predicate = NSPredicate(
@@ -132,7 +139,7 @@ actor CredentialVault {
 
     /// 删除指定凭据
     func delete(sessionId: UUID, type: CredentialType) async throws {
-        let context = PersistenceController.shared.newBackgroundContext()
+        let context = persistence.newBackgroundContext()
         try await context.perform {
             let request = CDCredential.fetchRequest()
             request.predicate = NSPredicate(
@@ -148,7 +155,7 @@ actor CredentialVault {
 
     /// 删除某会话的所有凭据
     func deleteAll(sessionId: UUID) async throws {
-        let context = PersistenceController.shared.newBackgroundContext()
+        let context = persistence.newBackgroundContext()
         try await context.perform {
             let request = CDCredential.fetchRequest()
             request.predicate = NSPredicate(format: "sessionId == %@", sessionId as CVarArg)

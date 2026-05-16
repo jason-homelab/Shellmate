@@ -69,7 +69,7 @@ struct TerminalToolbarView: View {
     private var connectionStatusView: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 状态点
-            StatusDotView(state: controller.state.stateColor)
+            StatusDotView(state: controller.state.toConnectionState)
 
             // 状态文本
             Text(controller.state.displayName)

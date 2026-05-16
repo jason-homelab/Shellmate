@@ -181,6 +181,16 @@
 		W29_BLD_07 /* SFTPPanelViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_07 /* SFTPPanelViewModelTests.swift */; };
 		W29_BLD_08 /* AIPanelViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_08 /* AIPanelViewModelTests.swift */; };
 		W29_BLD_09 /* TerminalViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_09 /* TerminalViewModelTests.swift */; };
+		W29_BLD_10 /* TerminalController+Reconnect.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_10 /* TerminalController+Reconnect.swift */; };
+		W29_BLD_11 /* TerminalController+SwiftTermDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */; };
+		W29_BLD_12 /* TerminalController+AlternativeConnections.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_12 /* TerminalController+AlternativeConnections.swift */; };
+		W29_BLD_13 /* TerminalController+DataTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_13 /* TerminalController+DataTransfer.swift */; };
+		W29_BLD_14 /* CredentialVaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_14 /* CredentialVaultTests.swift */; };
+		DT_BLD_01 /* DesignTokens+Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_01 /* DesignTokens+Colors.swift */; };
+		DT_BLD_02 /* DesignTokens+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_02 /* DesignTokens+Typography.swift */; };
+		DT_BLD_03 /* DesignTokens+Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_03 /* DesignTokens+Spacing.swift */; };
+		DT_BLD_04 /* DesignTokens+Sizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_04 /* DesignTokens+Sizes.swift */; };
+		DT_BLD_05 /* DesignTokens+Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_05 /* DesignTokens+Animation.swift */; };
 		W30_BLD_01 /* SessionLogStressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_01 /* SessionLogStressTests.swift */; };
 		W30_BLD_02 /* SFTPRenderPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_02 /* SFTPRenderPerformanceTests.swift */; };
 		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
@@ -393,6 +403,16 @@
 		W29_REF_07 /* SFTPPanelViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPPanelViewModelTests.swift; sourceTree = "<group>"; };
 		W29_REF_08 /* AIPanelViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPanelViewModelTests.swift; sourceTree = "<group>"; };
 		W29_REF_09 /* TerminalViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalViewModelTests.swift; sourceTree = "<group>"; };
+		W29_REF_10 /* TerminalController+Reconnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+Reconnect.swift"; sourceTree = "<group>"; };
+		W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+SwiftTermDelegate.swift"; sourceTree = "<group>"; };
+		W29_REF_12 /* TerminalController+AlternativeConnections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+AlternativeConnections.swift"; sourceTree = "<group>"; };
+		W29_REF_13 /* TerminalController+DataTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+DataTransfer.swift"; sourceTree = "<group>"; };
+		W29_REF_14 /* CredentialVaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVaultTests.swift; sourceTree = "<group>"; };
+		DT_REF_01 /* DesignTokens+Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Colors.swift"; sourceTree = "<group>"; };
+		DT_REF_02 /* DesignTokens+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Typography.swift"; sourceTree = "<group>"; };
+		DT_REF_03 /* DesignTokens+Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Spacing.swift"; sourceTree = "<group>"; };
+		DT_REF_04 /* DesignTokens+Sizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Sizes.swift"; sourceTree = "<group>"; };
+		DT_REF_05 /* DesignTokens+Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Animation.swift"; sourceTree = "<group>"; };
 		W30_REF_01 /* SessionLogStressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStressTests.swift; sourceTree = "<group>"; };
 		W30_REF_02 /* SFTPRenderPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRenderPerformanceTests.swift; sourceTree = "<group>"; };
 		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
@@ -622,6 +642,10 @@
 				CE020001 /* ConnectionErrorView.swift */,
 				W29_REF_05 /* TerminalViewModel.swift */,
 				W29_REF_06 /* TerminalController+SessionLog.swift */,
+				W29_REF_10 /* TerminalController+Reconnect.swift */,
+				W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */,
+				W29_REF_12 /* TerminalController+AlternativeConnections.swift */,
+				W29_REF_13 /* TerminalController+DataTransfer.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -656,6 +680,11 @@
 			isa = PBXGroup;
 			children = (
 				0002000200020011 /* DesignTokens.swift */,
+				DT_REF_01 /* DesignTokens+Colors.swift */,
+				DT_REF_02 /* DesignTokens+Typography.swift */,
+				DT_REF_03 /* DesignTokens+Spacing.swift */,
+				DT_REF_04 /* DesignTokens+Sizes.swift */,
+				DT_REF_05 /* DesignTokens+Animation.swift */,
 				AA0001000000000000000001 /* AppLogger.swift */,
 				AA0002000000000000000001 /* AppEvent.swift */,
 			);
@@ -902,6 +931,7 @@
 				FF050101 /* TabBarStoreTests.swift */,
 				FF050102 /* SessionLogStoreTests.swift */,
 				FF050103 /* HighlightEngineTests.swift */,
+				W29_REF_14 /* CredentialVaultTests.swift */,
 			);
 			path = StoreTests;
 			sourceTree = "<group>";
@@ -1146,6 +1176,11 @@
 				000100010001000E /* SessionStore.swift in Sources */,
 				000100010001000F /* GroupStore.swift in Sources */,
 				0001000100010010 /* DesignTokens.swift in Sources */,
+				DT_BLD_01 /* DesignTokens+Colors.swift in Sources */,
+				DT_BLD_02 /* DesignTokens+Typography.swift in Sources */,
+				DT_BLD_03 /* DesignTokens+Spacing.swift in Sources */,
+				DT_BLD_04 /* DesignTokens+Sizes.swift in Sources */,
+				DT_BLD_05 /* DesignTokens+Animation.swift in Sources */,
 				AA0001000000000000000002 /* AppLogger.swift in Sources */,
 				AA0002000000000000000002 /* AppEvent.swift in Sources */,
 				0001000100010011 /* Color+Hex.swift in Sources */,
@@ -1268,6 +1303,10 @@
 				W29_BLD_04 /* AICodeBlockView.swift in Sources */,
 				W29_BLD_05 /* TerminalViewModel.swift in Sources */,
 				W29_BLD_06 /* TerminalController+SessionLog.swift in Sources */,
+				W29_BLD_10 /* TerminalController+Reconnect.swift in Sources */,
+				W29_BLD_11 /* TerminalController+SwiftTermDelegate.swift in Sources */,
+				W29_BLD_12 /* TerminalController+AlternativeConnections.swift in Sources */,
+				W29_BLD_13 /* TerminalController+DataTransfer.swift in Sources */,
 				W2703_BUILD /* AppEnvironment.swift in Sources */,
 				MON010001 /* ServerMonitorPanelView.swift in Sources */,
 				CE010001 /* ConnectionErrorView.swift in Sources */,
@@ -1299,6 +1338,7 @@
 				W29_BLD_07 /* SFTPPanelViewModelTests.swift in Sources */,
 				W29_BLD_08 /* AIPanelViewModelTests.swift in Sources */,
 				W29_BLD_09 /* TerminalViewModelTests.swift in Sources */,
+				W29_BLD_14 /* CredentialVaultTests.swift in Sources */,
 				MOCK_BLD_01 /* MockSFTPSession.swift in Sources */,
 				W30_BLD_01 /* SessionLogStressTests.swift in Sources */,
 				W30_BLD_02 /* SFTPRenderPerformanceTests.swift in Sources */,

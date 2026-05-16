@@ -380,7 +380,7 @@ final class LibSSH2Bridge {
     ///   - password: 密码
     /// - Throws: SSHError 如果认证失败
     func authenticateWithPassword(username: String, password: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -413,7 +413,7 @@ final class LibSSH2Bridge {
         privateKeyPath: String,
         passphrase: String?
     ) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -457,7 +457,7 @@ final class LibSSH2Bridge {
         privateKeyData: Data,
         passphrase: String?
     ) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -497,7 +497,7 @@ final class LibSSH2Bridge {
     /// - Parameter username: 用户名
     /// - Throws: SSHError 如果认证失败
     func authenticateWithAgent(username: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -542,7 +542,7 @@ final class LibSSH2Bridge {
     /// - Parameter reason: 断开原因描述（可选）
     func disconnect(reason: String = "正常断开") {
         // 关闭会话
-        if let session = session {
+        if session != nil {
             // 在实际实现中：
             // libssh2_session_disconnect(session, reason)
             // libssh2_session_free(session)
@@ -565,7 +565,7 @@ final class LibSSH2Bridge {
 
     /// 获取最后一次错误信息
     func getLastErrorMessage() -> String {
-        guard let session = session else {
+        guard session != nil else {
             return "会话未初始化"
         }
 
@@ -582,7 +582,7 @@ final class LibSSH2Bridge {
 
     /// 获取阻塞方向（用于非阻塞模式的事件循环）
     func getBlockDirections() -> Int32 {
-        guard let session = session else {
+        guard session != nil else {
             return SSH2BlockDirections.none
         }
 
@@ -605,7 +605,7 @@ extension LibSSH2Bridge {
     /// 设置首选加密算法
     /// - Parameter algorithms: 算法列表（逗号分隔）
     func setPreferredCiphers(_ algorithms: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -622,7 +622,7 @@ extension LibSSH2Bridge {
     /// 设置首选 MAC 算法
     /// - Parameter algorithms: 算法列表（逗号分隔）
     func setPreferredMACs(_ algorithms: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -636,7 +636,7 @@ extension LibSSH2Bridge {
     /// 设置首选密钥交换算法
     /// - Parameter algorithms: 算法列表（逗号分隔）
     func setPreferredKeyExchange(_ algorithms: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 
@@ -649,7 +649,7 @@ extension LibSSH2Bridge {
     /// 设置首选主机密钥类型
     /// - Parameter algorithms: 算法列表（逗号分隔）
     func setPreferredHostKeyTypes(_ algorithms: String) throws {
-        guard let session = session else {
+        guard session != nil else {
             throw SSHError.sessionNotInitialized
         }
 

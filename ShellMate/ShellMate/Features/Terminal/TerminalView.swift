@@ -1080,7 +1080,7 @@ struct TerminalView: View {
         guard isSelected else { return }
         let store = ActiveTerminalStatusStore.shared
         let ctrl = controller
-        store.connectionState = ctrl.state.stateColor
+        store.connectionState = ctrl.state.toConnectionState
         store.session = session
         store.serverMetrics = ctrl.serverMetrics
         store.terminalColumns = ctrl.terminalSize.columns
