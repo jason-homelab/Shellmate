@@ -27,4 +27,27 @@ final class ContentViewModel: ObservableObject {
     /// 四格分屏：格 1–3 的额外会话 ID
     @Published var gridSessionIds: [Session.ID] = []
     @Published var showSplitSessionPicker: Bool = false
+
+    // MARK: - 互斥面板控制
+
+    /// 关闭所有 sheet 面板（在打开设置浮动面板前调用，防止 sheet + overlay 叠加）
+    func closeAllSheets() {
+        showScriptPanel = false
+        showSSHConfigImport = false
+        showRecordingDialog = false
+        showLogPanel = false
+        showImportExportDialog = false
+    }
+
+    /// 打开设置浮动面板，同时关闭所有 sheet 防止层叠冲突
+    func openSettingsPanel() {
+        closeAllSheets()
+        withAnimation(.easeInOut(duration: 0.2)) { showSettingsPanel = true }
+    }
+
+    /// 打开某个 sheet 面板，同时关闭设置浮动面板防止层叠冲突
+    func openSheet(_ open: () -> Void) {
+        showSettingsPanel = false
+        open()
+    }
 }

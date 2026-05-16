@@ -83,7 +83,7 @@ extension ContentView {
             }
             // Figma 7:6: 断开与功能按钮同级——rgba(0,0,0,0.04) 中性灰，无红色
             .buttonStyle(PillButtonStyle(tone: .normal))
-            .disabled(tabBarStore.selectedTab == nil)
+            .disabled(activeSession?.connectionState != .connected)
             .help("断开当前会话")
         }
     }
@@ -115,7 +115,7 @@ extension ContentView {
 
             splitMenu
 
-            Button { panels.showLogPanel = true } label: {
+            Button { panels.openSheet { panels.showLogPanel = true } } label: {
                 Text(verbatim: "日志")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
@@ -143,7 +143,9 @@ extension ContentView {
             splitLayout: $panels.splitLayout,
             showSplitSessionPicker: $panels.showSplitSessionPicker,
             splitSessionId: $panels.splitSessionId,
-            gridSessionIds: $panels.gridSessionIds
+            gridSessionIds: $panels.gridSessionIds,
+            // 侧边栏已选会话传入，可跳过二次选择器直接激活分屏
+            preselectedSessionId: sessionStore.selectedSession?.id
         )
     }
 
@@ -163,9 +165,7 @@ extension ContentView {
 
             toolbarDivider
 
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) { panels.showSettingsPanel = true }
-            } label: {
+            Button { panels.openSettingsPanel() } label: {
                 Label("设置", systemImage: "gearshape").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
@@ -214,6 +214,8 @@ private struct SplitScreenMenuButton: View {
     @Binding var showSplitSessionPicker: Bool
     @Binding var splitSessionId: Session.ID?
     @Binding var gridSessionIds: [Session.ID]
+    /// 侧边栏当前选中会话 ID — 有值时激活分屏可跳过选择器
+    var preselectedSessionId: Session.ID?
 
     @State private var showPopover = false
 
@@ -223,7 +225,7 @@ private struct SplitScreenMenuButton: View {
         Button {
             showPopover.toggle()
         } label: {
-            Text("⊡ 分屏")
+            Text(verbatim: "⊡ 分屏")
         }
         .buttonStyle(PillButtonStyle(tone: isActive ? .tinted : .normal))
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
@@ -232,29 +234,36 @@ private struct SplitScreenMenuButton: View {
         .help(isActive ? "分屏管理" : "开启分屏")
     }
 
+    /// 激活左右/上下分屏：若侧边栏已选会话则直接使用，否则打开选择器
+    private func activateSplit(_ layout: SplitLayout) {
+        splitLayout = layout
+        if let id = preselectedSessionId {
+            splitSessionId = id          // 跳过选择器，2 步完成分屏
+        } else {
+            showSplitSessionPicker = true
+        }
+        showPopover = false
+    }
+
     @ViewBuilder
     private var splitPopoverContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             if splitLayout == .none {
                 SplitOptionRow("左右分屏", icon: "rectangle.split.2x1") {
-                    splitLayout = .horizontal; showSplitSessionPicker = true; showPopover = false
+                    activateSplit(.horizontal)
                 }
                 SplitOptionRow("上下分屏", icon: "rectangle.split.1x2") {
-                    splitLayout = .vertical; showSplitSessionPicker = true; showPopover = false
+                    activateSplit(.vertical)
                 }
                 SplitOptionRow("四格分屏 (2×2)", icon: "rectangle.split.2x2") {
                     splitLayout = .grid; showSplitSessionPicker = true; showPopover = false
                 }
             } else {
                 SplitOptionRow("切换为左右分屏", icon: "rectangle.split.2x1") {
-                    splitLayout = .horizontal
-                    if splitSessionId == nil { showSplitSessionPicker = true }
-                    showPopover = false
+                    activateSplit(.horizontal)
                 }
                 SplitOptionRow("切换为上下分屏", icon: "rectangle.split.1x2") {
-                    splitLayout = .vertical
-                    if splitSessionId == nil { showSplitSessionPicker = true }
-                    showPopover = false
+                    activateSplit(.vertical)
                 }
                 SplitOptionRow("切换为四格分屏", icon: "rectangle.split.2x2") {
                     splitLayout = .grid
@@ -338,18 +347,18 @@ private struct MoreToolsMenuButton: View {
     private var moreMenuContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             SplitOptionRow("脚本自动化", icon: "chevron.left.forwardslash.chevron.right") {
-                panels.showScriptPanel = true; showPopover = false
+                panels.openSheet { panels.showScriptPanel = true }; showPopover = false
             }
             SplitOptionRow("隧道管理", icon: "network") {
                 NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
                 showPopover = false
             }
             SplitOptionRow("录制会话", icon: "record.circle") {
-                panels.showRecordingDialog = true; showPopover = false
+                panels.openSheet { panels.showRecordingDialog = true }; showPopover = false
             }
             Divider().padding(.horizontal, 8)
             SplitOptionRow("导入 / 导出会话", icon: "shippingbox") {
-                panels.showImportExportDialog = true; showPopover = false
+                panels.openSheet { panels.showImportExportDialog = true }; showPopover = false
             }
         }
         .padding(.vertical, 4)

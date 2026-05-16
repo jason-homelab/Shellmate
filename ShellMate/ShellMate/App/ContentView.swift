@@ -193,10 +193,10 @@ struct ContentView: View {
         }
         // 全局 UI 通知处理
         .onReceive(NotificationCenter.default.publisher(for: .settingsRequested)) { _ in
-            withAnimation(.easeInOut(duration: 0.2)) { panels.showSettingsPanel = true }
+            panels.openSettingsPanel()
         }
         .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
-            panels.showLogPanel = true
+            panels.openSheet { panels.showLogPanel = true }
         }
         // 同步 TerminalController 实际连接状态到 SessionStore（侧边栏计数器）和 TabBarStore（标签点颜色）
         .onReceive(NotificationCenter.default.publisher(for: .sessionConnectionStateChanged)) { notification in
@@ -273,15 +273,20 @@ struct ContentView: View {
             if !hasLaunchedBefore {
                 WelcomeScreenView(
                     onDismiss: {
-                        hasLaunchedBefore = true
+                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
                     },
                     onCreateSession: {
-                        hasLaunchedBefore = true
-                        sessionStore.showNewSessionForm()
+                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        // 等待欢迎屏淡出动画完成后再打开表单，避免 overlay + sheet 同时出现
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            sessionStore.showNewSessionForm()
+                        }
                     },
                     onImportConfiguration: {
-                        hasLaunchedBefore = true
-                        sessionStore.showNewSessionForm()
+                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            panels.openSheet { panels.showImportExportDialog = true }
+                        }
                     }
                 )
                 .zIndex(100)
