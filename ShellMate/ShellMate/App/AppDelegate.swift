@@ -97,10 +97,49 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleOpenURL(_ url: URL) {
-        guard url.scheme == "shellmate" else { return }
+        guard url.scheme == "shellmate",
+              url.host?.lowercased() == "connect" else { return }
 
-        // TODO: 解析 URL 并执行相应操作
-        AppLogger.general.debug("打开 URL: \(url)")
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            AppLogger.general.warning("URL Scheme: 无法解析 URL 结构，已忽略")
+            return
+        }
+
+        let queryItems = components.queryItems ?? []
+
+        // 白名单校验 host：仅允许合法主机名/IP，防止命令注入
+        guard let host = queryItems.first(where: { $0.name == "host" })?.value,
+              !host.isEmpty,
+              host.count <= 253,
+              host.range(of: #"^[a-zA-Z0-9\-\.]+$"#, options: .regularExpression) != nil
+        else {
+            AppLogger.general.warning("URL Scheme: 缺少或非法的 host 参数，已忽略")
+            return
+        }
+
+        // 白名单校验 port：必须为 1-65535
+        let portRaw = queryItems.first(where: { $0.name == "port" })?.value ?? "22"
+        guard let port = Int(portRaw), (1...65535).contains(port) else {
+            AppLogger.general.warning("URL Scheme: port 超出合法范围 (\(portRaw))，已忽略")
+            return
+        }
+
+        // 白名单校验 username：仅允许安全字符集
+        let username = queryItems.first(where: { $0.name == "user" })?.value ?? ""
+        guard !username.isEmpty,
+              username.count <= 64,
+              username.range(of: #"^[a-zA-Z0-9_\-\.]+$"#, options: .regularExpression) != nil
+        else {
+            AppLogger.general.warning("URL Scheme: 缺少或非法的 user 参数，已忽略")
+            return
+        }
+
+        AppLogger.general.info("URL Scheme: 请求连接 \(username)@\(host):\(port)")
+        NotificationCenter.default.post(
+            name: .urlSchemeConnectRequested,
+            object: nil,
+            userInfo: ["host": host, "port": port, "username": username]
+        )
     }
 
     // MARK: - Dock 菜单
@@ -197,4 +236,7 @@ extension Notification.Name {
     // 导入 / 导出会话（Session 菜单）
     static let importSessionsRequested = Notification.Name("app.shellmate.importSessionsRequested")
     static let exportSessionsRequested = Notification.Name("app.shellmate.exportSessionsRequested")
+
+    // URL Scheme 连接请求（shellmate://connect?host=...&port=...&user=...）
+    static let urlSchemeConnectRequested = Notification.Name("app.shellmate.urlSchemeConnectRequested")
 }

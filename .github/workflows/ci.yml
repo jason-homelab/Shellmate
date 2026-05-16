@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: 构建与测试
+    runs-on: macos-15
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 选择 Xcode 版本
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: 显示环境信息
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: 恢复 SPM 缓存
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages/checkouts
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: 构建（Debug）
+        run: |
+          xcodebuild build \
+            -project ShellMate/ShellMate.xcodeproj \
+            -scheme ShellMate \
+            -configuration Debug \
+            -destination "platform=macOS" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color || exit 1
+
+      - name: 运行单元测试
+        run: |
+          xcodebuild test \
+            -project ShellMate/ShellMate.xcodeproj \
+            -scheme ShellMate \
+            -configuration Debug \
+            -destination "platform=macOS" \
+            -testPlan UnitTests \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults.xcresult \
+            | xcpretty --color || exit 1
+
+      - name: 上传测试结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_number }}
+          path: TestResults.xcresult
+          retention-days: 7
+
+      - name: 检查覆盖率（信息性，不阻断）
+        if: success()
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult \
+            | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          coverage = data.get('lineCoverage', 0) * 100
+          print(f'当前代码行覆盖率: {coverage:.1f}%')
+          if coverage < 20:
+              print('警告：覆盖率低于 20%，建议补充测试')
+          " 2>/dev/null || echo "覆盖率数据暂不可用"
+
+  lint:
+    name: 代码规范检查
+    runs-on: macos-15
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 SwiftLint
+        run: brew install swiftlint
+
+      - name: 运行 SwiftLint
+        run: |
+          swiftlint lint \
+            --path ShellMate/ShellMate \
+            --reporter github-actions-logging \
+            --config .swiftlint.yml 2>/dev/null || \
+          swiftlint lint \
+            --path ShellMate/ShellMate \
+            --reporter github-actions-logging

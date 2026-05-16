@@ -278,13 +278,15 @@ struct ContentView: View {
                     onCreateSession: {
                         withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
                         // 等待欢迎屏淡出动画完成后再打开表单，避免 overlay + sheet 同时出现
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 350_000_000)
                             sessionStore.showNewSessionForm()
                         }
                     },
                     onImportConfiguration: {
                         withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 350_000_000)
                             panels.openSheet { panels.showImportExportDialog = true }
                         }
                     }

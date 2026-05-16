@@ -100,6 +100,9 @@ final class DNSResolver {
     }
 
     /// 异步解析（内部实现）
+    /// DispatchQueue.global 在此处是必要的：getaddrinfo 是阻塞式 C 系统调用，
+    /// 不能在 Swift 协作线程池（Task）上执行，否则会阻塞 async 执行器线程。
+    /// 外层公共 resolve() 已通过 withCheckedThrowingContinuation 将其桥接为 async/await。
     private func resolveAsync(host: String, completion: @escaping (Result<[String], SSHError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             var hints = addrinfo()
@@ -383,6 +386,8 @@ final class TCPConnector: @unchecked Sendable {
     }
 
     /// 等待连接完成
+    /// DispatchQueue.global 在此处是必要的：select() 是阻塞式 POSIX 调用，
+    /// 必须运行在 GCD 线程上而非 Swift 协作线程池，避免阻塞 async 执行器。
     private func waitForConnection(fd: Int32, host: String, port: Int32) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             DispatchQueue.global(qos: .userInitiated).async {

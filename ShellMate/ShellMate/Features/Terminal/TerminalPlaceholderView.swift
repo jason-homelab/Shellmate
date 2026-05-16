@@ -237,6 +237,8 @@ struct TerminalPlaceholderView: View {
         let savedPassword = password
         password = ""
 
+        // DispatchQueue.global 在此处是必要的：SSH2Connection 内部封装了阻塞式 libssh2 调用，
+        // 不能在 Swift 协作线程池（Task）上执行，否则会阻塞 async 执行器线程。
         DispatchQueue.global(qos: .userInitiated).async {
             let connection = SSH2Connection()
 

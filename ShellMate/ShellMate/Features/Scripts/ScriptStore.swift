@@ -30,7 +30,7 @@ class ScriptStore: ObservableObject {
     var groupedScripts: [(category: String, scripts: [Script])] {
         let dict = Dictionary(grouping: scripts, by: \.category)
         return dict.keys.sorted().map { cat in
-            (category: cat, scripts: dict[cat]!.sorted { $0.name < $1.name })
+            (category: cat, scripts: dict[cat, default: []].sorted { $0.name < $1.name })
         }
     }
 

@@ -180,6 +180,23 @@ final class SessionRepository: SessionRepositoryProtocol {
         try await save(updatedSession)
     }
 
+    // MARK: - 局部更新方法
+
+    /// 仅更新 lastConnectedAt 字段，不触发全量 fetch
+    /// 用于替代 saveSession 避免 updateLastConnectedAt → saveSession → loadSessions 的 O(n) IO 链路
+    func updateLastConnectedAt(sessionId: UUID, date: Date) async throws {
+        let context = persistenceController.viewContext
+        let request: NSFetchRequest<CDSession> = CDSession.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", sessionId as CVarArg)
+        request.fetchLimit = 1
+
+        if let entity = try context.fetch(request).first {
+            entity.lastConnectedAt = date
+            entity.modifiedAt = date
+            persistenceController.save()
+        }
+    }
+
     // MARK: - 排序方法
 
     /// 批量更新排序顺序

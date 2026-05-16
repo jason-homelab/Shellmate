@@ -1150,7 +1150,7 @@ final class TerminalController: ObservableObject {
                 else if case .disconnected = self.state { self.scheduleReconnect() }
             }
         }
-        monitor.start(queue: DispatchQueue(label: "com.shellmate.networkmonitor", qos: .utility))
+        monitor.start(queue: DispatchQueue(label: "app.shellmate.networkmonitor", qos: .utility))
     }
 }
 

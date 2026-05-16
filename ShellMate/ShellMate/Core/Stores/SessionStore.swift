@@ -121,24 +121,35 @@ final class SessionStore: ObservableObject {
     // MARK: - 搜索方法
 
     /// 执行搜索
+    /// 小数据集（≤ 200 条）直接内存过滤（< 1ms），大数据集走 Core Data 索引查询
     private func performSearch() async {
         guard !Task.isCancelled else { return }  // BUG-003：被新搜索任务取消时提前退出
         let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if query.isEmpty {
             filteredSessions = sessions
-        } else {
-            do {
-                filteredSessions = try await repository.search(query: query)
-            } catch {
-                // 仅在 sessions 已加载完成时才使用内存过滤兜底，
-                // 避免初次加载尚未完成时将 filteredSessions 错误地置为空列表
-                guard !sessions.isEmpty else { return }
-                filteredSessions = sessions.filter { session in
-                    session.name.localizedCaseInsensitiveContains(query) ||
-                    session.host.localizedCaseInsensitiveContains(query) ||
-                    session.tags.contains { $0.localizedCaseInsensitiveContains(query) }
-                }
+            return
+        }
+
+        // 小数据集内存过滤：避免不必要的 Core Data IO
+        if sessions.count <= 200 {
+            filteredSessions = sessions.filter { session in
+                session.name.localizedCaseInsensitiveContains(query) ||
+                session.host.localizedCaseInsensitiveContains(query) ||
+                session.tags.contains { $0.localizedCaseInsensitiveContains(query) }
+            }
+            return
+        }
+
+        // 大数据集：走 Core Data 全文索引
+        do {
+            filteredSessions = try await repository.search(query: query)
+        } catch {
+            guard !sessions.isEmpty else { return }
+            filteredSessions = sessions.filter { session in
+                session.name.localizedCaseInsensitiveContains(query) ||
+                session.host.localizedCaseInsensitiveContains(query) ||
+                session.tags.contains { $0.localizedCaseInsensitiveContains(query) }
             }
         }
     }
@@ -281,10 +292,18 @@ final class SessionStore: ObservableObject {
     }
 
     /// 更新最后连接时间
+    /// 直接调用 repository 精确更新单字段，避免 saveSession → loadSessions 全量 fetch 链路
     func updateLastConnectedAt(for sessionId: UUID) async {
-        if var session = sessions.first(where: { $0.id == sessionId }) {
-            session.lastConnectedAt = Date()
-            await saveSession(session)
+        let now = Date()
+        do {
+            try await repository.updateLastConnectedAt(sessionId: sessionId, date: now)
+            // 仅在内存中同步更新，不触发 loadSessions
+            sessions = sessions.map { s in
+                guard s.id == sessionId else { return s }
+                var copy = s; copy.lastConnectedAt = now; return copy
+            }
+        } catch {
+            errorMessage = "更新连接时间失败: \(error.localizedDescription)"
         }
     }
 }

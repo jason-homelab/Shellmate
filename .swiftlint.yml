@@ -1,0 +1,45 @@
+included:
+  - ShellMate/ShellMate
+
+excluded:
+  - ShellMate/ShellMateTests
+  - ShellMate/ShellMate.xcodeproj
+
+disabled_rules:
+  - trailing_whitespace      # Xcode 自动处理
+  - line_length              # 中文注释天然较长
+
+opt_in_rules:
+  - force_unwrapping         # 禁止 force unwrap（已修复 ScriptStore）
+  - empty_count
+  - closure_spacing
+  - literal_expression_end_indentation
+
+force_cast: error
+force_try: warning
+force_unwrapping: warning
+
+file_length:
+  warning: 600
+  error: 1000               # TerminalController(1339) 会触发，提醒拆分
+
+function_body_length:
+  warning: 60
+  error: 100
+
+type_body_length:
+  warning: 300
+  error: 500
+
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - fd
+    - vm
+    - ip
+    - s
