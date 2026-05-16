@@ -41,7 +41,8 @@ struct SFTPPanelView: View {
             Divider()
             HStack(spacing: 0) {
                 localPanelView
-                Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(width: 0.5)
+                // Figma 15:9: bg-[rgba(0,0,0,0.08)] w-[0.5px]
+                Rectangle().fill(Color.black.opacity(0.08)).frame(width: 0.5)
                 remotePanelView
             }
             Divider()

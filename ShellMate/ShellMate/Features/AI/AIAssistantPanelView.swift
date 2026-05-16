@@ -207,14 +207,15 @@ struct AIAssistantPanelView: View {
                 ForEach(quickSuggestions, id: \.self) { s in
                     Button { vm.send(text: s) } label: {
                         Text(s).font(DesignTokens.Typography.labelSmall)
-                            .foregroundColor(DesignTokens.Colors.textPrimary)
+                            .foregroundColor(Color(hex: "#6e6e73"))
                             .multilineTextAlignment(.center).lineLimit(2)
-                            .padding(.horizontal, 10).padding(.vertical, 7)
+                            .padding(.horizontal, 11).padding(.vertical, 7)
                             .frame(maxWidth: .infinity)
-                            // Figma: bg-white/80 border-[#d2d2d7]/50 rounded-full
-                            .background(Color.white.opacity(0.80))
-                            .clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1))
+                            // Figma 12:18: bg-[rgba(0,0,0,0.05)] border-[rgba(0,0,0,0.08)] rounded-[14px] h-[28px]
+                            .background(Color.black.opacity(0.05))
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(Color.black.opacity(0.08), lineWidth: 1))
                     }.buttonStyle(.plain)
                 }
             }
@@ -294,18 +295,16 @@ struct AIAssistantPanelView: View {
                         .padding(.horizontal, DesignTokens.Spacing.md)
                         .onSubmit { guard !vm.isStreaming else { return }; vm.send(text: vm.inputText) }
                 }
-                .frame(minHeight: 44)
-                // Figma: bg-white/80 border-[#d2d2d7]/50 rounded-xl
-                .background(Color.white.opacity(0.80))
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                    .strokeBorder(
-                        vm.inputMode == .nlCommand
-                            ? DesignTokens.Colors.accentSecondary.opacity(0.50)
-                            : Color(hex: "#d2d2d7").opacity(0.50),
-                        lineWidth: vm.inputMode == .nlCommand ? 1.0 : 0.75
-                    ))
-                .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
+                .frame(height: 36)
+                // Figma 12:26: bg-[#efeff1] h-[36px] rounded-[18px]
+                .background(Color(hex: "#efeff1"))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay {
+                    if vm.inputMode == .nlCommand {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.accentSecondary.opacity(0.50), lineWidth: 1.0)
+                    }
+                }
                 sendOrStopButton
             }
             Text(vm.inputMode == .nlCommand
@@ -332,19 +331,20 @@ struct AIAssistantPanelView: View {
             Button { vm.cancel() } label: {
                 Image(systemName: "stop.fill").font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.statusError)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 32, height: 32)
                     .background(DesignTokens.Colors.statusError.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }.buttonStyle(.plain).help("停止生成")
         } else {
             let canSend = !vm.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             let sendColor: Color = vm.inputMode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary
+            // Figma 12:28: bg-[#077aff] size-[32px] rounded-[16px]
             Button { vm.send(text: vm.inputText) } label: {
-                Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "paperplane.fill")
-                    .font(DesignTokens.Typography.bodyMedium).foregroundColor(.white)
-                    .frame(width: 44, height: 44)
+                Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "arrow.up")
+                    .font(.system(size: 14, weight: .semibold)).foregroundColor(.white)
+                    .frame(width: 32, height: 32)
                     .background(sendColor)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .shadow(color: sendColor.opacity(0.3), radius: 6, x: 0, y: 2)
             }
             .buttonStyle(.plain).disabled(!canSend).opacity(canSend ? 1.0 : 0.4)
@@ -401,7 +401,8 @@ struct AIMessageBubbleView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, DesignTokens.Spacing.lg).padding(.vertical, DesignTokens.Spacing.md)
                         .background(DesignTokens.Colors.accentPrimary)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+                        // Figma 12:8: bg-[#077aff] rounded-[12px]
+                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                         .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.3), radius: 8, x: 0, y: 3)
                     ZStack {
                         Circle().fill(DesignTokens.Colors.textSecondary).frame(width: 32, height: 32)
@@ -424,12 +425,9 @@ struct AIMessageBubbleView: View {
                             aiBubbleContent.padding(.horizontal, DesignTokens.Spacing.lg).padding(.vertical, DesignTokens.Spacing.md)
                         }
                     }
-                    // Figma: bg-white/80 border border-[#d2d2d7]/50 shadow-sm
-                    .background(Color.white.opacity(0.80))
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.75))
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+                    // Figma 12:6/10/15: bg-[#efeff1] rounded-[12px]
+                    .background(Color(hex: "#efeff1"))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                     Spacer(minLength: 32)
                 }
             }

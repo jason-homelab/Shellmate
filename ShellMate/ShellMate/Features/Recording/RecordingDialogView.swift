@@ -87,7 +87,8 @@ struct RecordingDialogView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
+        // Figma 20:2: shadow-[0px_8px_40px_0px_rgba(0,0,0,0.18)]
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .onAppear {
             loadRecordings()
             // 同步录制器当前状态（面板打开时可能已在录制）
@@ -463,11 +464,12 @@ struct RecordingDialogView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(Color.white.opacity(0.80))
+        // Figma 20:10: bg-white border-[rgba(0,0,0,0.06)] rounded-[8px]
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
         )
     }
 

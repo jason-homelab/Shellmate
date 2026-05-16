@@ -7,6 +7,9 @@ import SwiftUI
 /// Tab 栏：bg=rgba(0,0,0,0.02)，h=44，左侧 padding=16；每个 Tab width=72，height=32，cornerRadius=8
 struct SettingsView: View {
 
+    // MARK: - 关闭回调（自定义浮动面板模式）
+    var onClose: (() -> Void)? = nil
+
     // MARK: - 导航项（3 个 Tab：通用 / 外观 / 终端）
 
     enum SettingsTab: String, CaseIterable, Identifiable {
@@ -26,18 +29,67 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 顶部 Tab 选择器（5 格等宽，对齐 Figma grid-cols-5）
+            // Figma 14:3 — "设置" 标题 text-[18px] font-semibold text-[#1d1d1f] left-[28px] top-[24px] h=56
+            titleHeaderView
+            // Tab 选择器（h=44，bg-[rgba(0,0,0,0.02)]）
             tabPickerBar
-
-            Divider()
-
+            // Figma 14:11 — bg-[rgba(0,0,0,0.08)] h-[0.5px]
+            Rectangle()
+                .fill(Color.black.opacity(0.08))
+                .frame(height: 0.5)
             // 内容区域
             contentPanel
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            // Figma 14:51 — bottom divider
+            Rectangle()
+                .fill(Color.black.opacity(0.08))
+                .frame(height: 0.5)
+            // Figma 14:52 — 保存按钮
+            saveButtonRow
         }
-        .frame(width: 600, height: 580)
-        // Figma Desktop: #fafafb 背景，rounded-16px，shadow
+        .frame(width: 600, height: 584)
+        // Figma Desktop: #fafafb 背景
         .background(Color(hex: "#fafafb"))
+    }
+
+    // Figma 14:3: text-[18px] font-semibold text-[#1d1d1f], h=56；右侧关闭按钮（自定义浮动面板模式）
+    private var titleHeaderView: some View {
+        HStack {
+            Text(verbatim: "设置")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(Color(hex: "#1d1d1f"))
+            Spacer()
+            if let onClose {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(Color(hex: "#8e8e93"))
+                        .frame(width: 24, height: 24)
+                        .background(Color.black.opacity(0.06))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 28)
+        .frame(height: 56)
+    }
+
+    // Figma 14:52: bg-[#077aff] h-[36px] w-[80px] rounded-[8px] shadow-[0px_4px_12px_0px_rgba(7,122,255,0.3)]
+    private var saveButtonRow: some View {
+        HStack {
+            Spacer()
+            Button("保存") {}
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white)
+                .frame(width: 80, height: 36)
+                .background(DesignTokens.Colors.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
+                .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 28)
+        .frame(height: 47)
     }
 
     // MARK: - 顶部选择器（Figma Desktop 规格）
@@ -48,7 +100,7 @@ struct SettingsView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
                 } label: {
-                    Text(tab.localizedLabel)
+                    Text(verbatim: tab.rawValue)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(selectedTab == tab ? Color(hex: "#1d1d1f") : Color(hex: "#8e8e93"))
                         .frame(width: 72, height: 32)
@@ -72,14 +124,9 @@ struct SettingsView: View {
     private var contentPanel: some View {
         switch selectedTab {
         case .general:
+            // Figma 14:2 通用 Tab：仅显示 GeneralSettingsView（连接/通知/安全三分区）
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    generalContent
-                    Divider().padding(.horizontal, 20).padding(.vertical, 4)
-                    aiContent
-                    Divider().padding(.horizontal, 20).padding(.vertical, 4)
-                    automationContent
-                }
+                generalContent
             }
         case .appearance:
             ScrollView {

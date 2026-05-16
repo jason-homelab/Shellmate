@@ -106,7 +106,8 @@ struct LogPanelView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
+        // Figma 19:2: shadow-[0px_8px_40px_0px_rgba(0,0,0,0.18)]
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
     }
 
     // MARK: - 头部
@@ -241,12 +242,9 @@ struct LogPanelView: View {
             }
             .padding(.horizontal, DesignTokens.Spacing.sm)
             .padding(.vertical, DesignTokens.Spacing.micro)
-            .background(Color.white.opacity(0.80))
-            .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-            )
+            // Figma 19:4: bg-[rgba(0,0,0,0.05)] rounded-[8px]
+            .background(Color.black.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             if !sessionNames.isEmpty {
                 Picker("", selection: $selectedSession) {

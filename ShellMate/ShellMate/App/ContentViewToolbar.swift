@@ -191,12 +191,12 @@ extension ContentView {
             toolbarDivider
 
             Button {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showSettingsPanel = true }
             } label: {
                 Label("设置", systemImage: "gearshape").labelStyle(.iconOnly)
             }
             .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("设置 (⌘,)")
+            .help("设置 (⌘,")
         }
     }
 

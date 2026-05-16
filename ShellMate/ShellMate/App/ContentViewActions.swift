@@ -88,12 +88,10 @@ extension ContentView {
         }
     }
 
-    // MARK: - 设置窗口
+    // MARK: - 设置面板（已迁移为自定义浮动面板，通过 panels.showSettingsPanel 控制）
+    // 原 NSApp.sendAction(showSettingsWindow:) 已废弃，保留空函数避免调用侧编译错误
+    func openNativeSettingsWindow() {}
 
-    func openNativeSettingsWindow() {
-        // showSettingsWindow: 自 macOS 13 起可用（最低部署目标），无需版本判断
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-    }
 
     // MARK: - 连接方法
 

@@ -124,25 +124,6 @@ struct SessionSidebarView: View {
             sidebarIconButton(systemImage: "key", tooltip: "密码管理") {
                 vm.showPasswordManager = true
             }
-
-            // 打开设置（Figma 8:12: ⚙，macOS 14+ 用 SettingsLink）
-            if #available(macOS 14.0, *) {
-                SettingsLink {
-                    Label("偏好设置", systemImage: "gear")
-                        .labelStyle(.iconOnly)
-                        .font(DesignTokens.Typography.iconLarge)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("偏好设置")
-            } else {
-                sidebarIconButton(systemImage: "gear", tooltip: "偏好设置") {
-                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                }
-            }
         }
         // Figma 8:4: left=14, height=36
         // Figma 8:6-8:13: 按钮组距右边 2px，左侧标题保持 14px

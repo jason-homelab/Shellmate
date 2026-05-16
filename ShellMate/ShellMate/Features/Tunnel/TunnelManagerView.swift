@@ -50,7 +50,8 @@ struct TunnelManagerView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         )
-        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
+        // Figma 16:2: shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("启动失败", isPresented: $showStartError) {
             Button("确定", role: .cancel) {}
         } message: {

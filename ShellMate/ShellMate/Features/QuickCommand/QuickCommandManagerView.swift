@@ -249,75 +249,72 @@ struct QuickCommandManagerView: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
 
-                // 命令文本（text-xs bg-black/5 px-2 py-1 rounded font-mono）
+                // 命令文本（Figma 17:2: text-xs font-mono text-[#077aff]）
                 if !cmd.content.isEmpty {
                     Text(cmd.content)
                         .font(DesignTokens.Typography.codeTiny)
-                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .foregroundColor(DesignTokens.Colors.accentPrimary)
                         .lineLimit(2)
-                        .padding(.horizontal, DesignTokens.Spacing.sm)
-                        .padding(.vertical, DesignTokens.Spacing.xxs)
-                        .background(DesignTokens.Colors.surfaceHover)
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 右侧操作按钮
-            HStack(spacing: DesignTokens.Spacing.xxxs) {
-                // 执行（Play）
+            // 右侧操作按钮（Figma 17:2）
+            HStack(spacing: DesignTokens.Spacing.xxs) {
+                // 执行按钮（Figma: bg-[#077aff] h-[28px] rounded-[6px] text-white text-xs）
                 Button {
                     onSendCommand(cmd)
                 } label: {
-                    Image(systemName: "play.fill")
-                        .font(DesignTokens.Typography.captionLarge)
-                        .foregroundColor(DesignTokens.Colors.accentPrimary)
-                        .frame(width: 32, height: 32)
-                        .background(DesignTokens.Colors.accentPrimary.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
+                    Text("执行")
+                        .font(DesignTokens.Typography.labelSmall)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(DesignTokens.Colors.accentPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("执行命令")
 
-                // 编辑（Edit2）
+                // 编辑按钮（Figma: bg-[rgba(0,0,0,0.05)] h-[28px] rounded-[6px] text-xs）
                 Button {
                     formDraft = cmd
                     formSetID = setID
                     isNewCommand = false
                     withAnimation(.easeOut(duration: 0.15)) { showForm = true }
                 } label: {
-                    Image(systemName: "pencil")
-                        .font(DesignTokens.Typography.captionLarge)
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .frame(width: 32, height: 32)
-                        .background(DesignTokens.Colors.surfaceHover)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
+                    Text("编辑")
+                        .font(DesignTokens.Typography.labelSmall)
+                        .foregroundColor(DesignTokens.Colors.textSecondary)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(Color.black.opacity(0.05))
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .help("编辑命令")
 
-                // 删除（Trash2）
+                // 删除按钮（小图标，无背景）
                 Button {
                     pendingDelete = (command: cmd, setID: setID)
                 } label: {
                     Image(systemName: "trash")
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
                 .help("删除命令")
             }
         }
         .padding(DesignTokens.Spacing.md)
-        // Figma: bg-white/80 backdrop-blur-sm rounded-xl border border-[#d2d2d7]/50
-        .background(Color.white.opacity(0.80))
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        // Figma 17:2: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px]
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.03), radius: 3, x: 0, y: 1)
     }
 
     // MARK: - 新建/编辑表单

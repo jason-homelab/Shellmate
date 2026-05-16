@@ -5,161 +5,88 @@ import SwiftUI
 /// 对应 Figma 设置面板 §二：通用设置
 struct GeneralSettingsView: View {
 
-    // MARK: - 持久化偏好
+    // MARK: - 持久化偏好（Figma 14:2 通用 Tab 六项设置）
 
-    @AppStorage("general.autoReconnect")       private var autoReconnect: Bool   = false
-    @AppStorage("general.confirmCloseTab")     private var confirmCloseTab: Bool = true
-    @AppStorage("general.saveSessionLog")      private var saveSessionLog: Bool  = false
-    @AppStorage("general.defaultProtocol")     private var defaultProtocol: String = "SSH"
-    @AppStorage("general.language")            private var language: String      = "system"
-
-    /// 同步给 ContentView 使用（决定 .environment(\.locale)）
-    @AppStorage("app.language")                private var appLanguage: String   = "zh"
-
-    @State private var showLanguageRestartAlert: Bool = false
-
-    private let protocols = ["SSH", "Telnet", "Serial"]
-    private let languages: [(String, LocalizedStringKey)] = [("system", "跟随系统"), ("zh-Hans", "简体中文"), ("en", "English")]
+    // 连接
+    @AppStorage("general.keepAlive")             private var keepAlive: Bool             = true
+    @AppStorage("general.autoReconnect")         private var autoReconnect: Bool         = true
+    @AppStorage("general.compression")           private var compression: Bool           = false
+    // 通知
+    @AppStorage("general.connectionNotification") private var connectionNotification: Bool = true
+    @AppStorage("general.commandNotification")   private var commandNotification: Bool   = false
+    // 安全
+    @AppStorage("general.verifyKnownHosts")      private var verifyKnownHosts: Bool      = true
 
     // MARK: - 视图
 
     var body: some View {
         ScrollView { settingsContent }
-            .alert("需重启以应用语言更改", isPresented: $showLanguageRestartAlert) {
-                Button("稍后重启", role: .cancel) { }
-                Button("立即退出", role: .destructive) {
-                    NSApp.terminate(nil)
-                }
-            } message: {
-                Text("语言更改将在重启应用后完全生效。菜单栏将立即更新。")
-            }
     }
 
     /// 可供父视图直接嵌入的内容（不含 ScrollView 包装）
     var settingsContent: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+        VStack(alignment: .leading, spacing: 0) {
 
-            // 语言
-            settingRow(
-                title: "语言",
-                subtitle: nil
-            ) {
-                Picker("", selection: $language) {
-                    ForEach(languages, id: \.0) { lang in
-                        Text(lang.1).tag(lang.0)
-                    }
-                }
-                .labelsHidden()
-                .frame(width: 160)
-                .onChange(of: language) { newLang in
-                    applyLanguageSetting(newLang)
-                }
-            }
+            // Figma 14:12 — 连接
+            sectionHeader("连接")
+            // Figma 14:13 — 保持连接活跃
+            toggleRow(title: "保持连接活跃",   subtitle: "防止 SSH 超时断开",    binding: $keepAlive)
+            // Figma 14:19 — 自动重连
+            toggleRow(title: "自动重连",       subtitle: "连接断开后自动重试",    binding: $autoReconnect)
+            // Figma 14:25 — 压缩传输
+            toggleRow(title: "压缩传输",       subtitle: "启用数据压缩以提升速度", binding: $compression)
 
-            Divider()
+            // Figma 14:31 — 通知
+            sectionHeader("通知")
+            // Figma 14:32 — 连接通知
+            toggleRow(title: "连接通知",       subtitle: "连接状态改变时通知",    binding: $connectionNotification)
+            // Figma 14:38 — 命令完成通知
+            toggleRow(title: "命令完成通知",   subtitle: "长时命令完成时通知",    binding: $commandNotification)
 
-            // 启动时自动重连
-            toggleRow(
-                title: "启动时自动重连",
-                subtitle: "应用重启后自动建立上次活动会话",
-                binding: $autoReconnect
-            )
-
-            Divider()
-
-            // 关闭标签确认
-            toggleRow(
-                title: "关闭标签时需确认",
-                subtitle: "防止误关闭正在运行的会话",
-                binding: $confirmCloseTab
-            )
-
-            Divider()
-
-            // 保存会话日志
-            toggleRow(
-                title: "保存会话日志",
-                subtitle: "将终端输出保存至本地文件",
-                binding: $saveSessionLog
-            )
-
-            Divider()
-
-            // 默认协议
-            settingRow(
-                title: "默认连接协议",
-                subtitle: nil
-            ) {
-                Picker("", selection: $defaultProtocol) {
-                    ForEach(protocols, id: \.self) { Text($0).tag($0) }
-                }
-                .labelsHidden()
-                .pickerStyle(.segmented)
-                .frame(width: 200)
-            }
+            // Figma 14:44 — 安全
+            sectionHeader("安全")
+            // Figma 14:45 — 已知主机验证
+            toggleRow(title: "已知主机验证",   subtitle: "验证 SSH 服务器指纹",   binding: $verifyKnownHosts)
         }
-        .padding(DesignTokens.Spacing.lg)
-    }
-
-    // MARK: - 语言应用
-
-    private func applyLanguageSetting(_ lang: String) {
-        switch lang {
-        case "en":
-            UserDefaults.standard.set(["en"], forKey: "AppleLanguages")
-            appLanguage = "en"
-        case "zh-Hans":
-            UserDefaults.standard.set(["zh-Hans"], forKey: "AppleLanguages")
-            appLanguage = "zh"
-        default: // "system"
-            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
-            let systemLang = Locale.preferredLanguages.first ?? "zh-Hans"
-            appLanguage = systemLang.hasPrefix("en") ? "en" : "zh"
-        }
-        UserDefaults.standard.synchronize()
-        showLanguageRestartAlert = true
     }
 
     // MARK: - 辅助构建器
 
-    private func toggleRow(title: LocalizedStringKey, subtitle: LocalizedStringKey?, binding: Binding<Bool>) -> some View {
-        HStack(alignment: subtitle != nil ? .top : .center) {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
+    // Figma: text-[11px] font-semibold text-[#8e8e93] left-[28px] pt-[16px]
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(Color(hex: "#8e8e93"))
+            .padding(.horizontal, 28)
+            .padding(.top, 16)
+            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Figma: h-[52px] px-[28px]，title text-[13px] medium #1d1d1f，subtitle text-[12px] #8e8e93，bottom border rgba(0,0,0,0.06)
+    private func toggleRow(title: String, subtitle: String, binding: Binding<Bool>) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(DesignTokens.Typography.bodyMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                if let sub = subtitle {
-                    Text(sub)
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#8e8e93"))
             }
             Spacer()
             Toggle("", isOn: binding)
                 .toggleStyle(.switch)
                 .labelsHidden()
         }
-    }
-
-    private func settingRow<Content: View>(
-        title: LocalizedStringKey,
-        subtitle: LocalizedStringKey?,
-        @ViewBuilder control: () -> Content
-    ) -> some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text(title)
-                    .font(DesignTokens.Typography.bodyMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                if let sub = subtitle {
-                    Text(sub)
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.textSecondary)
-                }
-            }
-            Spacer()
-            control()
-        }
+        .padding(.horizontal, 28)
+        .frame(height: 52)
+        .overlay(
+            Rectangle()
+                .fill(Color.black.opacity(0.06))
+                .frame(height: 0.5),
+            alignment: .bottom
+        )
     }
 }
 

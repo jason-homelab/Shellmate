@@ -54,7 +54,8 @@ struct TmuxManagerView: View {
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .shadow(color: .black.opacity(0.50), radius: 24, x: 0, y: 8)
+        // Figma 18:2: shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .overlay {
             if showNewSessionSheet {
                 Color.black.opacity(0.3)

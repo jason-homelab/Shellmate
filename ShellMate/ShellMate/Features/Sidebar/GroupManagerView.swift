@@ -121,17 +121,14 @@ struct GroupManagerView: View {
                 .padding(DesignTokens.Spacing.xl)
         } else {
             ScrollView {
-                VStack(spacing: 0) {
+                // Figma 20:27: 卡片式行，无行间分隔线
+                VStack(spacing: DesignTokens.Spacing.xs) {
                     ForEach(groupStore.groups) { group in
                         groupRow(group)
-                        if group.id != groupStore.groups.last?.id {
-                            Rectangle()
-                                .fill(Color(hex: "#d2d2d7").opacity(0.50))
-                                .frame(height: 0.5)
-                                .padding(.leading, 52)
-                        }
                     }
                 }
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .padding(.vertical, DesignTokens.Spacing.md)
             }
             .frame(maxHeight: 320)
         }
@@ -141,15 +138,10 @@ struct GroupManagerView: View {
 
     private func groupRow(_ group: SessionGroup) -> some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            // 文件夹图标（颜色取分组颜色）
-            ZStack {
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                    .fill(group.color.opacity(0.12))
-                    .frame(width: 28, height: 28)
-                Image(systemName: "folder.fill")
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(group.color)
-            }
+            // Figma 20:28: 12×12 颜色圆点
+            Circle()
+                .fill(group.color)
+                .frame(width: 12, height: 12)
 
             // 分组名（可内联重命名）
             if editingGroupId == group.id {
@@ -224,8 +216,15 @@ struct GroupManagerView: View {
                 .help("删除分组")
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 13)
+        .frame(height: 52)
+        // Figma 20:27: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px] h-[52px]
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+        )
     }
 
     // MARK: - 新建分组输入区

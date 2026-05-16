@@ -64,6 +64,7 @@
 		A1010007 /* PasswordManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2010007 /* PasswordManagerView.swift */; };
 		A4010001 /* AppVariant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4020001 /* AppVariant.swift */; };
 		AA0001000000000000000002 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000001 /* AppLogger.swift */; };
+		AA0002000000000000000002 /* AppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000001 /* AppEvent.swift */; };
 		AC010001 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC020001 /* AppConstants.swift */; };
 		AI010001 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020001 /* AIService.swift */; };
 		AI010002 /* AIAssistantPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI020002 /* AIAssistantPanelView.swift */; };
@@ -275,6 +276,7 @@
 		A2010007 /* PasswordManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordManagerView.swift; sourceTree = "<group>"; };
 		A4020001 /* AppVariant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVariant.swift; sourceTree = "<group>"; };
 		AA0001000000000000000001 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		AA0002000000000000000001 /* AppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEvent.swift; sourceTree = "<group>"; };
 		AC020001 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		AI020001 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		AI020002 /* AIAssistantPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantPanelView.swift; sourceTree = "<group>"; };
@@ -655,6 +657,7 @@
 			children = (
 				0002000200020011 /* DesignTokens.swift */,
 				AA0001000000000000000001 /* AppLogger.swift */,
+				AA0002000000000000000001 /* AppEvent.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -1144,6 +1147,7 @@
 				000100010001000F /* GroupStore.swift in Sources */,
 				0001000100010010 /* DesignTokens.swift in Sources */,
 				AA0001000000000000000002 /* AppLogger.swift in Sources */,
+				AA0002000000000000000002 /* AppEvent.swift in Sources */,
 				0001000100010011 /* Color+Hex.swift in Sources */,
 				CX010001 /* Collection+SafeSubscript.swift in Sources */,
 				AC010001 /* AppConstants.swift in Sources */,

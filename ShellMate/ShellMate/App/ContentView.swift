@@ -193,7 +193,7 @@ struct ContentView: View {
         }
         // 全局 UI 通知处理
         .onReceive(NotificationCenter.default.publisher(for: .settingsRequested)) { _ in
-            openNativeSettingsWindow()
+            withAnimation(.easeInOut(duration: 0.2)) { panels.showSettingsPanel = true }
         }
         .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
             panels.showLogPanel = true
@@ -243,6 +243,28 @@ struct ContentView: View {
         ))
         // 兜底不透明背景，防止窗口透明时缝隙露出桌面壁纸
         .background(DesignTokens.Colors.surfaceWindow)
+        // 设置浮动面板（Figma 14:x，居中浮动，半透明遮罩背景）
+        .overlay {
+            if panels.showSettingsPanel {
+                ZStack {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                panels.showSettingsPanel = false
+                            }
+                        }
+                    SettingsView(onClose: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            panels.showSettingsPanel = false
+                        }
+                    })
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.18), radius: 20, x: 0, y: 8)
+                }
+                .transition(.opacity)
+            }
+        }
         // 欢迎界面覆层（首次启动，覆盖整个窗口含底栏）
         .overlay {
             if !hasLaunchedBefore {

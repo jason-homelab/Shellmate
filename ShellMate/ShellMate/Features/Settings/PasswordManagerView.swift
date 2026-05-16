@@ -37,6 +37,21 @@ struct PasswordManagerView: View {
         VStack(spacing: 0) {
             headerView
             Divider()
+            // Figma 20:50: 安全提示横幅 bg-[rgba(7,122,255,0.06)] h-[48px] rounded-[8px]
+            HStack(spacing: 8) {
+                Text("🔒")
+                    .font(DesignTokens.Typography.captionLarge)
+                Text("密码通过 macOS Keychain 加密存储，安全可靠")
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.accentPrimary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .frame(height: 48)
+            .background(DesignTokens.Colors.accentPrimary.opacity(0.06))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.top, DesignTokens.Spacing.lg)
             contentArea
         }
         .frame(width: 600)
@@ -183,15 +198,15 @@ struct PasswordManagerView: View {
     private func sessionRow(_ session: Session) -> some View {
         let isVisible = visiblePasswordIds.contains(session.id)
         return HStack(spacing: DesignTokens.Spacing.md) {
-            // 会话信息
+            // 会话信息：Figma 20:53-54 name font-medium text-[13px] + "username · 已保存" text-[#34d399]
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text(session.name)
-                    .font(DesignTokens.Typography.labelLarge)
+                    .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
-                Text("\(session.username)@\(session.host):\(session.port)")
-                    .font(DesignTokens.Typography.codeSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                Text("\(session.username) · 已保存")
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.statusConnected)
                     .lineLimit(1)
             }
 
@@ -237,11 +252,12 @@ struct PasswordManagerView: View {
             .disabled(isDeleting)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color.white.opacity(0.80))
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        // Figma 20:52: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px] h-[56px]
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
         )
     }
 

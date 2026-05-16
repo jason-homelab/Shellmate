@@ -13,6 +13,7 @@ final class ContentViewModel: ObservableObject {
     @Published var showRecordingDialog: Bool = false
     @Published var showLogPanel: Bool = false
     @Published var showImportExportDialog: Bool = false
+    @Published var showSettingsPanel: Bool = false
 
     // MARK: - 语言选择器
 

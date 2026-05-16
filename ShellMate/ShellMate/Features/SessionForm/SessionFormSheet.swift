@@ -26,7 +26,8 @@ struct SessionFormSheet: View {
     // MARK: - 颜色常量
 
     private let labelColor = DesignTokens.Colors.textPrimary
-    private let borderColor = Color(hex: "#d2d2d7").opacity(0.50)
+    // Figma 11:7: border-[rgba(0,0,0,0.12)]
+    private let borderColor = Color.black.opacity(0.12)
     private let fieldBackground = Color.white.opacity(0.80)
 
     // MARK: - 初始化
@@ -179,7 +180,8 @@ struct SessionFormSheet: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.20), radius: 32, x: 0, y: 8)
+        // Figma 11:2: shadow-[0px_20px_60px_0px_rgba(0,0,0,0.2)]
+        .shadow(color: Color.black.opacity(0.20), radius: 30, x: 0, y: 20)
         .onAppear {
             vm.configure(defaultProtocol: defaultProtocol)
         }
@@ -231,12 +233,13 @@ struct SessionFormSheet: View {
 
             Spacer()
 
+            // Figma 11:33: bg-[rgba(0,0,0,0.05)] h-[36px] rounded-[8px] text-[#6e6e73]
             Button("取消") { vm.cancel() }
                 .font(DesignTokens.Typography.bodyLarge)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .foregroundColor(Color(hex: "#6e6e73"))
                 .padding(.horizontal, DesignTokens.Spacing.lg)
                 .padding(.vertical, DesignTokens.Spacing.sm)
-                .background(cancelHovered ? DesignTokens.Colors.surfaceHover : Color.clear)
+                .background(Color.black.opacity(cancelHovered ? 0.08 : 0.05))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                 .buttonStyle(.plain)
                 .onHover { hovering in

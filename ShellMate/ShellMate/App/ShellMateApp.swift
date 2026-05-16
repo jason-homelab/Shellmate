@@ -33,16 +33,20 @@ struct ShellMateApp: App {
             appCommands
         }
 
-        // 设置窗口
-        Settings {
-            SettingsView()
-        }
     }
 
     // MARK: - 菜单命令
 
     @CommandsBuilder
     private var appCommands: some Commands {
+
+        // ── 设置（⌘,）：替换系统默认 Settings 菜单，改为打开自定义浮动面板 ──
+        CommandGroup(replacing: .appSettings) {
+            Button("设置...") {
+                NotificationCenter.default.post(name: .settingsRequested, object: nil)
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
 
         // ── File 菜单 ──────────────────────────────────────────────────────────
         CommandGroup(replacing: .newItem) {
