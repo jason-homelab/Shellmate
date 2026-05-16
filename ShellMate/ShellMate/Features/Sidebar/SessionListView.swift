@@ -186,18 +186,10 @@ struct SessionListView: View {
 
         Menu("分屏打开") {
             Button("左右分屏") {
-                NotificationCenter.default.post(
-                    name: .splitSessionRequested,
-                    object: nil,
-                    userInfo: ["sessionId": session.id, "layout": "horizontal"]
-                )
+                AppEvent.postSplitSession(sessionId: session.id, layout: "horizontal")
             }
             Button("上下分屏") {
-                NotificationCenter.default.post(
-                    name: .splitSessionRequested,
-                    object: nil,
-                    userInfo: ["sessionId": session.id, "layout": "vertical"]
-                )
+                AppEvent.postSplitSession(sessionId: session.id, layout: "vertical")
             }
         }
 

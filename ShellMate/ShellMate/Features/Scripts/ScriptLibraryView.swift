@@ -571,11 +571,7 @@ struct ScriptLibraryView: View {
         executionLogs = []
 
         // 将脚本内容通过通知写入当前活跃终端
-        NotificationCenter.default.post(
-            name: .runScriptRequested,
-            object: nil,
-            userInfo: ["scriptContent": script.content, "scriptName": script.name]
-        )
+        AppEvent.postRunScript(content: script.content, name: script.name)
 
         appendLog(String(format: NSLocalizedString("▶ 已发送：%@", comment: ""), script.name))
         appendLog(NSLocalizedString("脚本内容已写入当前终端会话，执行输出请切换到终端窗口查看。", comment: ""))

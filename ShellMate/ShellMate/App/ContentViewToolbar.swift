@@ -76,11 +76,7 @@ extension ContentView {
 
             Button {
                 if let sessionId = tabBarStore.selectedTab?.sessionId {
-                    NotificationCenter.default.post(
-                        name: .disconnectActiveTerminalRequested,
-                        object: nil,
-                        userInfo: ["sessionId": sessionId]
-                    )
+                    AppEvent.postDisconnectTerminal(sessionId: sessionId)
                 }
             } label: {
                 Text("断开")

@@ -252,11 +252,7 @@ struct TerminalView: View {
             // 因此必须在视图消失时主动断连。
             Task { await controller.disconnect() }
             // 重置 SessionStore 连接状态，避免侧边栏计数器不归零
-            NotificationCenter.default.post(
-                name: .sessionConnectionStateChanged,
-                object: nil,
-                userInfo: ["sessionId": session.id, "connectionState": ConnectionState.offline.rawValue]
-            )
+            AppEvent.postConnectionState(sessionId: session.id, state: .offline)
         }
         .onChange(of: globalFontSize) { newVal in
             // 无会话覆盖时同步全局变化，不覆盖有独立字号的会话
@@ -295,11 +291,7 @@ struct TerminalView: View {
         }
         .onChange(of: controller.state) { newState in
             // 将 TerminalController 的实际连接状态同步回 SessionStore
-            NotificationCenter.default.post(
-                name: .sessionConnectionStateChanged,
-                object: nil,
-                userInfo: ["sessionId": session.id, "connectionState": newState.stateColor.rawValue]
-            )
+            AppEvent.postConnectionState(sessionId: session.id, state: newState.stateColor)
             if case .failed(let reason) = newState {
                 connectionErrorMessage = reason
                 showConnectionError = true
@@ -1173,7 +1165,7 @@ private struct TerminalViewNotificationModifier: ViewModifier {
         content
             // 断开连接（通过 sessionId 精确路由）
             .onReceive(NotificationCenter.default.publisher(for: .disconnectActiveTerminalRequested)) { notification in
-                guard let targetId = notification.userInfo?["sessionId"] as? UUID,
+                guard let targetId = AppEvent.extractDisconnectTerminal(from: notification),
                       targetId == sessionId else { return }
                 Task { await controller.disconnect() }
             }
@@ -1218,7 +1210,7 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             }
             // 脚本库：将脚本内容逐行发送到终端
             .onReceive(NotificationCenter.default.publisher(for: .runScriptRequested)) { notification in
-                guard let content = notification.userInfo?["scriptContent"] as? String else { return }
+                guard let (content, _) = AppEvent.extractRunScript(from: notification) else { return }
                 Task {
                     let lines = content.components(separatedBy: "\n")
                     for line in lines {

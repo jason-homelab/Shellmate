@@ -175,11 +175,7 @@ struct ShellMateApp: App {
                 Button(String.localizedStringWithFormat(
                     NSLocalizedString("标签页 %d", comment: "Tab selection menu item"), index
                 )) {
-                    NotificationCenter.default.post(
-                        name: .selectTabRequested,
-                        object: nil,
-                        userInfo: ["index": index - 1]
-                    )
+                    AppEvent.postSelectTab(index: index - 1)
                 }
                 .keyboardShortcut(KeyEquivalent(Character("\(index)")), modifiers: .command)
             }

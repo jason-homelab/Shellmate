@@ -193,9 +193,7 @@ struct ContentView: View {
         }
         // 同步 TerminalController 实际连接状态到 SessionStore（侧边栏计数器）和 TabBarStore（标签点颜色）
         .onReceive(NotificationCenter.default.publisher(for: .sessionConnectionStateChanged)) { notification in
-            guard let sessionId = notification.userInfo?["sessionId"] as? UUID,
-                  let rawState = notification.userInfo?["connectionState"] as? Int,
-                  let state = ConnectionState(rawValue: rawState) else { return }
+            guard let (sessionId, state) = AppEvent.extractConnectionState(from: notification) else { return }
             sessionStore.updateConnectionState(for: sessionId, state: state)
             if let tab = tabBarStore.tabs.first(where: { $0.sessionId == sessionId }) {
                 tabBarStore.updateConnectionState(for: tab.id, state: state)
@@ -203,8 +201,7 @@ struct ContentView: View {
         }
         // 侧边栏右键"分屏打开"：在现有主终端旁边打开目标会话
         .onReceive(NotificationCenter.default.publisher(for: .splitSessionRequested)) { notification in
-            guard let sessionId = notification.userInfo?["sessionId"] as? UUID,
-                  let layoutStr = notification.userInfo?["layout"] as? String,
+            guard let (sessionId, layoutStr) = AppEvent.extractSplitSession(from: notification),
                   sessionStore.sessions.contains(where: { $0.id == sessionId }) else { return }
             panels.splitLayout = layoutStr == "horizontal" ? .horizontal : .vertical
             panels.splitSessionId = sessionId

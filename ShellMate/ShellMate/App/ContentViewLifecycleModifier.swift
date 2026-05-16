@@ -25,20 +25,12 @@ struct ContentViewLifecycleModifier: ViewModifier {
             }
             .onReceive(NotificationCenter.default.publisher(for: .disconnectSessionRequested)) { _ in
                 if let sessionId = tabBarStore.selectedTab?.sessionId {
-                    NotificationCenter.default.post(
-                        name: .disconnectActiveTerminalRequested,
-                        object: nil,
-                        userInfo: ["sessionId": sessionId]
-                    )
+                    AppEvent.postDisconnectTerminal(sessionId: sessionId)
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .disconnectAllRequested)) { _ in
                 for tab in tabBarStore.tabs {
-                    NotificationCenter.default.post(
-                        name: .disconnectActiveTerminalRequested,
-                        object: nil,
-                        userInfo: ["sessionId": tab.sessionId]
-                    )
+                    AppEvent.postDisconnectTerminal(sessionId: tab.sessionId)
                 }
             }
             // 标签页操作
@@ -59,7 +51,7 @@ struct ContentViewLifecycleModifier: ViewModifier {
                 tabBarStore.selectPreviousTab()
             }
             .onReceive(NotificationCenter.default.publisher(for: .selectTabRequested)) { notification in
-                if let index = notification.userInfo?["index"] as? Int {
+                if let index = AppEvent.extractSelectTab(from: notification) {
                     tabBarStore.selectTab(at: index)
                 }
             }

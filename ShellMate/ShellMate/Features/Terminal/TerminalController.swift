@@ -216,12 +216,16 @@ final class TerminalController: ObservableObject {
     }
 
     deinit {
+        // NWPathMonitor / Task 取消是线程安全的，可在 deinit 直接调用
+        networkMonitor?.cancel()  // 停止网络路径监控，释放关联 DispatchQueue
+        reconnectTask?.cancel()   // 取消待执行的重连 Task
         let id = sessionId
         Task { @MainActor in
             SyncInputStore.shared.unregister(sessionId: id)
         }
-        // 注意：disconnect() 不在此处调用——deinit 中 [weak self] 捕获到的 self 已为 nil，
-        // 实际断连由 TerminalView.onDisappear 负责，确保 SSH 连接在对象释放前关闭。
+        // 注意：disconnect() 不在此处调用——实际断连由 TerminalView.onDisappear 负责，
+        // 确保 SSH 连接在对象释放前关闭；TerminalControllerRegistry.unregister 同样由
+        // TerminalView.onDisappear 管理，生命周期与视图绑定。
     }
 
     /// W12.6：供外部查询的会话标题（用于 SyncInputStore.SessionInfo）
