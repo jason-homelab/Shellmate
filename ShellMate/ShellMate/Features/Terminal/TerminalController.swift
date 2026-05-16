@@ -740,7 +740,7 @@ final class TerminalController: ObservableObject {
     private func connectSerial() async throws {
         guard let portPath = session.serialPortPath, !portPath.isEmpty else {
             let err = SerialError.portOpenFailed(path: "(未配置)", code: 0)
-            state = .failed(err.localizedDescription ?? "串口路径未设置")
+            state = .failed(err.localizedDescription)
             delegate?.terminalController(self, didChangeState: state)
             throw err
         }

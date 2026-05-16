@@ -52,10 +52,12 @@ struct SFTPPanelView: View {
                     .frame(height: 120)
             }
         }
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.50))
-        }
+        // Figma 15:2: bg-[#fafafb]（亮色纯色近白；深色复用 surfaceCard #131922）
+        .background(Color(nsColor: NSColor(name: nil) { traits in
+            traits.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(srgbRed: 0.075, green: 0.098, blue: 0.133, alpha: 1)  // #131922
+                : NSColor(srgbRed: 0.980, green: 0.980, blue: 0.984, alpha: 1)  // #fafafb
+        }))
         .onAppear { vm.onAppear() }
         .onChange(of: syncDirectory) { vm.syncRemoteDirectoryIfNeeded($0) }
         .sheet(isPresented: $vm.showNewLocalFolderDialog) { newLocalFolderSheet }
@@ -118,10 +120,8 @@ struct SFTPPanelView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 36)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma 15:2 标题区无特殊背景，继承根 #fafafb
+        .background(Color.clear)
     }
 
     // MARK: - 本地面板
@@ -208,10 +208,8 @@ struct SFTPPanelView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 32)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma 15:5/15:7 列头：极淡叠加 rgba(0,0,0,0.03)
+        .background(Color.black.opacity(0.03))
     }
 
     // MARK: - 路径栏
@@ -248,10 +246,8 @@ struct SFTPPanelView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma: 路径栏继承根背景，极淡叠加区分层次
+        .background(Color.black.opacity(0.02))
     }
 
     private var remotePathBar: some View {
@@ -293,10 +289,8 @@ struct SFTPPanelView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
         .padding(.vertical, DesignTokens.Spacing.xs)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma: 路径栏继承根背景，极淡叠加区分层次
+        .background(Color.black.opacity(0.02))
     }
 
     // MARK: - 文件列表
@@ -385,10 +379,8 @@ struct SFTPPanelView: View {
                 .padding(.horizontal, DesignTokens.Spacing.md)
         }
         .frame(height: 28)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma 15:96 状态栏：极淡叠加 rgba(0,0,0,0.02)
+        .background(Color.black.opacity(0.02))
     }
 
     // MARK: - 辅助视图
@@ -676,10 +668,8 @@ struct SFTPTransferProgressView: View {
                 }
             }
         }
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        // Figma: 传输进度面板继承根背景，极淡叠加区分层次
+        .background(Color.black.opacity(0.02))
     }
 }
 

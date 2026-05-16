@@ -114,6 +114,10 @@ struct TerminalView: View {
         return globalThemeId
     }
 
+    private var effectiveThemeBackground: SwiftUI.Color {
+        (AppTheme.allThemes.first { $0.id == effectiveThemeId } ?? AppTheme.builtins[0]).background
+    }
+
     @State private var showSearch: Bool = false
     @State private var searchText: String = ""
     @State private var currentMatch: Int = 0
@@ -848,6 +852,9 @@ struct TerminalView: View {
                 themeId: effectiveThemeId,
                 optionAsMeta: optionAsMeta
             )
+            // Figma 9:15: terminal text 需要左侧呼吸空间；仅内缩 SwiftTerm NSView，
+            // ZStack 覆盖层和侧边面板不受影响；背景由父级 .background(effectiveThemeBackground) 提供同色填充
+            .padding(.leading, 8)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             stateOverlay
@@ -860,6 +867,8 @@ struct TerminalView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 用当前主题背景色填充 SwiftTerm 左侧内缩区域，避免与用户自定义主题色不匹配
+        .background(effectiveThemeBackground)
     }
 
     @ViewBuilder

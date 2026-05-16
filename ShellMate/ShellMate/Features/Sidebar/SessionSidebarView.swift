@@ -115,13 +115,13 @@ struct SessionSidebarView: View {
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            // 分组管理（Figma 8:8: ⊞）
-            sidebarIconButton(systemImage: "folder.badge.gearshape", tooltip: "分组管理") {
+            // 分组管理（Figma 8:8: ⊞ → square.grid.2x2 视觉更简洁）
+            sidebarIconButton(systemImage: "square.grid.2x2", tooltip: "分组管理") {
                 vm.showGroupManager = true
             }
 
-            // 密码管理（Figma 8:10: ⚿）
-            sidebarIconButton(systemImage: "key.fill", tooltip: "密码管理") {
+            // 密码管理（Figma 8:10: ⚿ → key 描边版与其他图标重量一致）
+            sidebarIconButton(systemImage: "key", tooltip: "密码管理") {
                 vm.showPasswordManager = true
             }
 

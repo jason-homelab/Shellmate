@@ -208,7 +208,7 @@ extension ContentView {
 
     private var toolbarDivider: some View {
         Rectangle()
-            .fill(DesignTokens.Colors.borderPrimary)
+            .fill(Color.black.opacity(0.12))
             .frame(width: 1, height: 20)
             .padding(.horizontal, 4)
     }
