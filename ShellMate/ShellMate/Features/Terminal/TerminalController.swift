@@ -643,11 +643,12 @@ final class TerminalController: ObservableObject {
     /// 用户接受新主机的密钥（D02 确认后调用）
     func acceptNewHostKey() {
         guard case .newHost(let fingerprint) = pendingHostKeyState else { return }
-        try? KnownHostsManager.shared.add(
-            host: session.host,
-            port: session.port,
-            fingerprint: fingerprint
-        )
+        do {
+            try KnownHostsManager.shared.add(host: session.host, port: session.port, fingerprint: fingerprint)
+        } catch {
+            // 写入失败不阻断连接，但需记录：下次连接仍会弹 D02 提示
+            AppLogger.ssh.warning("[KnownHosts] 保存主机指纹失败: \(error.localizedDescription)")
+        }
         pendingHostKeyState = nil
         Task { try? await connect() }
     }
@@ -655,12 +656,11 @@ final class TerminalController: ObservableObject {
     /// 用户接受密钥变更并继续连接（D03 高风险操作）
     func acceptChangedHostKey() {
         guard case .changedHost(_, let newFP) = pendingHostKeyState else { return }
-        // 更新 KnownHosts 为新密钥
-        try? KnownHostsManager.shared.add(
-            host: session.host,
-            port: session.port,
-            fingerprint: newFP
-        )
+        do {
+            try KnownHostsManager.shared.add(host: session.host, port: session.port, fingerprint: newFP)
+        } catch {
+            AppLogger.ssh.warning("[KnownHosts] 更新主机指纹失败: \(error.localizedDescription)")
+        }
         pendingHostKeyState = nil
         state = .disconnected
         Task { try? await connect() }
@@ -1160,8 +1160,8 @@ extension TerminalController: TmuxSendTarget {
     /// 发送 tmux 内部命令：直接写入 SSH 连接，不经过 SyncInputStore 广播
     func sendTmuxCommand(_ command: String) {
         guard let data = command.data(using: .utf8) else { return }
-        Task {
-            guard state == .connected else { return }
+        Task { [weak self] in
+            guard let self, state == .connected else { return }
             if let pm = proxyJumpManager {
                 try? await pm.write(data)
             } else if let conn = sshConnection {
@@ -1179,23 +1179,24 @@ extension TerminalController: SwiftTerm.TerminalViewDelegate {
 
     nonisolated func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
         let d = Data(data)
-        Task { @MainActor in
-            try? await send(d)
+        Task { @MainActor [weak self] in
+            try? await self?.send(d)
         }
     }
 
     nonisolated func scrolled(source: SwiftTerm.TerminalView, position: Double) {}
 
     nonisolated func setTerminalTitle(source: SwiftTerm.TerminalView, title: String) {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             self.terminalTitle = title
             delegate?.terminalController(self, didChangeTitle: title)
         }
     }
 
     nonisolated func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
-        Task { @MainActor in
-            terminalSize = TerminalSize(columns: newCols, rows: newRows)
+        Task { @MainActor [weak self] in
+            self?.terminalSize = TerminalSize(columns: newCols, rows: newRows)
         }
     }
 

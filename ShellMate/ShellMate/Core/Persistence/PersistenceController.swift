@@ -64,6 +64,9 @@ final class PersistenceController {
     /// 持久化存储加载错误（非 nil 时表示存储初始化失败，上层 UI 应展示降级提示）
     private(set) var loadError: Error?
 
+    /// 迁移失败后删库重建，表示本次启动发生了数据丢失；UI 应弹窗告知用户
+    private(set) var dataLossOccurred: Bool = false
+
     /// 主线程视图上下文
     var viewContext: NSManagedObjectContext {
         container.viewContext
@@ -87,11 +90,14 @@ final class PersistenceController {
         }
 
         var storeLoadError: Error?
+        var didLoseData = false
         container.loadPersistentStores { [weak container] storeDescription, error in
             if let error = error as NSError? {
-                AppLogger.db.debug("❌ 持久化存储加载失败: \(error), \(error.userInfo)")
+                AppLogger.db.error("❌ 持久化存储加载失败: \(error), \(error.userInfo)")
+                Self.writeMigrationFailureLog(error: error)
 
-                // 兜底：迁移不可挽救时删除旧库重建（开发阶段可接受数据丢失）
+                // 兜底：迁移不可挽救时删除旧库重建
+                // ⚠️ 此操作会清除用户所有本地会话数据，dataLossOccurred 标志供 UI 弹窗告知
                 if let storeURL = storeDescription.url {
                     do {
                         try container?.persistentStoreCoordinator.destroyPersistentStore(
@@ -101,9 +107,10 @@ final class PersistenceController {
                             ofType: NSSQLiteStoreType, configurationName: nil,
                             at: storeURL, options: nil
                         )
-                        AppLogger.db.debug("⚠️ 旧数据库已删除并重建")
+                        didLoseData = true
+                        AppLogger.db.warning("⚠️ 旧数据库已删除并重建，用户数据已清空")
                     } catch {
-                        AppLogger.db.debug("❌ 重建数据库也失败: \(error)")
+                        AppLogger.db.error("❌ 重建数据库也失败: \(error)")
                         storeLoadError = error
                     }
                 } else {
@@ -112,6 +119,7 @@ final class PersistenceController {
             }
         }
         self.loadError = storeLoadError
+        self.dataLossOccurred = didLoseData
 
         // 仅在存储成功加载时配置合并策略，避免在错误状态下操作上下文
         if storeLoadError == nil {
@@ -139,6 +147,27 @@ final class PersistenceController {
                 object: self,
                 userInfo: ["error": nsError]
             )
+        }
+    }
+
+    // MARK: - 私有方法
+
+    /// 将迁移失败详情写入 ~/Library/Logs/ShellMate/migration-error.log
+    /// 供开发者分析；不含任何用户数据，仅含 Core Data 错误码和时间戳
+    private static func writeMigrationFailureLog(error: NSError) {
+        guard let logsDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
+            .first?.appendingPathComponent("Logs/ShellMate") else { return }
+        try? FileManager.default.createDirectory(at: logsDir, withIntermediateDirectories: true)
+        let logFile = logsDir.appendingPathComponent("migration-error.log")
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let entry = "[\(timestamp)] code=\(error.code) domain=\(error.domain) desc=\(error.localizedDescription)\n"
+        guard let data = entry.data(using: .utf8) else { return }
+        if let fh = try? FileHandle(forWritingTo: logFile) {
+            fh.seekToEndOfFile()
+            fh.write(data)
+            try? fh.close()
+        } else {
+            try? data.write(to: logFile)
         }
     }
 

@@ -30,6 +30,8 @@ struct ContentView: View {
     @AppStorage("appearance.windowMode") var windowMode: String = "light"
     /// 数据库加载错误 Alert（在 init 之前已确定，State 驱动以正确响应 dismiss）
     @State private var showDBError: Bool = PersistenceController.shared.loadError != nil
+    /// 迁移失败删库重建警告（dataLossOccurred == true 时弹出）
+    @State private var showDataLossWarning: Bool = PersistenceController.shared.dataLossOccurred
     @AppStorage("appearance.bgOpacity") private var bgOpacity: Double = 0
 
     // MARK: - 语言状态
@@ -183,6 +185,11 @@ struct ContentView: View {
             if let error = PersistenceController.shared.loadError {
                 Text("本地数据库初始化失败，应用无法继续运行。\n\n\(error.localizedDescription)")
             }
+        }
+        .alert("会话数据已重置", isPresented: $showDataLossWarning) {
+            Button("了解") { showDataLossWarning = false }
+        } message: {
+            Text("由于数据库迁移失败，本地会话数据已被清空并重建。如需找回数据，请查看日志：~/Library/Logs/ShellMate/migration-error.log")
         }
         // 全局 UI 通知处理
         .onReceive(NotificationCenter.default.publisher(for: .settingsRequested)) { _ in
