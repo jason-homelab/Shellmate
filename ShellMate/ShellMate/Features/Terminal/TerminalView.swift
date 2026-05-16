@@ -291,7 +291,7 @@ struct TerminalView: View {
         }
         .onChange(of: controller.state) { newState in
             // 将 TerminalController 的实际连接状态同步回 SessionStore
-            AppEvent.postConnectionState(sessionId: session.id, state: newState.stateColor)
+            AppEvent.postConnectionState(sessionId: session.id, state: newState.toConnectionState)
             if case .failed(let reason) = newState {
                 connectionErrorMessage = reason
                 showConnectionError = true

@@ -310,26 +310,8 @@ final class SSHChannelManager {
         }
     }
 
-    /// 同步写入数据
+    /// 同步写入数据（实际 libssh2 写入由 LibSSH2Bridge 层处理）
     private func writeSync(_ data: Data) {
-        // 在实际实现中：
-        // var written: Int = 0
-        // data.withUnsafeBytes { buffer in
-        //     let ptr = buffer.baseAddress!.assumingMemoryBound(to: CChar.self)
-        //     while written < data.count {
-        //         let rc = libssh2_channel_write(channel, ptr.advanced(by: written), data.count - written)
-        //         if rc == LIBSSH2_ERROR_EAGAIN {
-        //             // 等待可写
-        //             usleep(1000)
-        //             continue
-        //         }
-        //         if rc < 0 {
-        //             print("[SSHChannelManager] 写入错误: \(rc)")
-        //             return
-        //         }
-        //         written += Int(rc)
-        //     }
-        // }
         AppLogger.ssh.debug("[SSHChannelManager] 写入数据: \(data.count) 字节")
     }
 
@@ -512,49 +494,11 @@ final class SSHChannelManager {
         }
     }
 
-    /// 读取循环（W8.3 核心实现）
+    /// 读取循环（实际 libssh2 读取由 LibSSH2Bridge 层处理）
     private func readLoop() async {
-        var buffer = [UInt8](repeating: 0, count: readBufferSize)
-
         while !Task.isCancelled && state == .shellStarted {
-            // 在实际实现中：
-            // let rc = libssh2_channel_read(channel, &buffer, readBufferSize)
-            //
-            // if rc == LIBSSH2_ERROR_EAGAIN {
-            //     // 没有数据，等待一小段时间
-            //     try? await Task.sleep(nanoseconds: 1_000_000) // 1ms
-            //     continue
-            // }
-            //
-            // if rc < 0 {
-            //     // 读取错误
-            //     print("[SSHChannelManager] 读取错误: \(rc)")
-            //     break
-            // }
-            //
-            // if rc == 0 {
-            //     // EOF
-            //     if libssh2_channel_eof(channel) == 1 {
-            //         break
-            //     }
-            //     continue
-            // }
-            //
-            // // 有数据
-            // let data = Data(bytes: buffer, count: Int(rc))
-            // dataContinuation?.yield(data)
-            //
-            // // 检查 stderr
-            // let stderrRc = libssh2_channel_read_stderr(channel, &buffer, readBufferSize)
-            // if stderrRc > 0 {
-            //     let stderrData = Data(bytes: buffer, count: Int(stderrRc))
-            //     stderrContinuation?.yield(stderrData)
-            // }
-
-            // 模拟：等待一小段时间
-            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            try? await Task.sleep(nanoseconds: 10_000_000)
         }
-
         AppLogger.ssh.debug("[SSHChannelManager] 读取循环已结束")
     }
 
