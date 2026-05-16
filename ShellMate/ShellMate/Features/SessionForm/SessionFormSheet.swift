@@ -220,14 +220,19 @@ struct SessionFormSheet: View {
 
     private var footerView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
+            // 显示所有校验错误（逐行），而非只显示第一条
             if !vm.validationErrors.isEmpty {
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.statusError)
-                    Text(vm.validationErrors.first ?? "")
-                        .font(DesignTokens.Typography.bodySmall)
-                        .foregroundColor(DesignTokens.Colors.statusError)
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(vm.validationErrors, id: \.self) { error in
+                        HStack(spacing: DesignTokens.Spacing.xs) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(DesignTokens.Typography.bodySmall)
+                                .foregroundColor(DesignTokens.Colors.statusError)
+                            Text(error)
+                                .font(DesignTokens.Typography.bodySmall)
+                                .foregroundColor(DesignTokens.Colors.statusError)
+                        }
+                    }
                 }
             }
 

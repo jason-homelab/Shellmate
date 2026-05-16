@@ -58,6 +58,7 @@ struct GroupHeaderView: View {
         .onTapGesture(count: 1) {
             withAnimation(DesignTokens.Animation.fast) { onToggle?() }
         }
+        .help("双击可编辑分组名")
     }
 }
 

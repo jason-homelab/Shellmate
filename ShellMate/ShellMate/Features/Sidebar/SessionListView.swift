@@ -14,6 +14,11 @@ struct SessionListView: View {
 
     @Environment(\.openWindow) private var openWindow
 
+    // MARK: - 删除确认状态
+
+    @State private var sessionToDelete: Session? = nil
+    @State private var groupToDelete: SessionGroup? = nil
+
     // MARK: - 视图
 
     var body: some View {
@@ -40,6 +45,36 @@ struct SessionListView: View {
         .background(DesignTokens.Colors.surfaceWindow)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(Rectangle())             // 裁剪行 shadow CALayer 溢出；.clipShape 比 .clipped 更彻底
+        // 会话删除确认（不可逆，需用户主动确认）
+        .confirmationDialog(
+            "删除会话"\(sessionToDelete?.name ?? "")"？",
+            isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("删除", role: .destructive) {
+                guard let s = sessionToDelete else { return }
+                sessionToDelete = nil
+                Task { await sessionStore.deleteSession(s) }
+            }
+            Button("取消", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("此操作无法撤销，会话配置将被永久移除。")
+        }
+        // 分组删除确认
+        .confirmationDialog(
+            "删除分组"\(groupToDelete?.name ?? "")"？",
+            isPresented: Binding(get: { groupToDelete != nil }, set: { if !$0 { groupToDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("删除", role: .destructive) {
+                guard let g = groupToDelete else { return }
+                groupToDelete = nil
+                Task { await groupStore.deleteGroup(g) }
+            }
+            Button("取消", role: .cancel) { groupToDelete = nil }
+        } message: {
+            Text("分组内的会话将移至未分组，不会被删除。")
+        }
     }
 
     // MARK: - 未分组会话
@@ -178,9 +213,10 @@ struct SessionListView: View {
         }
 
         Button("在新窗口打开") {
-            // 选中会话，写入待连接会话 ID，再打开新窗口（新窗口会自动连接）
-            sessionStore.selectedSessionId = session.id
-            UserDefaults.standard.set(session.id.uuidString, forKey: "pendingAutoConnectSessionId")
+            // 使用队列写入而非单值覆盖，防止快速连续点击时竞态条件导致 ID 丢失
+            var queue = UserDefaults.standard.stringArray(forKey: "pendingAutoConnectQueue") ?? []
+            queue.append(session.id.uuidString)
+            UserDefaults.standard.set(queue, forKey: "pendingAutoConnectQueue")
             openWindow(id: "main")
         }
 
@@ -208,16 +244,17 @@ struct SessionListView: View {
         Divider()
 
         Menu("移动到分组") {
-            Button("未分组") {
-                Task {
-                    await sessionStore.moveSession(session, to: nil)
-                }
+            Button {
+                Task { await sessionStore.moveSession(session, to: nil) }
+            } label: {
+                // 当前已在未分组时显示 checkmark，给用户当前位置反馈
+                Label("未分组", systemImage: session.groupId == nil ? "checkmark" : "tray")
             }
 
             Divider()
 
             ForEach(groupStore.groups) { group in
-                Button(group.name) {
+                Button {
                     Task {
                         await sessionStore.moveSession(session, to: group.id)
                         // 自动展开目标分组，让用户看到移入的会话
@@ -226,6 +263,9 @@ struct SessionListView: View {
                             await groupStore.setExpanded(current, isExpanded: true)
                         }
                     }
+                } label: {
+                    // 当前分组高亮显示 checkmark
+                    Label(group.name, systemImage: session.groupId == group.id ? "checkmark" : "folder")
                 }
             }
         }
@@ -233,9 +273,7 @@ struct SessionListView: View {
         Divider()
 
         Button("删除", role: .destructive) {
-            Task {
-                await sessionStore.deleteSession(session)
-            }
+            sessionToDelete = session
         }
     }
 
@@ -310,17 +348,14 @@ struct SessionListView: View {
         Divider()
 
         Button("删除分组", role: .destructive) {
-            Task {
-                await groupStore.deleteGroup(group)
-            }
+            groupToDelete = group
         }
     }
 
     // MARK: - 辅助方法
 
     private func duplicateSession(_ session: Session) {
-        var newSession = session
-        newSession = Session(
+        let newSession = Session(
             name: "\(session.name) 副本",
             host: session.host,
             port: session.port,
@@ -333,9 +368,10 @@ struct SessionListView: View {
             colorHex: session.colorHex,
             groupId: session.groupId
         )
-
         Task {
             await sessionStore.saveSession(newSession)
+            // 复制完成后选中新会话，让用户能在侧边栏立即定位到它
+            await MainActor.run { sessionStore.selectedSessionId = newSession.id }
         }
     }
 }

@@ -117,11 +117,13 @@ extension ContentView {
     /// 检查 UserDefaults 中是否有待自动连接的会话（由右键"在新窗口打开"写入）
     @MainActor
     func checkPendingAutoConnect() async {
-        guard let idStr = UserDefaults.standard.string(forKey: "pendingAutoConnectSessionId"),
-              let sessionId = UUID(uuidString: idStr) else { return }
+        // 从队列头部取出当前窗口应连接的会话 ID（队列方式防止多次快速点击时竞态覆盖）
+        var queue = UserDefaults.standard.stringArray(forKey: "pendingAutoConnectQueue") ?? []
+        guard !queue.isEmpty else { return }
+        let idStr = queue.removeFirst()
+        UserDefaults.standard.set(queue.isEmpty ? nil : queue, forKey: "pendingAutoConnectQueue")
 
-        // 清除标记，防止重复触发
-        UserDefaults.standard.removeObject(forKey: "pendingAutoConnectSessionId")
+        guard let sessionId = UUID(uuidString: idStr) else { return }
 
         // 等待 Core Data 会话加载（最多 1 秒，每 100ms 轮询一次）
         for _ in 0..<10 {

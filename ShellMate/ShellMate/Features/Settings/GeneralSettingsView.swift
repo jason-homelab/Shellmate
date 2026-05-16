@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 // MARK: - 通用设置（General）
 
@@ -29,25 +30,31 @@ struct GeneralSettingsView: View {
 
             // Figma 14:12 — 连接
             sectionHeader("连接")
-            // Figma 14:13 — 保持连接活跃
             toggleRow(title: "保持连接活跃",   subtitle: "防止 SSH 超时断开",    binding: $keepAlive)
-            // Figma 14:19 — 自动重连
             toggleRow(title: "自动重连",       subtitle: "连接断开后自动重试",    binding: $autoReconnect)
-            // Figma 14:25 — 压缩传输
             toggleRow(title: "压缩传输",       subtitle: "启用数据压缩以提升速度", binding: $compression)
 
-            // Figma 14:31 — 通知
+            // Figma 14:31 — 通知（开启时在此处请求系统权限，而非在触发器执行时）
             sectionHeader("通知")
-            // Figma 14:32 — 连接通知
             toggleRow(title: "连接通知",       subtitle: "连接状态改变时通知",    binding: $connectionNotification)
-            // Figma 14:38 — 命令完成通知
+                .onChange(of: connectionNotification) { enabled in
+                    if enabled { requestNotificationPermission() }
+                }
             toggleRow(title: "命令完成通知",   subtitle: "长时命令完成时通知",    binding: $commandNotification)
+                .onChange(of: commandNotification) { enabled in
+                    if enabled { requestNotificationPermission() }
+                }
 
             // Figma 14:44 — 安全
             sectionHeader("安全")
-            // Figma 14:45 — 已知主机验证
             toggleRow(title: "已知主机验证",   subtitle: "验证 SSH 服务器指纹",   binding: $verifyKnownHosts)
         }
+    }
+
+    // MARK: - 通知权限
+
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     // MARK: - 辅助构建器

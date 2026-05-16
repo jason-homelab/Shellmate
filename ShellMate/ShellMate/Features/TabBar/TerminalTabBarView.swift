@@ -39,38 +39,48 @@ struct TerminalTabBarView: View {
 
     // MARK: - 子视图
 
-    /// 标签页列表（超出宽度时横向滚动，避免 Tab 溢出截断）
+    /// 标签页列表（超出宽度时横向滚动，选中 Tab 自动滚入视野）
     private var tabList: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignTokens.Spacing.xxs) {  // Figma 9:3: 4px gap between tabs
-                ForEach(store.tabs) { tab in
-                    TerminalTabView(
-                        tab: tab,
-                        isSelected: store.selectedTabId == tab.id,
-                        onClose: {
-                            store.requestCloseTab(tab)
-                        },
-                        onSelect: {
-                            store.selectTab(tab)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DesignTokens.Spacing.xxs) {  // Figma 9:3: 4px gap between tabs
+                    ForEach(store.tabs) { tab in
+                        TerminalTabView(
+                            tab: tab,
+                            isSelected: store.selectedTabId == tab.id,
+                            onClose: {
+                                store.requestCloseTab(tab)
+                            },
+                            onSelect: {
+                                store.selectTab(tab)
+                            }
+                        )
+                        .id(tab.id)  // ScrollViewReader 锚点
+                        // 拖拽中原位 ghost 效果：淡化 + 轻微缩放，让用户知道正在移动
+                        .opacity(draggedTabId == tab.id ? 0.45 : 1.0)
+                        .scaleEffect(draggedTabId == tab.id ? 0.93 : 1.0)
+                        .animation(.easeInOut(duration: 0.15), value: draggedTabId == tab.id)
+                        .onDrag {
+                            draggedTabId = tab.id
+                            return NSItemProvider(object: tab.id.uuidString as NSString)
                         }
-                    )
-                    .onDrag {
-                        draggedTabId = tab.id
-                        return NSItemProvider(object: tab.id.uuidString as NSString)
+                        .onDrop(of: [.text], delegate: TabDropDelegate(
+                            targetTab: tab,
+                            store: store,
+                            draggedTabId: $draggedTabId
+                        ))
                     }
-                    .onDrop(of: [.text], delegate: TabDropDelegate(
-                        targetTab: tab,
-                        store: store,
-                        draggedTabId: $draggedTabId
-                    ))
+                }
+                // Figma 9:5：首个标签 left=4px
+                .padding(.leading, DesignTokens.Spacing.xxs)
+            }
+            // 选中 Tab 变化时（⌘1-9 快捷键、自动选中等）自动滚入视野
+            .onChange(of: store.selectedTabId) { newId in
+                guard let id = newId else { return }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    proxy.scrollTo(id, anchor: .center)
                 }
             }
-            // Figma 9:5：首个标签 left=4px
-            .padding(.leading, DesignTokens.Spacing.xxs)
-        }
-        // 选中 Tab 变化时自动滚动到可视区域
-        .onChange(of: store.selectedTabId) { _ in
-            // SwiftUI ScrollViewReader 需要绑定 id；此处依赖默认滚动行为，不引入额外状态
         }
     }
 
