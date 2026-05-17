@@ -4,7 +4,7 @@ import Combine
 // MARK: - Script Library Store
 
 @MainActor
-class ScriptStore: ObservableObject {
+final class ScriptStore: ObservableObject {
 
     // MARK: - 发布状态
 
