@@ -33,7 +33,7 @@ struct TerminalStatusBarView: View {
     var onMetricsTap: (() -> Void)? = nil
 
     /// W12.6：观察同步输入状态
-    @ObservedObject private var syncStore = SyncInputStore.shared
+    @EnvironmentObject private var syncStore: SyncInputStore
 
     /// CPU 历史读数（最近 8 次，用于 sparkline 柱状图）
     @State private var cpuHistory: [Double] = []

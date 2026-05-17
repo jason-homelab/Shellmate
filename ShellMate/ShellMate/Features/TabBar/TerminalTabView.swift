@@ -15,7 +15,7 @@ struct TerminalTabView: View {
     // MARK: - 私有状态
 
     @State private var isHovering: Bool = false
-    @ObservedObject private var syncStore = SyncInputStore.shared
+    @EnvironmentObject private var syncStore: SyncInputStore
 
     // MARK: - 视图
 

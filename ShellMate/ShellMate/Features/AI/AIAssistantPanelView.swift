@@ -6,7 +6,7 @@ import SwiftUI
 struct AIAssistantPanelView: View {
 
     @StateObject private var vm: AIPanelViewModel
-    @ObservedObject private var aiSettings = AISettingsStore.shared
+    @EnvironmentObject private var aiSettings: AISettingsStore
     @ObservedObject private var networkMonitor = NetworkMonitor.shared
     var onClose: () -> Void
     var initialError: String?

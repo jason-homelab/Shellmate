@@ -150,6 +150,7 @@
 		SL010004 /* ScriptEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL020004 /* ScriptEditorSheet.swift */; };
 		SLS010001 /* SessionLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SLS020001 /* SessionLogStore.swift */; };
 		ATS010001 /* ActiveTerminalStatusStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ATS020001 /* ActiveTerminalStatusStore.swift */; };
+		SSS010001 /* SecuritySettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSS020001 /* SecuritySettingsStore.swift */; };
 		SM010001 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020001 /* ServerMetrics.swift */; };
 		SM010002 /* ServerMetricsMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = SM020002 /* ServerMetricsMonitor.swift */; };
 		SP010001 /* SplitSessionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SP020001 /* SplitSessionPickerView.swift */; };
@@ -372,6 +373,7 @@
 		SL020004 /* ScriptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptEditorSheet.swift; sourceTree = "<group>"; };
 		SLS020001 /* SessionLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStore.swift; sourceTree = "<group>"; };
 		ATS020001 /* ActiveTerminalStatusStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTerminalStatusStore.swift; sourceTree = "<group>"; };
+		SSS020001 /* SecuritySettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecuritySettingsStore.swift; sourceTree = "<group>"; };
 		SM020001 /* ServerMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetrics.swift; sourceTree = "<group>"; };
 		SM020002 /* ServerMetricsMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMetricsMonitor.swift; sourceTree = "<group>"; };
 		SP020001 /* SplitSessionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitSessionPickerView.swift; sourceTree = "<group>"; };
@@ -592,6 +594,7 @@
 				AT020002 /* AutomationTriggerStore.swift */,
 				SLS020001 /* SessionLogStore.swift */,
 				ATS020001 /* ActiveTerminalStatusStore.swift */,
+				SSS020001 /* SecuritySettingsStore.swift */,
 			);
 			path = Stores;
 			sourceTree = "<group>";
@@ -1289,6 +1292,7 @@
 				LOG010001 /* LogPanelView.swift in Sources */,
 				SLS010001 /* SessionLogStore.swift in Sources */,
 				ATS010001 /* ActiveTerminalStatusStore.swift in Sources */,
+				SSS010001 /* SecuritySettingsStore.swift in Sources */,
 				W2701_BUILD /* BaseViewModel.swift in Sources */,
 				W2702_BUILD /* ServiceProtocols.swift in Sources */,
 				W28_BLD_01 /* WelcomeViewModel.swift in Sources */,

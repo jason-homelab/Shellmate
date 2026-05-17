@@ -12,7 +12,7 @@ struct CommandSafetyAlertView: View {
     /// 用户取消时回调
     var onCancel: () -> Void
 
-    @ObservedObject private var aiSettings = AISettingsStore.shared
+    @EnvironmentObject private var aiSettings: AISettingsStore
 
     @State private var aiAnalysis: String = ""
     @State private var isAnalyzing: Bool = false

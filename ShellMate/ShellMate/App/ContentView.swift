@@ -22,9 +22,11 @@ struct ContentView: View {
     /// 面板/分屏状态（统一由 ContentViewModel 管理）
     @StateObject var panels = ContentViewModel()
 
-    // MARK: - 终端状态
+    // MARK: - 全局 Store（根节点持有，通过 environmentObject 向下注入）
     /// 活跃终端推送的状态数据（底栏状态栏消费）
-    @ObservedObject private var terminalStatus = ActiveTerminalStatusStore.shared
+    @StateObject private var terminalStatus = ActiveTerminalStatusStore.shared
+    @StateObject private var aiSettings    = AISettingsStore.shared
+    @StateObject private var syncStore     = SyncInputStore.shared
 
     // MARK: - 外观状态
     @AppStorage("appearance.windowMode") var windowMode: String = "light"
@@ -74,6 +76,10 @@ struct ContentView: View {
         } detail: {
             detailArea
         }
+        // 根节点注入：替代各子视图直接访问 .shared 单例，支持测试时注入 Mock
+        .environmentObject(terminalStatus)
+        .environmentObject(aiSettings)
+        .environmentObject(syncStore)
         .navigationTitle("ShellMate")
         .toolbar {
             toolbarContent
@@ -454,7 +460,7 @@ struct ContentView: View {
                 SyncInputConfirmView(
                     currentSessionId: sessionId,
                     onConfirm: { ids in
-                        SyncInputStore.shared.activate(sessionIds: ids)
+                        syncStore.activate(sessionIds: ids)
                         withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = false }
                     },
                     onCancel: { withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = false } }

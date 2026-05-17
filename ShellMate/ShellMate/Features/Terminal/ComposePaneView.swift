@@ -19,7 +19,7 @@ struct ComposePaneView: View {
 
     // MARK: - AI 补全状态（任务 14.8）
 
-    @StateObject private var aiSettings = AISettingsStore.shared
+    @EnvironmentObject private var aiSettings: AISettingsStore
     @State private var aiSuggestion: String? = nil
     @State private var isLoadingAI: Bool = false
     @State private var aiDebounceTask: Task<Void, Never>? = nil

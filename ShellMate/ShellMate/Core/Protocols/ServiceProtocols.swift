@@ -88,6 +88,28 @@ protocol SFTPServiceProtocol: AnyObject {
     ) async throws
 }
 
+// MARK: - 隧道管理协议
+
+/// 端口转发管理服务的抽象接口，支持 Mock 替换以便单元测试
+@MainActor
+protocol TunnelManagerProtocol: AnyObject {
+    var rules: [TunnelRule] { get }
+    var sessionConfig: SSHSessionConfig? { get set }
+
+    func addRule(_ rule: TunnelRule)
+    func removeRule(_ rule: TunnelRule)
+    func applyEdit(from edited: TunnelRule)
+
+    @discardableResult
+    func startTunnel(_ rule: TunnelRule) throws -> Bool
+    func stopTunnel(_ rule: TunnelRule)
+    func toggleTunnel(_ rule: TunnelRule)
+    func startAll()
+    func stopAll()
+    func handleSSHConnected(config: SSHSessionConfig, sessionID: UUID)
+    func handleSSHDisconnected()
+}
+
 // MARK: - LLM 服务协议
 
 /// AI 大语言模型对话服务的抽象接口

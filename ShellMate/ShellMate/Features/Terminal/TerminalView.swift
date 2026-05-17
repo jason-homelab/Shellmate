@@ -94,8 +94,8 @@ struct TerminalView: View {
     /// ContentView 级面板状态（工具面板已提升至 ContentView，通过 environmentObject 共享）
     @EnvironmentObject private var panels: ContentViewModel
 
-    /// 共享底栏状态（用于消费 shouldShowMonitorPanel 信号）
-    @ObservedObject private var terminalStatus = ActiveTerminalStatusStore.shared
+    /// 共享底栏状态（由根节点 environmentObject 注入）
+    @EnvironmentObject private var terminalStatus: ActiveTerminalStatusStore
 
     /// SwiftTerm TerminalView 引用
     @State private var terminalViewRef: SwiftTerm.TerminalView?
@@ -141,8 +141,8 @@ struct TerminalView: View {
     @State private var showPrivateKeyMissing: Bool = false
     /// 服务器监控面板
     @State private var showMonitorPanel: Bool = false
-    /// W12.6：观察同步状态
-    @ObservedObject private var syncStore = SyncInputStore.shared
+    /// W12.6：观察同步状态（由根节点 environmentObject 注入）
+    @EnvironmentObject private var syncStore: SyncInputStore
 
     // MARK: - AI 助手
 
@@ -154,8 +154,8 @@ struct TerminalView: View {
     @State private var showSummaryPanel: Bool = false
     /// AI-06：待执行的高风险命令（非 nil 时显示安全审计弹窗）
     @State private var pendingRiskyCommand: CommandRisk? = nil
-    /// AI 设置观察（用于工具栏按钮显示）
-    @ObservedObject private var aiSettings = AISettingsStore.shared
+    /// AI 设置观察（由根节点 environmentObject 注入）
+    @EnvironmentObject private var aiSettings: AISettingsStore
 
     private let minFontSize: Double = Double(DesignTokens.Sizes.terminalFontSizeMin)
     private let maxFontSize: Double = Double(DesignTokens.Sizes.terminalFontSizeMax)
@@ -222,16 +222,16 @@ struct TerminalView: View {
         .onChange(of: controller.state) { _ in pushToStatusStore() }
         .onChange(of: controller.serverMetrics) { _ in
             guard isSelected else { return }
-            ActiveTerminalStatusStore.shared.serverMetrics = controller.serverMetrics
+            terminalStatus.serverMetrics = controller.serverMetrics
         }
         .onChange(of: controller.terminalSize) { _ in
             guard isSelected else { return }
-            ActiveTerminalStatusStore.shared.terminalColumns = controller.terminalSize.columns
-            ActiveTerminalStatusStore.shared.terminalRows = controller.terminalSize.rows
+            terminalStatus.terminalColumns = controller.terminalSize.columns
+            terminalStatus.terminalRows = controller.terminalSize.rows
         }
         .onChange(of: controller.connectedAt) { _ in
             guard isSelected else { return }
-            ActiveTerminalStatusStore.shared.connectedAt = controller.connectedAt
+            terminalStatus.connectedAt = controller.connectedAt
         }
         // 底栏触发"打开服务器监控"信号：由活跃 TerminalView 响应并显示 sheet
         .onChange(of: terminalStatus.shouldShowMonitorPanel) { should in
@@ -260,7 +260,7 @@ struct TerminalView: View {
                     connect()
                 },
                 onDismiss: { showConnectionError = false },
-                onAIDiagnose: AISettingsStore.shared.isEnabled ? {
+                onAIDiagnose: aiSettings.isEnabled ? {
                     // AI-04：以连接错误上下文预填充 AI 助手面板
                     showConnectionError = false
                     aiInitialError = connectionErrorMessage
@@ -1007,7 +1007,7 @@ struct TerminalView: View {
     /// 将本终端当前状态推送到共享底栏 store（仅 isSelected 时有效）
     private func pushToStatusStore() {
         guard isSelected else { return }
-        let store = ActiveTerminalStatusStore.shared
+        let store = terminalStatus
         let ctrl = controller
         store.connectionState = ctrl.state.toConnectionState
         store.session = session

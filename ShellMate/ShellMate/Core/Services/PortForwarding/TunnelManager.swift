@@ -7,7 +7,7 @@ import Combine
 /// 负责所有 TunnelRule 的生命周期管理：添加、删除、启动、停止
 /// @MainActor 保证 @Published 属性的线程安全
 @MainActor
-final class TunnelManager: ObservableObject {
+final class TunnelManager: ObservableObject, TunnelManagerProtocol {
 
     // MARK: - 属性
 

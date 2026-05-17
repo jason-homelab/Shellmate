@@ -4,7 +4,7 @@ import SwiftUI
 
 struct AISettingsView: View {
 
-    @ObservedObject private var store = AISettingsStore.shared
+    @EnvironmentObject private var store: AISettingsStore
 
     @State private var apiKeyInput: String = ""
     @State private var showAPIKey: Bool = false

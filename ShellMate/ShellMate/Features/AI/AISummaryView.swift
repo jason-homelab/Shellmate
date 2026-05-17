@@ -10,7 +10,7 @@ struct AISummaryView: View {
     let terminalOutput: String
     var onClose: () -> Void
 
-    @ObservedObject private var aiSettings = AISettingsStore.shared
+    @EnvironmentObject private var aiSettings: AISettingsStore
 
     @State private var summaryText: String = ""
     @State private var isStreaming: Bool = false

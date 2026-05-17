@@ -18,7 +18,7 @@ struct SyncInputConfirmView: View {
     // MARK: - 状态
 
     /// 观察 SyncInputStore 以获取实时会话列表
-    @ObservedObject private var syncStore = SyncInputStore.shared
+    @EnvironmentObject private var syncStore: SyncInputStore
 
     @State private var selectedIds: Set<UUID>
 
