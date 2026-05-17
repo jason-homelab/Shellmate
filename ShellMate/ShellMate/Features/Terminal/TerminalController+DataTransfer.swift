@@ -105,16 +105,6 @@ extension TerminalController {
         }
     }
 
-    // MARK: - 隧道管理器面板
-
-    func openTunnelManager() {
-        isTunnelManagerOpen = true
-    }
-
-    func closeTunnelManager() {
-        isTunnelManagerOpen = false
-    }
-
     // MARK: - 终端操作
 
     func clearTerminal() {

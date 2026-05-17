@@ -150,9 +150,6 @@ final class TerminalController: ObservableObject {
     /// 端口转发隧道管理器
     let tunnelManager = TunnelManager()
 
-    /// 隧道管理器面板是否显示
-    @Published var isTunnelManagerOpen: Bool = false
-
     /// tmux 会话状态管理器（懒初始化，需要 self 已准备好）
     private(set) lazy var tmuxStore: TmuxSessionStore = TmuxSessionStore(sessionId: sessionId, sendTarget: self)
 

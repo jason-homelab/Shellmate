@@ -91,6 +91,9 @@ struct TerminalView: View {
 
     @StateObject private var controller: TerminalController
 
+    /// ContentView 级面板状态（工具面板已提升至 ContentView，通过 environmentObject 共享）
+    @EnvironmentObject private var panels: ContentViewModel
+
     /// 共享底栏状态（用于消费 shouldShowMonitorPanel 信号）
     @ObservedObject private var terminalStatus = ActiveTerminalStatusStore.shared
 
@@ -130,16 +133,12 @@ struct TerminalView: View {
     @State private var sftpErrorMessage: String = ""
     @State private var showTunnelError: Bool = false
     @State private var tunnelErrorMessage: String = ""
-    /// W11：快捷命令面板是否显示
-    @State private var isQuickCommandOpen: Bool = false
     /// 密码输入向导（password/keyboard-interactive 无凭据时显示）
     @State private var showCredentialWizard: Bool = false
     @State private var wizardPassword: String = ""
     @State private var wizardSaveCredential: Bool = true
     /// 私钥路径缺失提示（提示用户前往编辑会话）
     @State private var showPrivateKeyMissing: Bool = false
-    /// W12.6：同步输入确认弹窗
-    @State private var showSyncConfirm: Bool = false
     /// 服务器监控面板
     @State private var showMonitorPanel: Bool = false
     /// W12.6：观察同步状态
@@ -186,51 +185,6 @@ struct TerminalView: View {
             // 终端主区域（含 Compose Pane 纵向布局）
             terminalAndComposeView
 
-            // 隧道管理器浮动面板（⌘⇧U）
-            if controller.isTunnelManagerOpen {
-                Color.clear
-                    .overlay(
-                        TunnelManagerView(
-                            tunnelManager: controller.tunnelManager,
-                            onClose: { controller.closeTunnelManager() }
-                        )
-                        .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
-                    )
-                    .allowsHitTesting(true)
-            }
-
-            // tmux 会话管理器浮动面板（⌘⇧T）
-            tmuxManagerOverlay
-
-            // W11：快捷命令管理器浮动面板（⌘⇧K）
-            if isQuickCommandOpen {
-                Color.clear
-                    .overlay(
-                        QuickCommandManagerView(
-                            store: QuickCommandStore.shared,
-                            onSendCommand: { cmd in controller.sendQuickCommand(cmd) },
-                            onClose: { withAnimation { isQuickCommandOpen = false } }
-                        )
-                        .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
-                    )
-                    .allowsHitTesting(true)
-            }
-
-            // W12.6：同步输入确认弹窗
-            if showSyncConfirm {
-                Color.clear
-                    .overlay(
-                        SyncInputConfirmView(
-                            currentSessionId: session.id,
-                            onConfirm: { ids in
-                                syncStore.activate(sessionIds: ids)
-                                showSyncConfirm = false
-                            },
-                            onCancel: { showSyncConfirm = false }
-                        )
-                    )
-                    .allowsHitTesting(true)
-            }
         }
         .background(DesignTokens.Colors.terminalBackground)
         .onAppear {
@@ -356,7 +310,6 @@ struct TerminalView: View {
             controller: controller,
             showSearch: $showSearch,
             fontSize: $sessionFontSize,
-            isQuickCommandOpen: $isQuickCommandOpen,
             isAIPanelOpen: $isAIPanelOpen,
             aiInitialError: $aiInitialError,
             minFontSize: minFontSize,
@@ -550,25 +503,6 @@ struct TerminalView: View {
     }
 
     @ViewBuilder
-    private var tmuxManagerOverlay: some View {
-        if controller.tmuxStore.isManagerOpen {
-            Color.clear
-                .overlay(
-                    TmuxManagerView(
-                        store: controller.tmuxStore,
-                        serverLabel: "\(session.username)@\(session.host)",
-                        onClose: {
-                            withAnimation(DesignTokens.Animation.fast) {
-                                controller.tmuxStore.isManagerOpen = false
-                            }
-                        }
-                    )
-                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
-                )
-                .allowsHitTesting(true)
-        }
-    }
-
     private var toolbarView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             // 终端标题（已连接时显示，如 "ubuntu@host: ~"）
@@ -631,13 +565,9 @@ struct TerminalView: View {
             ToolbarButton(
                 icon: "arrow.left.arrow.right",
                 tooltip: "隧道管理器 (⌘⇧U)",
-                isActive: controller.isTunnelManagerOpen
+                isActive: panels.showTunnelPanel
             ) {
-                if controller.isTunnelManagerOpen {
-                    controller.closeTunnelManager()
-                } else {
-                    controller.openTunnelManager()
-                }
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showTunnelPanel.toggle() }
             }
 
             // tmux 会话管理器按钮（⌘⇧T）
@@ -645,12 +575,10 @@ struct TerminalView: View {
                 ToolbarButton(
                     icon: "rectangle.3.group",
                     tooltip: "tmux 会话管理器 (⌘⇧T)",
-                    isActive: controller.tmuxStore.isManagerOpen,
-                    tintColor: controller.tmuxStore.isManagerOpen ? DesignTokens.Colors.accentPrimary : nil
+                    isActive: panels.showTmuxPanel,
+                    tintColor: panels.showTmuxPanel ? DesignTokens.Colors.accentPrimary : nil
                 ) {
-                    withAnimation(DesignTokens.Animation.fast) {
-                        controller.tmuxStore.isManagerOpen.toggle()
-                    }
+                    withAnimation(.easeInOut(duration: 0.2)) { panels.showTmuxPanel.toggle() }
                 }
             }
 
@@ -669,9 +597,9 @@ struct TerminalView: View {
             ToolbarButton(
                 icon: "list.bullet.rectangle",
                 tooltip: "快捷命令 (⌘⇧K)",
-                isActive: isQuickCommandOpen
+                isActive: panels.showQuickCommandPanel
             ) {
-                withAnimation { isQuickCommandOpen.toggle() }
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showQuickCommandPanel.toggle() }
             }
 
             // W12.6：同步输入按钮（O03）
@@ -685,7 +613,8 @@ struct TerminalView: View {
                 if syncStore.isSynced(session.id) {
                     syncStore.deactivate()
                 } else {
-                    showSyncConfirm = true
+                    panels.syncInputSessionId = session.id
+                    withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = true }
                 }
             }
 
@@ -1154,7 +1083,6 @@ private struct TerminalViewNotificationModifier: ViewModifier {
     let controller: TerminalController
     @Binding var showSearch: Bool
     @Binding var fontSize: Double
-    @Binding var isQuickCommandOpen: Bool
     @Binding var isAIPanelOpen: Bool
     @Binding var aiInitialError: String?
     let minFontSize: Double
@@ -1179,18 +1107,8 @@ private struct TerminalViewNotificationModifier: ViewModifier {
                     if !isAIPanelOpen { aiInitialError = nil }
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .tunnelManagerRequested)) { _ in
-                if controller.isTunnelManagerOpen { controller.closeTunnelManager() }
-                else { controller.openTunnelManager() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .quickCommandsRequested)) { _ in
-                withAnimation { isQuickCommandOpen.toggle() }
-            }
             .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
                 withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .tmuxManagerRequested)) { _ in
-                withAnimation { controller.tmuxStore.isManagerOpen.toggle() }
             }
             // 终端控制
             .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in

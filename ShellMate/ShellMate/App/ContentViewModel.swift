@@ -15,6 +15,15 @@ final class ContentViewModel: ObservableObject {
     @Published var showImportExportDialog: Bool = false
     @Published var showSettingsPanel: Bool = false
 
+    // MARK: - 工具面板（ContentView 级遮罩，同 Settings 样式）
+
+    @Published var showTunnelPanel: Bool = false
+    @Published var showTmuxPanel: Bool = false
+    @Published var showQuickCommandPanel: Bool = false
+    @Published var showSyncInputPanel: Bool = false
+    /// 发起同步输入的会话 ID（SyncInputConfirmView 需要）
+    var syncInputSessionId: UUID? = nil
+
     // MARK: - 语言选择器
 
     @Published var showLanguagePicker: Bool = false
@@ -37,6 +46,14 @@ final class ContentViewModel: ObservableObject {
         showRecordingDialog = false
         showLogPanel = false
         showImportExportDialog = false
+    }
+
+    /// 关闭所有工具面板（切换 Tab 时调用，避免跨会话数据错乱）
+    func closeToolPanels() {
+        showTunnelPanel = false
+        showTmuxPanel = false
+        showQuickCommandPanel = false
+        showSyncInputPanel = false
     }
 
     /// 打开设置浮动面板，同时关闭所有 sheet 防止层叠冲突

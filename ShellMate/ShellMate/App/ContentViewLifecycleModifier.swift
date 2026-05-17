@@ -10,6 +10,7 @@ struct ContentViewLifecycleModifier: ViewModifier {
     let groupStore: GroupStore
     let tabBarStore: TabBarStore
     let onConnect: (Session) -> Void
+    let panels: ContentViewModel
 
     func body(content: Content) -> some View {
         content
@@ -54,6 +55,32 @@ struct ContentViewLifecycleModifier: ViewModifier {
                 if let index = AppEvent.extractSelectTab(from: notification) {
                     tabBarStore.selectTab(at: index)
                 }
+            }
+            // 同步 TerminalController 实际连接状态到 SessionStore（侧边栏计数器）和 TabBarStore（标签点颜色）
+            .onReceive(NotificationCenter.default.publisher(for: .sessionConnectionStateChanged)) { notification in
+                guard let (sessionId, state) = AppEvent.extractConnectionState(from: notification) else { return }
+                sessionStore.updateConnectionState(for: sessionId, state: state)
+                if let tab = tabBarStore.tabs.first(where: { $0.sessionId == sessionId }) {
+                    tabBarStore.updateConnectionState(for: tab.id, state: state)
+                }
+            }
+            // 侧边栏右键"分屏打开"
+            .onReceive(NotificationCenter.default.publisher(for: .splitSessionRequested)) { notification in
+                guard let (sessionId, layoutStr) = AppEvent.extractSplitSession(from: notification),
+                      sessionStore.sessions.contains(where: { $0.id == sessionId }) else { return }
+                let layout: SplitLayout = layoutStr == "horizontal" ? .horizontal : .vertical
+                panels.splitLayout = layout
+                panels.splitSessionId = sessionId
+            }
+            // 工具面板（由菜单栏 / 快捷键触发，统一在 ContentView 级别响应）
+            .onReceive(NotificationCenter.default.publisher(for: .tunnelManagerRequested)) { _ in
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showTunnelPanel.toggle() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .quickCommandsRequested)) { _ in
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showQuickCommandPanel.toggle() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .tmuxManagerRequested)) { _ in
+                withAnimation(.easeInOut(duration: 0.2)) { panels.showTmuxPanel.toggle() }
             }
     }
 }

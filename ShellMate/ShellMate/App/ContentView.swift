@@ -198,21 +198,6 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
             panels.openSheet { panels.showLogPanel = true }
         }
-        // 同步 TerminalController 实际连接状态到 SessionStore（侧边栏计数器）和 TabBarStore（标签点颜色）
-        .onReceive(NotificationCenter.default.publisher(for: .sessionConnectionStateChanged)) { notification in
-            guard let (sessionId, state) = AppEvent.extractConnectionState(from: notification) else { return }
-            sessionStore.updateConnectionState(for: sessionId, state: state)
-            if let tab = tabBarStore.tabs.first(where: { $0.sessionId == sessionId }) {
-                tabBarStore.updateConnectionState(for: tab.id, state: state)
-            }
-        }
-        // 侧边栏右键"分屏打开"：在现有主终端旁边打开目标会话
-        .onReceive(NotificationCenter.default.publisher(for: .splitSessionRequested)) { notification in
-            guard let (sessionId, layoutStr) = AppEvent.extractSplitSession(from: notification),
-                  sessionStore.sessions.contains(where: { $0.id == sessionId }) else { return }
-            panels.splitLayout = layoutStr == "horizontal" ? .horizontal : .vertical
-            panels.splitSessionId = sessionId
-        }
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
@@ -228,18 +213,21 @@ struct ContentView: View {
         .task {
             await checkPendingAutoConnect()
         }
-        // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）
+        // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）；
+        // 同时关闭工具面板，避免跨会话数据错乱
         .onChange(of: tabBarStore.selectedTabId) { newId in
             guard let newId,
                   let tab = tabBarStore.tabs.first(where: { $0.id == newId }) else { return }
             sessionStore.selectedSessionId = tab.sessionId
+            panels.closeToolPanels()
         }
         // 数据加载 + 菜单栏通知处理（拆分以规避 Swift 类型检查超时）
         .modifier(ContentViewLifecycleModifier(
             sessionStore: sessionStore,
             groupStore: groupStore,
             tabBarStore: tabBarStore,
-            onConnect: connectToSession
+            onConnect: connectToSession,
+            panels: panels
         ))
         // 兜底不透明背景，防止窗口透明时缝隙露出桌面壁纸
         .background(DesignTokens.Colors.surfaceWindow)
@@ -268,6 +256,10 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
+        .overlay { tunnelPanelOverlayView }
+        .overlay { tmuxPanelOverlayView }
+        .overlay { quickCommandPanelOverlayView }
+        .overlay { syncInputPanelOverlayView }
         // 欢迎界面覆层（首次启动，覆盖整个窗口含底栏）
         .overlay {
             if !hasLaunchedBefore {
@@ -341,7 +333,7 @@ struct ContentView: View {
                let s = sessionStore.sessions.first(where: { $0.id == splitId }) {
                 HSplitView {
                     mainTerminalStack.frame(minWidth: 300)
-                    TerminalView(session: s, isSelected: false).frame(minWidth: 300)
+                    TerminalView(session: s, isSelected: false).environmentObject(panels).frame(minWidth: 300)
                 }
             } else { mainTerminalStack }
 
@@ -350,7 +342,7 @@ struct ContentView: View {
                let s = sessionStore.sessions.first(where: { $0.id == splitId }) {
                 VSplitView {
                     mainTerminalStack.frame(minHeight: 200)
-                    TerminalView(session: s, isSelected: false).frame(minHeight: 200)
+                    TerminalView(session: s, isSelected: false).environmentObject(panels).frame(minHeight: 200)
                 }
             } else { mainTerminalStack }
 
@@ -381,7 +373,7 @@ struct ContentView: View {
     @ViewBuilder
     private func gridPanel(session: Session?) -> some View {
         if let session {
-            TerminalView(session: session, isSelected: false)
+            TerminalView(session: session, isSelected: false).environmentObject(panels)
         } else {
             TerminalPlaceholderView(onNewSession: { sessionStore.showNewSessionForm() })
         }
@@ -400,6 +392,7 @@ struct ContentView: View {
                                 session: session,
                                 isSelected: tabBarStore.selectedTabId == tab.id
                             )
+                            .environmentObject(panels)
                         }
                     }
                     .opacity(tabBarStore.selectedTabId == tab.id ? 1 : 0)
@@ -412,6 +405,80 @@ struct ContentView: View {
         // 终端区域使用纯色背景，零毛玻璃，降低 GPU 渲染压力（W27 Sprint-01 §修改意见3）
         .background(DesignTokens.Colors.terminalBackground)
         .clipShape(Rectangle())
+    }
+
+    // MARK: - 工具面板 Overlay 视图
+
+    @ViewBuilder
+    private var tunnelPanelOverlayView: some View {
+        if panels.showTunnelPanel, let ctrl = activeController {
+            toolPanelOverlay(onDismiss: { panels.showTunnelPanel = false }) {
+                TunnelManagerView(
+                    tunnelManager: ctrl.tunnelManager,
+                    onClose: { withAnimation(.easeInOut(duration: 0.2)) { panels.showTunnelPanel = false } }
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var tmuxPanelOverlayView: some View {
+        if panels.showTmuxPanel, let ctrl = activeController, let sess = activeSession {
+            toolPanelOverlay(onDismiss: { panels.showTmuxPanel = false }) {
+                TmuxManagerView(
+                    store: ctrl.tmuxStore,
+                    serverLabel: "\(sess.username)@\(sess.host)",
+                    onClose: { withAnimation(.easeInOut(duration: 0.2)) { panels.showTmuxPanel = false } }
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var quickCommandPanelOverlayView: some View {
+        if panels.showQuickCommandPanel, let ctrl = activeController {
+            toolPanelOverlay(onDismiss: { panels.showQuickCommandPanel = false }) {
+                QuickCommandManagerView(
+                    store: QuickCommandStore.shared,
+                    onSendCommand: { cmd in ctrl.sendQuickCommand(cmd) },
+                    onClose: { withAnimation(.easeInOut(duration: 0.2)) { panels.showQuickCommandPanel = false } }
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var syncInputPanelOverlayView: some View {
+        if panels.showSyncInputPanel, let sessionId = panels.syncInputSessionId {
+            toolPanelOverlay(onDismiss: { panels.showSyncInputPanel = false }) {
+                SyncInputConfirmView(
+                    currentSessionId: sessionId,
+                    onConfirm: { ids in
+                        SyncInputStore.shared.activate(sessionIds: ids)
+                        withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = false }
+                    },
+                    onCancel: { withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = false } }
+                )
+            }
+        }
+    }
+
+    /// 工具面板通用遮罩容器（与 Settings 面板一致：半透明黑幕 + 点击背景关闭 + ESC 关闭）
+    @ViewBuilder
+    private func toolPanelOverlay<Content: View>(
+        onDismiss: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+            content()
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .shadow(color: Color.black.opacity(0.18), radius: 20, x: 0, y: 8)
+                .onExitCommand { onDismiss() }
+        }
+        .transition(.opacity.animation(.easeInOut(duration: 0.2)))
     }
 
 }
