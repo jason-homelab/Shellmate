@@ -103,6 +103,36 @@ struct ContentViewPanelSyncModifier: ViewModifier {
     }
 }
 
+// MARK: - Hotkey 窗口会话路由 ViewModifier
+//
+// 接收 Hotkey 面板发出的 openSessionInMainWindowRequested 通知：
+//   - 若目标 sessionId 已有 Tab → 直接切换选中
+//   - 否则 → 调用 onConnect 新建 Tab 并连接
+// 独立拆分以保持 ContentViewLifecycleModifier 修饰符链长度可控。
+
+struct ContentViewHotkeyModifier: ViewModifier {
+
+    let sessionStore: SessionStore
+    let tabBarStore: TabBarStore
+    let onConnect: (Session) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .openSessionInMainWindowRequested)) { notification in
+                guard let sessionId = AppEvent.extractOpenSession(from: notification) else { return }
+                if let existingTab = tabBarStore.tabs.first(where: { $0.sessionId == sessionId }) {
+                    // 已有 Tab：直接切换，不重新建立连接
+                    tabBarStore.selectedTabId = existingTab.id
+                } else if let session = sessionStore.sessions.first(where: { $0.id == sessionId }) {
+                    // 无 Tab：新建并连接
+                    onConnect(session)
+                }
+                // 确保主窗口在最前
+                NSApp.windows.first(where: { !($0 is NSPanel) })?.makeKeyAndOrderFront(nil)
+            }
+    }
+}
+
 // MARK: - 录制状态刷新 ViewModifier
 //
 // 独立于 ContentViewLifecycleModifier，避免修饰符链过长导致 Swift 类型检查超时。

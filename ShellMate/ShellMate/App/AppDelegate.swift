@@ -239,4 +239,6 @@ extension Notification.Name {
 
     // URL Scheme 连接请求（shellmate://connect?host=...&port=...&user=...）
     static let urlSchemeConnectRequested = Notification.Name("app.shellmate.urlSchemeConnectRequested")
+    /// Hotkey 窗口中点击会话行，请求主窗口选中或新建对应 Tab
+    static let openSessionInMainWindowRequested = Notification.Name("app.shellmate.openSessionInMainWindowRequested")
 }

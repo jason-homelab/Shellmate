@@ -1,14 +1,12 @@
 import AppKit
 import SwiftUI
 
-// MARK: - Hotkey Window 管理器（任务 13.8）
+// MARK: - Hotkey Window 管理器
 
 /// 全局快捷键浮动终端面板管理器
 /// 默认快捷键 ⌥Space，覆盖在任意 App 之上，失焦自动隐藏
-/// 对标 iTerm2 Hotkey Window
-///
-/// - Note: `NSEvent.addGlobalMonitorForEvents` 在 App Store Sandbox 版需要
-///   Input Monitoring 权限（Privacy → Input Monitoring）；Direct 版无此限制。
+/// 面板功能：快速会话切换 / 启动器（连接后在主窗口渲染）
+@MainActor
 final class HotkeyWindowManager {
 
     // MARK: - 单例
@@ -18,8 +16,15 @@ final class HotkeyWindowManager {
     // MARK: - 私有状态
 
     private var panel: NSPanel?
+    /// NSHostingView 引用，用于在 setSessionStore 后更新 rootView
+    private var hostingView: NSHostingView<AnyView>?
     private var globalMonitor: Any?
     private var localMonitor: Any?
+
+    /// 注入的 SessionStore（由 ContentView.onAppear 设置）
+    private weak var sessionStore: SessionStore?
+    /// 当 sessionStore 尚未注入时使用的空占位 store
+    private let emptyStore = SessionStore()
 
     /// 默认 key：⌥Space（keyCode=49，modifier=.option）
     private let hotkeyCode: UInt16 = 49
@@ -28,7 +33,6 @@ final class HotkeyWindowManager {
     // MARK: - 初始化
 
     private init() {
-        // 注册默认偏好
         UserDefaults.standard.register(defaults: [
             UserDefaultsKeys.autoHideOnBlur: true
         ])
@@ -36,19 +40,23 @@ final class HotkeyWindowManager {
 
     // MARK: - 公开 API
 
+    /// 从 ContentView 注入 SessionStore，保持响应式更新
+    func setSessionStore(_ store: SessionStore) {
+        sessionStore = store
+        // 若面板已构建，实时更新 rootView 使会话列表响应最新数据
+        hostingView?.rootView = makeRootView()
+    }
+
     /// 启动全局 & 本地快捷键监听（在 applicationDidFinishLaunching 调用）
     func startMonitoring() {
-        // 全局监听：任意 App 激活时响应（需 Input Monitoring 权限，Sandbox 版降级处理）
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.isHotkey(event) else { return }
             Task { @MainActor [weak self] in self?.toggle() }
         }
-
-        // 本地监听：ShellMate 自身为 frontmost 时响应（Sandbox 无需额外权限）
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.isHotkey(event) else { return event }
             Task { @MainActor [weak self] in self?.toggle() }
-            return nil   // 消费事件，不传递给当前 firstResponder
+            return nil
         }
     }
 
@@ -90,18 +98,18 @@ final class HotkeyWindowManager {
         let panel = NSPanel(
             contentRect: frame,
             styleMask: [
-                .titled,
+                // 移除 .titled 以隐藏原生标题栏及红黄绿按钮，改用 SwiftUI 自定义标题条
                 .closable,
                 .resizable,
                 .fullSizeContentView,
-                .nonactivatingPanel       // 呼出时不强制激活 ShellMate 主窗口
+                .nonactivatingPanel
             ],
             backing: .buffered,
             defer: false
         )
 
-        // 外观
-        panel.title                      = "ShellMate — Hotkey Terminal"
+        // 强制深色外观，与主应用保持一致
+        panel.appearance               = NSAppearance(named: .darkAqua)
         panel.titlebarAppearsTransparent = true
         panel.isMovableByWindowBackground = true
         panel.isFloatingPanel            = true
@@ -111,11 +119,9 @@ final class HotkeyWindowManager {
         panel.animationBehavior          = .utilityWindow
         panel.backgroundColor            = .clear
 
-        // 内容：SwiftUI 本地终端视图
-        let content = HotkeyTerminalContentView {
-            panel.orderOut(nil)
-        }
-        panel.contentView = NSHostingView(rootView: content)
+        let hv = NSHostingView(rootView: makeRootView())
+        self.hostingView = hv
+        panel.contentView = hv
 
         // 失焦自动隐藏
         NotificationCenter.default.addObserver(
@@ -125,10 +131,20 @@ final class HotkeyWindowManager {
         ) { [weak self, weak panel] _ in
             guard UserDefaults.standard.bool(forKey: UserDefaultsKeys.autoHideOnBlur) else { return }
             panel?.orderOut(nil)
-            _ = self  // 保持引用存活
+            _ = self
         }
 
         return panel
+    }
+
+    /// 构建注入了 SessionStore 的 SwiftUI 根视图
+    private func makeRootView() -> AnyView {
+        let store = sessionStore ?? emptyStore
+        let onClose: () -> Void = { [weak self] in self?.hide() }
+        return AnyView(
+            HotkeyTerminalContentView(onClose: onClose)
+                .environmentObject(store)
+        )
     }
 
     // MARK: - 私有：定位
@@ -151,7 +167,6 @@ final class HotkeyWindowManager {
     // MARK: - 私有：快捷键判断
 
     private func isHotkey(_ event: NSEvent) -> Bool {
-        // 仅响应 ⌥Space，不与含其他修饰键的组合冲突
         event.keyCode == hotkeyCode &&
         event.modifierFlags.intersection([.command, .option, .control, .shift]) == hotkeyModifiers
     }
@@ -160,33 +175,27 @@ final class HotkeyWindowManager {
 
     enum UserDefaultsKeys {
         static let autoHideOnBlur = "hotkey.autoHideOnBlur"
-        static let customShortcut = "hotkey.customShortcut"   // 预留，暂未实现自定义
+        static let customShortcut = "hotkey.customShortcut"
     }
 }
 
 // MARK: - Hotkey 终端内容视图
 
-/// Hotkey Window 内部的终端视图
-/// 上方紧凑标题条 + 下方占位区域（本地Shell功能已移除）
 struct HotkeyTerminalContentView: View {
 
+    @EnvironmentObject private var sessionStore: SessionStore
     var onClose: () -> Void
-
-    // MARK: - 视图
 
     var body: some View {
         let base = VStack(spacing: 0) {
             titleBar
-            TerminalPlaceholderView()
+            Divider().background(Color.white.opacity(0.08))
+            sessionListBody
         }
-        .background(Color.black)
+        .background(DesignTokens.Colors.surfaceWindow)
 
-        // ⎋ 关闭面板（onKeyPress 需 macOS 14+，低版本忽略，ESC 通过 NSPanel responder chain 处理）
         if #available(macOS 14.0, *) {
-            base.onKeyPress(.escape) {
-                onClose()
-                return .handled
-            }
+            base.onKeyPress(.escape) { onClose(); return .handled }
         } else {
             base
         }
@@ -196,58 +205,282 @@ struct HotkeyTerminalContentView: View {
 
     private var titleBar: some View {
         HStack(spacing: 8) {
-            // 图标 + 标题
             Image(systemName: "terminal.fill")
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.white.opacity(0.55))
+                .foregroundColor(DesignTokens.Colors.textSecondary)
 
-            Text("Hotkey Terminal")
+            Text("快捷终端")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.white.opacity(0.75))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Text("⌥Space")
                 .font(.system(size: 10, weight: .regular, design: .monospaced))
-                .foregroundColor(.white.opacity(0.35))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
-                .background(Color.white.opacity(0.10))
+                .background(DesignTokens.Colors.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+                )
 
             Spacer()
 
-            // 自动隐藏状态提示
             AutoHideToggleButton()
 
-            // 关闭按钮
             Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.white.opacity(0.55))
-                    .frame(width: 20, height: 20)
-                    .background(Color.white.opacity(0.10))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .frame(width: 22, height: 22)
+                    .background(DesignTokens.Colors.surfaceCard)
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
             .help("关闭（⌥Space 再次呼出）")
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        // 与终端视图背景融合：深色磨砂
-        .background(
-            Color(NSColor(red: 0.08, green: 0.08, blue: 0.10, alpha: 1.0))
-                .overlay(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.05), Color.clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-        )
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 0.5)
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, 8)
+        .background(DesignTokens.Colors.surfaceWindow)
+    }
+
+    // MARK: - 会话列表主体
+
+    @ViewBuilder
+    private var sessionListBody: some View {
+        if sessionStore.sessions.isEmpty {
+            hotkeyEmptyState
+        } else {
+            HotkeySessionListView(onClose: onClose)
         }
+    }
+
+    // MARK: - 空状态（无会话）
+
+    private var hotkeyEmptyState: some View {
+        VStack(spacing: DesignTokens.Spacing.xl) {
+            // 图标容器 — 与 EmptyStateView 统一用 64pt
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [
+                            DesignTokens.Colors.accentPrimary.opacity(0.10),
+                            DesignTokens.Colors.accentIndigo.opacity(0.10)
+                        ],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ))
+                    .frame(width: 64, height: 64)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
+                    )
+                Image(systemName: "desktopcomputer")
+                    .font(.system(size: 26, weight: .regular))
+                    .foregroundStyle(LinearGradient(
+                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    ))
+            }
+
+            VStack(spacing: DesignTokens.Spacing.xs) {
+                Text("还没有会话")
+                    .font(DesignTokens.Typography.labelLargeAlt)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("新建一个 SSH 连接，即可在此快速呼出")
+                    .font(.system(size: 12.5))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                AppEvent.postOpenNewSession()
+                onClose()
+            } label: {
+                Label("新建会话", systemImage: "plus")
+                    .font(.system(size: 12.5, weight: .medium))
+            }
+            .buttonStyle(HotkeyPrimaryButtonStyle())
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(DesignTokens.Spacing.xxl)
+    }
+}
+
+// MARK: - 会话列表视图
+
+private struct HotkeySessionListView: View {
+
+    @EnvironmentObject private var sessionStore: SessionStore
+    var onClose: () -> Void
+
+    private var connectedSessions: [Session] {
+        sessionStore.sessions.filter { $0.connectionState == .connected }
+    }
+    private var otherSessions: [Session] {
+        sessionStore.sessions.filter { $0.connectionState != .connected }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if !connectedSessions.isEmpty {
+                        sectionHeader("已连接", count: connectedSessions.count)
+                        ForEach(connectedSessions) { session in
+                            HotkeySessionRowView(session: session, onClose: onClose)
+                            if session.id != connectedSessions.last?.id {
+                                rowDivider
+                            }
+                        }
+                    }
+
+                    if !otherSessions.isEmpty {
+                        if !connectedSessions.isEmpty {
+                            Divider()
+                                .background(DesignTokens.Colors.borderPrimary)
+                                .padding(.vertical, DesignTokens.Spacing.xs)
+                        }
+                        sectionHeader("其他会话", count: otherSessions.count)
+                        ForEach(otherSessions) { session in
+                            HotkeySessionRowView(session: session, onClose: onClose)
+                            if session.id != otherSessions.last?.id {
+                                rowDivider
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, DesignTokens.Spacing.sm)
+            }
+
+            // 底部工具栏
+            Divider().background(DesignTokens.Colors.borderPrimary)
+            HStack {
+                Spacer()
+                Button {
+                    AppEvent.postOpenNewSession()
+                    onClose()
+                } label: {
+                    Label("新建会话", systemImage: "plus")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .buttonStyle(HotkeyPrimaryButtonStyle())
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(DesignTokens.Colors.surfaceWindow)
+        }
+    }
+
+    private func sectionHeader(_ title: String, count: Int) -> some View {
+        HStack(spacing: DesignTokens.Spacing.xs) {
+            Text(title)
+                .font(DesignTokens.Typography.captionMedium)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+            Text("\(count)")
+                .font(DesignTokens.Typography.captionSmall)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(DesignTokens.Colors.surfaceCard)
+                .clipShape(Capsule())
+        }
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+
+    private var rowDivider: some View {
+        Divider()
+            .background(DesignTokens.Colors.borderPrimary.opacity(0.5))
+            .padding(.leading, DesignTokens.Spacing.lg + 26 + DesignTokens.Spacing.sm)
+    }
+}
+
+// MARK: - 会话行视图
+
+private struct HotkeySessionRowView: View {
+
+    let session: Session
+    var onClose: () -> Void
+    @State private var isHovering = false
+
+    private var isConnected: Bool { session.connectionState == .connected }
+
+    var body: some View {
+        Button {
+            AppEvent.postOpenSession(sessionId: session.id)
+            NSApp.activate(ignoringOtherApps: true)
+            onClose()
+        } label: {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                // 状态指示点
+                Circle()
+                    .fill(session.connectionState.dotColor)
+                    .frame(width: 7, height: 7)
+                    .shadow(color: isConnected ? session.connectionState.dotColor.opacity(0.5) : .clear,
+                            radius: 3, x: 0, y: 0)
+
+                // 图标背景
+                ZStack {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isConnected
+                              ? DesignTokens.Colors.statusConnected.opacity(0.12)
+                              : DesignTokens.Colors.surfaceCard)
+                    Image(systemName: session.connectionType.iconName)
+                        .font(.system(size: 11))
+                        .foregroundColor(isConnected
+                                         ? DesignTokens.Colors.statusConnected
+                                         : DesignTokens.Colors.textSecondary)
+                }
+                .frame(width: 22, height: 22)
+
+                // 名称 + 主机
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(session.name)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.textPrimary)
+                        .lineLimit(1)
+                    Text("\(session.username)@\(session.host):\(session.port)")
+                        .font(DesignTokens.Typography.codeTiny)
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                // 操作标签
+                Text(isConnected ? "打开" : "连接")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(isConnected
+                                     ? DesignTokens.Colors.accentPrimary
+                                     : DesignTokens.Colors.textSecondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        (isConnected ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.surfaceCard)
+                            .opacity(isHovering ? (isConnected ? 0.18 : 0.8) : (isConnected ? 0.10 : 0.5))
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .strokeBorder(
+                                (isConnected ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.borderPrimary)
+                                    .opacity(isConnected ? 0.3 : 0.8),
+                                lineWidth: 0.5
+                            )
+                    )
+            }
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .background(
+                isHovering
+                    ? DesignTokens.Colors.surfaceHover
+                    : Color.clear
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
     }
 }
 
@@ -259,29 +492,70 @@ private struct AutoHideToggleButton: View {
     private var autoHide: Bool = true
 
     var body: some View {
-        Button {
-            autoHide.toggle()
-        } label: {
+        Button { autoHide.toggle() } label: {
             HStack(spacing: 4) {
                 Image(systemName: autoHide ? "pin.slash" : "pin.fill")
                     .font(.system(size: 9, weight: .medium))
                 Text(autoHide ? "失焦隐藏" : "保持显示")
                     .font(.system(size: 10))
             }
-            .foregroundColor(.white.opacity(autoHide ? 0.40 : 0.70))
+            .foregroundColor(autoHide
+                             ? DesignTokens.Colors.textTertiary
+                             : DesignTokens.Colors.textSecondary)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(Color.white.opacity(autoHide ? 0.06 : 0.15))
+            .background(DesignTokens.Colors.surfaceCard.opacity(autoHide ? 0.6 : 1.0))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
+            )
         }
         .buttonStyle(.plain)
         .help(autoHide ? "当前：失焦自动隐藏。点击保持显示" : "当前：保持显示。点击启用失焦隐藏")
     }
 }
 
+// MARK: - Hotkey 主按钮样式
+
+private struct HotkeyPrimaryButtonStyle: ButtonStyle {
+    @State private var isHovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(isHovering ? .white : DesignTokens.Colors.accentPrimary)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                    .fill(
+                        isHovering
+                            ? DesignTokens.Colors.accentPrimary.opacity(configuration.isPressed ? 0.9 : 1.0)
+                            : DesignTokens.Colors.accentPrimary.opacity(0.12)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                            .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(isHovering ? 0 : 0.28), lineWidth: 0.75)
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: configuration.isPressed)
+            .onHover { hovering in
+                withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }
+            }
+    }
+}
+
 // MARK: - 预览
 
-#Preview("Hotkey 终端面板") {
+#Preview("Hotkey 快捷终端 — 有会话") {
     HotkeyTerminalContentView(onClose: {})
-        .frame(width: 960, height: 400)
+        .environmentObject(SessionStore())
+        .frame(width: 960, height: 380)
+}
+
+#Preview("Hotkey 快捷终端 — 空状态") {
+    HotkeyTerminalContentView(onClose: {})
+        .environmentObject(SessionStore())
+        .frame(width: 960, height: 300)
 }

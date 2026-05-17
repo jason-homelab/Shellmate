@@ -202,6 +202,10 @@ struct ContentView: View {
         // 新窗口打开时自动连接待连接会话（由右键菜单"在新窗口打开"写入 UserDefaults）
         .task {
             await checkPendingAutoConnect()
+            // 注入 SessionStore 到 Hotkey 面板，使会话列表响应实时数据
+            await MainActor.run {
+                HotkeyWindowManager.shared.setSessionStore(sessionStore)
+            }
         }
         // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）；
         // 同时关闭工具面板，避免跨会话数据错乱
@@ -225,6 +229,11 @@ struct ContentView: View {
             isRecordingActive: $isActiveRecording
         ))
         .modifier(ContentViewPanelSyncModifier(panels: panels))
+        .modifier(ContentViewHotkeyModifier(
+            sessionStore: sessionStore,
+            tabBarStore: tabBarStore,
+            onConnect: connectToSession
+        ))
         // 兜底不透明背景，防止窗口透明时缝隙露出桌面壁纸
         .background(DesignTokens.Colors.surfaceWindow)
         // 设置浮动面板（Figma 14:x，居中浮动，半透明遮罩背景）

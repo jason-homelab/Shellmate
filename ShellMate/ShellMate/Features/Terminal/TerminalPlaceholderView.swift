@@ -33,7 +33,7 @@ struct TerminalPlaceholderView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 96, height: 96)
+                    .frame(width: 64, height: 64)
                     .overlay(
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.15), lineWidth: 0.75)
@@ -83,7 +83,7 @@ struct TerminalPlaceholderView: View {
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text("·")
                     .foregroundColor(DesignTokens.Colors.textTertiary)
-                keyHint("⌘F")
+                keyHint("⌘⌥F")
                 Text("搜索")
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }

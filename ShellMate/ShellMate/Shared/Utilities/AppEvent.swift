@@ -96,6 +96,30 @@ enum AppEvent {
         return (content, name)
     }
 
+    // MARK: - openSessionInMainWindowRequested
+    // 发送方：HotkeyTerminalContentView（点击会话行）
+    // 接收方：ContentViewHotkeyModifier（选中已有 Tab 或新建 Tab 连接，然后激活主窗口）
+
+    static func postOpenSession(sessionId: UUID) {
+        NotificationCenter.default.post(
+            name: .openSessionInMainWindowRequested,
+            object: nil,
+            userInfo: [Key.sessionId: sessionId]
+        )
+    }
+
+    static func extractOpenSession(from n: Notification) -> UUID? {
+        n.userInfo?[Key.sessionId] as? UUID
+    }
+
+    // MARK: - openNewSessionRequested
+    // 发送方：HotkeyTerminalContentView（"新建会话"按钮）
+    // 接收方：ContentViewLifecycleModifier（已有 newSessionRequested 处理）
+
+    static func postOpenNewSession() {
+        NotificationCenter.default.post(name: .newSessionRequested, object: nil)
+    }
+
     // MARK: - userInfo 键常量（消除字符串字面量散落各处）
 
     enum Key {
