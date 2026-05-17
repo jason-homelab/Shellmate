@@ -1,28 +1,20 @@
 import SwiftUI
 
 // MARK: - D04 隧道管理器
+// 1:1 对齐 Figma OBPyCWFtlCx5OEIXwrckZm 节点 16:2
 
-/// 端口转发规则管理面板（D04）
-/// 规格：640pt 宽，浮动非模态 Panel，快捷键 ⌘⇧U
-/// 对齐 Figma-Spec-v2 §11：卡片布局，蓝色新建按钮，副标题
 struct TunnelManagerView: View {
 
     @ObservedObject var tunnelManager: TunnelManager
-
-    /// 关闭回调
     var onClose: () -> Void
 
     // MARK: - 状态
 
-    @State private var selectedRuleID: UUID?
     @State private var showEditPanel: Bool = false
     @State private var editingRule: TunnelRule? = nil
-
-    /// 编辑表单临时副本
     @State private var editDraft: TunnelRule = TunnelRule()
     @State private var showDeleteConfirm = false
     @State private var ruleToDelete: TunnelRule?
-
     @State private var showStartError: Bool = false
     @State private var startErrorMessage: String = ""
 
@@ -30,19 +22,31 @@ struct TunnelManagerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            headerView
-            actionBarView
-            cardListView
+            // Figma 16:2 标题行：∞ 隧道管理器（左）+ 新建隧道（右）
+            headerRow
+
+            // Figma: 列标题行（名称 | 类型 | 本地端口 | 远程地址 | 状态）
+            if !tunnelManager.rules.isEmpty {
+                columnHeaderRow
+            }
+
+            // Figma: 规则列表 or 空态
+            ruleListArea
+
+            // 编辑表单（展开时追加在底部）
             if showEditPanel {
-                Divider()
+                Divider().padding(.horizontal, 20)
                 detailPanelView
             }
+
+            // Figma: 页脚统计文字
+            footerRow
         }
-        // Figma 16:2: 660px white card, rounded-2xl, shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
+        // Figma 16:2: 660px white card, rounded-2xl
         .frame(width: 660)
         .frame(minHeight: 300, maxHeight: 560)
         .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("启动失败", isPresented: $showStartError) {
             Button("确定", role: .cancel) {}
@@ -59,137 +63,174 @@ struct TunnelManagerView: View {
         }
     }
 
-    // MARK: - 标题区（含副标题）
+    // MARK: - 标题行
 
-    private var headerView: some View {
-        HStack(spacing: 10) {
+    // Figma: 左侧图标 + "隧道管理器"，右侧蓝色"+ 新建隧道"按钮，同行
+    private var headerRow: some View {
+        HStack(spacing: 8) {
+            // Figma: 左侧双向箭头图标，textTertiary
             Image(systemName: "arrow.left.arrow.right")
-                .font(DesignTokens.Typography.bodyLarge)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text("隧道管理器")
-                    .font(DesignTokens.Typography.labelLarge)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("管理 SSH 端口转发与隧道")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-            Spacer()
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(DesignTokens.Typography.labelMedium)
-                    .foregroundColor(DesignTokens.Colors.textDisabled)
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-        .frame(height: 52)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
-        .overlay(Divider(), alignment: .bottom)
-    }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color(hex: "#8e8e93"))
 
-    // MARK: - 操作栏（仅新建按钮）
+            // Figma: "隧道管理器" 18px semibold #1d1d1f
+            Text("隧道管理器")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(Color(hex: "#1d1d1f"))
 
-    private var actionBarView: some View {
-        HStack {
             Spacer()
+
+            // Figma: 蓝色"+ 新建隧道"按钮，bg-[#077aff]，h-32，rounded-8，text-13 semibold
             Button(action: { addNewRule() }) {
-                HStack(spacing: DesignTokens.Spacing.xxs) {
+                HStack(spacing: 4) {
                     Image(systemName: "plus")
-                        .font(DesignTokens.Typography.captionMedium)
+                        .font(.system(size: 11, weight: .semibold))
                     Text("新建隧道")
-                        .font(DesignTokens.Typography.labelSmall)
+                        .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, DesignTokens.Spacing.micro)
-                .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
+                .padding(.horizontal, 12)
+                .frame(height: 32)
+                .background(Color(hex: "#077aff"))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .shadow(color: Color(hex: "#077aff").opacity(0.30), radius: 6, x: 0, y: 3)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-        .frame(height: 40)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+        .padding(.horizontal, 20)
+        .frame(height: 56)
+        // Figma: 底部 0.5px rgba(0,0,0,0.08) 分割线
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.black.opacity(0.08)).frame(height: 0.5)
         }
-        .overlay(Divider(), alignment: .bottom)
     }
 
-    // MARK: - 卡片列表
+    // MARK: - 列标题行
 
-    private var cardListView: some View {
-        ScrollView {
-            if tunnelManager.rules.isEmpty {
-                emptyStateView
-            } else {
-                VStack(spacing: DesignTokens.Spacing.sm) {
-                    ForEach(tunnelManager.rules) { rule in
-                        TunnelCardView(
+    // Figma: 名称 | 类型 | 本地端口 | 远程地址 | 状态（灰色 11px semibold 标签）
+    private var columnHeaderRow: some View {
+        HStack(spacing: 0) {
+            Text("名称")
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("类型")
+                .frame(width: 88, alignment: .leading)
+            Text("本地端口")
+                .frame(width: 80, alignment: .leading)
+            Text("远程地址")
+                .frame(width: 150, alignment: .leading)
+            Text("状态")
+                .frame(width: 80, alignment: .center)
+            // 删除列占位
+            Color.clear.frame(width: 32)
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .foregroundColor(Color(hex: "#8e8e93"))
+        .padding(.horizontal, 20)
+        .frame(height: 32)
+        .background(Color.black.opacity(0.02))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.black.opacity(0.08)).frame(height: 0.5)
+        }
+    }
+
+    // MARK: - 规则列表区域
+
+    @ViewBuilder
+    private var ruleListArea: some View {
+        if tunnelManager.rules.isEmpty {
+            emptyStateView
+        } else {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(Array(tunnelManager.rules.enumerated()), id: \.element.id) { idx, rule in
+                        TunnelTableRow(
                             rule: rule,
-                            isSelected: selectedRuleID == rule.id,
                             onToggle: { tunnelManager.toggleTunnel(rule) },
                             onEdit: { selectRule(rule) },
                             onDelete: { confirmDelete(rule) }
                         )
+                        // Figma: 每行底部 0.5px 分割线（末行不加）
+                        if idx < tunnelManager.rules.count - 1 {
+                            Rectangle()
+                                .fill(Color.black.opacity(0.06))
+                                .frame(height: 0.5)
+                                .padding(.horizontal, 20)
+                        }
                     }
                 }
-                .padding(DesignTokens.Spacing.md)
             }
+            .frame(maxHeight: 340)
         }
-        .frame(maxHeight: 300)
     }
 
+    // MARK: - 空态视图
+
     private var emptyStateView: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
+        VStack(spacing: 12) {
             Image(systemName: "arrow.left.arrow.right.square")
-                .font(DesignTokens.Typography.heroSmall)
-                .foregroundColor(DesignTokens.Colors.textDisabled)
-                .padding(.bottom, DesignTokens.Spacing.xxs)
+                .font(.system(size: 40))
+                .foregroundColor(Color(hex: "#d2d2d7"))
+
             Text("暂无隧道规则")
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("SSH 隧道可将远端端口映射到本地，或将本地端口转发到远端。")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color(hex: "#8e8e93"))
+
+            Text("SSH 隧道可将远端端口映射到本地，\n或将本地端口转发到远端。")
+                .font(.system(size: 12, weight: .regular))
+                .foregroundColor(Color(hex: "#aeaeb2"))
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 280)
+
             Button(action: { addNewRule() }) {
-                HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "plus")
-                        .font(DesignTokens.Typography.labelSmall)
-                    Text("新建第一条隧道")
-                        .font(DesignTokens.Typography.labelMedium)
+                HStack(spacing: 4) {
+                    Image(systemName: "plus").font(.system(size: 11, weight: .semibold))
+                    Text("新建第一条隧道").font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+                .padding(.horizontal, 16)
+                .frame(height: 36)
+                .background(Color(hex: "#077aff"))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .shadow(color: Color(hex: "#077aff").opacity(0.35), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
-            .padding(.top, DesignTokens.Spacing.xxs)
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, DesignTokens.Spacing.giant)
+        .padding(.vertical, 48)
+    }
+
+    // MARK: - 页脚
+
+    // Figma: "共 N 个隧道 · M 个活跃 · K 个已停止"，text-[11px] text-[#aeaeb2]
+    private var footerRow: some View {
+        let total = tunnelManager.rules.count
+        let active = tunnelManager.rules.filter { $0.status.isActive }.count
+        let stopped = total - active
+
+        return HStack {
+            if total > 0 {
+                Text("共 \(total) 个隧道 · \(active) 个活跃 · \(stopped) 个已停止")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(Color(hex: "#aeaeb2"))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .frame(height: 36)
+        .overlay(alignment: .top) {
+            Rectangle().fill(Color.black.opacity(0.08)).frame(height: 0.5)
+        }
     }
 
     // MARK: - 编辑表单
 
     @ViewBuilder
     private var detailPanelView: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            // 详情标题行
+        VStack(spacing: 12) {
             HStack {
                 Text("规则详情")
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(hex: "#8e8e93"))
                     .textCase(.uppercase)
                 Spacer()
                 Button("取消") { cancelEdit() }
@@ -200,13 +241,10 @@ struct TunnelManagerView: View {
                     .controlSize(.small)
             }
 
-            // 第一行：隧道名称 + 类型
-            HStack(spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: 12) {
                 FormGroup(label: "隧道名称") {
                     CustomTextField(placeholder: "如：MySQL 数据库", text: $editDraft.name)
-                        .font(DesignTokens.Typography.codeSmall)
                 }
-
                 FormGroup(label: "转发类型") {
                     Picker("", selection: $editDraft.type) {
                         ForEach(TunnelType.allCases, id: \.self) { t in
@@ -219,83 +257,69 @@ struct TunnelManagerView: View {
                 .frame(width: 160)
             }
 
-            // 第二行：本地地址 + 端口 + 远端目标 + 端口
-            HStack(spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: 12) {
                 FormGroup(label: "本地地址") {
                     CustomTextField(placeholder: "127.0.0.1", text: $editDraft.localBindAddress)
-                        .font(DesignTokens.Typography.codeSmall)
                 }
                 .frame(width: 140)
 
                 FormGroup(label: "端口") {
                     TextField("8080", value: $editDraft.localPort, format: .number)
                         .textFieldStyle(.plain)
-                        .font(DesignTokens.Typography.codeSmall)
-                        .padding(DesignTokens.Spacing.xs)
-                        .background(Color.white.opacity(0.80))
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
+                        .padding(6)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
                 }
                 .frame(width: 72)
 
                 if editDraft.type != .dynamicSocks {
                     FormGroup(label: "远端目标") {
                         CustomTextField(placeholder: "db.internal", text: $editDraft.remoteHost)
-                            .font(DesignTokens.Typography.codeSmall)
                     }
-
                     FormGroup(label: "端口") {
                         TextField("3306", value: $editDraft.remotePort, format: .number)
                             .textFieldStyle(.plain)
-                            .font(DesignTokens.Typography.codeSmall)
-                            .padding(DesignTokens.Spacing.xs)
-                            .background(DesignTokens.Colors.surfaceInput)
-                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5))
+                            .padding(6)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
                     }
                     .frame(width: 72)
                 }
             }
 
-            // 第三行：备注 + 自动启动
-            HStack(spacing: DesignTokens.Spacing.md) {
+            HStack(spacing: 12) {
                 FormGroup(label: "备注（可选）") {
                     CustomTextField(placeholder: "如：访问生产数据库", text: $editDraft.notes)
-                        .font(DesignTokens.Typography.codeSmall)
                 }
-
                 Toggle("会话连接时自动启动", isOn: $editDraft.autoStart)
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#8e8e93"))
             }
         }
-        .padding(DesignTokens.Spacing.lg)
-        .background {
-            Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
-        }
+        .padding(20)
+        .background(Color(hex: "#fafafb"))
     }
 
-    // MARK: - 辅助视图组件
+    // MARK: - 辅助
 
     private struct FormGroup<Content: View>: View {
         let label: String
         @ViewBuilder let content: Content
 
         var body: some View {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(label)
-                    .font(DesignTokens.Typography.captionMedium)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(hex: "#aeaeb2"))
                     .textCase(.uppercase)
                 content
             }
         }
     }
-
-    // MARK: - 操作
 
     private func addNewRule() {
         let rule = TunnelRule()
@@ -304,20 +328,14 @@ struct TunnelManagerView: View {
     }
 
     private func selectRule(_ rule: TunnelRule) {
-        selectedRuleID = rule.id
         editDraft = rule.editableCopy()
         editingRule = rule
-        withAnimation(.easeOut(duration: 0.2)) {
-            showEditPanel = true
-        }
+        withAnimation(.easeOut(duration: 0.2)) { showEditPanel = true }
     }
 
     private func cancelEdit() {
-        withAnimation(.easeOut(duration: 0.2)) {
-            showEditPanel = false
-        }
+        withAnimation(.easeOut(duration: 0.2)) { showEditPanel = false }
         editingRule = nil
-        selectedRuleID = nil
     }
 
     private func saveEdit() {
@@ -331,94 +349,99 @@ struct TunnelManagerView: View {
     }
 }
 
-// MARK: - 隧道卡片视图
+// MARK: - 表格行视图（对齐 Figma 16:2 行样式）
 
-private struct TunnelCardView: View {
+private struct TunnelTableRow: View {
 
     @ObservedObject var rule: TunnelRule
-    let isSelected: Bool
     let onToggle: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
 
+    @State private var isHovering = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            // 第一行：状态点 + 名称 + 操作按钮
-            HStack(spacing: DesignTokens.Spacing.sm) {
+        HStack(spacing: 0) {
+            // 名称列：状态点 + 名称文字
+            HStack(spacing: 8) {
                 Circle()
                     .fill(rule.status.statusColor)
-                    .frame(width: 8, height: 8)
-                Text(rule.name.isEmpty ? rule.localAddressDisplay : rule.name)
-                    .font(DesignTokens.Typography.labelLarge)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                    .frame(width: 6, height: 6)
+                Text(rule.name.isEmpty ? "(未命名)" : rule.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Color(hex: "#1d1d1f"))
                     .lineLimit(1)
-                Spacer()
-                // Start/Stop 按钮
-                Button(action: onToggle) {
-                    Text(rule.status.isActive ? "停止" : "启动")
-                        .font(DesignTokens.Typography.labelSmall)
-                        .foregroundColor(rule.status.isActive ? DesignTokens.Colors.statusConnected : DesignTokens.Colors.textSecondary)
-                        .padding(.horizontal, DesignTokens.Spacing.sm)
-                        .padding(.vertical, DesignTokens.Spacing.nano)
-                        .background(rule.status.isActive ? DesignTokens.Colors.accentSecondary.opacity(0.12) : DesignTokens.Colors.surfaceHover)
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                // 编辑按钮
-                Button(action: onEdit) {
-                    Image(systemName: "pencil")
-                        .font(DesignTokens.Typography.captionLarge)
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .frame(width: 26, height: 26)
-                        .background(DesignTokens.Colors.surfaceHover)
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                // 删除按钮
-                Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .font(DesignTokens.Typography.captionLarge)
-                        .foregroundColor(DesignTokens.Colors.textTertiary)
-                        .frame(width: 26, height: 26)
-                }
-                .buttonStyle(.plain)
             }
-            // 第二行：描述
-            Text(rule.descriptionText)
-                .font(DesignTokens.Typography.codeSmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            // 第三行：类型徽章
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 类型徽章
             TunnelTypeBadgeView(type: rule.type)
+                .frame(width: 88, alignment: .leading)
+
+            // 本地端口
+            Text("\(rule.localPort)")
+                .font(.system(size: 13, weight: .regular).monospacedDigit())
+                .foregroundColor(Color(hex: "#1d1d1f"))
+                .frame(width: 80, alignment: .leading)
+
+            // 远程地址
+            Text(rule.remoteDisplay)
+                .font(.system(size: 12, weight: .regular).monospaced())
+                .foregroundColor(Color(hex: "#8e8e93"))
+                .lineLimit(1)
+                .frame(width: 150, alignment: .leading)
+
+            // 状态 Toggle
+            Toggle("", isOn: Binding(
+                get: { rule.status.isActive },
+                set: { _ in onToggle() }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .frame(width: 80, alignment: .center)
+
+            // 删除按钮
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#aeaeb2"))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 32, alignment: .center)
+            .opacity(isHovering ? 1 : 0.4)
         }
-        .padding(DesignTokens.Spacing.md)
-        .background(isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.08) : Color.white.opacity(0.80))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(
-                    isSelected
-                        ? DesignTokens.Colors.accentPrimary.opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
-                    lineWidth: 0.5
-                )
-        )
-        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .padding(.horizontal, 20)
+        .frame(height: 52)
+        .background(isHovering ? Color.black.opacity(0.02) : Color.white)
         .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
+        .onTapGesture(count: 2) { onEdit() }
     }
 }
 
-// MARK: - 类型标签徽章
+// MARK: - 类型徽章（Figma：蓝色/橙色 badge）
 
 private struct TunnelTypeBadgeView: View {
     let type: TunnelType
 
     var body: some View {
         Text(type.badgeLabel)
-            .font(DesignTokens.Typography.captionSmall)
+            .font(.system(size: 11, weight: .medium))
             .foregroundColor(type.badgeColor)
-            .padding(.horizontal, DesignTokens.Spacing.xs)
+            .padding(.horizontal, 6)
             .frame(height: 18)
-            .background(type.badgeColor.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMicro, style: .continuous))
+            .background(type.badgeColor.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+}
+
+// MARK: - TunnelRule 扩展
+
+private extension TunnelRule {
+    var remoteDisplay: String {
+        if type == .dynamicSocks { return "—" }
+        if remoteHost.isEmpty { return "—" }
+        return "\(remoteHost):\(remotePort)"
     }
 }
