@@ -42,9 +42,9 @@ struct TunnelManagerView: View {
             // Figma: 页脚统计文字
             footerRow
         }
-        // Figma 16:2: 660px white card, rounded-2xl
+        // Figma 16:2: 660px white card, rounded-2xl，高度跟随内容（不撑满容器）
+        .fixedSize(horizontal: false, vertical: true)
         .frame(width: 660)
-        .frame(minHeight: 300, maxHeight: 560)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
@@ -68,13 +68,13 @@ struct TunnelManagerView: View {
     // Figma: 左侧图标 + "隧道管理器"，右侧蓝色"+ 新建隧道"按钮，同行
     private var headerRow: some View {
         HStack(spacing: 8) {
-            // Figma: 左侧双向箭头图标，textTertiary
-            Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: 14, weight: .medium))
+            // Figma: 左侧无限符号图标，textTertiary
+            Image(systemName: "infinity")
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(Color(hex: "#8e8e93"))
 
             // Figma: "隧道管理器" 18px semibold #1d1d1f
-            Text("隧道管理器")
+            Text(verbatim: "隧道管理器")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "#1d1d1f"))
 
@@ -85,7 +85,7 @@ struct TunnelManagerView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "plus")
                         .font(.system(size: 11, weight: .semibold))
-                    Text("新建隧道")
+                    Text(verbatim: "新建隧道")
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundColor(.white)
@@ -110,18 +110,18 @@ struct TunnelManagerView: View {
     // Figma: 名称 | 类型 | 本地端口 | 远程地址 | 状态（灰色 11px semibold 标签）
     private var columnHeaderRow: some View {
         HStack(spacing: 0) {
-            Text("名称")
+            Text(verbatim: "名称")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("类型")
+            Text(verbatim: "类型")
                 .frame(width: 88, alignment: .leading)
-            Text("本地端口")
+            Text(verbatim: "本地端口")
                 .frame(width: 80, alignment: .leading)
-            Text("远程地址")
+            Text(verbatim: "远程地址")
                 .frame(width: 150, alignment: .leading)
-            Text("状态")
+            Text(verbatim: "状态")
                 .frame(width: 80, alignment: .center)
-            // 删除列占位
-            Color.clear.frame(width: 32)
+            // 编辑 + 删除两列占位
+            Color.clear.frame(width: 64)
         }
         .font(.system(size: 11, weight: .semibold))
         .foregroundColor(Color(hex: "#8e8e93"))
@@ -159,7 +159,8 @@ struct TunnelManagerView: View {
                     }
                 }
             }
-            .frame(maxHeight: 340)
+            // 最多显示 7 行（7×52），超出时内部滚动
+            .frame(maxHeight: 364)
         }
     }
 
@@ -179,21 +180,6 @@ struct TunnelManagerView: View {
                 .font(.system(size: 12, weight: .regular))
                 .foregroundColor(Color(hex: "#aeaeb2"))
                 .multilineTextAlignment(.center)
-
-            Button(action: { addNewRule() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus").font(.system(size: 11, weight: .semibold))
-                    Text("新建第一条隧道").font(.system(size: 13, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .frame(height: 36)
-                .background(Color(hex: "#077aff"))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .shadow(color: Color(hex: "#077aff").opacity(0.35), radius: 8, x: 0, y: 4)
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 48)
@@ -264,7 +250,8 @@ struct TunnelManagerView: View {
                 .frame(width: 140)
 
                 FormGroup(label: "端口") {
-                    TextField("8080", value: $editDraft.localPort, format: .number)
+                    TextField("8080", value: $editDraft.localPort,
+                              format: IntegerFormatStyle<Int>().grouping(.never))
                         .textFieldStyle(.plain)
                         .padding(6)
                         .background(Color.white)
@@ -279,7 +266,8 @@ struct TunnelManagerView: View {
                         CustomTextField(placeholder: "db.internal", text: $editDraft.remoteHost)
                     }
                     FormGroup(label: "端口") {
-                        TextField("3306", value: $editDraft.remotePort, format: .number)
+                        TextField("3306", value: $editDraft.remotePort,
+                                  format: IntegerFormatStyle<Int>().grouping(.never))
                             .textFieldStyle(.plain)
                             .padding(6)
                             .background(Color.white)
@@ -367,7 +355,7 @@ private struct TunnelTableRow: View {
                 Circle()
                     .fill(rule.status.statusColor)
                     .frame(width: 6, height: 6)
-                Text(rule.name.isEmpty ? "(未命名)" : rule.name)
+                Text(rule.name.isEmpty ? "（未命名）" : rule.name)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(Color(hex: "#1d1d1f"))
                     .lineLimit(1)
@@ -378,8 +366,8 @@ private struct TunnelTableRow: View {
             TunnelTypeBadgeView(type: rule.type)
                 .frame(width: 88, alignment: .leading)
 
-            // 本地端口
-            Text("\(rule.localPort)")
+            // 本地端口（用 String() 避免 LocalizedStringKey 千位格式化）
+            Text(String(rule.localPort))
                 .font(.system(size: 13, weight: .regular).monospacedDigit())
                 .foregroundColor(Color(hex: "#1d1d1f"))
                 .frame(width: 80, alignment: .leading)
@@ -401,7 +389,17 @@ private struct TunnelTableRow: View {
             .controlSize(.small)
             .frame(width: 80, alignment: .center)
 
-            // 删除按钮
+            // 编辑按钮（hover 可见）
+            Button(action: onEdit) {
+                Image(systemName: "pencil")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#8e8e93"))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 32, alignment: .center)
+            .opacity(isHovering ? 1 : 0)
+
+            // 删除按钮（hover 时加深）
             Button(action: onDelete) {
                 Image(systemName: "trash")
                     .font(.system(size: 12))
@@ -416,7 +414,7 @@ private struct TunnelTableRow: View {
         .background(isHovering ? Color.black.opacity(0.02) : Color.white)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
-        .onTapGesture(count: 2) { onEdit() }
+        .onTapGesture { onEdit() }
     }
 }
 
