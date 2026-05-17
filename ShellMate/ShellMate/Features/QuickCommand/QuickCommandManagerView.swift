@@ -38,19 +38,12 @@ struct QuickCommandManagerView: View {
             actionBarView
             mainContent
         }
-        // 对齐规范 §12：sm:max-w-[700px] max-h-[80vh]，bg-white/95 backdrop-blur-2xl，rounded-2xl
-        .frame(width: 700)
+        // Figma 17:2: 660px white card, rounded-2xl, shadow
+        .frame(width: 660)
         .frame(minHeight: 360, maxHeight: 560)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.25), radius: 32, x: 0, y: 16)
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("新建命令集", isPresented: $showNewSetAlert) {
             TextField("命令集名称", text: $newSetName)
             Button("创建") {

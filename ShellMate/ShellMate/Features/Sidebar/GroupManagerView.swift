@@ -34,17 +34,11 @@ struct GroupManagerView: View {
             Divider()
             newGroupInputArea
         }
-        .frame(width: 500)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        // Figma 20:22: 460px white card, rounded-2xl, shadow
+        .frame(width: 460)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .task {
             await groupStore.loadGroups()
         }

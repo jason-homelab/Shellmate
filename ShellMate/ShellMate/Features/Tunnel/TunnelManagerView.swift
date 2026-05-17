@@ -38,19 +38,11 @@ struct TunnelManagerView: View {
                 detailPanelView
             }
         }
-        // 对齐规范 §11：sm:max-w-[700px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
-        .frame(width: 700)
+        // Figma 16:2: 660px white card, rounded-2xl, shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
+        .frame(width: 660)
         .frame(minHeight: 300, maxHeight: 560)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        )
-        // Figma 16:2: shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("启动失败", isPresented: $showStartError) {
             Button("确定", role: .cancel) {}

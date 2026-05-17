@@ -21,16 +21,23 @@ struct WelcomeScreenView: View {
 
     var body: some View {
         ZStack {
-            // Figma: bg-gradient-to-br from-[#f5f5f7] via-white to-[#e8e8ed]
-            LinearGradient(
-                stops: [
-                    .init(color: Color(hex: "#f5f5f7"), location: 0.0),
-                    .init(color: Color.white,           location: 0.5),
-                    .init(color: Color(hex: "#e8e8ed"), location: 1.0)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            // Figma 21:2: 径向渐变，从顶部中心蓝色放射至底部近白
+            // radialGradient centered at top, rgba(7,122,255,0.08)→rgba(245,245,247,1)
+            ZStack {
+                Color(hex: "#f5f5f7")
+                RadialGradient(
+                    stops: [
+                        .init(color: Color(hex: "#077aff").opacity(0.08), location: 0.0),
+                        .init(color: Color(hex: "#4299fd").opacity(0.31), location: 0.25),
+                        .init(color: Color(hex: "#7eb7fb").opacity(0.54), location: 0.50),
+                        .init(color: Color(hex: "#bad6f9").opacity(0.77), location: 0.75),
+                        .init(color: Color(hex: "#f5f5f7").opacity(0.0),  location: 1.0)
+                    ],
+                    center: .top,
+                    startRadius: 0,
+                    endRadius: 800
+                )
+            }
             .ignoresSafeArea()
 
             // Close button — absolute top-4 right-4, rounded-full, hover:bg-black/5

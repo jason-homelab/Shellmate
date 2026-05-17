@@ -95,18 +95,11 @@ struct LogPanelView: View {
                 settingsTabView
             }
         }
-        .frame(width: 900)
+        // Figma 19:2: 700px white card, rounded-2xl, shadow
+        .frame(width: 700)
         .frame(minHeight: 400, maxHeight: 640)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        )
-        // Figma 19:2: shadow-[0px_8px_40px_0px_rgba(0,0,0,0.18)]
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
     }
 

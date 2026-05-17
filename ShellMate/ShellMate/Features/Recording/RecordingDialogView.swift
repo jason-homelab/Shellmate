@@ -76,18 +76,11 @@ struct RecordingDialogView: View {
             Divider()
             footerView
         }
-        .frame(minWidth: 560, maxWidth: 672)
-        .frame(minHeight: 340, maxHeight: 600)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
+        // Figma 20:2: 460px white card, rounded-2xl, shadow
+        .frame(width: 460)
+        .frame(minHeight: 340, maxHeight: 560)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        )
-        // Figma 20:2: shadow-[0px_8px_40px_0px_rgba(0,0,0,0.18)]
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .onAppear {
             loadRecordings()

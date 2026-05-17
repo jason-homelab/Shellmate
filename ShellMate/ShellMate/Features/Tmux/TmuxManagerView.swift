@@ -5,9 +5,9 @@ import SwiftUI
 // MARK: - Tab 枚举
 
 private enum TmuxTab: String, CaseIterable {
-    case sessions     = "会话"
-    case windows      = "窗口"
-    case quickActions = "快捷操作"
+    case sessions     = "Sessions"
+    case windows      = "Windows"
+    case quickActions = "Quick Actions"
 }
 
 /// tmux 会话管理器浮动面板（覆层 O04）
@@ -42,19 +42,11 @@ struct TmuxManagerView: View {
             tabContentView
             statusFooter
         }
-        // 对齐规范 §10：sm:max-w-[900px]，bg-white/95 backdrop-blur-2xl，border-[#d2d2d7]/50，rounded-2xl
-        .frame(width: 900)
+        // Figma 18:2: 880px white card, rounded-2xl, shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
+        .frame(width: 880)
         .frame(minHeight: 420, maxHeight: 660)
-        .background {
-            Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
-        }
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-        // Figma 18:2: shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .overlay {
             if showNewSessionSheet {
