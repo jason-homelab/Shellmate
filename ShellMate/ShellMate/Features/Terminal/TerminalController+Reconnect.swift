@@ -58,6 +58,11 @@ extension TerminalController {
         guard state == .connected else { return }
         tmuxStore.handleSSHDisconnected()
         logSystemEvent("连接意外断开")
+        // 清理旧连接对象，确保重连时从干净状态建立新连接
+        sshConnection?.disconnect()
+        sshConnection = nil
+        telnetConnection = nil
+        serialConnection = nil
         state = .failed("连接已断开")
         delegate?.terminalController(self, didChangeState: state)
         if reconnectConfig.enabled && !userDisconnected { scheduleReconnect() }

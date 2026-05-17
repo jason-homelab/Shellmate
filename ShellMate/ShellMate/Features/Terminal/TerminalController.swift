@@ -255,7 +255,7 @@ final class TerminalController: ObservableObject {
     // MARK: - 连接管理
 
     func connect() async throws {
-        guard state == .disconnected || state.isFailed else { return }
+        guard state == .disconnected || state.isFailed || state.isReconnecting else { return }
         // SEC-002：所有退出路径（正常 return / throw）都清零临时密码，防止明文凭证在堆上残留
         defer { zeroTemporaryPassword() }
 
