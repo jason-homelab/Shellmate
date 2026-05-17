@@ -101,7 +101,13 @@ final class AutomationTriggerEngine {
         switch trigger.actionType {
         case .sendCommand:
             guard !payload.isEmpty else { return }
-            Task { try? await controller.send(payload + "\n") }
+            Task {
+                do {
+                    try await controller.send(payload + "\n")
+                } catch {
+                    AppLogger.general.error("[AutomationTrigger] 发送命令失败 (\(trigger.name)): \(error.localizedDescription)")
+                }
+            }
 
         case .notification:
             sendNotification(title: trigger.name, body: payload.isEmpty ? trigger.name : payload)
@@ -120,7 +126,11 @@ final class AutomationTriggerEngine {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/bin/sh")
             proc.arguments = ["-c", payload]
-            try? proc.run()
+            do {
+                try proc.run()
+            } catch {
+                AppLogger.general.error("[AutomationTrigger] 脚本启动失败 (\(trigger.name)): \(error.localizedDescription)")
+            }
             #endif
 
         case .highlightLine:
@@ -174,14 +184,17 @@ final class AutomationTriggerEngine {
         let expandedPath = (path as NSString).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath)
         guard let data = text.data(using: .utf8) else { return }
-        if FileManager.default.fileExists(atPath: expandedPath) {
-            if let handle = try? FileHandle(forWritingTo: url) {
+        do {
+            if FileManager.default.fileExists(atPath: expandedPath) {
+                let handle = try FileHandle(forWritingTo: url)
                 handle.seekToEndOfFile()
                 handle.write(data)
-                try? handle.close()
+                try handle.close()
+            } else {
+                try data.write(to: url, options: .atomic)
             }
-        } else {
-            try? data.write(to: url, options: .atomic)
+        } catch {
+            AppLogger.general.error("[AutomationTrigger] 写入日志文件失败 (\(expandedPath)): \(error.localizedDescription)")
         }
     }
 

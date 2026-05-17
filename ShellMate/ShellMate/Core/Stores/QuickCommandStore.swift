@@ -81,9 +81,13 @@ final class QuickCommandStore: ObservableObject {
         let request: NSFetchRequest<CDQuickCommandSet> = CDQuickCommandSet.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
-        if let entity = try? context.fetch(request).first {
-            context.delete(entity)
-            saveContext()
+        do {
+            if let entity = try context.fetch(request).first {
+                context.delete(entity)
+                saveContext()
+            }
+        } catch {
+            AppLogger.db.error("[QuickCommandStore] 删除命令集失败: \(error.localizedDescription)")
         }
         if selectedSetID == id { selectedSetID = nil }
         fetchAll()
@@ -158,14 +162,24 @@ final class QuickCommandStore: ObservableObject {
         let request: NSFetchRequest<CDQuickCommandSet> = CDQuickCommandSet.fetchRequest()
         request.predicate  = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
-        return try? context.fetch(request).first
+        do {
+            return try context.fetch(request).first
+        } catch {
+            AppLogger.db.error("[QuickCommandStore] 查询命令集失败: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     private func fetchCDCommand(id: UUID) -> CDQuickCommand? {
         let request: NSFetchRequest<CDQuickCommand> = CDQuickCommand.fetchRequest()
         request.predicate  = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1
-        return try? context.fetch(request).first
+        do {
+            return try context.fetch(request).first
+        } catch {
+            AppLogger.db.error("[QuickCommandStore] 查询命令失败: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     private func saveContext() {

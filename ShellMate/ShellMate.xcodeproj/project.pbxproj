@@ -186,6 +186,10 @@
 		W29_BLD_11 /* TerminalController+SwiftTermDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */; };
 		W29_BLD_12 /* TerminalController+AlternativeConnections.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_12 /* TerminalController+AlternativeConnections.swift */; };
 		W29_BLD_13 /* TerminalController+DataTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_13 /* TerminalController+DataTransfer.swift */; };
+		TCT010001 /* TerminalControllerTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = TCT020001 /* TerminalControllerTypes.swift */; };
+		TSM010001 /* TerminalSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = TSM020001 /* TerminalSessionManager.swift */; };
+		TCH010001 /* TerminalController+HostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = TCH020001 /* TerminalController+HostKey.swift */; };
+		TCS010001 /* TerminalController+SFTPPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = TCS020001 /* TerminalController+SFTPPanel.swift */; };
 		W29_BLD_14 /* CredentialVaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_14 /* CredentialVaultTests.swift */; };
 		DT_BLD_01 /* DesignTokens+Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_01 /* DesignTokens+Colors.swift */; };
 		DT_BLD_02 /* DesignTokens+Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_02 /* DesignTokens+Typography.swift */; };
@@ -409,6 +413,10 @@
 		W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+SwiftTermDelegate.swift"; sourceTree = "<group>"; };
 		W29_REF_12 /* TerminalController+AlternativeConnections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+AlternativeConnections.swift"; sourceTree = "<group>"; };
 		W29_REF_13 /* TerminalController+DataTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+DataTransfer.swift"; sourceTree = "<group>"; };
+		TCT020001 /* TerminalControllerTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalControllerTypes.swift; sourceTree = "<group>"; };
+		TSM020001 /* TerminalSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionManager.swift; sourceTree = "<group>"; };
+		TCH020001 /* TerminalController+HostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+HostKey.swift"; sourceTree = "<group>"; };
+		TCS020001 /* TerminalController+SFTPPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+SFTPPanel.swift"; sourceTree = "<group>"; };
 		W29_REF_14 /* CredentialVaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialVaultTests.swift; sourceTree = "<group>"; };
 		DT_REF_01 /* DesignTokens+Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Colors.swift"; sourceTree = "<group>"; };
 		DT_REF_02 /* DesignTokens+Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Typography.swift"; sourceTree = "<group>"; };
@@ -649,6 +657,10 @@
 				W29_REF_11 /* TerminalController+SwiftTermDelegate.swift */,
 				W29_REF_12 /* TerminalController+AlternativeConnections.swift */,
 				W29_REF_13 /* TerminalController+DataTransfer.swift */,
+				TCT020001 /* TerminalControllerTypes.swift */,
+				TSM020001 /* TerminalSessionManager.swift */,
+				TCH020001 /* TerminalController+HostKey.swift */,
+				TCS020001 /* TerminalController+SFTPPanel.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -1311,6 +1323,10 @@
 				W29_BLD_11 /* TerminalController+SwiftTermDelegate.swift in Sources */,
 				W29_BLD_12 /* TerminalController+AlternativeConnections.swift in Sources */,
 				W29_BLD_13 /* TerminalController+DataTransfer.swift in Sources */,
+				TCT010001 /* TerminalControllerTypes.swift in Sources */,
+				TSM010001 /* TerminalSessionManager.swift in Sources */,
+				TCH010001 /* TerminalController+HostKey.swift in Sources */,
+				TCS010001 /* TerminalController+SFTPPanel.swift in Sources */,
 				W2703_BUILD /* AppEnvironment.swift in Sources */,
 				MON010001 /* ServerMonitorPanelView.swift in Sources */,
 				CE010001 /* ConnectionErrorView.swift in Sources */,
