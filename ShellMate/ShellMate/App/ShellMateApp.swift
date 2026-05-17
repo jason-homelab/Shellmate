@@ -49,6 +49,7 @@ struct ShellMateApp: App {
         }
 
         // ── File 菜单 ──────────────────────────────────────────────────────────
+        // 移除"新建窗口"（低频操作），改放至 Window 菜单
         CommandGroup(replacing: .newItem) {
             Button("新建会话") {
                 NotificationCenter.default.post(name: .newSessionRequested, object: nil)
@@ -71,18 +72,10 @@ struct ShellMateApp: App {
                 NotificationCenter.default.post(name: .closeTabRequested, object: nil)
             }
             .keyboardShortcut("w", modifiers: .command)
-
-            Divider()
-
-            Button("新建窗口") {
-                NotificationCenter.default.post(name: .newWindowRequested, object: nil)
-            }
-            .keyboardShortcut("n", modifiers: [.command, .option])
         }
 
-        // ── Session 菜单（原"连接" + 原"Tools" Hotkey）────────────────────────
-        // 使用名词"Session"符合 macOS HIG 菜单命名惯例
-        CommandMenu("Session") {
+        // ── 会话 菜单 ──────────────────────────────────────────────────────────
+        CommandMenu("会话") {
             Button("连接选中会话") {
                 NotificationCenter.default.post(name: .connectSessionRequested, object: nil)
             }
@@ -93,13 +86,15 @@ struct ShellMateApp: App {
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
 
+            Divider()
+
+            // 危险操作与常用操作通过 Divider 隔离，防止误触
             Button("断开所有连接") {
                 NotificationCenter.default.post(name: .disconnectAllRequested, object: nil)
             }
 
             Divider()
 
-            // 导入 / 导出（原分散在工具栏）
             Button("导入会话...") {
                 NotificationCenter.default.post(name: .importSessionsRequested, object: nil)
             }
@@ -107,47 +102,51 @@ struct ShellMateApp: App {
             Button("导出会话...") {
                 NotificationCenter.default.post(name: .exportSessionsRequested, object: nil)
             }
-
-            Divider()
-
-            // Hotkey Window（原 Tools 菜单，合并至此）
-            // ⌥Space 由全局 NSEvent monitor 直接捕获，此处为发现性入口
-            Button("呼出 / 隐藏 Hotkey 终端") {
-                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
-            }
         }
 
-        // ── View 菜单：注入系统已有 View 菜单，消除重复 ──────────────────────
-        // CommandGroup(after: .toolbar) 将条目追加到系统 View 菜单的工具栏区块之后，
-        // 不会创建新的顶级菜单，从而修复"View"重复出现的问题。
+        // ── View 菜单：注入系统已有 View 菜单 ────────────────────────────────
         CommandGroup(after: .toolbar) {
             Divider()
 
+            // 外观模式：用 Toggle 实现选中态，Accessibility 正确识别，无硬编码 ✓ 字符
             Menu("外观模式") {
-                Button(action: { windowMode = "auto" }) {
-                    Label(
-                        windowMode == "auto" ? "✓ 跟随系统" : "跟随系统",
-                        systemImage: "circle.lefthalf.filled"
-                    )
+                Toggle(isOn: Binding(
+                    get: { windowMode == "auto" },
+                    set: { _ in windowMode = "auto" }
+                )) {
+                    Label("跟随系统", systemImage: "circle.lefthalf.filled")
                 }
-                .keyboardShortcut("1", modifiers: [.command, .option])
-
-                Button(action: { windowMode = "light" }) {
-                    Label(
-                        windowMode == "light" ? "✓ 浅色模式" : "浅色模式",
-                        systemImage: "sun.max"
-                    )
+                Toggle(isOn: Binding(
+                    get: { windowMode == "light" },
+                    set: { _ in windowMode = "light" }
+                )) {
+                    Label("浅色模式", systemImage: "sun.max")
                 }
-                .keyboardShortcut("2", modifiers: [.command, .option])
-
-                Button(action: { windowMode = "dark" }) {
-                    Label(
-                        windowMode == "dark" ? "✓ 深色模式" : "深色模式",
-                        systemImage: "moon"
-                    )
+                Toggle(isOn: Binding(
+                    get: { windowMode == "dark" },
+                    set: { _ in windowMode = "dark" }
+                )) {
+                    Label("深色模式", systemImage: "moon")
                 }
-                .keyboardShortcut("3", modifiers: [.command, .option])
             }
+
+            Divider()
+
+            // 字体大小调整（视觉外观操作，归属 View 菜单而非 Terminal）
+            Button("增大字体") {
+                NotificationCenter.default.post(name: .increaseFontRequested, object: nil)
+            }
+            .keyboardShortcut("+", modifiers: .command)
+
+            Button("减小字体") {
+                NotificationCenter.default.post(name: .decreaseFontRequested, object: nil)
+            }
+            .keyboardShortcut("-", modifiers: .command)
+
+            Button("重置字体大小") {
+                NotificationCenter.default.post(name: .resetFontRequested, object: nil)
+            }
+            .keyboardShortcut("0", modifiers: .command)
 
             Divider()
 
@@ -156,10 +155,18 @@ struct ShellMateApp: App {
             }
             .keyboardShortcut("s", modifiers: [.command, .control])
 
+            // ⌘⌥L 替代原 ⌘L，避免与 Safari/Finder 等应用的"定位"快捷键语义冲突
             Button("聚焦搜索") {
                 NotificationCenter.default.post(name: .focusSidebarSearchRequested, object: nil)
             }
-            .keyboardShortcut("l", modifiers: .command)
+            .keyboardShortcut("l", modifiers: [.command, .option])
+
+            Divider()
+
+            // Hotkey 终端属于全局视图切换，语义上归属 View 而非 会话
+            Button("呼出 / 隐藏 Hotkey 终端") {
+                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
+            }
 
             Divider()
 
@@ -185,37 +192,23 @@ struct ShellMateApp: App {
             }
         }
 
-        // ── Terminal 菜单 ──────────────────────────────────────────────────────
-        CommandMenu("Terminal") {
+        // ── 终端 菜单（仅保留纯终端操作）────────────────────────────────────
+        // 工具面板类条目（SFTP / 隧道 / 快捷命令）已移至「工具」菜单
+        CommandMenu("终端") {
             Button("清屏") {
                 NotificationCenter.default.post(name: .clearTerminalRequested, object: nil)
             }
             .keyboardShortcut("k", modifiers: .command)
 
+            // ⌘⌥F 替代原 ⌘F，避免与系统 Edit > Find（⌘F）静默冲突
             Button("搜索") {
                 NotificationCenter.default.post(name: .searchTerminalRequested, object: nil)
             }
-            .keyboardShortcut("f", modifiers: .command)
+            .keyboardShortcut("f", modifiers: [.command, .option])
+        }
 
-            Divider()
-
-            Button("增大字体") {
-                NotificationCenter.default.post(name: .increaseFontRequested, object: nil)
-            }
-            .keyboardShortcut("+", modifiers: .command)
-
-            Button("减小字体") {
-                NotificationCenter.default.post(name: .decreaseFontRequested, object: nil)
-            }
-            .keyboardShortcut("-", modifiers: .command)
-
-            Button("重置字体大小") {
-                NotificationCenter.default.post(name: .resetFontRequested, object: nil)
-            }
-            .keyboardShortcut("0", modifiers: .command)
-
-            Divider()
-
+        // ── 工具 菜单（面板入口统一归类）────────────────────────────────────
+        CommandMenu("工具") {
             Button("SFTP 文件管理器") {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             }
@@ -235,6 +228,15 @@ struct ShellMateApp: App {
                 NotificationCenter.default.post(name: .composePaneRequested, object: nil)
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
+        }
+
+        // ── Window 菜单：新建窗口（低频，从 File 下移至此）──────────────────
+        CommandGroup(after: .windowArrangement) {
+            Divider()
+            Button("新建窗口") {
+                NotificationCenter.default.post(name: .newWindowRequested, object: nil)
+            }
+            .keyboardShortcut("n", modifiers: [.command, .option])
         }
 
         // ── Help 菜单 ──────────────────────────────────────────────────────────
