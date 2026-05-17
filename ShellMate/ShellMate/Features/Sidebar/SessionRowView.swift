@@ -47,8 +47,8 @@ struct SessionRowView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                // Figma 8:24: 副标题选中白色70%，未选中 #8e8e93 = textSubtle
-                Text("\(session.username)@\(session.host)")
+                // Figma 8:24: 副标题选中白色70%，未选中 #8e8e93 = textSubtle；非标准端口追加 :port
+                Text("\(session.username)@\(session.host)\(session.port != 22 ? ":\(session.port)" : "")")
                     .font(.system(size: 11))
                     .foregroundColor(isSelected
                         ? Color.white.opacity(0.70)

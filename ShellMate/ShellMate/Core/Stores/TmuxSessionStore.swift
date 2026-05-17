@@ -97,8 +97,8 @@ final class TmuxSessionStore: ObservableObject {
             processMarkerLine(line)
             return true
         }
-        // 含 __SM_TMUX_ 标记的行
-        if TmuxOutputMarker.containsMarker(line) {
+        // 仅行首出现 __SM_TMUX_ 才触发过滤，防止 history 等命令输出中含标记字符串时误触发
+        if TmuxOutputMarker.hasMarkerAtLineStart(line) {
             processMarkerLine(line)
             return true
         }
@@ -108,17 +108,23 @@ final class TmuxSessionStore: ObservableObject {
     // MARK: - 输出解析（由 TerminalController 转发）
 
     /// 处理来自 SSH 输出流中检测到的 tmux 协议行（内部使用）
+    ///
+    /// 使用 `stripped.hasPrefix(marker)` 而非 `line.contains(marker)`，确保
+    /// `history` 命令输出中的历史条目（如 `53  echo '__SM_TMUX_LS_START__'...`）
+    /// 不会误触发状态机跳转，导致后续终端输出被吞噬。
     private func processMarkerLine(_ line: String) {
+        let stripped = line.trimmingCharacters(in: .whitespacesAndNewlines)
+
         // --- 可用性检测 ---
-        if line.contains(TmuxOutputMarker.checkNA) {
+        if stripped.hasPrefix(TmuxOutputMarker.checkNA) {
             availability = .unavailable
             return
         }
 
         // --- 版本解析（24.4）---
-        if line.contains(TmuxOutputMarker.versionPrefix) {
+        if stripped.hasPrefix(TmuxOutputMarker.versionPrefix) {
             // 提取版本字符串，格式：__SM_TMUX_VER__tmux 3.4
-            let versionStr = line.components(separatedBy: TmuxOutputMarker.versionPrefix).last ?? "tmux"
+            let versionStr = stripped.components(separatedBy: TmuxOutputMarker.versionPrefix).last ?? "tmux"
             let trimmed = versionStr.trimmingCharacters(in: .whitespacesAndNewlines)
             isVersionTooOld = !TmuxOutputMarker.isVersionSupported(trimmed)
             if case .available = availability { } else {
@@ -128,7 +134,7 @@ final class TmuxSessionStore: ObservableObject {
             return
         }
 
-        if line.contains(TmuxOutputMarker.checkOK) {
+        if stripped.hasPrefix(TmuxOutputMarker.checkOK) {
             // 兼容旧标记（不应出现，但保留防御）
             if case .available = availability { } else {
                 availability = .available(version: "tmux")
@@ -138,12 +144,12 @@ final class TmuxSessionStore: ObservableObject {
         }
 
         // --- 会话列表 ---
-        if line.contains(TmuxOutputMarker.sessionListStart) {
+        if stripped.hasPrefix(TmuxOutputMarker.sessionListStart) {
             collectingSessionList = true
             sessionListBuffer = ""
             return
         }
-        if line.contains(TmuxOutputMarker.sessionListEnd) {
+        if stripped.hasPrefix(TmuxOutputMarker.sessionListEnd) {
             collectingSessionList = false
             parseSessionList(sessionListBuffer)
             sessionListBuffer = ""
@@ -161,18 +167,18 @@ final class TmuxSessionStore: ObservableObject {
             sessionListBuffer += line + "\n"
             return
         }
-        if line.contains(TmuxOutputMarker.noSessions) {
+        if stripped.hasPrefix(TmuxOutputMarker.noSessions) {
             sessions = []
             return
         }
 
         // --- 窗口列表 ---
-        if line.contains(TmuxOutputMarker.windowListStart) {
+        if stripped.hasPrefix(TmuxOutputMarker.windowListStart) {
             collectingWindowList = true
             windowListBuffer = ""
             return
         }
-        if line.contains(TmuxOutputMarker.windowListEnd) {
+        if stripped.hasPrefix(TmuxOutputMarker.windowListEnd) {
             collectingWindowList = false
             parseWindowList(windowListBuffer, for: windowListTargetSession)
             windowListBuffer = ""

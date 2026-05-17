@@ -189,59 +189,6 @@ struct SessionSidebarView: View {
 
 }
 
-// MARK: - 侧边栏工具栏视图
-
-struct SidebarToolbarView: View {
-
-    // MARK: - 属性
-
-    @ObservedObject var groupStore: GroupStore
-
-    // MARK: - 视图
-
-    var body: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            // 全部展开/折叠
-            Menu {
-                Button("全部展开") {
-                    Task {
-                        await groupStore.expandAll()
-                    }
-                }
-
-                Button("全部折叠") {
-                    Task {
-                        await groupStore.collapseAll()
-                    }
-                }
-            } label: {
-                Image(systemName: "sidebar.squares.leading")
-                    .font(DesignTokens.Typography.bodyLarge)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-            }
-            .menuStyle(.borderlessButton)
-            .frame(width: 24, height: 24)
-
-            Spacer()
-
-            // 排序选项（预留）
-            Menu {
-                Button("按名称排序") { }
-                Button("按最近连接排序") { }
-                Button("按创建时间排序") { }
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
-                    .font(DesignTokens.Typography.bodyLarge)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-            }
-            .menuStyle(.borderlessButton)
-            .frame(width: 24, height: 24)
-        }
-        .padding(.horizontal, DesignTokens.Spacing.sm)
-        .padding(.vertical, DesignTokens.Spacing.xs)
-    }
-}
-
 // MARK: - 悬停图标按钮（薄壳，内部委托 PillButtonStyle）
 // 保留 HoverIconButton 名称用于现有调用点；新代码请直接用：
 //   Button { ... } label: { Label(...).labelStyle(.iconOnly) }

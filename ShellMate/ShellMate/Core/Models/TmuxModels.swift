@@ -99,9 +99,20 @@ enum TmuxOutputMarker {
     static let windowListEnd    = "__SM_TMUX_WL_END__"
     static let noSessions       = "__SM_TMUX_NO_SESSIONS__"
 
-    /// 判断一行文本是否包含任一 tmux 标记
-    static func containsMarker(_ line: String) -> Bool {
+    /// 判断一行文本是否含 tmux 协议标记（用于 filterLine 快速路径）
+    static func hasMarkerAtLineStart(_ line: String) -> Bool {
         line.contains("__SM_TMUX_")
+    }
+
+    /// 判断多行文本块中是否含 tmux 协议标记（用于 TerminalController 快速路径）
+    static func hasMarkerAtLineStart(in text: String) -> Bool {
+        text.contains("__SM_TMUX_")
+    }
+
+    /// 兼容旧调用点（已被 hasMarkerAtLineStart 取代，勿在新代码中使用）
+    @available(*, deprecated, renamed: "hasMarkerAtLineStart(_:)")
+    static func containsMarker(_ line: String) -> Bool {
+        hasMarkerAtLineStart(line)
     }
 
     /// 最低支持版本（Major.Minor）

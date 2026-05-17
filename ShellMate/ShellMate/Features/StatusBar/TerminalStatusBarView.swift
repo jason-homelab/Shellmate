@@ -222,7 +222,7 @@ struct TerminalStatusBarView: View {
 
             HStack(spacing: 6) {
                 // Figma: text-xs text-[#86868b] "CPU"
-                Text("CPU")
+                Text("处理器")
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 // Figma: font-semibold ${cpuColor}（12pt semibold）
@@ -266,7 +266,7 @@ struct TerminalStatusBarView: View {
             }
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {
-                Text("Memory")
+                Text("内存")
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 HStack(spacing: 2) {
@@ -323,7 +323,7 @@ struct TerminalStatusBarView: View {
             }
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {
-                Text("Disk")
+                Text("磁盘")
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 HStack(spacing: 2) {

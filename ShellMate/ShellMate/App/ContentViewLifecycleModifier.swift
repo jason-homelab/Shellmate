@@ -11,7 +11,6 @@ struct ContentViewLifecycleModifier: ViewModifier {
     let tabBarStore: TabBarStore
     let onConnect: (Session) -> Void
     let panels: ContentViewModel
-
     func body(content: Content) -> some View {
         content
             // 会话 / 分组操作
@@ -82,5 +81,31 @@ struct ContentViewLifecycleModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .tmuxManagerRequested)) { _ in
                 withAnimation(.easeInOut(duration: 0.2)) { panels.showTmuxPanel.toggle() }
             }
+    }
+}
+
+// MARK: - 录制状态刷新 ViewModifier
+//
+// 独立于 ContentViewLifecycleModifier，避免修饰符链过长导致 Swift 类型检查超时。
+
+struct ContentViewRecordingStateModifier: ViewModifier {
+
+    let tabBarStore: TabBarStore
+    let panels: ContentViewModel
+    @Binding var isRecordingActive: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .task(id: tabBarStore.selectedTabId) {
+                isRecordingActive = await recordingState()
+            }
+            .onChange(of: panels.showRecordingDialog) { _ in
+                Task { isRecordingActive = await recordingState() }
+            }
+    }
+
+    private func recordingState() async -> Bool {
+        guard let sessionId = tabBarStore.selectedTab?.sessionId else { return false }
+        return await TerminalControllerRegistry.shared.controller(for: sessionId)?.recorder.isRecording ?? false
     }
 }

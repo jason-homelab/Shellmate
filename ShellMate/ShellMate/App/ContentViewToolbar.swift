@@ -83,7 +83,7 @@ extension ContentView {
             }
             // Figma 7:6: 断开与功能按钮同级——rgba(0,0,0,0.04) 中性灰，无红色
             .buttonStyle(PillButtonStyle(tone: .normal))
-            .disabled(activeSession?.connectionState != .connected)
+            .disabled(activeSession?.connectionState != .connected && activeSession?.connectionState != .connecting)
             .help("断开当前会话")
         }
     }
@@ -100,7 +100,7 @@ extension ContentView {
                 Text(verbatim: "✦ AI")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
-            .disabled(tabBarStore.selectedTab == nil)
+            .disabled(tabBarStore.selectedTab == nil || activeSession?.connectionState != .connected)
             .help("AI 助手 (⌘⇧A)")
             .keyboardShortcut("a", modifiers: [.command, .shift])
 
@@ -118,7 +118,7 @@ extension ContentView {
                 Text(verbatim: "⇅ 文件")
             }
             .buttonStyle(PillButtonStyle(tone: .normal))
-            .disabled(tabBarStore.selectedTab == nil)
+            .disabled(tabBarStore.selectedTab == nil || activeSession?.connectionState != .connected)
             .help("文件传输 (SFTP)")
 
             splitMenu
@@ -187,10 +187,14 @@ extension ContentView {
             Button {
                 panels.openSheet { panels.showRecordingDialog = true }
             } label: {
-                Label("录制会话", systemImage: "record.circle").labelStyle(.iconOnly)
+                Label(
+                    isActiveRecording ? "录制进行中" : "录制会话",
+                    systemImage: isActiveRecording ? "record.circle.fill" : "record.circle"
+                )
+                .labelStyle(.iconOnly)
             }
-            .buttonStyle(PillButtonStyle(tone: .normal, variant: .iconOnly))
-            .help("录制会话")
+            .buttonStyle(PillButtonStyle(tone: isActiveRecording ? .destructive : .normal, variant: .iconOnly))
+            .help(isActiveRecording ? "录制进行中（点击管理）" : "录制会话")
 
             toolbarDivider
 

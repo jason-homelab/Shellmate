@@ -36,6 +36,9 @@ struct ContentView: View {
     @State private var showDataLossWarning: Bool = PersistenceController.shared.dataLossOccurred
     @AppStorage("appearance.bgOpacity") private var bgOpacity: Double = 0
 
+    /// 当前活跃控制器是否正在录制（工具栏图标状态，惰性刷新）
+    @State var isActiveRecording = false
+
     // MARK: - 语言状态
     @AppStorage("app.language") var appLanguage: String = "zh"
 
@@ -83,9 +86,6 @@ struct ContentView: View {
         .navigationTitle("ShellMate")
         .toolbar {
             toolbarContent
-        }
-        .sheet(isPresented: $panels.showScriptPanel) {
-            ScriptLibraryView(onClose: { panels.showScriptPanel = false })
         }
         .sheet(isPresented: $panels.showSSHConfigImport) {
             sshConfigImportSheet
@@ -218,6 +218,11 @@ struct ContentView: View {
             tabBarStore: tabBarStore,
             onConnect: connectToSession,
             panels: panels
+        ))
+        .modifier(ContentViewRecordingStateModifier(
+            tabBarStore: tabBarStore,
+            panels: panels,
+            isRecordingActive: $isActiveRecording
         ))
         // 兜底不透明背景，防止窗口透明时缝隙露出桌面壁纸
         .background(DesignTokens.Colors.surfaceWindow)
@@ -404,6 +409,7 @@ struct ContentView: View {
         quickCommandPanelOverlayView
         syncInputPanelOverlayView
         recordingPanelOverlayView
+        scriptPanelOverlayView
     }
 
     @ViewBuilder
@@ -465,6 +471,17 @@ struct ContentView: View {
         if panels.showRecordingDialog {
             toolPanelOverlay(onDismiss: { panels.showRecordingDialog = false }) {
                 makeRecordingDialogView()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var scriptPanelOverlayView: some View {
+        if panels.showScriptPanel {
+            toolPanelOverlay(onDismiss: { panels.showScriptPanel = false }) {
+                ScriptLibraryView(
+                    onClose: { withAnimation(.easeInOut(duration: 0.2)) { panels.showScriptPanel = false } }
+                )
             }
         }
     }
