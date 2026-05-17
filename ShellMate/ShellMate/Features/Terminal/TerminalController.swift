@@ -160,6 +160,7 @@ final class TerminalController: ObservableObject {
     init(session: Session) {
         self.session = session
         self.sessionId = session.id
+        reconnectConfig.enabled = session.autoReconnect
         setupObservers()
         startNetworkMonitoring()
         // W12.6：注册到同步输入管理器
