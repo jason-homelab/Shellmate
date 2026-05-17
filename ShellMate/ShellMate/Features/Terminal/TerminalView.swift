@@ -464,6 +464,7 @@ struct TerminalView: View {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 isAIPanelOpen = false
                                 aiInitialError = nil
+                                panels.showAIPanel = false
                             }
                         },
                         initialError: aiInitialError,
@@ -1088,6 +1089,7 @@ private struct TerminalViewNotificationModifier: ViewModifier {
     let minFontSize: Double
     let maxFontSize: Double
     let onToggleSFTP: () -> Void
+    @EnvironmentObject private var panels: ContentViewModel
 
     func body(content: Content) -> some View {
         content
@@ -1100,12 +1102,14 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             // 面板控制
             .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
                 onToggleSFTP()
+                panels.showSFTPPanel = controller.isSFTPPanelOpen
             }
             .onReceive(NotificationCenter.default.publisher(for: .aiPanelRequested)) { _ in
                 withAnimation(.easeInOut(duration: 0.2)) {
                     isAIPanelOpen.toggle()
                     if !isAIPanelOpen { aiInitialError = nil }
                 }
+                panels.showAIPanel = isAIPanelOpen
             }
             .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
                 withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }

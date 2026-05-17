@@ -24,6 +24,11 @@ final class ContentViewModel: ObservableObject {
     /// 发起同步输入的会话 ID（SyncInputConfirmView 需要）
     var syncInputSessionId: UUID? = nil
 
+    /// AI 助手面板开关（提升至此层，供工具栏激活态读取）
+    @Published var showAIPanel: Bool = false
+    /// SFTP 文件传输面板开关（提升至此层，供工具栏激活态读取）
+    @Published var showSFTPPanel: Bool = false
+
     // MARK: - 语言选择器
 
     @Published var showLanguagePicker: Bool = false

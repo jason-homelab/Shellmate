@@ -117,6 +117,8 @@ struct TerminalStatusBarView: View {
             // tmux、同步状态保持独立（不放入芯片）
             if let sessionName = tmuxAttachedSession {
                 tmuxBadge(sessionName: sessionName)
+                    // 扩大热区：整行高度 × 最小 120px 宽度，方便鼠标点击
+                    .contentShape(Rectangle().inset(by: -6))
                     .onTapGesture {
                         if !tmuxWindows.isEmpty { showWindowPopover.toggle() }
                     }
@@ -221,10 +223,9 @@ struct TerminalStatusBarView: View {
             .frame(width: 20, height: 20)
 
             HStack(spacing: 6) {
-                // Figma: text-xs text-[#86868b] "CPU"
                 Text("处理器")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(DesignTokens.Typography.captionSmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
                 // Figma: font-semibold ${cpuColor}（12pt semibold）
                 Text(String(format: "%.1f%%", m.cpuUsage))
                     .font(DesignTokens.Typography.bodySmallStrong)
@@ -267,8 +268,8 @@ struct TerminalStatusBarView: View {
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {
                 Text("内存")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(DesignTokens.Typography.captionSmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
                 HStack(spacing: 2) {
                     Text(ServerMetrics.formatBytes(m.memoryUsed))
                         .font(DesignTokens.Typography.bodySmallStrong)
@@ -324,8 +325,8 @@ struct TerminalStatusBarView: View {
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {
                 Text("磁盘")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
+                    .font(DesignTokens.Typography.captionSmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
                 HStack(spacing: 2) {
                     Text(ServerMetrics.formatBytes(m.diskUsed))
                         .font(DesignTokens.Typography.bodySmallStrong)

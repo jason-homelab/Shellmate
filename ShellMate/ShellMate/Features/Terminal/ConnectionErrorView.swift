@@ -233,19 +233,20 @@ struct ConnectionErrorView: View {
 
     // MARK: - 底部
 
+    @ObservedObject private var aiSettings = AISettingsStore.shared
+
     private var footerView: some View {
         HStack {
-            // AI-04：AI 诊断按钮（仅 AI 功能启用时显示）
-            if let onAIDiagnose {
-                Button {
-                    onDismiss()
-                    onAIDiagnose()
-                } label: {
-                    Label("AI 诊断", systemImage: "sparkles")
-                }
-                .buttonStyle(.bordered)
-                .help("用 AI 分析此错误并给出修复建议")
+            // AI 诊断按钮：始终占位，无 AI 或未启用时 disabled + tooltip 引导
+            Button {
+                onDismiss()
+                onAIDiagnose?()
+            } label: {
+                Label("AI 诊断", systemImage: "sparkles")
             }
+            .buttonStyle(.bordered)
+            .disabled(!aiSettings.isEnabled || onAIDiagnose == nil)
+            .help(aiSettings.isEnabled ? "用 AI 分析此错误并给出修复建议" : "请先在「设置 → AI」中启用 AI 功能")
 
             Spacer()
             Button("关闭", action: onDismiss)

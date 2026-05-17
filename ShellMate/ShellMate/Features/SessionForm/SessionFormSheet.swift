@@ -63,12 +63,7 @@ struct SessionFormSheet: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: DesignTokens.Spacing.lg) {
-                    // 1. 名称
-                    fieldGroup(label: "名称") {
-                        CustomTextField(placeholder: "输入会话名称", text: $vm.name)
-                    }
-
-                    // 2. 协议
+                    // 1. 协议（决定后续字段结构，放首位）
                     fieldGroup(label: "协议") {
                         Picker("", selection: $vm.connectionProtocol) {
                             Text("SSH").tag("SSH")
@@ -90,7 +85,7 @@ struct SessionFormSheet: View {
                         }
                     }
 
-                    // 3. 主机 + 端口（SSH / Telnet 显示）
+                    // 2. 主机 + 端口（SSH / Telnet）
                     if vm.connectionProtocol != "Serial" {
                         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                             Text("主机 / 端口")
@@ -108,19 +103,19 @@ struct SessionFormSheet: View {
                         }
                     }
 
-                    // 3b. 串口设备（Serial 显示）
+                    // 2b. 串口设备（Serial）
                     if vm.connectionProtocol == "Serial" {
                         serialConfigSection
                     }
 
-                    // 4. 用户名（SSH / Telnet 显示）
+                    // 3. 用户名（SSH / Telnet）
                     if vm.connectionProtocol != "Serial" {
                         fieldGroup(label: "用户名") {
                             CustomTextField(placeholder: "登录用户名", text: $vm.username)
                         }
                     }
 
-                    // 5. 密码（仅 SSH 显示）
+                    // 4. 密码（仅 SSH）
                     if vm.connectionProtocol == "SSH" {
                         fieldGroup(label: "密码") {
                             VStack(spacing: DesignTokens.Spacing.sm) {
@@ -138,7 +133,10 @@ struct SessionFormSheet: View {
                         }
                     }
 
-                    // 6. 分组
+                    // 5. 高级设置（折叠，含私钥/跳板机等认证配置）
+                    advancedSection
+
+                    // 6. 分组（元数据，置于认证配置之后）
                     fieldGroup(label: "分组") {
                         Picker("", selection: $vm.selectedGroupId) {
                             Text("无分组").tag(Optional<UUID>.none)
@@ -158,8 +156,10 @@ struct SessionFormSheet: View {
                         )
                     }
 
-                    // 7. 高级设置（折叠）
-                    advancedSection
+                    // 7. 名称（可由主机自动推断，置于末位）
+                    fieldGroup(label: "会话名称") {
+                        CustomTextField(placeholder: "留空则自动使用主机名", text: $vm.name)
+                    }
                 }
                 .padding(DesignTokens.Spacing.xl)
             }

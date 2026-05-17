@@ -224,6 +224,7 @@ struct ContentView: View {
             panels: panels,
             isRecordingActive: $isActiveRecording
         ))
+        .modifier(ContentViewPanelSyncModifier(panels: panels))
         // 兜底不透明背景，防止窗口透明时缝隙露出桌面壁纸
         .background(DesignTokens.Colors.surfaceWindow)
         // 设置浮动面板（Figma 14:x，居中浮动，半透明遮罩背景）

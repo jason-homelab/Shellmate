@@ -139,8 +139,8 @@ extension EmptyStateView {
         EmptyStateView(
             iconName: "desktopcomputer",
             title: "暂无会话",
-            description: "点击右上角 + 创建第一个 SSH 连接",
-            buttonTitle: "新建会话",
+            description: "添加第一个 SSH 连接，开始管理你的服务器",
+            buttonTitle: "+ 新建会话",
             onButtonTap: onAdd
         )
     }

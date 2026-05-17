@@ -23,7 +23,7 @@ extension DesignTokens {
         )
         static let surfaceCard = adaptive(
             light: NSColor(srgbRed: 1.000, green: 1.000, blue: 1.000, alpha: 1),
-            dark:  NSColor(srgbRed: 0.075, green: 0.098, blue: 0.133, alpha: 1)
+            dark:  NSColor(srgbRed: 0.086, green: 0.110, blue: 0.157, alpha: 1)  // #161C28，较 surfacePanel 亮约 10 点
         )
         static let surfaceOverlay = adaptive(
             light: NSColor(srgbRed: 0.953, green: 0.957, blue: 0.969, alpha: 1),

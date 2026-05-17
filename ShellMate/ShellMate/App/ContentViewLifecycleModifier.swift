@@ -84,6 +84,25 @@ struct ContentViewLifecycleModifier: ViewModifier {
     }
 }
 
+// MARK: - AI / SFTP 面板同步 ViewModifier
+//
+// 独立拆分，避免 ContentViewLifecycleModifier 修饰符链过长导致 Swift 类型检查超时。
+
+struct ContentViewPanelSyncModifier: ViewModifier {
+
+    let panels: ContentViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .aiPanelRequested)) { _ in
+                panels.showAIPanel.toggle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
+                panels.showSFTPPanel.toggle()
+            }
+    }
+}
+
 // MARK: - 录制状态刷新 ViewModifier
 //
 // 独立于 ContentViewLifecycleModifier，避免修饰符链过长导致 Swift 类型检查超时。

@@ -19,27 +19,17 @@ struct SessionRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Figma 8:16/8:21: 状态点 6×6，left=14 within row（行左边距4 + 点14 = 18px from sidebar）
-            // 所有状态均显示点：连接=绿，离线=灰，连接中=黄，错误=红
-            Circle()
-                .fill(session.connectionState.dotColor)
-                .frame(width: 6, height: 6)
-                .padding(.leading, 14)
-
-            // Figma 8:17/8:22: 图标容器 26×26 rounded-6，left=29 within row（dot 14 + 6 + 9 = 29）
+            // 图标容器：背景色随连接状态变化，兼顾状态指示与类型展示，去掉独立状态圆点
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isSelected
-                        ? Color.white.opacity(0.20)
-                        : Color.black.opacity(0.06))
+                    .fill(iconBackground)
                 Image(systemName: session.connectionType.iconName)
                     .font(.system(size: 13))
-                    .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
+                    .foregroundColor(iconForeground)
             }
             .frame(width: 26, height: 26)
-            .padding(.leading, 9)
+            .padding(.leading, 14)
 
-            // Figma 8:18/8:23+24: 名称 13px medium + 子标题 11px，left=64 within row
             VStack(alignment: .leading, spacing: 1) {
                 Text(session.name)
                     .font(.system(size: 13, weight: .medium))
@@ -89,11 +79,34 @@ struct SessionRowView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(DesignTokens.Colors.accentPrimary)
         } else if isHovering {
-            // hover:bg-black/5
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.black.opacity(0.05))
         } else {
             Color.clear
+        }
+    }
+
+    // MARK: - 图标颜色（状态 × 选中）
+
+    private var iconBackground: Color {
+        if isSelected { return Color.white.opacity(0.20) }
+        switch session.connectionState {
+        case .connected:   return DesignTokens.Colors.statusConnected.opacity(0.15)
+        case .connecting:  return DesignTokens.Colors.statusConnecting.opacity(0.15)
+        case .error:       return DesignTokens.Colors.statusError.opacity(0.12)
+        case .offline:     return Color.black.opacity(0.06)
+        case .disconnecting: return Color.black.opacity(0.06)
+        }
+    }
+
+    private var iconForeground: Color {
+        if isSelected { return .white }
+        switch session.connectionState {
+        case .connected:   return DesignTokens.Colors.statusConnected
+        case .connecting:  return DesignTokens.Colors.statusConnecting
+        case .error:       return DesignTokens.Colors.statusError
+        case .offline:     return DesignTokens.Colors.textSecondary
+        case .disconnecting: return DesignTokens.Colors.textSecondary
         }
     }
 }
