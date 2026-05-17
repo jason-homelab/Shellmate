@@ -149,6 +149,10 @@ final class TerminalController: ObservableObject {
 
     var reconnectTask: Task<Void, Never>?
     var userDisconnected = false
+    /// 用户在终端输入了 exit/logout/quit 命令（区分主动退出与意外断线）
+    var userExiting = false
+    /// 逐字符累积当前正在输入的行，用于 exit 命令检测
+    var inputLineBuffer: String = ""
     private var cancellables = Set<AnyCancellable>()
 
     /// TC-005：网络路径监控（网络恢复时自动触发重连）
@@ -295,7 +299,7 @@ final class TerminalController: ObservableObject {
                     // 智能过滤：仅在 tmux 收集阶段或数据含标记时进行行级处理；
                     // 其余情况直接透传原始字节，避免 UTF-8 转换丢失数据或引入多余 \n
                     if let text = String(bytes: flushed, encoding: .utf8),
-                       self.tmuxStore.isInCollectionMode || text.contains("__SM_TMUX_") {
+                       self.tmuxStore.isInCollectionMode || TmuxOutputMarker.hasMarkerAtLineStart(in: text) {
                         // 行过滤路径：逐行判断是否为 tmux 标记/收集数据
                         // 被过滤行分两类：
                         //   - 纯标记行（__SM_TMUX_ 开头）或收集阶段数据行 → 完全丢弃

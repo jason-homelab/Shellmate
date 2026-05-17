@@ -75,13 +75,23 @@ extension TerminalController {
     func handleConnectionLost() {
         guard state == .connected else { return }
         tmuxStore.handleSSHDisconnected()
-        logSystemEvent("连接意外断开")
         // 清理旧连接对象，确保重连时从干净状态建立新连接
         sshConnection?.disconnect()
         sshConnection = nil
         telnetConnection = nil
         serialConnection = nil
-        state = .failed("连接已断开")
+
+        if userExiting || userDisconnected {
+            // 用户主动执行 exit/logout/quit，SSH channel 正常关闭——静默回到断开状态，不显示错误面板
+            logSystemEvent("用户主动断开连接")
+            userExiting = false
+            inputLineBuffer = ""
+            state = .disconnected
+        } else {
+            // 意外断线（网络中断、服务器宕机等）——显示错误面板
+            logSystemEvent("连接意外断开")
+            state = .failed("连接已断开")
+        }
         delegate?.terminalController(self, didChangeState: state)
         if canAutoReconnect { scheduleReconnect() }
     }

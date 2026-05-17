@@ -8,6 +8,7 @@ extension TerminalController {
         guard state == .connected else {
             throw SSHError.sessionClosed
         }
+        detectExitCommand(in: data)
         if let pm = proxyJumpManager {
             try await pm.write(data)
         } else if let conn = sshConnection {
@@ -22,6 +23,33 @@ extension TerminalController {
             throw SSHError.sessionClosed
         }
         SyncInputStore.shared.broadcast(data: data, from: sessionId)
+    }
+
+    /// 逐字节解析用户输入，检测 exit/logout/quit 命令以区分主动退出和意外断线
+    private func detectExitCommand(in data: Data) {
+        for byte in data {
+            switch byte {
+            case 0x1B:
+                // ESC：转义序列开始（方向键等），重置缓冲以避免误识别
+                inputLineBuffer = ""
+            case 0x7F, 0x08:
+                // Backspace / DEL
+                if !inputLineBuffer.isEmpty { inputLineBuffer.removeLast() }
+            case 0x0D, 0x0A:
+                // CR / LF：命令确认，检查是否为退出命令
+                let cmd = inputLineBuffer.trimmingCharacters(in: .whitespaces)
+                if cmd == "exit" || cmd == "logout" || cmd == "quit" {
+                    userExiting = true
+                }
+                inputLineBuffer = ""
+            case 0x20...0x7E:
+                // 可打印 ASCII：新行第一个字符时重置退出标志（说明用户在子 shell 退出后继续使用）
+                if inputLineBuffer.isEmpty { userExiting = false }
+                inputLineBuffer.append(Character(UnicodeScalar(byte)))
+            default:
+                break
+            }
+        }
     }
 
     func send(_ string: String) async throws {
