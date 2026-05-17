@@ -84,13 +84,14 @@ struct RecordingDialogView: View {
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .onAppear {
             loadRecordings()
-            // 同步录制器当前状态（面板打开时可能已在录制）
+            // 同步录制器当前状态（面板关闭后重新打开时，录制可能仍在进行）
             Task {
                 let recording = await recorder.isRecording
+                let elapsed   = await recorder.elapsedSeconds
                 await MainActor.run {
                     if recording && recordingPhase == .ready {
                         recordingPhase = .recording
-                        startTimer()
+                        startTimer(resumingFrom: elapsed)
                     }
                 }
             }
@@ -542,8 +543,8 @@ struct RecordingDialogView: View {
         }
     }
 
-    private func startTimer() {
-        elapsedSeconds = 0
+    private func startTimer(resumingFrom offset: TimeInterval = 0) {
+        elapsedSeconds = offset
         elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             elapsedSeconds += 1
         }

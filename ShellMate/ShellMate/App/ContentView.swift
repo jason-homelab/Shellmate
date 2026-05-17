@@ -90,22 +90,6 @@ struct ContentView: View {
         .sheet(isPresented: $panels.showSSHConfigImport) {
             sshConfigImportSheet
         }
-        .sheet(isPresented: $panels.showRecordingDialog) {
-            if let ctrl = activeController {
-                RecordingDialogView(
-                    sessionName: ctrl.session.name,
-                    recorder: ctrl.recorder,
-                    onClose: { panels.showRecordingDialog = false }
-                )
-            } else {
-                // 无活跃 SSH 会话（本地 Shell 或无连接），仅展示历史录制列表
-                RecordingDialogView(
-                    sessionName: activeSession?.name ?? "",
-                    recorder: SessionRecorder(),
-                    onClose: { panels.showRecordingDialog = false }
-                )
-            }
-        }
         .sheet(isPresented: $panels.showLogPanel) {
             LogPanelView(onClose: { panels.showLogPanel = false })
         }
@@ -262,10 +246,7 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
-        .overlay { tunnelPanelOverlayView }
-        .overlay { tmuxPanelOverlayView }
-        .overlay { quickCommandPanelOverlayView }
-        .overlay { syncInputPanelOverlayView }
+        .overlay { toolPanelsOverlayGroup }
         // 欢迎界面覆层（首次启动，覆盖整个窗口含底栏）
         .overlay {
             if !hasLaunchedBefore {
@@ -415,6 +396,16 @@ struct ContentView: View {
 
     // MARK: - 工具面板 Overlay 视图
 
+    /// 将多个工具面板合并为单个 .overlay，规避 Swift 类型检查超时
+    @ViewBuilder
+    private var toolPanelsOverlayGroup: some View {
+        tunnelPanelOverlayView
+        tmuxPanelOverlayView
+        quickCommandPanelOverlayView
+        syncInputPanelOverlayView
+        recordingPanelOverlayView
+    }
+
     @ViewBuilder
     private var tunnelPanelOverlayView: some View {
         if panels.showTunnelPanel, let ctrl = activeController {
@@ -467,6 +458,25 @@ struct ContentView: View {
                 )
             }
         }
+    }
+
+    @ViewBuilder
+    private var recordingPanelOverlayView: some View {
+        if panels.showRecordingDialog {
+            toolPanelOverlay(onDismiss: { panels.showRecordingDialog = false }) {
+                makeRecordingDialogView()
+            }
+        }
+    }
+
+    private func makeRecordingDialogView() -> RecordingDialogView {
+        let recorder = activeController?.recorder ?? SessionRecorder()
+        let name = activeController?.session.name ?? activeSession?.name ?? ""
+        return RecordingDialogView(
+            sessionName: name,
+            recorder: recorder,
+            onClose: { withAnimation(.easeInOut(duration: 0.2)) { panels.showRecordingDialog = false } }
+        )
     }
 
     /// 工具面板通用遮罩容器（与 Settings 面板一致：半透明黑幕 + 点击背景关闭 + ESC 关闭）
