@@ -9,6 +9,11 @@ struct TerminalPlaceholderView: View {
 
     var onNewSession: (() -> Void)?
 
+    // MARK: - 状态
+
+    @State private var appeared = false
+    @State private var buttonHovered = false
+
     // MARK: - 视图
 
     var body: some View {
@@ -21,6 +26,7 @@ struct TerminalPlaceholderView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: DesignTokens.Spacing.xl) {
+            // 图标容器：入场时从下方淡入 + 轻微放大
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                     .fill(
@@ -48,6 +54,9 @@ struct TerminalPlaceholderView: View {
                         )
                     )
             }
+            .scaleEffect(appeared ? 1.0 : 0.80)
+            .opacity(appeared ? 1.0 : 0.0)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.05), value: appeared)
 
             VStack(spacing: DesignTokens.Spacing.sm) {
                 Text("暂无活跃会话")
@@ -59,7 +68,11 @@ struct TerminalPlaceholderView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
+            .opacity(appeared ? 1.0 : 0.0)
+            .offset(y: appeared ? 0 : 8)
+            .animation(.easeOut(duration: 0.35).delay(0.15), value: appeared)
 
+            // 新建按钮：hover 时轻微上浮 + 阴影加深
             Button(action: { onNewSession?() }) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
                     Image(systemName: "plus")
@@ -70,12 +83,27 @@ struct TerminalPlaceholderView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, DesignTokens.Spacing.xl)
                 .padding(.vertical, DesignTokens.Spacing.sm)
-                .background(DesignTokens.Colors.accentPrimary)
+                .background(
+                    LinearGradient(
+                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
-                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 10, x: 0, y: 4)
+                .shadow(
+                    color: DesignTokens.Colors.accentPrimary.opacity(buttonHovered ? 0.50 : 0.30),
+                    radius: buttonHovered ? 14 : 10,
+                    x: 0, y: buttonHovered ? 6 : 4
+                )
+                .offset(y: buttonHovered ? -2 : 0)
+                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: buttonHovered)
             }
             .buttonStyle(.plain)
             .padding(.top, DesignTokens.Spacing.xxs)
+            .onHover { buttonHovered = $0 }
+            .opacity(appeared ? 1.0 : 0.0)
+            .animation(.easeOut(duration: 0.35).delay(0.22), value: appeared)
 
             HStack(spacing: DesignTokens.Spacing.xs) {
                 keyHint("⌘N")
@@ -88,8 +116,12 @@ struct TerminalPlaceholderView: View {
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .font(DesignTokens.Typography.captionLarge)
+            .opacity(appeared ? 1.0 : 0.0)
+            .animation(.easeOut(duration: 0.35).delay(0.28), value: appeared)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { appeared = true }
+        .onDisappear { appeared = false }
     }
 
     private func keyHint(_ key: String) -> some View {

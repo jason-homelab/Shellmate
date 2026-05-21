@@ -102,15 +102,20 @@ struct TerminalStatusBarView: View {
                 statusDotView
 
                 if let session {
-                    // Figma: 整段文字统一 text-[11px] text-[#34d399]
-                    Group {
+                    HStack(spacing: 0) {
                         Text("已连接 · \(session.username)@\(session.host)")
-                        + (latency.map { Text(" · \($0)ms") } ?? Text(""))
+                            .font(DesignTokens.Typography.captionLarge)
+                            .foregroundColor(DesignTokens.Colors.statusConnected)
+                            .lineLimit(1)
+                        if let ms = latency {
+                            Text(" · \(ms)ms")
+                                .font(DesignTokens.Typography.captionLarge)
+                                .foregroundColor(DesignTokens.Colors.statusConnected)
+                                .monospacedDigit()
+                                .contentTransition(.numericText())
+                                .animation(.easeOut(duration: 0.3), value: ms)
+                        }
                     }
-                    // Figma 9:26: text-[11px] = captionLarge
-                    .font(DesignTokens.Typography.captionLarge)
-                    .foregroundColor(DesignTokens.Colors.statusConnected)
-                    .lineLimit(1)
                 }
             }
 
@@ -231,6 +236,8 @@ struct TerminalStatusBarView: View {
                     .font(DesignTokens.Typography.bodySmallStrong)
                     .monospacedDigit()
                     .foregroundColor(cpuColor(m.cpuColor))
+                    .contentTransition(.numericText())
+                    .animation(.easeOut(duration: 0.4), value: m.cpuUsage)
                 // Figma: 8 bars, max height 12px, w-0.5 = 2pt, opacity-60
                 HStack(alignment: .bottom, spacing: 1.5) {
                     ForEach(Array(cpuHistory.suffix(8).enumerated()), id: \.offset) { _, value in
@@ -292,15 +299,20 @@ struct TerminalStatusBarView: View {
     private func memoryBar(ratio: Double) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Figma: bg-black/5 rounded-full overflow-hidden
                 Capsule()
                     .fill(DesignTokens.Colors.surfaceHover)
                 Capsule()
-                    .fill(memoryBarColor(ratio))
+                    .fill(
+                        LinearGradient(
+                            colors: [memoryBarColor(ratio), memoryBarColor(ratio).opacity(0.7)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(width: geo.size.width * CGFloat(min(ratio, 1)))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: ratio)
             }
         }
-        // Figma: w-12 h-1.5 = 48pt × 6pt
         .frame(width: 48, height: 6)
     }
 

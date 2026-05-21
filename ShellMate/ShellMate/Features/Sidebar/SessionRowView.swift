@@ -54,11 +54,11 @@ struct SessionRowView: View {
         // Figma: h-[44px]
         .frame(height: 44)
         .background(rowBackground)
-        // shadow-md shadow-[#007aff]/30（仅选中时）
-        // x:2 使阴影向右偏移，左扩散 = radius(3) - x(2) = 1pt，远小于 LazyVStack 4pt padding，不溢出列边界
+        .overlay(alignment: .leading) { statusBar }
+        // 选中时渐变阴影，比单色更有深度感
         .shadow(
-            color: isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.25) : .clear,
-            radius: 3, x: 2, y: 2
+            color: isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.30) : .clear,
+            radius: 6, x: 0, y: 3
         )
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
@@ -77,12 +77,40 @@ struct SessionRowView: View {
     private var rowBackground: some View {
         if isSelected {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(DesignTokens.Colors.accentPrimary)
+                .fill(
+                    LinearGradient(
+                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
         } else if isHovering {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.black.opacity(0.05))
         } else {
             Color.clear
+        }
+    }
+
+    // MARK: - 左侧状态竖条
+
+    private var statusBarColor: Color? {
+        if isSelected { return Color.white.opacity(0.75) }
+        switch session.connectionState {
+        case .connected:    return DesignTokens.Colors.statusConnected
+        case .connecting:   return DesignTokens.Colors.statusConnecting
+        case .error:        return DesignTokens.Colors.statusError
+        default:            return nil
+        }
+    }
+
+    @ViewBuilder
+    private var statusBar: some View {
+        if let color = statusBarColor {
+            Capsule()
+                .fill(color)
+                .frame(width: 2, height: 20)
+                .padding(.leading, 4)
         }
     }
 

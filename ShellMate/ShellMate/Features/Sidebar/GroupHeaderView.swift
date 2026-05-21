@@ -46,10 +46,11 @@ struct GroupHeaderView: View {
         .padding(.leading, 8)
         .padding(.trailing, 8)
         .frame(height: DesignTokens.Sizes.groupRowHeight)
-        .background(
+        .background {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                .fill(isHovering ? DesignTokens.Colors.surfaceHover : Color.clear)
-        )
+                .fill(.ultraThinMaterial)
+                .opacity(isHovering ? 1 : 0)
+        }
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(DesignTokens.Animation.hover) { isHovering = hovering }

@@ -187,6 +187,7 @@ struct CustomTextField: View {
     var isError: Bool = false
     var errorMessage: String?
     var isSecure: Bool = false
+    var isValid: Bool = false
 
     @FocusState private var isFocused: Bool
 
@@ -194,7 +195,6 @@ struct CustomTextField: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             ZStack {
                 // 玻璃背景
-                // Figma: bg-white/80 backdrop-blur-sm
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(.regularMaterial)
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
@@ -203,13 +203,6 @@ struct CustomTextField: View {
                 // 边框（状态感知）
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .strokeBorder(borderGradient, lineWidth: isFocused ? 1.0 : 0.75)
-
-                // 聚焦光晕
-                if isFocused && !isError {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                        .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.25), lineWidth: 3)
-                        .blur(radius: 2)
-                }
 
                 // 输入内容
                 HStack {
@@ -229,14 +222,30 @@ struct CustomTextField: View {
                         Image(systemName: "exclamationmark.circle.fill")
                             .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.statusError)
+                            .transition(.scale.combined(with: .opacity))
+                    } else if isValid && !text.isEmpty {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(DesignTokens.Typography.bodyMedium)
+                            .foregroundColor(DesignTokens.Colors.statusConnected)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
                 .padding(.horizontal, DesignTokens.Spacing.sm)
                 .padding(.vertical, DesignTokens.Spacing.sm)
             }
             .frame(height: 30)
+            // focus 时用 shadow 模拟光晕，比 strokeBorder+blur 更自然
+            .shadow(
+                color: isFocused && !isError
+                    ? DesignTokens.Colors.accentPrimary.opacity(0.22)
+                    : isError
+                        ? DesignTokens.Colors.statusError.opacity(0.18)
+                        : .clear,
+                radius: 6, x: 0, y: 0
+            )
             .animation(DesignTokens.Animation.fast, value: isFocused)
             .animation(DesignTokens.Animation.fast, value: isError)
+            .animation(DesignTokens.Animation.fast, value: isValid)
 
             if let error = errorMessage, isError {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
@@ -261,6 +270,13 @@ struct CustomTextField: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+        } else if isValid && !text.isEmpty {
+            return LinearGradient(
+                colors: [DesignTokens.Colors.statusConnected.opacity(0.60),
+                         DesignTokens.Colors.statusConnected.opacity(0.30)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         } else if isFocused {
             return LinearGradient(
                 colors: [DesignTokens.Colors.accentPrimary.opacity(0.75),
@@ -269,7 +285,6 @@ struct CustomTextField: View {
                 endPoint: .bottomTrailing
             )
         } else {
-            // Figma: border-[#d2d2d7]/50
             return LinearGradient(
                 colors: [Color(hex: "#d2d2d7").opacity(0.50),
                          Color(hex: "#d2d2d7").opacity(0.50)],
