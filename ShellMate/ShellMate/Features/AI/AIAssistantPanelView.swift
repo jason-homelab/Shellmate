@@ -162,13 +162,20 @@ struct AIAssistantPanelView: View {
                 LazyVStack(spacing: DesignTokens.Spacing.lg) {
                     offlineBannerView
                     ForEach(vm.messages) { msg in
-                        AIMessageBubbleView(message: msg, onInsertCommand: onInsertCommand).id(msg.id)
+                        AIMessageBubbleView(message: msg, onInsertCommand: onInsertCommand)
+                            .id(msg.id)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                removal: .opacity
+                            ))
                     }
                     if vm.isStreaming {
                         AIMessageBubbleView(
                             message: .assistant(vm.streamingContent),
                             isStreaming: true, onInsertCommand: onInsertCommand
-                        ).id("streaming")
+                        )
+                        .id("streaming")
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     if vm.messages.count <= 1 && !vm.isStreaming { quickSuggestionsView }
                     if let err = vm.errorMessage { errorBanner(err).padding(.horizontal, 14).padding(.top, DesignTokens.Spacing.xs) }
@@ -205,7 +212,7 @@ struct AIAssistantPanelView: View {
             let columns = [GridItem(.flexible(), spacing: DesignTokens.Spacing.sm), GridItem(.flexible(), spacing: DesignTokens.Spacing.sm)]
             LazyVGrid(columns: columns, spacing: DesignTokens.Spacing.sm) {
                 ForEach(quickSuggestions, id: \.self) { s in
-                    Button { vm.send(text: s) } label: {
+                    Button { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { vm.send(text: s) } } label: {
                         Text(s).font(DesignTokens.Typography.labelSmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                             .multilineTextAlignment(.center).lineLimit(2)
@@ -293,7 +300,7 @@ struct AIAssistantPanelView: View {
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .padding(.horizontal, DesignTokens.Spacing.md)
-                        .onSubmit { guard !vm.isStreaming else { return }; vm.send(text: vm.inputText) }
+                        .onSubmit { guard !vm.isStreaming else { return }; withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { vm.send(text: vm.inputText) } }
                 }
                 .frame(height: 36)
                 // Figma 12:26: bg-[#efeff1] h-[36px] rounded-[18px]
@@ -339,7 +346,7 @@ struct AIAssistantPanelView: View {
             let canSend = !vm.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             let sendColor: Color = vm.inputMode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary
             // Figma 12:28: bg-[#077aff] size-[32px] rounded-[16px]
-            Button { vm.send(text: vm.inputText) } label: {
+            Button { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { vm.send(text: vm.inputText) } } label: {
                 Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "arrow.up")
                     .font(DesignTokens.Typography.bodyLargeStrong).foregroundColor(.white)
                     .frame(width: 32, height: 32)

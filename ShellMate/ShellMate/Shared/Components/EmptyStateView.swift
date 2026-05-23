@@ -14,12 +14,19 @@ struct EmptyStateView: View {
     var buttonTitle: LocalizedStringKey?
     var onButtonTap: (() -> Void)?
 
+    // MARK: - 入场动画状态
+
+    @State private var appeared = false
+
     // MARK: - 视图
 
     var body: some View {
         VStack(spacing: DesignTokens.Spacing.xl) {
             if let iconName {
                 iconContainer(iconName)
+                    .scaleEffect(appeared ? 1.0 : 0.75)
+                    .opacity(appeared ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.45, dampingFraction: 0.7).delay(0.05), value: appeared)
             }
 
             VStack(spacing: DesignTokens.Spacing.sm) {
@@ -27,26 +34,37 @@ struct EmptyStateView: View {
                     .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .multilineTextAlignment(.center)
+                    .opacity(appeared ? 1.0 : 0.0)
+                    .offset(y: appeared ? 0 : 8)
+                    .animation(.easeOut(duration: 0.35).delay(0.15), value: appeared)
 
                 if let description {
                     Text(description)
-                        .font(.system(size: 12.5))
+                        .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
+                        .opacity(appeared ? 1.0 : 0.0)
+                        .offset(y: appeared ? 0 : 8)
+                        .animation(.easeOut(duration: 0.35).delay(0.22), value: appeared)
                 }
             }
 
             if let buttonTitle {
                 Button(action: { onButtonTap?() }) {
                     Text(buttonTitle)
-                        .font(.system(size: 12.5, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                 }
                 .buttonStyle(EmptyStateButtonStyle())
+                .opacity(appeared ? 1.0 : 0.0)
+                .offset(y: appeared ? 0 : 8)
+                .animation(.easeOut(duration: 0.35).delay(0.30), value: appeared)
             }
         }
         .padding(DesignTokens.Spacing.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { appeared = true }
+        .onDisappear { appeared = false }
     }
 
     // MARK: - 图标容器
