@@ -369,7 +369,7 @@ struct ScriptLibraryView: View {
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .disabled(isRunning)
 
             // Edit
@@ -393,7 +393,7 @@ struct ScriptLibraryView: View {
                         .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
 
             // Schedule
             Button {
@@ -416,7 +416,7 @@ struct ScriptLibraryView: View {
                         .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
 
             // Duplicate
             Button {
@@ -433,7 +433,7 @@ struct ScriptLibraryView: View {
                             .stroke(DesignTokens.Colors.borderDefault, lineWidth: 1)
                     )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .help("复制脚本")
 
             // Delete
@@ -452,7 +452,7 @@ struct ScriptLibraryView: View {
                             .stroke(DesignTokens.Colors.statusError.opacity(0.6), lineWidth: 1)
                     )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .help("删除脚本")
 
             Spacer()

@@ -46,10 +46,13 @@ struct TerminalStatusBarView: View {
         HStack(spacing: 0) {
             if connectionState == .connected {
                 connectedContent
+                    .transition(.opacity)
             } else {
                 disconnectedContent
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.30), value: connectionState == .connected)
         .frame(height: DesignTokens.Sizes.statusBarHeight)
         // Figma 9:24: bg-[rgba(245,245,247,0.95)]
         .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))

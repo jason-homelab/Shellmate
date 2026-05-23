@@ -272,7 +272,7 @@ struct QuickCommandManagerView: View {
                         .background(DesignTokens.Colors.accentPrimary)
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("执行命令")
 
                 // 编辑按钮（Figma: bg-[rgba(0,0,0,0.05)] h-[28px] rounded-[6px] text-xs）
@@ -290,7 +290,7 @@ struct QuickCommandManagerView: View {
                         .background(Color.black.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("编辑命令")
 
                 // 删除按钮（小图标，无背景）
@@ -302,7 +302,7 @@ struct QuickCommandManagerView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 28, height: 28)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("删除命令")
             }
         }

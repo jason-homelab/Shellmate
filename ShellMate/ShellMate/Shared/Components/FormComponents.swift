@@ -179,6 +179,19 @@ struct TextButtonStyle: ButtonStyle {
 
 // 注：旧 `ToolbarIconButtonStyle` 已删除，统一改用 `PillButtonStyle(tone:variant:)`。
 
+// MARK: - 轻量 Press 缩放按钮样式（保留原有外观，仅加点击缩放反馈）
+
+/// 不改变任何视觉样式，仅在按下时以 spring 动画缩放到 0.96
+/// 适用于已有手工 background/overlay 的 plain 按钮，直接替换 `.buttonStyle(.plain)` 即可获得 press 反馈
+struct ScaleButtonStyle: ButtonStyle {
+    var scale: CGFloat = 0.96
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
 // MARK: - 玻璃输入框
 
 struct CustomTextField: View {
