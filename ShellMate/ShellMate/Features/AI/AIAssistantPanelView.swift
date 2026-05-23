@@ -369,7 +369,9 @@ struct AIAssistantPanelView: View {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
                         Image(systemName: mode == .chat ? "bubble.left" : "terminal")
                             .font(DesignTokens.Typography.captionMedium)
-                        Text(mode.rawValue).font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                        Text(mode.rawValue)
+                            .font(DesignTokens.Typography.captionLarge)
+                            .fontWeight(isSelected ? .semibold : .regular)
                     }
                     .foregroundColor(isSelected
                         ? (mode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary)
@@ -532,7 +534,10 @@ struct AIPrivacyConsentView: View {
                         .frame(width: 60, height: 60)
                     Image(systemName: "sparkles").font(DesignTokens.Typography.displayMedium).foregroundColor(.white)
                 }
-                Text("AI 助手数据说明").font(.system(size: 16, weight: .bold)).foregroundColor(DesignTokens.Colors.textPrimary)
+                Text("AI 助手数据说明")
+                    .font(DesignTokens.Typography.labelXLarge)
+                    .fontWeight(.bold)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("在开启 AI 功能前，请了解以下数据处理方式")
                     .font(DesignTokens.Typography.bodySmall).foregroundColor(DesignTokens.Colors.textSecondary).multilineTextAlignment(.center)
             }

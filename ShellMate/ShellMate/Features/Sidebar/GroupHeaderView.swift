@@ -22,7 +22,7 @@ struct GroupHeaderView: View {
 
             // ── 展开/折叠箭头 ── Figma: › 10pt medium secondary
             Image(systemName: "chevron.right")
-                .font(.system(size: 10, weight: .medium))
+                .font(DesignTokens.Typography.captionMediumStrong)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 12)
                 .rotationEffect(.degrees(group.isExpanded ? 90 : 0))

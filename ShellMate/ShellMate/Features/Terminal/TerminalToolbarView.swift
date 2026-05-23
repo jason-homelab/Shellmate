@@ -361,7 +361,8 @@ struct TerminalSearchBar: View {
             // 大小写敏感切换
             Button(action: { caseSensitive.toggle() }) {
                 Text("Aa")
-                    .font(.system(size: 11, weight: caseSensitive ? .bold : .regular))
+                    .font(DesignTokens.Typography.captionLarge)
+                    .fontWeight(caseSensitive ? .bold : .regular)
                     .foregroundColor(caseSensitive ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(caseSensitive ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)
@@ -373,7 +374,8 @@ struct TerminalSearchBar: View {
             // 正则表达式切换（O01 新增）
             Button(action: { useRegex.toggle() }) {
                 Text(".*")
-                    .font(.system(size: 11, weight: useRegex ? .bold : .regular, design: .monospaced))
+                    .font(DesignTokens.Typography.codeTiny)
+                    .fontWeight(useRegex ? .bold : .regular)
                     .foregroundColor(useRegex ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
                     .background(useRegex ? DesignTokens.Colors.accentPrimary.opacity(0.15) : .clear)

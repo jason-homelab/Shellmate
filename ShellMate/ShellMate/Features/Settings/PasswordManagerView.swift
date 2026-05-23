@@ -227,7 +227,7 @@ struct PasswordManagerView: View {
                         .frame(width: 28, height: 28)
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help(isVisible ? "隐藏密码" : "显示密码")
             }
 
@@ -242,7 +242,7 @@ struct PasswordManagerView: View {
                     .background(DesignTokens.Colors.statusError.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .disabled(isDeleting)
         }
         .padding(DesignTokens.Spacing.md)

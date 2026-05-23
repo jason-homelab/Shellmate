@@ -19,6 +19,7 @@ extension DesignTokens {
         // MARK: 标题级
         static let titleXLarge = Font.system(size: 20, weight: .semibold, design: .rounded)
         static let titleLarge  = Font.system(size: 20, weight: .semibold, design: .rounded)
+        static let titlePanel  = Font.system(size: 18, weight: .semibold, design: .rounded)
         static let titleMedium = Font.system(size: 16, weight: .semibold, design: .rounded)
         static let titleSmall  = Font.system(size: 13, weight: .semibold, design: .rounded)
 
@@ -41,9 +42,11 @@ extension DesignTokens {
         static let labelSmall    = Font.system(size: 11, weight: .medium)
 
         // MARK: 说明文字级
-        static let captionLarge  = Font.system(size: 11, weight: .regular)
-        static let captionMedium = Font.system(size: 10, weight: .regular)
-        static let captionSmall  = Font.system(size: 9,  weight: .regular)
+        static let captionLarge        = Font.system(size: 11, weight: .regular)
+        static let captionMedium       = Font.system(size: 10, weight: .regular)
+        static let captionMediumStrong = Font.system(size: 10, weight: .medium)
+        static let captionSmall        = Font.system(size: 9,  weight: .regular)
+        static let captionSmallStrong  = Font.system(size: 9,  weight: .medium)
 
         // MARK: 等宽代码级
         static let codeLarge  = Font.system(size: 14, weight: .regular, design: .monospaced)

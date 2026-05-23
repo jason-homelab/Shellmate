@@ -57,7 +57,7 @@ struct SettingsView: View {
     private var titleHeaderView: some View {
         HStack {
             Text("设置")
-                .font(.system(size: 18, weight: .semibold))
+                .font(DesignTokens.Typography.titlePanel)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             if let onClose {

@@ -186,7 +186,7 @@ struct SessionFormSheet: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 // Figma 11:4: text-[18px] font-semibold
                 Text(vm.isEditing ? "编辑 SSH 会话" : "新建 SSH 会话")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(DesignTokens.Typography.titlePanel)
                     .foregroundColor(labelColor)
                 // Figma 11:5: text-[13px] font-normal text-[#8e8e93]
                 Text(vm.isEditing ? "编辑 SSH 连接信息" : "创建新的 SSH 连接会话")

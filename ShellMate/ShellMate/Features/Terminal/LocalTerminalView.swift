@@ -97,7 +97,7 @@ struct LocalTerminalView: View {
     private func terminatedOverlay(exitCode: Int32) -> some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             Image(systemName: "terminal")
-                .font(.system(size: 48, weight: .light))
+                .font(DesignTokens.Typography.heroLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
             Text("Shell 已退出")

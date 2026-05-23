@@ -90,7 +90,8 @@ struct AppearanceModePickerView: View {
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                     }
                     Text(mode.label)
-                        .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                        .font(DesignTokens.Typography.captionLarge)
+                        .fontWeight(isSelected ? .semibold : .regular)
                         .foregroundColor(
                             isSelected
                                 ? DesignTokens.Colors.accentPrimary

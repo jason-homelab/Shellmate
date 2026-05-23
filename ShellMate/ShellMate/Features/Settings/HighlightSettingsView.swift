@@ -132,6 +132,7 @@ struct HighlightSettingsView: View {
             } else {
                 ForEach(engine.rules) { rule in
                     ruleRow(rule)
+                        .transition(.asymmetric(insertion: .identity, removal: .opacity.combined(with: .move(edge: .trailing))))
                     if rule.id != engine.rules.last?.id {
                         Divider()
                             .opacity(0.5)
@@ -204,24 +205,26 @@ struct HighlightSettingsView: View {
 
             // 操作按钮（悬停时显示）
             HStack(spacing: DesignTokens.Spacing.xxs) {
-                Button(action: { engine.removeRule(id: rule.id) }) {
+                Button(action: { withAnimation(.easeOut(duration: 0.25)) { engine.removeRule(id: rule.id) } }) {
                     Image(systemName: "trash")
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(hoveredRuleId == rule.id
                             ? DesignTokens.Colors.statusError
                             : DesignTokens.Colors.textTertiary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("删除规则")
             }
             .frame(width: 60, alignment: .trailing)
             .opacity(hoveredRuleId == rule.id ? 1 : 0.4)
+            .animation(.easeInOut(duration: 0.12), value: hoveredRuleId == rule.id)
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 38)
         .background(hoveredRuleId == rule.id
             ? DesignTokens.Colors.surfacePanel
             : Color.clear)
+        .animation(.easeInOut(duration: 0.12), value: hoveredRuleId == rule.id)
         .onHover { hovering in
             hoveredRuleId = hovering ? rule.id : nil
         }

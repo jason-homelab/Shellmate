@@ -231,7 +231,7 @@ struct HotkeyTerminalContentView: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DesignTokens.Typography.captionMediumStrong)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
                     .background(DesignTokens.Colors.surfaceCard)
@@ -276,7 +276,7 @@ struct HotkeyTerminalContentView: View {
                             .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
                     )
                 Image(systemName: "desktopcomputer")
-                    .font(.system(size: 26, weight: .regular))
+                    .font(DesignTokens.Typography.displayMedium)
                     .foregroundStyle(LinearGradient(
                         colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
                         startPoint: .topLeading, endPoint: .bottomTrailing
@@ -288,7 +288,7 @@ struct HotkeyTerminalContentView: View {
                     .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("新建一个 SSH 连接，即可在此快速呼出")
-                    .font(.system(size: 12.5))
+                    .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -298,7 +298,7 @@ struct HotkeyTerminalContentView: View {
                 onClose()
             } label: {
                 Label("新建会话", systemImage: "plus")
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(DesignTokens.Typography.labelMedium)
             }
             .buttonStyle(HotkeyPrimaryButtonStyle())
         }
@@ -495,9 +495,9 @@ private struct AutoHideToggleButton: View {
         Button { autoHide.toggle() } label: {
             HStack(spacing: 4) {
                 Image(systemName: autoHide ? "pin.slash" : "pin.fill")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(DesignTokens.Typography.captionSmallStrong)
                 Text(autoHide ? "失焦隐藏" : "保持显示")
-                    .font(.system(size: 10))
+                    .font(DesignTokens.Typography.captionMedium)
             }
             .foregroundColor(autoHide
                              ? DesignTokens.Colors.textTertiary

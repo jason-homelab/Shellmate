@@ -78,7 +78,7 @@ struct TunnelManagerView: View {
 
             // Figma: "隧道管理器" 18px semibold #1d1d1f
             Text("隧道管理器")
-                .font(.system(size: 18, weight: .semibold))
+                .font(DesignTokens.Typography.titlePanel)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
@@ -188,7 +188,7 @@ struct TunnelManagerView: View {
     private var emptyStateView: some View {
         VStack(spacing: 12) {
             Image(systemName: "arrow.left.arrow.right.square")
-                .font(.system(size: 40))
+                .font(DesignTokens.Typography.heroMedium)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
                 .scaleEffect(emptyStateAppeared ? 1.0 : 0.70)
                 .opacity(emptyStateAppeared ? 1.0 : 0.0)

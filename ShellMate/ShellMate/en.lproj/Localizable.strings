@@ -477,7 +477,6 @@
 "减小字体" = "Decrease Font";
 "重置字体大小" = "Reset Font Size";
 "隧道管理器" = "Tunnel Manager";
-"快捷命令" = "Quick Commands";
 "ShellMate 帮助" = "ShellMate Help";
 "访问官网" = "Visit Website";
 "反馈问题" = "Report Issue";
@@ -499,7 +498,6 @@
 "快捷操作" = "Quick Actions";
 
 // --- TmuxManagerView 会话 Tab ---
-"暂无会话" = "No Sessions";
 "%lld 个会话" = "%lld sessions";
 "正在检测 tmux…" = "Detecting tmux…";
 "远程服务器未安装 tmux" = "tmux is not installed on the remote server";
