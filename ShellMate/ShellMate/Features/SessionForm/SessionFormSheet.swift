@@ -28,7 +28,7 @@ struct SessionFormSheet: View {
     private let labelColor = DesignTokens.Colors.textPrimary
     // Figma 11:7: border-[rgba(0,0,0,0.12)]
     private let borderColor = Color.black.opacity(0.12)
-    private let fieldBackground = Color.white
+    private let fieldBackground = DesignTokens.Colors.surfaceInput
 
     // MARK: - 初始化
 

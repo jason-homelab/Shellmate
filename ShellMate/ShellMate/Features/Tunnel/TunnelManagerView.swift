@@ -443,10 +443,15 @@ private struct TunnelTableRow: View {
         }
         .padding(.horizontal, 20)
         .frame(height: 52)
-        .background(isHovering ? Color.black.opacity(0.02) : DesignTokens.Colors.surfaceCard)
+        .background(isHovering ? Color.black.opacity(0.025) : Color.clear)
+        .animation(.easeInOut(duration: 0.12), value: isHovering)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
         .onTapGesture { onEdit() }
+        .help(rule.name.isEmpty ? "编辑隧道规则" : "\(rule.name) — 单击编辑")
+        .accessibilityLabel(rule.name.isEmpty ? "隧道规则" : rule.name)
+        .accessibilityHint("单击编辑，使用开关切换启停")
+        .accessibilityAction { onEdit() }
     }
 }
 

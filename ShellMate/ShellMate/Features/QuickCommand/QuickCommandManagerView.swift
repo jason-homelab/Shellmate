@@ -331,7 +331,7 @@ struct QuickCommandManagerView: View {
                     withAnimation(.easeOut(duration: 0.15)) { showForm = false }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15))
+                        .font(DesignTokens.Typography.titleSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .buttonStyle(.plain)

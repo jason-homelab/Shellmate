@@ -18,6 +18,7 @@ struct SessionImportExportView: View {
     // MARK: - 状态
 
     @State private var activeTab: ExportTab = .export
+    @Namespace private var exportTabNamespace
 
     /// 导出 Tab：生成好的 JSON 预览文本（只读）
     @State private var exportJSONPreview: String = ""
@@ -102,18 +103,25 @@ struct SessionImportExportView: View {
     private var tabPickerView: some View {
         HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(ExportTab.allCases, id: \.rawValue) { tab in
-                Button(action: { activeTab = tab }) {
+                Button(action: {
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) { activeTab = tab }
+                }) {
                     Text(tab.rawValue)
-                        .font(.system(size: 12, weight: activeTab == tab ? .semibold : .regular))
+                        .font(DesignTokens.Typography.labelSmall)
+                        .fontWeight(activeTab == tab ? .semibold : .regular)
                         .foregroundColor(activeTab == tab
                             ? DesignTokens.Colors.textPrimary
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                        .shadow(color: activeTab == tab ? Color.black.opacity(0.08) : .clear,
-                                radius: 3, x: 0, y: 1)
+                        .background {
+                            if activeTab == tab {
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                    .fill(DesignTokens.Colors.surfaceActive)
+                                    .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+                                    .matchedGeometryEffect(id: "exportTabBG", in: exportTabNamespace)
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }

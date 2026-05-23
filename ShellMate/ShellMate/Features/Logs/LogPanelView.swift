@@ -51,6 +51,7 @@ struct LogPanelView: View {
     @ObservedObject private var logStore = SessionLogStore.shared
 
     @State private var activeLogTab: LogTab = .viewer
+    @Namespace private var logTabNamespace
     @State private var selectedType: SessionLogEntry.LogType? = nil
     @State private var searchText = ""
     @State private var selectedSession: String? = nil
@@ -175,19 +176,24 @@ struct LogPanelView: View {
         HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(LogTab.allCases, id: \.self) { tab in
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 0.15)) { activeLogTab = tab }
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) { activeLogTab = tab }
                 }) {
                     Text(tab.rawValue)
-                        .font(.system(size: 12, weight: activeLogTab == tab ? .medium : .regular))
+                        .font(DesignTokens.Typography.labelSmall)
+                        .fontWeight(activeLogTab == tab ? .medium : .regular)
                         .foregroundColor(activeLogTab == tab
                             ? DesignTokens.Colors.textPrimary
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeLogTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                        .shadow(color: activeLogTab == tab ? Color.black.opacity(0.08) : Color.clear,
-                                radius: 3, x: 0, y: 1)
+                        .background {
+                            if activeLogTab == tab {
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                    .fill(DesignTokens.Colors.surfaceActive)
+                                    .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+                                    .matchedGeometryEffect(id: "logTabBG", in: logTabNamespace)
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }

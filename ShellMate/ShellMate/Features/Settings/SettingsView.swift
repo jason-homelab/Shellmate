@@ -24,6 +24,7 @@ struct SettingsView: View {
     // MARK: - 状态
 
     @State private var selectedTab: SettingsTab = .general
+    @Namespace private var settingsTabNamespace
 
     // MARK: - 视图
 
@@ -98,16 +99,20 @@ struct SettingsView: View {
         HStack(spacing: 8) {
             ForEach(SettingsTab.allCases) { tab in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) { selectedTab = tab }
                 } label: {
                     Text(verbatim: tab.rawValue)
                         .font(DesignTokens.Typography.labelLarge)
                         .foregroundColor(selectedTab == tab ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSubtle)
                         .frame(width: 72, height: 32)
-                        .background(selectedTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .shadow(color: selectedTab == tab ? Color.black.opacity(0.06) : .clear,
-                                radius: 2, x: 0, y: 1)
+                        .background {
+                            if selectedTab == tab {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(DesignTokens.Colors.surfaceActive)
+                                    .shadow(color: Color.black.opacity(0.06), radius: 2, x: 0, y: 1)
+                                    .matchedGeometryEffect(id: "settingsTabBG", in: settingsTabNamespace)
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }

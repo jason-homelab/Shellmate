@@ -49,13 +49,19 @@ struct TerminalTabBarView: View {
                             tab: tab,
                             isSelected: store.selectedTabId == tab.id,
                             onClose: {
-                                store.requestCloseTab(tab)
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                                    store.requestCloseTab(tab)
+                                }
                             },
                             onSelect: {
                                 store.selectTab(tab)
                             }
                         )
                         .id(tab.id)  // ScrollViewReader 锚点
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.82).combined(with: .opacity),
+                            removal: .scale(scale: 0.82).combined(with: .opacity)
+                        ))
                         // 拖拽中原位 ghost 效果：淡化 + 轻微缩放，让用户知道正在移动
                         .opacity(draggedTabId == tab.id ? 0.45 : 1.0)
                         .scaleEffect(draggedTabId == tab.id ? 0.93 : 1.0)

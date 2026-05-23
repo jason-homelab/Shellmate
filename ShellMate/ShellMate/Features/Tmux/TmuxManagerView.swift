@@ -23,6 +23,7 @@ struct TmuxManagerView: View {
     // MARK: - 私有状态
 
     @State private var activeTab: TmuxTab = .sessions
+    @Namespace private var tmuxTabNamespace
     @State private var selectedSessionName: String? = nil
     @State private var showNewSessionSheet: Bool = false
     @State private var confirmKillSession: TmuxSession? = nil
@@ -149,18 +150,24 @@ struct TmuxManagerView: View {
         HStack(spacing: DesignTokens.Spacing.xxxs) {
             ForEach(TmuxTab.allCases, id: \.self) { tab in
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 0.15)) { activeTab = tab }
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) { activeTab = tab }
                 }) {
                     Text(tab.rawValue)
-                        .font(.system(size: 12, weight: activeTab == tab ? .medium : .regular))
+                        .font(DesignTokens.Typography.labelSmall)
+                        .fontWeight(activeTab == tab ? .medium : .regular)
                         .foregroundColor(activeTab == tab
                             ? DesignTokens.Colors.textPrimary
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-                        .shadow(color: activeTab == tab ? Color.black.opacity(0.08) : Color.clear, radius: 3, x: 0, y: 1)
+                        .background {
+                            if activeTab == tab {
+                                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                                    .fill(DesignTokens.Colors.surfaceActive)
+                                    .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+                                    .matchedGeometryEffect(id: "tmuxTabBG", in: tmuxTabNamespace)
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
             }

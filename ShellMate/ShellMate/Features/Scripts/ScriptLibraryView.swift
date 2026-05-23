@@ -254,7 +254,8 @@ struct ScriptLibraryView: View {
         } label: {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
                 Text(script.name)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .font(DesignTokens.Typography.bodyMedium)
+                    .fontWeight(isSelected ? .semibold : .regular)
                     .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
 
