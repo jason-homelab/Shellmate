@@ -64,6 +64,7 @@ struct SessionRowView: View {
         .onHover { isHovering = $0 }
         .animation(DesignTokens.Animation.hover, value: isSelected)
         .animation(DesignTokens.Animation.hover, value: isHovering)
+        .animation(.easeInOut(duration: 0.30), value: session.connectionState)
         .help("\(session.name) — \(session.username)@\(session.host)\(session.port != 22 ? ":\(session.port)" : "")")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(session.name)，\(session.username)@\(session.host)")

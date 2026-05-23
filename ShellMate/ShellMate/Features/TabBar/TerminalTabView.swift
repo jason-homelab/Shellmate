@@ -75,6 +75,7 @@ struct TerminalTabView: View {
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .onHover { isHovering = $0 }
+        .animation(.easeInOut(duration: 0.30), value: tab.connectionState)
         .help(tab.title)
         .accessibilityLabel(tab.title)
         .accessibilityHint(isSelected ? "当前标签页" : "切换到此标签页")

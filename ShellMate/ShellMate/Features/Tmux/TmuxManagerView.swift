@@ -30,6 +30,7 @@ struct TmuxManagerView: View {
     @State private var isRefreshing: Bool = false
     @State private var windowsSessionName: String? = nil
     @State private var emptySessionsAppeared: Bool = false
+    @State private var hoveringCardName: String? = nil
 
     // MARK: - 视图
 
@@ -401,9 +402,20 @@ struct TmuxManagerView: View {
                     lineWidth: 0.5
                 )
         )
-        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+        // hover 时用半透明白叠加层模拟"提亮"效果，不破坏原有渐变背景
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(hoveringCardName == session.name ? 0.04 : 0))
+        )
+        .shadow(color: .black.opacity(hoveringCardName == session.name ? 0.07 : 0.04),
+                radius: hoveringCardName == session.name ? 6 : 4, x: 0, y: 2)
+        .animation(.easeInOut(duration: 0.15), value: hoveringCardName == session.name)
         .contentShape(Rectangle())
+        .onHover { hovering in hoveringCardName = hovering ? session.name : nil }
         .onTapGesture { selectedSessionName = session.name }
+        .accessibilityLabel("\(session.name)，\(session.windowCount) 个窗口")
+        .accessibilityHint(isAttached ? "已附加，单击选择" : "单击选择")
+        .accessibilityAction { selectedSessionName = session.name }
     }
 
     // MARK: - Windows Tab
