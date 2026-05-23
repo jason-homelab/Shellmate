@@ -96,6 +96,18 @@ struct TunnelManagerView: View {
                 .shadow(color: Color(hex: "#077aff").opacity(0.30), radius: 6, x: 0, y: 3)
             }
             .buttonStyle(.plain)
+
+            // 关闭按钮
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .frame(width: 28, height: 28)
+                    .background(Color.black.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .help("关闭")
         }
         .padding(.horizontal, 20)
         .frame(height: 56)
