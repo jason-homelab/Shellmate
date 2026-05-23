@@ -189,6 +189,7 @@ struct SessionListView: View {
             // 单击手势导致 onConnect 调用两次，创建重复标签页）
             onConnect?(session)
         }
+        .accessibilityAction { onConnect?(session) }
         .contextMenu {
             sessionContextMenu(session)
         }

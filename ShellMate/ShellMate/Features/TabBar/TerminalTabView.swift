@@ -75,6 +75,11 @@ struct TerminalTabView: View {
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .onHover { isHovering = $0 }
+        .help(tab.title)
+        .accessibilityLabel(tab.title)
+        .accessibilityHint(isSelected ? "当前标签页" : "切换到此标签页")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+        .accessibilityAction { onSelect() }
         .contextMenu { tabContextMenu }
     }
 
@@ -130,7 +135,7 @@ struct TerminalTabView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.97), Color.white.opacity(0.88)],
+                        colors: [DesignTokens.Colors.surfaceActive, DesignTokens.Colors.surfaceActive.opacity(0.90)],
                         startPoint: .top,
                         endPoint: .bottom
                     )

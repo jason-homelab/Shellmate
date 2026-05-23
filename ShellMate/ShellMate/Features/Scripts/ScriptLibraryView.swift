@@ -49,7 +49,7 @@ struct ScriptLibraryView: View {
         .frame(width: 1100, height: 680)
         .background {
             Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.90))
+            Rectangle().fill(DesignTokens.Colors.surfacePanel)
         }
         .sheet(isPresented: $showEditorSheet) {
             ScriptEditorSheet(
@@ -78,7 +78,7 @@ struct ScriptLibraryView: View {
             Button("删除", role: .destructive) {
                 if let id = pendingDeleteId {
                     if selectedScriptId == id { selectedScriptId = nil }
-                    store.deleteScript(id)
+                    withAnimation(.easeOut(duration: 0.25)) { store.deleteScript(id) }
                     pendingDeleteId = nil
                 }
             }
@@ -167,6 +167,10 @@ struct ScriptLibraryView: View {
                             if !isCollapsed {
                                 ForEach(group.scripts) { script in
                                     scriptRow(script)
+                                        .transition(.asymmetric(
+                                            insertion: .identity,
+                                            removal: .opacity.combined(with: .move(edge: .leading))
+                                        ))
                                 }
                             }
                         } header: {
@@ -184,7 +188,7 @@ struct ScriptLibraryView: View {
         }
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
     }
 
@@ -234,7 +238,7 @@ struct ScriptLibraryView: View {
             .padding(.bottom, DesignTokens.Spacing.xxs)
             .background {
                 Rectangle().fill(.thinMaterial)
-                Rectangle().fill(Color.white.opacity(0.60))
+                Rectangle().fill(DesignTokens.Colors.glassBorderTop)
             }
             .contentShape(Rectangle())
         }

@@ -28,6 +28,7 @@ struct TmuxManagerView: View {
     @State private var confirmKillSession: TmuxSession? = nil
     @State private var isRefreshing: Bool = false
     @State private var windowsSessionName: String? = nil
+    @State private var emptySessionsAppeared: Bool = false
 
     // MARK: - 视图
 
@@ -115,7 +116,7 @@ struct TmuxManagerView: View {
         .frame(height: 52)
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(alignment: .bottom) {
             Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)
@@ -157,7 +158,7 @@ struct TmuxManagerView: View {
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeTab == tab ? Color.white : Color.clear)
+                        .background(activeTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .shadow(color: activeTab == tab ? Color.black.opacity(0.08) : Color.clear, radius: 3, x: 0, y: 1)
                 }
@@ -234,7 +235,7 @@ struct TmuxManagerView: View {
             .frame(height: 40)
             .background {
                 Rectangle().fill(.thinMaterial)
-                Rectangle().fill(Color.white.opacity(0.60))
+                Rectangle().fill(DesignTokens.Colors.glassBorderTop)
             }
             .overlay(Divider(), alignment: .bottom)
 
@@ -380,7 +381,7 @@ struct TmuxManagerView: View {
                     endPoint: .bottomTrailing
                 )
             } else {
-                Color.white.opacity(0.80)
+                DesignTokens.Colors.surfaceInput.opacity(0.80)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -424,7 +425,7 @@ struct TmuxManagerView: View {
             .frame(height: 44)
             .background {
                 Rectangle().fill(.thinMaterial)
-                Rectangle().fill(Color.white.opacity(0.60))
+                Rectangle().fill(DesignTokens.Colors.glassBorderTop)
             }
             .overlay(Divider(), alignment: .bottom)
 
@@ -501,7 +502,7 @@ struct TmuxManagerView: View {
                     endPoint: .bottomTrailing
                 )
             } else {
-                Color.white.opacity(0.80)
+                DesignTokens.Colors.surfaceInput.opacity(0.80)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
@@ -672,15 +673,26 @@ struct TmuxManagerView: View {
             Image(systemName: "rectangle.3.group")
                 .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
+                .scaleEffect(emptySessionsAppeared ? 1.0 : 0.70)
+                .opacity(emptySessionsAppeared ? 1.0 : 0.0)
+                .animation(.spring(response: 0.45, dampingFraction: 0.7).delay(0.05), value: emptySessionsAppeared)
             Text("没有活跃的 tmux 会话")
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
+                .opacity(emptySessionsAppeared ? 1.0 : 0.0)
+                .offset(y: emptySessionsAppeared ? 0 : 8)
+                .animation(.easeOut(duration: 0.35).delay(0.15), value: emptySessionsAppeared)
             Text("点击「新建会话」创建一个会话")
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
+                .opacity(emptySessionsAppeared ? 1.0 : 0.0)
+                .offset(y: emptySessionsAppeared ? 0 : 8)
+                .animation(.easeOut(duration: 0.35).delay(0.22), value: emptySessionsAppeared)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+        .onAppear { emptySessionsAppeared = true }
+        .onDisappear { emptySessionsAppeared = false }
     }
 
     private var emptyWindowsView: some View {
@@ -741,7 +753,7 @@ struct TmuxManagerView: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
                 .fill(.ultraThinMaterial)
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous)
-                .fill(Color.white.opacity(0.95))
+                .fill(DesignTokens.Colors.surfaceCard)
         }
         .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 6)
         .transition(.scale(scale: 0.92).combined(with: .opacity))
@@ -769,7 +781,7 @@ struct TmuxManagerView: View {
         .frame(height: 28)
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(alignment: .top) {
             Rectangle().fill(DesignTokens.Colors.borderFaint).frame(height: 0.5)

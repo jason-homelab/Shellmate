@@ -17,6 +17,7 @@ struct TunnelManagerView: View {
     @State private var ruleToDelete: TunnelRule?
     @State private var showStartError: Bool = false
     @State private var startErrorMessage: String = ""
+    @State private var emptyStateAppeared: Bool = false
 
     // MARK: - 视图
 
@@ -55,7 +56,9 @@ struct TunnelManagerView: View {
         }
         .confirmationDialog("确认删除", isPresented: $showDeleteConfirm) {
             Button("删除", role: .destructive) {
-                if let r = ruleToDelete { tunnelManager.removeRule(r) }
+                if let r = ruleToDelete {
+                    withAnimation(.easeOut(duration: 0.25)) { tunnelManager.removeRule(r) }
+                }
             }
             Button("取消", role: .cancel) {}
         } message: {
@@ -154,15 +157,19 @@ struct TunnelManagerView: View {
         } else {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
-                    ForEach(Array(tunnelManager.rules.enumerated()), id: \.element.id) { idx, rule in
+                    ForEach(tunnelManager.rules) { rule in
                         TunnelTableRow(
                             rule: rule,
                             onToggle: { tunnelManager.toggleTunnel(rule) },
                             onEdit: { selectRule(rule) },
                             onDelete: { confirmDelete(rule) }
                         )
-                        // Figma: 每行底部 0.5px 分割线（末行不加）
-                        if idx < tunnelManager.rules.count - 1 {
+                        .transition(.asymmetric(
+                            insertion: .identity,
+                            removal: .opacity.combined(with: .move(edge: .trailing))
+                        ))
+
+                        if rule.id != tunnelManager.rules.last?.id {
                             Rectangle()
                                 .fill(Color.black.opacity(0.06))
                                 .frame(height: 0.5)
@@ -183,18 +190,29 @@ struct TunnelManagerView: View {
             Image(systemName: "arrow.left.arrow.right.square")
                 .font(.system(size: 40))
                 .foregroundColor(DesignTokens.Colors.textDisabled)
+                .scaleEffect(emptyStateAppeared ? 1.0 : 0.70)
+                .opacity(emptyStateAppeared ? 1.0 : 0.0)
+                .animation(.spring(response: 0.45, dampingFraction: 0.7).delay(0.05), value: emptyStateAppeared)
 
             Text("暂无隧道规则")
                 .font(DesignTokens.Typography.bodyLargeMedium)
                 .foregroundColor(DesignTokens.Colors.textSubtle)
+                .opacity(emptyStateAppeared ? 1.0 : 0.0)
+                .offset(y: emptyStateAppeared ? 0 : 8)
+                .animation(.easeOut(duration: 0.35).delay(0.15), value: emptyStateAppeared)
 
             Text("SSH 隧道可将远端端口映射到本地，\n或将本地端口转发到远端。")
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .multilineTextAlignment(.center)
+                .opacity(emptyStateAppeared ? 1.0 : 0.0)
+                .offset(y: emptyStateAppeared ? 0 : 8)
+                .animation(.easeOut(duration: 0.35).delay(0.22), value: emptyStateAppeared)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 48)
+        .onAppear { emptyStateAppeared = true }
+        .onDisappear { emptyStateAppeared = false }
     }
 
     // MARK: - 页脚
@@ -208,6 +226,8 @@ struct TunnelManagerView: View {
         return HStack {
             if total > 0 {
                 Text("共 \(total) 个隧道 · \(active) 个活跃 · \(stopped) 个已停止")
+                    .contentTransition(.numericText())
+                    .animation(.easeOut(duration: 0.3), value: total)
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }

@@ -60,7 +60,9 @@ struct QuickCommandManagerView: View {
         )) {
             Button("删除", role: .destructive) {
                 if let item = pendingDelete {
-                    store.deleteCommand(id: item.command.id, from: item.setID)
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        store.deleteCommand(id: item.command.id, from: item.setID)
+                    }
                 }
                 pendingDelete = nil
             }
@@ -100,7 +102,7 @@ struct QuickCommandManagerView: View {
         .frame(height: 52)
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(Divider(), alignment: .bottom)
     }
@@ -164,7 +166,7 @@ struct QuickCommandManagerView: View {
         .frame(height: 40)
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(Divider(), alignment: .bottom)
     }
@@ -226,6 +228,10 @@ struct QuickCommandManagerView: View {
 
             ForEach(set.sortedCommands) { cmd in
                 commandCard(cmd, setID: set.id)
+                    .transition(.asymmetric(
+                        insertion: .identity,
+                        removal: .opacity.combined(with: .move(edge: .trailing))
+                    ))
             }
         }
     }
@@ -334,7 +340,7 @@ struct QuickCommandManagerView: View {
             .frame(height: 44)
             .background {
                 Rectangle().fill(.thinMaterial)
-                Rectangle().fill(Color.white.opacity(0.60))
+                Rectangle().fill(DesignTokens.Colors.glassBorderTop)
             }
             .overlay(Divider(), alignment: .bottom)
 
@@ -460,7 +466,7 @@ struct QuickCommandManagerView: View {
             }
             .background {
                 Rectangle().fill(.thinMaterial)
-                Rectangle().fill(Color.white.opacity(0.60))
+                Rectangle().fill(DesignTokens.Colors.glassBorderTop)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

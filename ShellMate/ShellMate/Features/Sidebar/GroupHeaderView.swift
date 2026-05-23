@@ -59,7 +59,12 @@ struct GroupHeaderView: View {
         .onTapGesture(count: 1) {
             withAnimation(DesignTokens.Animation.fast) { onToggle?() }
         }
-        .help("双击可编辑分组名")
+        .help("\(group.name) — 双击编辑")
+        .accessibilityLabel(group.name)
+        .accessibilityHint(group.isExpanded ? "已展开，单击折叠，双击重命名" : "已折叠，单击展开，双击重命名")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { withAnimation(DesignTokens.Animation.fast) { onToggle?() } }
+        .accessibilityAction(named: "重命名") { onDoubleClick?() }
     }
 }
 

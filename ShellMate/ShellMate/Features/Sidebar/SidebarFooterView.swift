@@ -19,6 +19,8 @@ struct SidebarFooterView: View {
         HStack {
             // Figma 8:34：10px regular，#8e8e93 = textSubtle，left=14
             Text(String(format: NSLocalizedString("%d 已连接", comment: ""), connectedCount))
+                .contentTransition(.numericText())
+                .animation(.easeOut(duration: 0.3), value: connectedCount)
                 .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textSubtle)
 
@@ -26,6 +28,8 @@ struct SidebarFooterView: View {
 
             // Figma 8:35：10px regular，#8e8e93 = textSubtle，right-aligned
             Text(String(format: NSLocalizedString("共 %d 个", comment: ""), totalCount))
+                .contentTransition(.numericText())
+                .animation(.easeOut(duration: 0.3), value: totalCount)
                 .font(DesignTokens.Typography.captionMedium)
                 .foregroundColor(DesignTokens.Colors.textSubtle)
         }
