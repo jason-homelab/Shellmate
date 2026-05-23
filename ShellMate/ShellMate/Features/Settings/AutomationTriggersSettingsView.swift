@@ -16,7 +16,7 @@ struct AutomationTriggersSettingsView: View {
             actionBar
 
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                .fill(DesignTokens.Colors.borderPrimary)
                 .frame(height: 0.5)
 
             // 触发器列表
@@ -211,11 +211,11 @@ struct AutomationTriggersSettingsView: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 }
@@ -265,7 +265,7 @@ private struct TriggerFormSheet: View {
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
-                        .background(Color.white.opacity(0.80))
+                        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -417,7 +417,7 @@ private struct TriggerFormSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 8)
     }

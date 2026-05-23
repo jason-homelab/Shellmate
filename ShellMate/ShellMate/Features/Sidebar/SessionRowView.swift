@@ -24,7 +24,7 @@ struct SessionRowView: View {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(iconBackground)
                 Image(systemName: session.connectionType.iconName)
-                    .font(.system(size: 13))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(iconForeground)
             }
             .frame(width: 26, height: 26)
@@ -32,14 +32,14 @@ struct SessionRowView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(session.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(isSelected ? .white : DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
 
                 // Figma 8:24: 副标题选中白色70%，未选中 #8e8e93 = textSubtle；非标准端口追加 :port
                 Text("\(session.username)@\(session.host)\(session.port != 22 ? ":\(session.port)" : "")")
-                    .font(.system(size: 11))
+                    .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(isSelected
                         ? Color.white.opacity(0.70)
                         : DesignTokens.Colors.textSubtle)

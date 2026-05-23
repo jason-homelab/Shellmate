@@ -407,7 +407,7 @@ struct SFTPPanelView: View {
                 .foregroundColor(DesignTokens.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
     }
 
     private func errorOverlay(message: String) -> some View {
@@ -427,7 +427,7 @@ struct SFTPPanelView: View {
             .buttonStyle(.bordered)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white.opacity(0.95))
+        .background(DesignTokens.Colors.surfaceCard.opacity(0.95))
     }
 
     private var dropZoneOverlay: some View {

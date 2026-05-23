@@ -49,21 +49,21 @@ struct SettingsView: View {
         }
         .frame(width: 600, height: 584)
         // Figma Desktop: #fafafb 背景
-        .background(Color(hex: "#fafafb"))
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     // Figma 14:3: text-[18px] font-semibold text-[#1d1d1f], h=56；右侧关闭按钮（自定义浮动面板模式）
     private var titleHeaderView: some View {
         HStack {
-            Text(verbatim: "设置")
+            Text("设置")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             if let onClose {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: "#8e8e93"))
+                        .font(DesignTokens.Typography.labelMedium)
+                        .foregroundColor(DesignTokens.Colors.textSubtle)
                         .frame(width: 24, height: 24)
                         .background(Color.black.opacity(0.06))
                         .clipShape(Circle())
@@ -80,7 +80,7 @@ struct SettingsView: View {
         HStack {
             Spacer()
             Button("保存") {}
-                .font(.system(size: 14, weight: .medium))
+                .font(DesignTokens.Typography.bodyLargeMedium)
                 .foregroundColor(.white)
                 .frame(width: 80, height: 36)
                 .background(DesignTokens.Colors.accentPrimary)
@@ -101,8 +101,8 @@ struct SettingsView: View {
                     withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
                 } label: {
                     Text(verbatim: tab.rawValue)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(selectedTab == tab ? Color(hex: "#1d1d1f") : Color(hex: "#8e8e93"))
+                        .font(DesignTokens.Typography.labelLarge)
+                        .foregroundColor(selectedTab == tab ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSubtle)
                         .frame(width: 72, height: 32)
                         .background(selectedTab == tab ? Color.white : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

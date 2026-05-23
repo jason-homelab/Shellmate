@@ -36,7 +36,7 @@ struct GroupManagerView: View {
         }
         // Figma 20:22: 460px white card, rounded-2xl, shadow
         .frame(width: 460)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .task {
@@ -90,7 +90,7 @@ struct GroupManagerView: View {
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -175,7 +175,7 @@ struct GroupManagerView: View {
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 28, height: 28)
-                        .background(Color.white.opacity(0.80))
+                        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
@@ -213,7 +213,7 @@ struct GroupManagerView: View {
         .padding(.horizontal, 13)
         .frame(height: 52)
         // Figma 20:27: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px] h-[52px]
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)

@@ -206,11 +206,11 @@ struct HotkeyTerminalContentView: View {
     private var titleBar: some View {
         HStack(spacing: 8) {
             Image(systemName: "terminal.fill")
-                .font(.system(size: 11, weight: .medium))
+                .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             Text("快捷终端")
-                .font(.system(size: 12, weight: .medium))
+                .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Text("⌥Space")
@@ -362,7 +362,7 @@ private struct HotkeySessionListView: View {
                     onClose()
                 } label: {
                     Label("新建会话", systemImage: "plus")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(DesignTokens.Typography.labelMedium)
                 }
                 .buttonStyle(HotkeyPrimaryButtonStyle())
             }
@@ -427,7 +427,7 @@ private struct HotkeySessionRowView: View {
                               ? DesignTokens.Colors.statusConnected.opacity(0.12)
                               : DesignTokens.Colors.surfaceCard)
                     Image(systemName: session.connectionType.iconName)
-                        .font(.system(size: 11))
+                        .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(isConnected
                                          ? DesignTokens.Colors.statusConnected
                                          : DesignTokens.Colors.textSecondary)
@@ -437,7 +437,7 @@ private struct HotkeySessionRowView: View {
                 // 名称 + 主机
                 VStack(alignment: .leading, spacing: 1) {
                     Text(session.name)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(DesignTokens.Typography.labelLarge)
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .lineLimit(1)
                     Text("\(session.username)@\(session.host):\(session.port)")
@@ -450,7 +450,7 @@ private struct HotkeySessionRowView: View {
 
                 // 操作标签
                 Text(isConnected ? "打开" : "连接")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(isConnected
                                      ? DesignTokens.Colors.accentPrimary
                                      : DesignTokens.Colors.textSecondary)

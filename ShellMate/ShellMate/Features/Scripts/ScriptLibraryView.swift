@@ -37,7 +37,7 @@ struct ScriptLibraryView: View {
             sidebarPanel
                 .frame(width: 210)
 
-            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(width: 0.5)
+            Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(width: 0.5)
 
             // 右侧内容区
             if let script = selectedScript {
@@ -301,7 +301,7 @@ struct ScriptLibraryView: View {
             HStack(spacing: 0) {
                 codePanel(script: script)
 
-                Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(width: 0.5)
+                Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(width: 0.5)
 
                 logPanel
             }
@@ -467,7 +467,7 @@ struct ScriptLibraryView: View {
                 .padding(.horizontal, DesignTokens.Spacing.lg)
                 .padding(.vertical, 10)
 
-            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
+            Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(height: 0.5)
 
             // 代码内容（只读）
             ScrollView([.vertical, .horizontal]) {
@@ -480,7 +480,7 @@ struct ScriptLibraryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -495,7 +495,7 @@ struct ScriptLibraryView: View {
                 .padding(.horizontal, DesignTokens.Spacing.lg)
                 .padding(.vertical, 10)
 
-            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
+            Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(height: 0.5)
 
             if executionLogs.isEmpty {
                 // 空状态
@@ -530,7 +530,7 @@ struct ScriptLibraryView: View {
                 }
             }
         }
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
         .frame(maxHeight: .infinity)
         .frame(width: 384)  // w-96 对齐 Figma-Spec-v2 §14 更新
     }

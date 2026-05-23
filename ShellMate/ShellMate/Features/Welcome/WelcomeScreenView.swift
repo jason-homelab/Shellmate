@@ -24,14 +24,14 @@ struct WelcomeScreenView: View {
             // Figma 21:2: 径向渐变，从顶部中心蓝色放射至底部近白
             // radialGradient centered at top, rgba(7,122,255,0.08)→rgba(245,245,247,1)
             ZStack {
-                Color(hex: "#f5f5f7")
+                DesignTokens.Colors.surfaceWindow
                 RadialGradient(
                     stops: [
-                        .init(color: Color(hex: "#077aff").opacity(0.08), location: 0.0),
+                        .init(color: DesignTokens.Colors.accentPrimary.opacity(0.08), location: 0.0),
                         .init(color: Color(hex: "#4299fd").opacity(0.31), location: 0.25),
                         .init(color: Color(hex: "#7eb7fb").opacity(0.54), location: 0.50),
                         .init(color: Color(hex: "#bad6f9").opacity(0.77), location: 0.75),
-                        .init(color: Color(hex: "#f5f5f7").opacity(0.0),  location: 1.0)
+                        .init(color: DesignTokens.Colors.surfaceWindow.opacity(0.0),  location: 1.0)
                     ],
                     center: .top,
                     startRadius: 0,
@@ -147,7 +147,7 @@ struct WelcomeScreenView: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(index == vm.currentStep
                               ? DesignTokens.Colors.accentPrimary
-                              : Color(hex: "#d2d2d7"))
+                              : DesignTokens.Colors.textDisabled)
                         .frame(width: index == vm.currentStep ? 32 : 8, height: 8)
                         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: vm.currentStep)
                 }
@@ -218,7 +218,7 @@ struct WelcomeScreenView: View {
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 0.75)
+                        .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.75)
                 )
             }
         }
@@ -233,7 +233,7 @@ struct WelcomeScreenView: View {
                 iconColor: DesignTokens.Colors.accentPrimary,
                 gradientColors: [
                     DesignTokens.Colors.accentPrimary.opacity(0.10),
-                    Color(hex: "#5856d6").opacity(0.10)
+                    DesignTokens.Colors.accentIndigo.opacity(0.10)
                 ],
                 hoverBorderColor: DesignTokens.Colors.accentPrimary.opacity(0.50),
                 title: "新建连接",
@@ -362,12 +362,12 @@ private struct WelcomeActionCard: View {
         .padding(DesignTokens.Spacing.xl)
         // bg-white/80 backdrop-blur-xl
         .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous)
                 .strokeBorder(
-                    isHovering ? hoverBorderColor : Color(hex: "#d2d2d7").opacity(0.50),
+                    isHovering ? hoverBorderColor : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.75
                 )
         )

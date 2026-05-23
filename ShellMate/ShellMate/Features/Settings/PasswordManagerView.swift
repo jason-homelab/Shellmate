@@ -56,7 +56,7 @@ struct PasswordManagerView: View {
         }
         // Figma 20:47: 480px white card, rounded-2xl, shadow
         .frame(width: 480)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .task {
@@ -109,7 +109,7 @@ struct PasswordManagerView: View {
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -247,7 +247,7 @@ struct PasswordManagerView: View {
         }
         .padding(DesignTokens.Spacing.md)
         // Figma 20:52: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px] h-[56px]
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)

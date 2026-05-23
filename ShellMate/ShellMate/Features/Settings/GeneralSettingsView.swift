@@ -62,8 +62,8 @@ struct GeneralSettingsView: View {
     // Figma: text-[11px] font-semibold text-[#8e8e93] left-[28px] pt-[16px]
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundColor(Color(hex: "#8e8e93"))
+            .font(DesignTokens.Typography.labelSmall)
+            .foregroundColor(DesignTokens.Colors.textSubtle)
             .padding(.horizontal, 28)
             .padding(.top, 16)
             .padding(.bottom, 4)
@@ -75,11 +75,11 @@ struct GeneralSettingsView: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(hex: "#1d1d1f"))
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text(subtitle)
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
             }
             Spacer()
             Toggle("", isOn: binding)

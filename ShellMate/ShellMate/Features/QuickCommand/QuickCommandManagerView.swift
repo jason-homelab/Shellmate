@@ -41,7 +41,7 @@ struct QuickCommandManagerView: View {
         // Figma 17:2: 660px white card, rounded-2xl, shadow
         .frame(width: 660)
         .frame(minHeight: 360, maxHeight: 560)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("新建命令集", isPresented: $showNewSetAlert) {
@@ -302,7 +302,7 @@ struct QuickCommandManagerView: View {
         }
         .padding(DesignTokens.Spacing.md)
         // Figma 17:2: bg-white border-[rgba(0,0,0,0.06)] rounded-[10px]
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -348,11 +348,11 @@ struct QuickCommandManagerView: View {
                             .font(DesignTokens.Typography.bodySmall)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .background(Color.white)
+                            .background(DesignTokens.Colors.surfaceCard)
                             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                             )
                     }
 
@@ -372,13 +372,13 @@ struct QuickCommandManagerView: View {
                                 .foregroundColor(DesignTokens.Colors.textPrimary)
                                 .frame(minHeight: 72)
                                 .scrollContentBackground(.hidden)
-                                .background(Color.white)
+                                .background(DesignTokens.Colors.surfaceCard)
                         }
-                        .background(Color.white)
+                        .background(DesignTokens.Colors.surfaceCard)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                         )
                     }
 

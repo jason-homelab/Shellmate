@@ -91,10 +91,10 @@ struct TerminalSettingsView: View {
                     .frame(width: 80)
                     .font(DesignTokens.Typography.codeTiny)
                     .padding(DesignTokens.Spacing.xs)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                        .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
+                        .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5))
                     .disabled(unlimitedScrollback)
 
                 Text("行")

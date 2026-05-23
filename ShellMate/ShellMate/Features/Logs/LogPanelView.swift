@@ -23,7 +23,7 @@ extension SessionLogEntry.LogType {
 
     var borderColor: Color {
         switch self {
-        case .info:    return Color(hex: "#d2d2d7").opacity(0.50)
+        case .info:    return DesignTokens.Colors.borderPrimary
         case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.30)
         case .error:   return DesignTokens.Colors.statusError.opacity(0.30)
         case .command: return DesignTokens.Colors.accentPrimary.opacity(0.25)
@@ -98,7 +98,7 @@ struct LogPanelView: View {
         // Figma 19:2: 700px white card, rounded-2xl, shadow
         .frame(width: 700)
         .frame(minHeight: 400, maxHeight: 640)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
     }
@@ -160,7 +160,7 @@ struct LogPanelView: View {
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -287,7 +287,7 @@ struct LogPanelView: View {
                 }
             }
         }
-        .background(Color(hex: "#fafafa"))
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     private var emptyLogView: some View {
@@ -327,7 +327,7 @@ struct LogPanelView: View {
                     .lineLimit(1)
                     .padding(.horizontal, DesignTokens.Spacing.sm)
                     .padding(.vertical, DesignTokens.Spacing.xxxs)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Capsule())
             }
 
@@ -371,7 +371,7 @@ struct LogPanelView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
                 .padding(DesignTokens.Spacing.md)
-                .background(Color(hex: "#fafafa"))
+                .background(DesignTokens.Colors.surfaceWindow)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
 
                 // 保存路径
@@ -383,7 +383,7 @@ struct LogPanelView: View {
                         .font(DesignTokens.Typography.bodySmall)
                 }
                 .padding(DesignTokens.Spacing.md)
-                .background(Color(hex: "#fafafa"))
+                .background(DesignTokens.Colors.surfaceWindow)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
 
                 // 记录时间戳
@@ -415,7 +415,7 @@ struct LogPanelView: View {
                 .toggleStyle(.switch)
         }
         .padding(DesignTokens.Spacing.md)
-        .background(Color(hex: "#fafafa"))
+        .background(DesignTokens.Colors.surfaceWindow)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
     }
 

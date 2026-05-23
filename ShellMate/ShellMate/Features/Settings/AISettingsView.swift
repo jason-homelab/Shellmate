@@ -163,11 +163,11 @@ struct AISettingsView: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                     .padding(DesignTokens.Spacing.sm)
                     // Figma: bg-white/80 border-[#d2d2d7]/50
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                            .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                            .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                     )
 
                     Button {

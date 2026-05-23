@@ -204,7 +204,7 @@ private struct LocalTerminalToolbarView: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // Shell 图标
             Image(systemName: "terminal.fill")
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 
             // 标题
@@ -220,14 +220,14 @@ private struct LocalTerminalToolbarView: View {
                 fontSize = max(minFontSize, fontSize - 1)
             } label: {
                 Image(systemName: "minus.magnifyingglass")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)
             .help("缩小字号")
 
             // 字号数值
             Text("\(Int(fontSize))pt")
-                .font(.system(size: 11, design: .monospaced))
+                .font(DesignTokens.Typography.codeTiny)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 32, alignment: .center)
 
@@ -236,7 +236,7 @@ private struct LocalTerminalToolbarView: View {
                 fontSize = min(maxFontSize, fontSize + 1)
             } label: {
                 Image(systemName: "plus.magnifyingglass")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)
             .help("放大字号")
@@ -246,7 +246,7 @@ private struct LocalTerminalToolbarView: View {
             // 清屏按钮
             Button(action: onClear) {
                 Image(systemName: "trash")
-                    .font(.system(size: 12))
+                    .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)
             .help("清屏")

@@ -41,7 +41,7 @@ struct AIAssistantPanelView: View {
         .overlay(alignment: .leading) {
             // Figma: border-[#d2d2d7]/50
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                .fill(DesignTokens.Colors.borderPrimary)
                 .frame(width: 0.5)
         }
         .onAppear {
@@ -110,7 +110,7 @@ struct AIAssistantPanelView: View {
         }
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(Color(hex: "#d2d2d7").opacity(0.50))
+                .fill(DesignTokens.Colors.borderPrimary)
                 .frame(height: 0.5)
         }
     }
@@ -145,10 +145,10 @@ struct AIAssistantPanelView: View {
             }
             .padding(.horizontal, DesignTokens.Spacing.sm)
             .padding(.vertical, DesignTokens.Spacing.xxs)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
             .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5))
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
@@ -207,7 +207,7 @@ struct AIAssistantPanelView: View {
                 ForEach(quickSuggestions, id: \.self) { s in
                     Button { vm.send(text: s) } label: {
                         Text(s).font(DesignTokens.Typography.labelSmall)
-                            .foregroundColor(Color(hex: "#6e6e73"))
+                            .foregroundColor(DesignTokens.Colors.textSecondary)
                             .multilineTextAlignment(.center).lineLimit(2)
                             .padding(.horizontal, 11).padding(.vertical, 7)
                             .frame(maxWidth: .infinity)
@@ -297,7 +297,7 @@ struct AIAssistantPanelView: View {
                 }
                 .frame(height: 36)
                 // Figma 12:26: bg-[#efeff1] h-[36px] rounded-[18px]
-                .background(Color(hex: "#efeff1"))
+                .background(DesignTokens.Colors.surfaceOverlay)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay {
                     if vm.inputMode == .nlCommand {
@@ -321,7 +321,7 @@ struct AIAssistantPanelView: View {
             Rectangle().fill(Color.white.opacity(0.60))
         }
         .overlay(alignment: .top) {
-            Rectangle().fill(Color(hex: "#d2d2d7").opacity(0.50)).frame(height: 0.5)
+            Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(height: 0.5)
         }
     }
 
@@ -341,7 +341,7 @@ struct AIAssistantPanelView: View {
             // Figma 12:28: bg-[#077aff] size-[32px] rounded-[16px]
             Button { vm.send(text: vm.inputText) } label: {
                 Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "arrow.up")
-                    .font(.system(size: 14, weight: .semibold)).foregroundColor(.white)
+                    .font(DesignTokens.Typography.bodyLargeStrong).foregroundColor(.white)
                     .frame(width: 32, height: 32)
                     .background(sendColor)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -426,7 +426,7 @@ struct AIMessageBubbleView: View {
                         }
                     }
                     // Figma 12:6/10/15: bg-[#efeff1] rounded-[12px]
-                    .background(Color(hex: "#efeff1"))
+                    .background(DesignTokens.Colors.surfaceOverlay)
                     .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
                     Spacer(minLength: 32)
                 }

@@ -45,7 +45,7 @@ struct TmuxManagerView: View {
         // Figma 18:2: 880px white card, rounded-2xl, shadow-[0px_8px_20px_0px_rgba(0,0,0,0.18)]
         .frame(width: 880)
         .frame(minHeight: 420, maxHeight: 660)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .overlay {
@@ -389,7 +389,7 @@ struct TmuxManagerView: View {
                 .strokeBorder(
                     isAttached
                         ? DesignTokens.Colors.accentSecondary.opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
+                        : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.5
                 )
         )
@@ -510,7 +510,7 @@ struct TmuxManagerView: View {
                 .strokeBorder(
                     isActive
                         ? DesignTokens.Colors.accentPrimary.opacity(0.30)
-                        : Color(hex: "#d2d2d7").opacity(0.50),
+                        : DesignTokens.Colors.borderPrimary,
                     lineWidth: 0.5
                 )
         )
@@ -591,11 +591,11 @@ struct TmuxManagerView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(DesignTokens.Spacing.md)
-            .background(Color.white.opacity(0.80))
+            .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                    .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
             )
             .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
         }
@@ -627,11 +627,11 @@ struct TmuxManagerView: View {
             .help("复制到剪贴板")
         }
         .padding(DesignTokens.Spacing.sm)
-        .background(Color.white.opacity(0.80))
+        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         )
     }
 

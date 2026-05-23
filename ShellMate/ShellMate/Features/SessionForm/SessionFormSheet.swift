@@ -171,7 +171,7 @@ struct SessionFormSheet: View {
         .frame(width: 500)
         .frame(minHeight: 520)
         // Figma 11:2: bg-[#fafafb] rounded-[16px] shadow-[0px_20px_60px_0px_rgba(0,0,0,0.2)]
-        .background(Color(hex: "#fafafb"))
+        .background(DesignTokens.Colors.surfaceWindow)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: Color.black.opacity(0.20), radius: 30, x: 0, y: 20)
         .onAppear {
@@ -190,7 +190,7 @@ struct SessionFormSheet: View {
                     .foregroundColor(labelColor)
                 // Figma 11:5: text-[13px] font-normal text-[#8e8e93]
                 Text(vm.isEditing ? "编辑 SSH 连接信息" : "创建新的 SSH 连接会话")
-                    .font(.system(size: 13, weight: .regular))
+                    .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
 
@@ -234,8 +234,8 @@ struct SessionFormSheet: View {
 
             // Figma 11:33: bg-[rgba(0,0,0,0.05)] h-[36px] w-[80px] rounded-[8px] text-[#6e6e73]
             Button("取消") { vm.cancel() }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(hex: "#6e6e73"))
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 80, height: 36)
                 .background(Color.black.opacity(cancelHovered ? 0.08 : 0.05))
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
@@ -247,7 +247,7 @@ struct SessionFormSheet: View {
 
             // Figma 11:35: bg-[#077aff] h-[36px] rounded-[8px] shadow-[0px_4px_12px_0px_rgba(7,122,255,0.3)]
             Button(vm.isEditing ? "保存修改" : "创建会话") { vm.save() }
-                .font(.system(size: 14, weight: .medium))
+                .font(DesignTokens.Typography.bodyLargeMedium)
                 .foregroundColor(.white)
                 .frame(width: 120, height: 36)
                 .background(DesignTokens.Colors.accentPrimary)

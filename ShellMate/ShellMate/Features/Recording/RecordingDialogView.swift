@@ -79,7 +79,7 @@ struct RecordingDialogView: View {
         // Figma 20:2: 460px white card, rounded-2xl, shadow
         .frame(width: 460)
         .frame(minHeight: 340, maxHeight: 560)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .onAppear {
@@ -145,7 +145,7 @@ struct RecordingDialogView: View {
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
-                    .background(Color.white.opacity(0.80))
+                    .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
@@ -336,11 +336,11 @@ struct RecordingDialogView: View {
                         .foregroundColor(DesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 34)
-                        .background(Color.white.opacity(0.80))
+                        .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
                         )
                 }
                 .buttonStyle(.plain)
@@ -459,7 +459,7 @@ struct RecordingDialogView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, DesignTokens.Spacing.sm)
         // Figma 20:10: bg-white border-[rgba(0,0,0,0.06)] rounded-[8px]
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)

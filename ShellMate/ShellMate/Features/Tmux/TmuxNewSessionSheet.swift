@@ -69,7 +69,7 @@ struct TmuxNewSessionSheet: View {
         }
         .overlay {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.50), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderPrimary, lineWidth: 0.5)
         }
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 6)
         .onAppear { focusedField = .sessionName }

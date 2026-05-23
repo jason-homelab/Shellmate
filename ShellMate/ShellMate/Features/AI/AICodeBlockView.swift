@@ -43,7 +43,7 @@ struct AICodeBlockView: View {
             .background(Color.black.opacity(0.04))
 
             Divider()
-                .overlay(Color(hex: "#d2d2d7").opacity(0.30))
+                .overlay(DesignTokens.Colors.borderSecondary)
 
             // 代码内容（横向可滚动）
             ScrollView(.horizontal, showsIndicators: false) {
@@ -61,7 +61,7 @@ struct AICodeBlockView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .strokeBorder(Color(hex: "#d2d2d7").opacity(0.30), lineWidth: 0.5)
+                .strokeBorder(DesignTokens.Colors.borderSecondary, lineWidth: 0.5)
         )
     }
 

@@ -45,7 +45,7 @@ struct TunnelManagerView: View {
         // Figma 16:2: 660px white card, rounded-2xl，高度跟随内容（不撑满容器）
         .fixedSize(horizontal: false, vertical: true)
         .frame(width: 660)
-        .background(Color.white)
+        .background(DesignTokens.Colors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 8)
         .alert("启动失败", isPresented: $showStartError) {
@@ -70,13 +70,13 @@ struct TunnelManagerView: View {
         HStack(spacing: 8) {
             // Figma: 左侧无限符号图标，textTertiary
             Image(systemName: "infinity")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(Color(hex: "#8e8e93"))
+                .font(DesignTokens.Typography.labelXLarge)
+                .foregroundColor(DesignTokens.Colors.textSubtle)
 
             // Figma: "隧道管理器" 18px semibold #1d1d1f
-            Text(verbatim: "隧道管理器")
+            Text("隧道管理器")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 
@@ -84,24 +84,24 @@ struct TunnelManagerView: View {
             Button(action: { addNewRule() }) {
                 HStack(spacing: 4) {
                     Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text(verbatim: "新建隧道")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(DesignTokens.Typography.labelSmall)
+                    Text("新建隧道")
+                        .font(DesignTokens.Typography.bodyMediumStrong)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal, 12)
                 .frame(height: 32)
-                .background(Color(hex: "#077aff"))
+                .background(DesignTokens.Colors.accentPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .shadow(color: Color(hex: "#077aff").opacity(0.30), radius: 6, x: 0, y: 3)
+                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 3)
             }
             .buttonStyle(.plain)
 
             // 关闭按钮
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .font(DesignTokens.Typography.labelMedium)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
                     .frame(width: 28, height: 28)
                     .background(Color.black.opacity(0.05))
                     .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
@@ -122,21 +122,21 @@ struct TunnelManagerView: View {
     // Figma: 名称 | 类型 | 本地端口 | 远程地址 | 状态（灰色 11px semibold 标签）
     private var columnHeaderRow: some View {
         HStack(spacing: 0) {
-            Text(verbatim: "名称")
+            Text("名称")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(verbatim: "类型")
+            Text("类型")
                 .frame(width: 88, alignment: .leading)
-            Text(verbatim: "本地端口")
+            Text("本地端口")
                 .frame(width: 80, alignment: .leading)
-            Text(verbatim: "远程地址")
+            Text("远程地址")
                 .frame(width: 150, alignment: .leading)
-            Text(verbatim: "状态")
+            Text("状态")
                 .frame(width: 80, alignment: .center)
             // 编辑 + 删除两列占位
             Color.clear.frame(width: 64)
         }
-        .font(.system(size: 11, weight: .semibold))
-        .foregroundColor(Color(hex: "#8e8e93"))
+        .font(DesignTokens.Typography.labelSmall)
+        .foregroundColor(DesignTokens.Colors.textSubtle)
         .padding(.horizontal, 20)
         .frame(height: 32)
         .background(Color.black.opacity(0.02))
@@ -182,15 +182,15 @@ struct TunnelManagerView: View {
         VStack(spacing: 12) {
             Image(systemName: "arrow.left.arrow.right.square")
                 .font(.system(size: 40))
-                .foregroundColor(Color(hex: "#d2d2d7"))
+                .foregroundColor(DesignTokens.Colors.textDisabled)
 
             Text("暂无隧道规则")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(hex: "#8e8e93"))
+                .font(DesignTokens.Typography.bodyLargeMedium)
+                .foregroundColor(DesignTokens.Colors.textSubtle)
 
             Text("SSH 隧道可将远端端口映射到本地，\n或将本地端口转发到远端。")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(Color(hex: "#aeaeb2"))
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textTertiary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -208,8 +208,8 @@ struct TunnelManagerView: View {
         return HStack {
             if total > 0 {
                 Text("共 \(total) 个隧道 · \(active) 个活跃 · \(stopped) 个已停止")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(Color(hex: "#aeaeb2"))
+                    .font(DesignTokens.Typography.captionLarge)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             Spacer()
         }
@@ -227,8 +227,8 @@ struct TunnelManagerView: View {
         VStack(spacing: 12) {
             HStack {
                 Text("规则详情")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .font(DesignTokens.Typography.labelSmall)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
                     .textCase(.uppercase)
                 Spacer()
                 Button("取消") { cancelEdit() }
@@ -266,7 +266,7 @@ struct TunnelManagerView: View {
                               format: IntegerFormatStyle<Int>().grouping(.never))
                         .textFieldStyle(.plain)
                         .padding(6)
-                        .background(Color.white)
+                        .background(DesignTokens.Colors.surfaceCard)
                         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
@@ -282,7 +282,7 @@ struct TunnelManagerView: View {
                                   format: IntegerFormatStyle<Int>().grouping(.never))
                             .textFieldStyle(.plain)
                             .padding(6)
-                            .background(Color.white)
+                            .background(DesignTokens.Colors.surfaceCard)
                             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
@@ -296,12 +296,12 @@ struct TunnelManagerView: View {
                     CustomTextField(placeholder: "如：访问生产数据库", text: $editDraft.notes)
                 }
                 Toggle("会话连接时自动启动", isOn: $editDraft.autoStart)
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
             }
         }
         .padding(20)
-        .background(Color(hex: "#fafafb"))
+        .background(DesignTokens.Colors.surfaceWindow)
     }
 
     // MARK: - 辅助
@@ -313,8 +313,8 @@ struct TunnelManagerView: View {
         var body: some View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(label)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(hex: "#aeaeb2"))
+                    .font(DesignTokens.Typography.labelSmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
                     .textCase(.uppercase)
                 content
             }
@@ -368,8 +368,8 @@ private struct TunnelTableRow: View {
                     .fill(rule.status.statusColor)
                     .frame(width: 6, height: 6)
                 Text(rule.name.isEmpty ? "（未命名）" : rule.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Color(hex: "#1d1d1f"))
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -380,14 +380,14 @@ private struct TunnelTableRow: View {
 
             // 本地端口（用 String() 避免 LocalizedStringKey 千位格式化）
             Text(String(rule.localPort))
-                .font(.system(size: 13, weight: .regular).monospacedDigit())
-                .foregroundColor(Color(hex: "#1d1d1f"))
+                .font(DesignTokens.Typography.bodyMedium.monospacedDigit())
+                .foregroundColor(DesignTokens.Colors.textPrimary)
                 .frame(width: 80, alignment: .leading)
 
             // 远程地址
             Text(rule.remoteDisplay)
-                .font(.system(size: 12, weight: .regular).monospaced())
-                .foregroundColor(Color(hex: "#8e8e93"))
+                .font(DesignTokens.Typography.bodySmall.monospaced())
+                .foregroundColor(DesignTokens.Colors.textSubtle)
                 .lineLimit(1)
                 .frame(width: 150, alignment: .leading)
 
@@ -404,8 +404,8 @@ private struct TunnelTableRow: View {
             // 编辑按钮（hover 可见）
             Button(action: onEdit) {
                 Image(systemName: "pencil")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#8e8e93"))
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
             }
             .buttonStyle(.plain)
             .frame(width: 32, alignment: .center)
@@ -414,8 +414,8 @@ private struct TunnelTableRow: View {
             // 删除按钮（hover 时加深）
             Button(action: onDelete) {
                 Image(systemName: "trash")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#aeaeb2"))
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
             }
             .buttonStyle(.plain)
             .frame(width: 32, alignment: .center)
@@ -423,7 +423,7 @@ private struct TunnelTableRow: View {
         }
         .padding(.horizontal, 20)
         .frame(height: 52)
-        .background(isHovering ? Color.black.opacity(0.02) : Color.white)
+        .background(isHovering ? Color.black.opacity(0.02) : DesignTokens.Colors.surfaceCard)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
         .onTapGesture { onEdit() }
@@ -437,7 +437,7 @@ private struct TunnelTypeBadgeView: View {
 
     var body: some View {
         Text(type.badgeLabel)
-            .font(.system(size: 11, weight: .medium))
+            .font(DesignTokens.Typography.labelSmall)
             .foregroundColor(type.badgeColor)
             .padding(.horizontal, 6)
             .frame(height: 18)

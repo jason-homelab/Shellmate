@@ -267,10 +267,10 @@ struct TerminalStatusBarView: View {
             // Figma: p-1 rounded-md bg-[#5856d6]/10，icon h-3 w-3 = 12pt
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                    .fill(Color(hex: "#5856d6").opacity(0.10))
+                    .fill(DesignTokens.Colors.accentIndigo.opacity(0.10))
                 Image(systemName: "memorychip")
                     .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(Color(hex: "#5856d6"))
+                    .foregroundColor(DesignTokens.Colors.accentIndigo)
             }
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {
@@ -329,10 +329,10 @@ struct TerminalStatusBarView: View {
             // Figma: p-1 rounded-md bg-[#ff9500]/10，icon h-3 w-3 = 12pt
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                    .fill(Color(hex: "#ff9500").opacity(0.10))
+                    .fill(DesignTokens.Colors.statusConnecting.opacity(0.10))
                 Image(systemName: "internaldrive")
                     .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(Color(hex: "#ff9500"))
+                    .foregroundColor(DesignTokens.Colors.statusConnecting)
             }
             .frame(width: 20, height: 20)
             HStack(spacing: 6) {

@@ -30,7 +30,7 @@ struct GroupHeaderView: View {
 
             // ── 文件夹图标 ── Figma: 📁 12pt secondary，无彩色背景
             Image(systemName: group.isExpanded ? "folder.fill" : "folder")
-                .font(.system(size: 12))
+                .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 14)
 
