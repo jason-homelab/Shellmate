@@ -372,7 +372,7 @@ extension HighlightColor {
         case .cyan:    return Color(red: 0.3, green: 0.9, blue: 0.9)
         case .magenta: return Color(red: 0.9, green: 0.4, blue: 0.9)
         case .blue:    return Color(red: 0.35, green: 0.6, blue: 1.0)
-        case .white:   return Color.white.opacity(0.85)
+        case .white:   return DesignTokens.Colors.surfaceCard
         }
     }
 }

@@ -104,7 +104,7 @@ struct SettingsView: View {
                         .font(DesignTokens.Typography.labelLarge)
                         .foregroundColor(selectedTab == tab ? DesignTokens.Colors.textPrimary : DesignTokens.Colors.textSubtle)
                         .frame(width: 72, height: 32)
-                        .background(selectedTab == tab ? Color.white : Color.clear)
+                        .background(selectedTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .shadow(color: selectedTab == tab ? Color.black.opacity(0.06) : .clear,
                                 radius: 2, x: 0, y: 1)

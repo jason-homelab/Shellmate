@@ -312,7 +312,7 @@ struct RecordingDialogView: View {
                             .foregroundColor(Color.white.opacity(0.50))
                         Text(reviewFilename.isEmpty ? "—" : reviewFilename)
                             .font(DesignTokens.Typography.codeTiny)
-                            .foregroundColor(Color.white.opacity(0.80))
+                            .foregroundColor(DesignTokens.Colors.surfaceInput.opacity(0.80))
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }

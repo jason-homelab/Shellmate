@@ -412,7 +412,7 @@ private struct TriggerFormSheet: View {
         .frame(width: 480)
         .background {
             Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
+            Rectangle().fill(DesignTokens.Colors.surfaceCard)
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(

@@ -66,7 +66,7 @@ struct GroupFormSheet: View {
                                     .overlay(
                                         Circle()
                                             .stroke(
-                                                colorHex == hex ? Color.white : Color.clear,
+                                                colorHex == hex ? DesignTokens.Colors.surfaceActive : Color.clear,
                                                 lineWidth: 2
                                             )
                                     )

@@ -65,7 +65,7 @@ struct TmuxNewSessionSheet: View {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                 .fill(.ultraThinMaterial)
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
-                .fill(Color.white.opacity(0.95))
+                .fill(DesignTokens.Colors.surfaceCard)
         }
         .overlay {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)

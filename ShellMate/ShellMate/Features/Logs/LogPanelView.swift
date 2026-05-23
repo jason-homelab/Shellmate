@@ -14,7 +14,7 @@ extension SessionLogEntry.LogType {
 
     var rowBackground: Color {
         switch self {
-        case .info:    return Color.white.opacity(0.80)
+        case .info:    return DesignTokens.Colors.surfaceInput.opacity(0.80)
         case .warning: return DesignTokens.Colors.statusConnecting.opacity(0.08)
         case .error:   return DesignTokens.Colors.statusError.opacity(0.08)
         case .command: return DesignTokens.Colors.accentPrimary.opacity(0.07)
@@ -184,7 +184,7 @@ struct LogPanelView: View {
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeLogTab == tab ? Color.white : Color.clear)
+                        .background(activeLogTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
                         .shadow(color: activeLogTab == tab ? Color.black.opacity(0.08) : Color.clear,
                                 radius: 3, x: 0, y: 1)
@@ -255,7 +255,7 @@ struct LogPanelView: View {
         .padding(.vertical, DesignTokens.Spacing.sm)
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
     }
 

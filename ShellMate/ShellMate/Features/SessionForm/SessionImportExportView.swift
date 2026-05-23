@@ -46,7 +46,7 @@ struct SessionImportExportView: View {
         .frame(minHeight: 380, maxHeight: 560)
         .background {
             Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.95))
+            Rectangle().fill(DesignTokens.Colors.surfaceCard)
         }
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
         .overlay(
@@ -110,7 +110,7 @@ struct SessionImportExportView: View {
                             : DesignTokens.Colors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 28)
-                        .background(activeTab == tab ? Color.white : Color.clear)
+                        .background(activeTab == tab ? DesignTokens.Colors.surfaceActive : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .shadow(color: activeTab == tab ? Color.black.opacity(0.08) : .clear,
                                 radius: 3, x: 0, y: 1)

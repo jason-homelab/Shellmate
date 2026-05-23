@@ -36,7 +36,7 @@ struct AIAssistantPanelView: View {
         // Figma: bg-white/90 backdrop-blur-xl
         .background {
             Rectangle().fill(.ultraThinMaterial)
-            Rectangle().fill(Color.white.opacity(0.90))
+            Rectangle().fill(DesignTokens.Colors.surfacePanel)
         }
         .overlay(alignment: .leading) {
             // Figma: border-[#d2d2d7]/50
@@ -106,7 +106,7 @@ struct AIAssistantPanelView: View {
         // Figma: bg-white/60 backdrop-blur-xl border-b border-[#d2d2d7]/50
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(alignment: .bottom) {
             Rectangle()
@@ -318,7 +318,7 @@ struct AIAssistantPanelView: View {
         // Figma: bg-white/60 backdrop-blur-xl border-t border-[#d2d2d7]/50
         .background {
             Rectangle().fill(.thinMaterial)
-            Rectangle().fill(Color.white.opacity(0.60))
+            Rectangle().fill(DesignTokens.Colors.glassBorderTop)
         }
         .overlay(alignment: .top) {
             Rectangle().fill(DesignTokens.Colors.borderPrimary).frame(height: 0.5)
