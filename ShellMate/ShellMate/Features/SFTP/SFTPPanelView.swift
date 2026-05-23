@@ -196,7 +196,7 @@ struct SFTPPanelView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .help("新建文件夹")
             Button(action: onDelete) {
                 Image(systemName: "trash")
@@ -204,7 +204,7 @@ struct SFTPPanelView: View {
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .help("删除选中项")
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
@@ -234,7 +234,7 @@ struct SFTPPanelView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .disabled(vm.localPath == "/")
             .help("返回上一级")
             Button(action: { vm.loadLocalDirectory(path: vm.localPath) }) {
@@ -242,7 +242,7 @@ struct SFTPPanelView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .help("刷新")
         }
         .padding(.horizontal, DesignTokens.Spacing.sm)
@@ -276,7 +276,7 @@ struct SFTPPanelView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .disabled(vm.remotePath == "/" || vm.isRemoteLoading)
             .help("返回上一级")
             Button(action: { vm.loadRemoteDirectory(path: vm.remotePath) }) {
@@ -284,7 +284,7 @@ struct SFTPPanelView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
             .disabled(vm.isRemoteLoading)
             .help("刷新")
         }

@@ -148,7 +148,7 @@ struct RecordingDialogView: View {
                     .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
                     .clipShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle())
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
         .padding(.vertical, 14)
@@ -199,7 +199,7 @@ struct RecordingDialogView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 .shadow(color: DesignTokens.Colors.statusError.opacity(0.30), radius: 6, x: 0, y: 3)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle(scale: 0.97))
             .disabled(sessionName.isEmpty)
         }
         .frame(maxWidth: .infinity)
@@ -257,7 +257,7 @@ struct RecordingDialogView: View {
                 .background(DesignTokens.Colors.statusError)
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ScaleButtonStyle(scale: 0.97))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, DesignTokens.Spacing.xl)
@@ -440,7 +440,7 @@ struct RecordingDialogView: View {
                         .background(Color.black.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("在 Finder 中显示")
 
                 Button {
@@ -452,7 +452,7 @@ struct RecordingDialogView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ScaleButtonStyle())
                 .help("删除录制文件")
             }
         }
