@@ -43,22 +43,22 @@ extension DesignTokens {
         static let surfaceHover    = adaptive(light: NSColor(white: 0.0, alpha: 0.05), dark: NSColor(white: 1.0, alpha: 0.05))
         static let glassPress      = adaptive(light: NSColor(white: 0.0, alpha: 0.07), dark: NSColor(white: 1.0, alpha: 0.07))
         static let glassPressStrong = adaptive(light: NSColor(white: 0.0, alpha: 0.10), dark: NSColor(white: 1.0, alpha: 0.10))
-        static let glassSelected   = Color(hex: "#007aff").opacity(0.12)
+        static let glassSelected   = Color(hex: "#077aff").opacity(0.12)
 
         // ── 玻璃边框 ──────────────────────────────────────────
 
         static let glassBorderTop    = adaptive(light: NSColor(white: 0.0, alpha: 0.08), dark: NSColor(white: 1.0, alpha: 0.10))
         static let glassBorderSide   = adaptive(light: NSColor(white: 0.0, alpha: 0.05), dark: NSColor(white: 1.0, alpha: 0.07))
         static let glassBorderBottom = adaptive(light: NSColor(white: 0.0, alpha: 0.03), dark: NSColor(white: 1.0, alpha: 0.04))
-        static let glassBorderAccent = Color(hex: "#007aff").opacity(0.30)
+        static let glassBorderAccent = Color(hex: "#077aff").opacity(0.30)
 
         // ── 品牌色：Apple Blue ────────────────────────────────
 
-        static let accentPrimary    = Color(hex: "#007aff")
+        static let accentPrimary    = Color(hex: "#077aff")
         static let accentSecondary  = Color(hex: "#34d399")
         static let accentTertiary   = Color(hex: "#0051d5")
-        static let accentGlow       = Color(hex: "#007aff").opacity(0.20)
-        static let accentGlowStrong = Color(hex: "#007aff").opacity(0.38)
+        static let accentGlow       = Color(hex: "#077aff").opacity(0.20)
+        static let accentGlowStrong = Color(hex: "#077aff").opacity(0.38)
 
         // ── AI 品牌色：Apple Indigo ───────────────────────────
 
@@ -122,7 +122,7 @@ extension DesignTokens {
             light: NSColor(srgbRed: 0.824, green: 0.824, blue: 0.847, alpha: 0.3),
             dark:  NSColor(white: 1.0, alpha: 0.05)
         )
-        static let borderFocus  = Color(hex: "#007aff").opacity(0.35)
+        static let borderFocus  = Color(hex: "#077aff").opacity(0.35)
         static let borderSubtle = adaptive(
             light: NSColor(srgbRed: 0.824, green: 0.824, blue: 0.847, alpha: 0.2),
             dark:  NSColor(white: 1.0, alpha: 0.04)
@@ -131,8 +131,8 @@ extension DesignTokens {
         // ── 背景交互状态 ──────────────────────────────────────
 
         static let backgroundHover    = adaptive(light: NSColor(white: 0.0, alpha: 0.04), dark: NSColor(white: 1.0, alpha: 0.04))
-        static let backgroundSelected = Color(hex: "#007aff").opacity(0.12)
-        static let backgroundPressed  = Color(hex: "#007aff").opacity(0.18)
+        static let backgroundSelected = Color(hex: "#077aff").opacity(0.12)
+        static let backgroundPressed  = Color(hex: "#077aff").opacity(0.18)
 
         // ── 扩展令牌（兼容旧调用）────────────────────────────
 

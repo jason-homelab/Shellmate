@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 会话行视图 — 1:1 对齐 Figma Make Sidebar.tsx session button
 /// px-3 py-2 rounded-lg gap-2 mb-1
-/// 选中：bg-[#007aff] text-white shadow-md shadow-[#007aff]/30
+/// 选中：bg-[#077aff] text-white shadow-md shadow-[#077aff]/30
 /// 悬停：hover:bg-black/5
 struct SessionRowView: View {
 
@@ -111,24 +111,12 @@ struct SessionRowView: View {
 
     private var iconBackground: Color {
         if isSelected { return Color.white.opacity(0.20) }
-        switch session.connectionState {
-        case .connected:   return DesignTokens.Colors.statusConnected.opacity(0.15)
-        case .connecting:  return DesignTokens.Colors.statusConnecting.opacity(0.15)
-        case .error:       return DesignTokens.Colors.statusError.opacity(0.12)
-        case .offline:     return Color.black.opacity(0.06)
-        case .disconnecting: return Color.black.opacity(0.06)
-        }
+        return Color.black.opacity(0.06)
     }
 
     private var iconForeground: Color {
         if isSelected { return .white }
-        switch session.connectionState {
-        case .connected:   return DesignTokens.Colors.statusConnected
-        case .connecting:  return DesignTokens.Colors.statusConnecting
-        case .error:       return DesignTokens.Colors.statusError
-        case .offline:     return DesignTokens.Colors.textSecondary
-        case .disconnecting: return DesignTokens.Colors.textSecondary
-        }
+        return DesignTokens.Colors.textSecondary
     }
 }
 
