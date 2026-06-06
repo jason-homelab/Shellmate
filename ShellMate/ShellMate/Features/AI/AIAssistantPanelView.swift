@@ -76,8 +76,9 @@ struct AIAssistantPanelView: View {
                     .foregroundColor(.white)
             }
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
-                Text("AI 助手")
-                    .font(DesignTokens.Typography.titleSmall)
+                // Figma 12:4: "✦ AI 助手" 15px semibold
+                (Text(verbatim: "✦ ") + Text("AI 助手"))
+                    .font(DesignTokens.Typography.labelLargeAlt)
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Text("基于 \(aiSettings.currentModel.name) · \(vm.session.name)")
                     .font(DesignTokens.Typography.captionLarge)

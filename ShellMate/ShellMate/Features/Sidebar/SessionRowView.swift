@@ -19,7 +19,13 @@ struct SessionRowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // 图标容器：背景色随连接状态变化，兼顾状态指示与类型展示，去掉独立状态圆点
+            // Figma 8:16: 6×6 状态圆点，left=14，top=19（行高44居中）
+            Circle()
+                .fill(statusDotColor)
+                .frame(width: 6, height: 6)
+                .padding(.leading, 14)
+
+            // Figma 8:17: 26×26 头像方块，left=29（dot 14 + 6 + gap 9 = 29）
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(iconBackground)
@@ -28,8 +34,9 @@ struct SessionRowView: View {
                     .foregroundColor(iconForeground)
             }
             .frame(width: 26, height: 26)
-            .padding(.leading, 14)
+            .padding(.leading, 9)
 
+            // Figma 8:18/8:19: 名称+副标题，left=64（29 + 26 + gap 9 = 64）
             VStack(alignment: .leading, spacing: 1) {
                 Text(session.name)
                     .font(DesignTokens.Typography.labelLarge)
@@ -37,7 +44,7 @@ struct SessionRowView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
 
-                // Figma 8:24: 副标题选中白色70%，未选中 #8e8e93 = textSubtle；非标准端口追加 :port
+                // Figma 8:19: 副标题选中白色70%，未选中 #8e8e93 = textSubtle；非标准端口追加 :port
                 Text("\(session.username)@\(session.host)\(session.port != 22 ? ":\(session.port)" : "")")
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(isSelected
@@ -54,8 +61,7 @@ struct SessionRowView: View {
         // Figma: h-[44px]
         .frame(height: 44)
         .background(rowBackground)
-        .overlay(alignment: .leading) { statusBar }
-        // 选中时渐变阴影，比单色更有深度感
+        // 选中时蓝色阴影
         .shadow(
             color: isSelected ? DesignTokens.Colors.accentPrimary.opacity(0.30) : .clear,
             radius: 6, x: 0, y: 3
@@ -78,14 +84,9 @@ struct SessionRowView: View {
     @ViewBuilder
     private var rowBackground: some View {
         if isSelected {
+            // Figma 8:15: bg-[#077aff] — 纯色蓝，不使用渐变
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(DesignTokens.Colors.accentPrimary)
         } else if isHovering {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.black.opacity(0.05))
@@ -94,25 +95,15 @@ struct SessionRowView: View {
         }
     }
 
-    // MARK: - 左侧状态竖条
+    // MARK: - 状态圆点颜色（Figma 8:16）
 
-    private var statusBarColor: Color? {
-        if isSelected { return Color.white.opacity(0.75) }
+    private var statusDotColor: Color {
         switch session.connectionState {
         case .connected:    return DesignTokens.Colors.statusConnected
         case .connecting:   return DesignTokens.Colors.statusConnecting
         case .error:        return DesignTokens.Colors.statusError
-        default:            return nil
-        }
-    }
-
-    @ViewBuilder
-    private var statusBar: some View {
-        if let color = statusBarColor {
-            Capsule()
-                .fill(color)
-                .frame(width: 2, height: 20)
-                .padding(.leading, 4)
+        case .offline:      return Color.gray.opacity(0.35)
+        case .disconnecting: return Color.gray.opacity(0.35)
         }
     }
 

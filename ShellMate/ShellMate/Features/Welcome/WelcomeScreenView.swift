@@ -103,35 +103,31 @@ struct WelcomeScreenView: View {
         let step = vm.steps[vm.currentStep]
         return VStack(spacing: DesignTokens.Spacing.lg) {
 
-            // 图标容器：w-32 h-32 rounded-[2.5rem]，emoji text-7xl
+            // 图标容器：Figma 21:3 140×140 圆形 + 60px emoji
             ZStack {
-                RoundedRectangle(cornerRadius: 40, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: step.gradientColors,
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 128, height: 128)
-                    .shadow(color: .black.opacity(0.10), radius: 50, x: 0, y: 25)
+                Circle()
+                    .fill(Color.white.opacity(0.45))
+                    .frame(width: 140, height: 140)
+                    .shadow(color: .black.opacity(0.08), radius: 30, x: 0, y: 12)
 
                 Text(step.emoji)
-                    .font(.system(size: 72))
+                    .font(.system(size: 60))
             }
             .animation(.easeInOut(duration: 0.5), value: vm.currentStep)
 
-            // 标题：text-5xl font-bold text-[#1d1d1f]
+            // 标题：Figma 21:5 text-[36px] font-bold
             Text(step.title)
-                .font(.system(size: 48, weight: .bold))
+                .font(.system(size: 36, weight: .bold))
                 .foregroundColor(DesignTokens.Colors.textPrimary)
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: vm.currentStep)
 
-            // 描述：text-xl text-[#86868b] max-w-2xl
+            // 描述：Figma 21:6 text-[16px] font-normal text-[#8e8e93]
             Text(step.description)
-                .font(.system(size: 20, weight: .regular))
+                .font(.system(size: 16, weight: .regular))
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 640)
+                .frame(maxWidth: 560)
                 .animation(.easeInOut(duration: 0.3), value: vm.currentStep)
 
             stepIndicator
@@ -157,38 +153,29 @@ struct WelcomeScreenView: View {
         .padding(.top, DesignTokens.Spacing.xxs)
     }
 
-    // MARK: - 导航按钮（step 0 & 1）：flex justify-center gap-4
+    // MARK: - 导航按钮（step 0 & 1）：Figma 21:10-12 蓝色按钮 + 下方跳过文字
 
     private var navigationButtons: some View {
-        HStack(spacing: DesignTokens.Spacing.lg) {
-            // 跳过：ghost, text-[#86868b] hover:bg-black/5 rounded-xl px-8
-            Button(action: { vm.skip() }) {
-                Text("跳过")
-                    .font(DesignTokens.Typography.bodyLarge)
-                    .foregroundColor(DesignTokens.Colors.textSecondary)
-                    .padding(.horizontal, DesignTokens.Spacing.xxxl)
-                    .padding(.vertical, DesignTokens.Spacing.sm)
-                    .background(Color.black.opacity(0.05))
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-            }
-            .buttonStyle(.plain)
-
-            // 下一步：bg-[#007aff] hover:bg-[#0051d5] text-white rounded-xl px-8
+        VStack(spacing: DesignTokens.Spacing.md) {
+            // 下一步：Figma 21:10 bg-[#077aff] h-[48px] w-[140px] rounded-[12px] shadow
             Button(action: { vm.nextStep() }) {
-                HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Text("下一步")
-                        .font(DesignTokens.Typography.bodyLargeStrong)
-                    Image(systemName: "arrow.right")
-                        .font(DesignTokens.Typography.captionLarge)
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, DesignTokens.Spacing.xxxl)
-                .padding(.vertical, DesignTokens.Spacing.sm)
+                Text("下一步 →")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 140, height: 48)
             }
             .buttonStyle(.plain)
             .background(DesignTokens.Colors.accentPrimary)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
-            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.20), radius: 20, x: 0, y: 10)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.35), radius: 24, x: 0, y: 8)
+
+            // 跳过引导：Figma 21:12 text-[13px] text-[#8e8e93]
+            Button(action: { vm.skip() }) {
+                Text("跳过引导")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(DesignTokens.Colors.textSecondary)
+            }
+            .buttonStyle(.plain)
         }
     }
 

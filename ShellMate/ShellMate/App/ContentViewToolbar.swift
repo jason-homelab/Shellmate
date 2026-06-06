@@ -67,7 +67,7 @@ extension ContentView {
             Button {
                 if let session = sessionStore.selectedSession { connectToSession(session) }
             } label: {
-                Text("连接")
+                Text(verbatim: "⏻ ") + Text("连接")
             }
             .buttonStyle(PillButtonStyle(tone: .tinted))
             .disabled(sessionStore.selectedSession == nil)
@@ -97,7 +97,7 @@ extension ContentView {
             Button {
                 NotificationCenter.default.post(name: .aiPanelRequested, object: nil)
             } label: {
-                Text("AI")
+                Text(verbatim: "✦ ") + Text("AI")
             }
             .buttonStyle(PillButtonStyle(tone: panels.showAIPanel ? .tinted : .normal))
             .disabled(tabBarStore.selectedTab == nil || activeSession?.connectionState != .connected)
@@ -107,7 +107,7 @@ extension ContentView {
             Button {
                 panels.openSheet { panels.showScriptPanel = true }
             } label: {
-                Text("脚本")
+                Text(verbatim: "</> ") + Text("脚本")
             }
             .buttonStyle(PillButtonStyle(tone: panels.showScriptPanel ? .tinted : .normal))
             .help("脚本自动化")
@@ -115,13 +115,19 @@ extension ContentView {
             Button {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             } label: {
-                Text("文件")
+                Text(verbatim: "⇅ ") + Text("文件")
             }
             .buttonStyle(PillButtonStyle(tone: panels.showSFTPPanel ? .tinted : .normal))
             .disabled(tabBarStore.selectedTab == nil || activeSession?.connectionState != .connected)
             .help("文件传输 (SFTP)")
 
             splitMenu
+
+            Button { panels.openSheet { panels.showLogPanel = true } } label: {
+                Text("日志")
+            }
+            .buttonStyle(PillButtonStyle(tone: panels.showLogPanel ? .tinted : .normal))
+            .help("会话日志")
 
             Button {
                 NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
@@ -139,12 +145,6 @@ extension ContentView {
             }
             .buttonStyle(PillButtonStyle(tone: panels.showTunnelPanel ? .tinted : .normal))
             .help("隧道管理 (Tunnel)")
-
-            Button { panels.openSheet { panels.showLogPanel = true } } label: {
-                Text("日志")
-            }
-            .buttonStyle(PillButtonStyle(tone: panels.showLogPanel ? .tinted : .normal))
-            .help("会话日志")
         }
     }
 
@@ -258,7 +258,7 @@ private struct SplitScreenMenuButton: View {
         Button {
             showPopover.toggle()
         } label: {
-            Text("分屏")
+            Text(verbatim: "⊡ ") + Text("分屏")
         }
         .buttonStyle(PillButtonStyle(tone: isActive ? .tinted : .normal))
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {

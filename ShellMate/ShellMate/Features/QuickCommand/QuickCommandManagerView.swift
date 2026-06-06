@@ -76,19 +76,14 @@ struct QuickCommandManagerView: View {
 
     /// 对齐规范 §12 §3：Terminal 图标，标题，描述
     private var headerView: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "terminal")
-                .font(DesignTokens.Typography.bodyLarge)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text("快捷命令管理器")
-                    .font(DesignTokens.Typography.labelLarge)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("创建并管理常用命令")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+        HStack(spacing: 8) {
+            // Figma 17:3: "⚡  快捷命令" 16px semibold #1d1d1f
+            (Text(verbatim: "⚡  ") + Text("快捷命令管理器"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+
             Spacer()
+
             Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(DesignTokens.Typography.labelMedium)

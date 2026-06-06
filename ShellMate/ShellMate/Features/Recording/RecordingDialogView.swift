@@ -115,28 +115,9 @@ struct RecordingDialogView: View {
 
     private var headerView: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [DesignTokens.Colors.statusError, DesignTokens.Colors.statusError],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 36, height: 36)
-                    .shadow(color: DesignTokens.Colors.statusError.opacity(0.35), radius: 6, x: 0, y: 3)
-                Image(systemName: "record.circle")
-                    .font(DesignTokens.Typography.titleMedium)
-                    .foregroundColor(.white)
-            }
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
-                Text("终端录制")
-                    .font(DesignTokens.Typography.bodyLargeStrong)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("录制终端操作并保存为 asciinema v2 格式")
-                    .font(DesignTokens.Typography.captionLarge)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+            (Text(verbatim: "⏺  ") + Text("录制 / 历史"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 

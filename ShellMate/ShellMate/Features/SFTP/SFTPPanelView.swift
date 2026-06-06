@@ -75,11 +75,9 @@ struct SFTPPanelView: View {
 
     private var titleBarView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            Text(vm.sessionName.isEmpty ? "文件传输" : "文件传输 — \(vm.sessionName)")
-                .font(DesignTokens.Typography.titleSmall)
+            (Text(verbatim: "⇅  ") + Text("文件传输"))
+                .font(DesignTokens.Typography.titleMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
-                .lineLimit(1)
-                .truncationMode(.tail)
 
             Spacer()
 

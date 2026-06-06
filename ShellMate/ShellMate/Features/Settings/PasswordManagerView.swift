@@ -83,24 +83,9 @@ struct PasswordManagerView: View {
 
     private var headerView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            // orange key 图标
-            ZStack {
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                    .fill(DesignTokens.Colors.statusConnecting.opacity(0.10))
-                    .frame(width: 36, height: 36)
-                Image(systemName: "key.fill")
-                    .font(DesignTokens.Typography.labelXLarge)
-                    .foregroundColor(DesignTokens.Colors.statusConnecting)
-            }
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text("密码管理")
-                    .font(DesignTokens.Typography.titleMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("管理已保存的 SSH 登录密码")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+            (Text(verbatim: "⚿  ") + Text("密码管理"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 

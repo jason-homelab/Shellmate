@@ -71,14 +71,9 @@ struct TunnelManagerView: View {
     // Figma: 左侧图标 + "隧道管理器"，右侧蓝色"+ 新建隧道"按钮，同行
     private var headerRow: some View {
         HStack(spacing: 8) {
-            // Figma: 左侧无限符号图标，textTertiary
-            Image(systemName: "infinity")
-                .font(DesignTokens.Typography.labelXLarge)
-                .foregroundColor(DesignTokens.Colors.textSubtle)
-
-            // Figma: "隧道管理器" 18px semibold #1d1d1f
-            Text("隧道管理器")
-                .font(DesignTokens.Typography.titlePanel)
+            // Figma 16:3: "⚯  隧道管理器" 16px semibold #1d1d1f，unicode 前缀内联
+            (Text(verbatim: "⚯  ") + Text("隧道管理器"))
+                .font(DesignTokens.Typography.titleMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
@@ -461,12 +456,13 @@ private struct TunnelTypeBadgeView: View {
     let type: TunnelType
 
     var body: some View {
+        // Figma 16:15: h-22, rounded-4, bg rgba(7,122,255,0.08), text #077aff 11px medium
         Text(type.badgeLabel)
             .font(DesignTokens.Typography.labelSmall)
             .foregroundColor(type.badgeColor)
-            .padding(.horizontal, 6)
-            .frame(height: 18)
-            .background(type.badgeColor.opacity(0.12))
+            .padding(.horizontal, 8)
+            .frame(height: 22)
+            .background(type.badgeColor.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }

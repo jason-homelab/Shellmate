@@ -79,19 +79,10 @@ struct TmuxManagerView: View {
 
     private var panelHeader: some View {
         HStack(spacing: 0) {
-            Image(systemName: "rectangle.3.group")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.accentSecondary)
-                .padding(.trailing, DesignTokens.Spacing.sm)
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text("tmux 会话管理器")
-                    .font(DesignTokens.Typography.titleSmall)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("管理并监控服务器上的 tmux 会话")
-                    .font(DesignTokens.Typography.captionMedium)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+            // Figma 18:3: "■  tmux 管理器" 16px semibold #1d1d1f
+            (Text(verbatim: "■  ") + Text("tmux 管理器"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 

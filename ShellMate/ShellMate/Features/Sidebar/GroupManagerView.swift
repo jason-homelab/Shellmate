@@ -64,24 +64,9 @@ struct GroupManagerView: View {
 
     private var headerView: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            // blue folder 图标
-            ZStack {
-                RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                    .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
-                    .frame(width: 36, height: 36)
-                Image(systemName: "folder.fill")
-                    .font(DesignTokens.Typography.labelLargeMid)
-                    .foregroundColor(DesignTokens.Colors.accentPrimary)
-            }
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxxs) {
-                Text("分组管理")
-                    .font(DesignTokens.Typography.titleMedium)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text("共 \(groupStore.groups.count) 个分组")
-                    .font(DesignTokens.Typography.bodySmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+            (Text(verbatim: "📁  ") + Text("分组管理"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 

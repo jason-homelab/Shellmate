@@ -108,18 +108,10 @@ struct LogPanelView: View {
 
     private var headerView: some View {
         HStack(spacing: 10) {
-            Image(systemName: "doc.text.below.ecg")
-                .font(DesignTokens.Typography.labelXLarge)
-                .foregroundColor(DesignTokens.Colors.accentPrimary)
-
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.px) {
-                Text("会话日志")
-                    .font(DesignTokens.Typography.bodyLargeStrong)
-                    .foregroundColor(DesignTokens.Colors.textPrimary)
-                Text(selectedSession.map { "· \($0)" } ?? "所有会话")
-                    .font(DesignTokens.Typography.captionLarge)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
+            // Figma 19:3: "📋  会话日志" 16px semibold #1d1d1f
+            (Text(verbatim: "📋  ") + Text("会话日志"))
+                .font(DesignTokens.Typography.titleMedium)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
 
             Spacer()
 

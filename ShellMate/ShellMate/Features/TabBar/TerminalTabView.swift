@@ -57,16 +57,10 @@ struct TerminalTabView: View {
         .frame(minWidth: DesignTokens.Sizes.tabMinWidth, maxWidth: 140)
         .background(tabBackground)
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
-        // 激活标签底部渐变指示线（选中时淡入）
+        // Figma 9:6: 底部蓝色指示线，纯色 #077aff，60×2，selected 时淡入缩放
         .overlay(alignment: .bottom) {
             RoundedRectangle(cornerRadius: 1, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
+                .fill(DesignTokens.Colors.accentPrimary)
                 .frame(width: 60, height: 2)
                 .opacity(isSelected ? 1 : 0)
                 .scaleEffect(x: isSelected ? 1 : 0.3, anchor: .center)
@@ -133,29 +127,9 @@ struct TerminalTabView: View {
     @ViewBuilder
     private var tabBackground: some View {
         if isSelected {
+            // Figma 9:5: bg-[rgba(255,255,255,0.92)] = surfaceActive，纯色无渐变无描边
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [DesignTokens.Colors.surfaceActive, DesignTokens.Colors.surfaceActive.opacity(0.90)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [
-                                    DesignTokens.Colors.accentPrimary.opacity(0.18),
-                                    Color.black.opacity(0.06)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 0.5
-                        )
-                }
-                .shadow(color: .black.opacity(0.07), radius: 3, x: 0, y: 1)
+                .fill(DesignTokens.Colors.surfaceActive)
         } else if isHovering {
             RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                 .fill(DesignTokens.Colors.glassUltraLight)
