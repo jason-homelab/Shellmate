@@ -88,7 +88,7 @@ private struct PillButtonContent: View {
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(backgroundColor)
-                // Figma: shadow-sm shadow-[#007aff]/30（仅 primary 有蓝色投影）
+                // Figma: shadow-sm shadow-[#077aff]/30（仅 primary 有蓝色投影）
                 .shadow(
                     color: tone == .primary
                         ? DesignTokens.Colors.accentPrimary.opacity(0.30)
@@ -140,10 +140,10 @@ private struct PillButtonContent: View {
         let isPressed = configuration.isPressed
         switch tone {
         case .primary:
-            // Figma: bg-[#007aff] hover:bg-[#0051d5]，disabled:opacity-40（由 opacity 统一处理）
+            // Figma: bg-[#077aff] hover:bg-[#0051d5]，disabled:opacity-40（由 opacity 统一处理）
             if isPressed  { return DesignTokens.Colors.accentTertiary }  // #0051d5
             if isHovering { return DesignTokens.Colors.accentTertiary }  // #0051d5
-            return DesignTokens.Colors.accentPrimary                     // #007aff
+            return DesignTokens.Colors.accentPrimary                     // #077aff
         case .tinted:
             if isPressed  { return DesignTokens.Colors.accentPrimary.opacity(0.15) }
             if isHovering { return DesignTokens.Colors.accentPrimary.opacity(0.12) }

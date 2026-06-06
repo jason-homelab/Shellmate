@@ -220,7 +220,7 @@ struct TerminalStatusBarView: View {
     private func cpuView(_ m: ServerMetrics) -> some View {
         // Figma: gap-2 内部 + gap-1.5 文字组（外层使用 gap-2，文字组用 gap-1.5）
         HStack(spacing: 8) {
-            // Figma: p-1 rounded-md bg-[#007aff]/10，icon h-3 w-3 = 12pt
+            // Figma: p-1 rounded-md bg-[#077aff]/10，icon h-3 w-3 = 12pt
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))

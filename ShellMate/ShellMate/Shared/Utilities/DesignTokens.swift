@@ -18,15 +18,15 @@ enum DesignTokens {
         // shadow-2xl: 0 25px 50px rgba(0,0,0,0.25)
         static let xlarge = ShadowStyle(color: .black.opacity(0.25), radius: 50, x: 0, y: 25)
 
-        static let accentGlow       = ShadowStyle(color: Color(hex: "#007aff").opacity(0.22), radius: 18, x: 0, y: 0)
-        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#007aff").opacity(0.38), radius: 28, x: 0, y: 0)
+        static let accentGlow       = ShadowStyle(color: Color(hex: "#077aff").opacity(0.22), radius: 18, x: 0, y: 0)
+        static let accentGlowStrong = ShadowStyle(color: Color(hex: "#077aff").opacity(0.38), radius: 28, x: 0, y: 0)
 
         static let connectedGlow  = ShadowStyle(color: Color(hex: "#34d399").opacity(0.32), radius: 8, x: 0, y: 0)
         static let connectingGlow = ShadowStyle(color: Color(hex: "#fbbf24").opacity(0.32), radius: 8, x: 0, y: 0)
         static let errorGlow      = ShadowStyle(color: Color(hex: "#f87171").opacity(0.32), radius: 8, x: 0, y: 0)
 
         // 选中行蓝色光晕（Figma 诊断 P1 #3）
-        static let selectedRowGlow = ShadowStyle(color: Color(hex: "#007aff").opacity(0.22), radius: 10, x: 0, y: 4)
+        static let selectedRowGlow = ShadowStyle(color: Color(hex: "#077aff").opacity(0.22), radius: 10, x: 0, y: 4)
     }
 
     // MARK: - 渐变
@@ -49,9 +49,9 @@ enum DesignTokens {
         /// 选中状态玻璃边框渐变（Apple Blue 光晕）
         static let glassAccentBorder = LinearGradient(
             stops: [
-                .init(color: Color(hex: "#007aff").opacity(0.45), location: 0.0),
+                .init(color: Color(hex: "#077aff").opacity(0.45), location: 0.0),
                 .init(color: Color(hex: "#4da3ff").opacity(0.22), location: 0.5),
-                .init(color: Color(hex: "#007aff").opacity(0.12), location: 1.0),
+                .init(color: Color(hex: "#077aff").opacity(0.12), location: 1.0),
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -59,14 +59,14 @@ enum DesignTokens {
 
         /// 强调按钮渐变（Apple Blue → Deep Blue，对齐 Figma hover:#0051d5）
         static let accentButton = LinearGradient(
-            colors: [Color(hex: "#007aff"), Color(hex: "#0051d5")],
+            colors: [Color(hex: "#077aff"), Color(hex: "#0051d5")],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
 
-        /// AI 助手渐变（Apple Blue → Indigo，对齐 Figma from-[#007aff] to-[#5856d6]）
+        /// AI 助手渐变（Apple Blue → Indigo，对齐 Figma from-[#077aff] to-[#5856d6]）
         static let aiGradient = LinearGradient(
-            colors: [Color(hex: "#007aff"), Color(hex: "#5856d6")],
+            colors: [Color(hex: "#077aff"), Color(hex: "#5856d6")],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

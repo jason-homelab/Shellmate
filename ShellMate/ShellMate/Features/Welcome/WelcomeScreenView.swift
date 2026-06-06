@@ -134,7 +134,7 @@ struct WelcomeScreenView: View {
         }
     }
 
-    // MARK: - 步骤指示器（h-2 rounded-full，active w-8 bg-[#007aff]，inactive w-2 bg-[#d2d2d7]）
+    // MARK: - 步骤指示器（h-2 rounded-full，active w-8 bg-[#077aff]，inactive w-2 bg-[#d2d2d7]）
 
     private var stepIndicator: some View {
         HStack(spacing: DesignTokens.Spacing.xxs) {

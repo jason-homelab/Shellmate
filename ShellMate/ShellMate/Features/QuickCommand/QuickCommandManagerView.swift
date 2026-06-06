@@ -135,7 +135,7 @@ struct QuickCommandManagerView: View {
 
             Spacer()
 
-            // 新建命令按钮（Figma §12：bg-[#007aff]）
+            // 新建命令按钮（Figma §12：bg-[#077aff]）
             Button {
                 formDraft = QuickCommand()
                 formSetID = store.selectedSetID ?? store.commandSets.first?.id
@@ -429,7 +429,7 @@ struct QuickCommandManagerView: View {
                         .background(DesignTokens.Colors.surfaceHover)
                         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
 
-                        // Add / Update Command（bg-[#007aff]）
+                        // Add / Update Command（bg-[#077aff]）
                         let canSave = !formDraft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             && !formDraft.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         Button(isNewCommand ? "添加命令" : "保存") {
