@@ -142,3 +142,21 @@ coverage/
 
 # Claude Code
 .claude/
+
+# 内部产品文档（本地保留，不提交）
+ShellMate_MRD.md
+ShellMate_PRD.md
+ShellMate_BlackBox_TestPlan.md
+ShellMate_Grand_Refactoring_Masterplan.md
+ShellMate_Product_Tech_Review.md
+ShellMate_产品评审报告.md
+MVVM_Refactoring_Roadmap.md
+QA测试报告-*.md
+codebase_review.md
+todo.md
+原型.md
+开发进度.md
+技术方案.md
+数据库设计文档.md
+项目Review报告-*.md
+ShellMate/ADD_FILES_TO_XCODE.md
