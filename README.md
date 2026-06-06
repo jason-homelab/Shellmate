@@ -25,7 +25,6 @@ ShellMate 是一款专为 macOS 打造的原生 SSH 会话管理工具。与 Ter
 
 - **真正的 macOS 原生**：非 Electron / Web 技术，Apple Silicon 原生编译，内存占用极低
 - **安全本地化**：密码与私钥仅存于设备 Keychain，不经过任何第三方服务器
-- **买断制定价**：告别订阅疲劳，$14.99 一次性买断，可选 $4.99/年 Pro 订阅解锁 iCloud 同步
 - **SSH 场景专属 AI**：错误自动诊断、上下文感知命令补全，而非通用代码助手
 
 ---
@@ -132,16 +131,6 @@ ShellMate/
 │   └── Utilities/          # DesignTokens、AppLogger 等
 └── ShellMate.xcdatamodeld  # Core Data 数据模型
 ```
-
----
-
-## 定价
-
-| 方案 | 价格 | 包含内容 |
-|------|------|----------|
-| 免费试用 | 免费（14 天） | 全功能体验，会话数上限 3 个 |
-| Standard（买断） | $14.99 一次性 | 无限会话 + 全部核心功能 |
-| Pro（订阅） | $4.99 / 年 | Standard 全部 + iCloud 同步 + 高级主题 + 优先支持 |
 
 ---
 
