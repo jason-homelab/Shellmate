@@ -461,14 +461,19 @@
 
 // MARK: - 菜单栏（CommandMenu / CommandGroup / Dock）
 "视图" = "View";
+"工具" = "Tools";
+"设置..." = "Settings...";
 "新建窗口" = "New Window";
 "连接选中会话" = "Connect Selected Session";
 "断开当前连接" = "Disconnect Current";
 "断开所有连接" = "Disconnect All";
+"导入会话..." = "Import Sessions...";
+"导出会话..." = "Export Sessions...";
 "浅色模式" = "Light Mode";
 "深色模式" = "Dark Mode";
 "切换侧边栏" = "Toggle Sidebar";
 "聚焦搜索" = "Focus Search";
+"呼出 / 隐藏 Hotkey 终端" = "Toggle Hotkey Terminal";
 "下一个标签页" = "Next Tab";
 "上一个标签页" = "Previous Tab";
 "标签页 %d" = "Tab %d";

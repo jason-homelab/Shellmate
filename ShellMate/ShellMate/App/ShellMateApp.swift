@@ -104,7 +104,7 @@ struct ShellMateApp: App {
             }
         }
 
-        // ── View 菜单：注入系统已有 View 菜单 ────────────────────────────────
+        // ── View 菜单：仅保留外观 + 视图显隐操作 ────────────────────────────
         CommandGroup(after: .toolbar) {
             Divider()
 
@@ -132,7 +132,39 @@ struct ShellMateApp: App {
 
             Divider()
 
-            // 字体大小调整（视觉外观操作，归属 View 菜单而非 Terminal）
+            Button("切换侧边栏") {
+                NotificationCenter.default.post(name: .toggleSidebarRequested, object: nil)
+            }
+            .keyboardShortcut("s", modifiers: [.command, .control])
+
+            // ⌘⌥L 替代原 ⌘L，避免与 Safari/Finder 等应用的"定位"快捷键语义冲突
+            Button("聚焦搜索") {
+                NotificationCenter.default.post(name: .focusSidebarSearchRequested, object: nil)
+            }
+            .keyboardShortcut("l", modifiers: [.command, .option])
+
+            Divider()
+
+            Button("呼出 / 隐藏 Hotkey 终端") {
+                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
+            }
+        }
+
+        // ── 终端 菜单（终端操作 + 字体 + 标签页切换）────────────────────────
+        CommandMenu("终端") {
+            Button("清屏") {
+                NotificationCenter.default.post(name: .clearTerminalRequested, object: nil)
+            }
+            .keyboardShortcut("k", modifiers: .command)
+
+            // ⌘⌥F 替代原 ⌘F，避免与系统 Edit > Find（⌘F）静默冲突
+            Button("搜索") {
+                NotificationCenter.default.post(name: .searchTerminalRequested, object: nil)
+            }
+            .keyboardShortcut("f", modifiers: [.command, .option])
+
+            Divider()
+
             Button("增大字体") {
                 NotificationCenter.default.post(name: .increaseFontRequested, object: nil)
             }
@@ -147,26 +179,6 @@ struct ShellMateApp: App {
                 NotificationCenter.default.post(name: .resetFontRequested, object: nil)
             }
             .keyboardShortcut("0", modifiers: .command)
-
-            Divider()
-
-            Button("切换侧边栏") {
-                NotificationCenter.default.post(name: .toggleSidebarRequested, object: nil)
-            }
-            .keyboardShortcut("s", modifiers: [.command, .control])
-
-            // ⌘⌥L 替代原 ⌘L，避免与 Safari/Finder 等应用的"定位"快捷键语义冲突
-            Button("聚焦搜索") {
-                NotificationCenter.default.post(name: .focusSidebarSearchRequested, object: nil)
-            }
-            .keyboardShortcut("l", modifiers: [.command, .option])
-
-            Divider()
-
-            // Hotkey 终端属于全局视图切换，语义上归属 View 而非 会话
-            Button("呼出 / 隐藏 Hotkey 终端") {
-                NotificationCenter.default.post(name: .hotkeyWindowToggleRequested, object: nil)
-            }
 
             Divider()
 
@@ -190,21 +202,6 @@ struct ShellMateApp: App {
                 }
                 .keyboardShortcut(KeyEquivalent(Character("\(index)")), modifiers: .command)
             }
-        }
-
-        // ── 终端 菜单（仅保留纯终端操作）────────────────────────────────────
-        // 工具面板类条目（SFTP / 隧道 / 快捷命令）已移至「工具」菜单
-        CommandMenu("终端") {
-            Button("清屏") {
-                NotificationCenter.default.post(name: .clearTerminalRequested, object: nil)
-            }
-            .keyboardShortcut("k", modifiers: .command)
-
-            // ⌘⌥F 替代原 ⌘F，避免与系统 Edit > Find（⌘F）静默冲突
-            Button("搜索") {
-                NotificationCenter.default.post(name: .searchTerminalRequested, object: nil)
-            }
-            .keyboardShortcut("f", modifiers: [.command, .option])
         }
 
         // ── 工具 菜单（面板入口统一归类）────────────────────────────────────
