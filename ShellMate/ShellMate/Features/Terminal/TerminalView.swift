@@ -307,6 +307,7 @@ struct TerminalView: View {
         ))
         .modifier(TerminalViewNotificationModifier(
             sessionId: session.id,
+            isSelected: isSelected,
             controller: controller,
             showSearch: $showSearch,
             fontSize: $sessionFontSize,
@@ -1081,6 +1082,7 @@ struct TerminalView: View {
 private struct TerminalViewNotificationModifier: ViewModifier {
 
     let sessionId: UUID
+    let isSelected: Bool
     let controller: TerminalController
     @Binding var showSearch: Bool
     @Binding var fontSize: Double
@@ -1101,10 +1103,12 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             }
             // 面板控制
             .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
+                guard isSelected else { return }
                 onToggleSFTP()
                 panels.showSFTPPanel = controller.isSFTPPanelOpen
             }
             .onReceive(NotificationCenter.default.publisher(for: .aiPanelRequested)) { _ in
+                guard isSelected else { return }
                 withAnimation(.easeInOut(duration: 0.2)) {
                     isAIPanelOpen.toggle()
                     if !isAIPanelOpen { aiInitialError = nil }
@@ -1112,13 +1116,16 @@ private struct TerminalViewNotificationModifier: ViewModifier {
                 panels.showAIPanel = isAIPanelOpen
             }
             .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
+                guard isSelected else { return }
                 withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
             }
-            // 终端控制
+            // 终端控制（仅作用于当前活跃 Tab，其余 Tab 的 TerminalView 虽然存活在 ZStack 中也不响应）
             .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in
+                guard isSelected else { return }
                 controller.clearTerminal()
             }
             .onReceive(NotificationCenter.default.publisher(for: .searchTerminalRequested)) { _ in
+                guard isSelected else { return }
                 withAnimation { showSearch.toggle() }
             }
             .onReceive(NotificationCenter.default.publisher(for: .increaseFontRequested)) { _ in
@@ -1130,9 +1137,10 @@ private struct TerminalViewNotificationModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .resetFontRequested)) { _ in
                 fontSize = 13
             }
-            // 脚本库：将脚本内容逐行发送到终端
+            // 脚本库：将脚本内容逐行发送到活跃终端
             .onReceive(NotificationCenter.default.publisher(for: .runScriptRequested)) { notification in
-                guard let (content, _) = AppEvent.extractRunScript(from: notification) else { return }
+                guard isSelected,
+                      let (content, _) = AppEvent.extractRunScript(from: notification) else { return }
                 Task {
                     let lines = content.components(separatedBy: "\n")
                     for line in lines {
