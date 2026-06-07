@@ -23,6 +23,12 @@ struct SessionFormSheet: View {
 
     @State private var cancelHovered: Bool = false
 
+    // MARK: - W4 新增：测试连接状态（解 UE-P0#2）
+
+    @State private var preflightResult: PreflightResult?
+    @State private var preflightRunning: Bool = false
+    @State private var showPreflightPanel: Bool = false
+
     // MARK: - 颜色常量
 
     private let labelColor = DesignTokens.Colors.textPrimary
@@ -230,6 +236,32 @@ struct SessionFormSheet: View {
                 }
             }
 
+            // W4 新增：测试连接按钮（解 UE-P0#2）
+            Button(action: runPreflight) {
+                HStack(spacing: 6) {
+                    if preflightRunning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        AppIcon.connect.image.font(.system(size: 12))
+                    }
+                    Text(preflightRunning ? "测试中…" : "测试连接")
+                }
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .frame(height: 36)
+                .padding(.horizontal, 14)
+                .background(DesignTokens.Colors.glassLight)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(preflightRunning || vm.host.isEmpty)
+            .opacity((preflightRunning || vm.host.isEmpty) ? 0.5 : 1.0)
+            .help("不打开会话，先验证主机连通性 (DNS / TCP / SSH)")
+
             Spacer()
 
             // Figma 11:33: bg-[rgba(0,0,0,0.05)] h-[36px] w-[80px] rounded-[8px] text-[#6e6e73]
@@ -260,6 +292,44 @@ struct SessionFormSheet: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.vertical, DesignTokens.Spacing.lg)
+        .overlay(alignment: .top) {
+            // W4 新增：Preflight 结果浮层（覆盖底部按钮上方）
+            if showPreflightPanel {
+                PreflightProgressView(result: preflightResult, isRunning: preflightRunning)
+                    .frame(maxWidth: 420)
+                    .padding(.bottom, 4)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                    .offset(y: -76)
+            }
+        }
+    }
+
+    // MARK: - W4 新增：触发 Preflight
+
+    private func runPreflight() {
+        let host = vm.host.trimmingCharacters(in: .whitespaces)
+        guard !host.isEmpty else { return }
+        let portValue = Int(vm.port) ?? 22
+
+        preflightRunning = true
+        showPreflightPanel = true
+        preflightResult = nil
+
+        Task {
+            let result = await ConnectionPreflightService.shared.preflight(
+                host: host,
+                port: portValue,
+                username: vm.username,
+                authMethod: .skipAuth
+            )
+            await MainActor.run {
+                preflightResult = result
+                preflightRunning = false
+            }
+        }
     }
 
     // MARK: - 通用字段组

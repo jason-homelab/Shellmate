@@ -31,9 +31,9 @@ enum TunnelType: String, Codable, CaseIterable {
 
     var badgeColor: Color {
         switch self {
-        case .localForward:  return Color(hex: "#7AB4F5")
-        case .remoteForward: return Color(hex: "#F5C842")
-        case .dynamicSocks:  return Color(hex: "#C88AF0")
+        case .localForward:  return DesignTokens.Semantic.tunnelLocal
+        case .remoteForward: return DesignTokens.Semantic.tunnelRemote
+        case .dynamicSocks:  return DesignTokens.Semantic.tunnelSocks
         }
     }
 }

@@ -60,24 +60,31 @@ struct ContentView: View {
     // MARK: - 视图
 
     var body: some View {
-        NavigationSplitView {
-            // 侧边栏（含底部统计条，放在 NavigationSplitView 内部避免悬浮面板问题）
-            SessionSidebarView(
-                sessionStore: sessionStore,
-                groupStore: groupStore,
-                onConnect: { session in
-                    connectToSession(session)
-                }
-            )
-            .navigationSplitViewColumnWidth(
-                min: DesignTokens.Sizes.sidebarMinWidth,
-                ideal: DesignTokens.Sizes.sidebarWidth,
-                max: DesignTokens.Sizes.sidebarMaxWidth
-            )
-            // 二次兜底：在 NavigationSplitView 列级别压制 sidebar vibrancy 穿透
-            .background(DesignTokens.Colors.surfaceWindow)
-        } detail: {
-            detailArea
+        ZStack {
+            NavigationSplitView {
+                // 侧边栏（含底部统计条，放在 NavigationSplitView 内部避免悬浮面板问题）
+                SessionSidebarView(
+                    sessionStore: sessionStore,
+                    groupStore: groupStore,
+                    onConnect: { session in
+                        connectToSession(session)
+                    }
+                )
+                .navigationSplitViewColumnWidth(
+                    min: DesignTokens.Sizes.sidebarMinWidth,
+                    ideal: DesignTokens.Sizes.sidebarWidth,
+                    max: DesignTokens.Sizes.sidebarMaxWidth
+                )
+                // 二次兜底：在 NavigationSplitView 列级别压制 sidebar vibrancy 穿透
+                .background(DesignTokens.Colors.surfaceWindow)
+            } detail: {
+                detailArea
+            }
+
+            // W1 注入：Feedback Toast 全局宿主，置顶 ZStack 不阻挡底层交互
+            ToastHost()
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
         }
         // 根节点注入：替代各子视图直接访问 .shared 单例，支持测试时注入 Mock
         .environmentObject(terminalStatus)

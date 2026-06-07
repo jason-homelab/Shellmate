@@ -43,6 +43,7 @@ struct StatusDotView: View {
                 .frame(width: size, height: size)
         }
         .frame(width: size * 2.5, height: size * 2.5)
+        .a11yConnectionStatus(state.uiState)
         .onAppear {
             if state.needsAnimation {
                 startPulseAnimation()

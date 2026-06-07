@@ -28,9 +28,9 @@ struct WelcomeScreenView: View {
                 RadialGradient(
                     stops: [
                         .init(color: DesignTokens.Colors.accentPrimary.opacity(0.08), location: 0.0),
-                        .init(color: Color(hex: "#4299fd").opacity(0.31), location: 0.25),
-                        .init(color: Color(hex: "#7eb7fb").opacity(0.54), location: 0.50),
-                        .init(color: Color(hex: "#bad6f9").opacity(0.77), location: 0.75),
+                        .init(color: DesignTokens.Gradients.welcomeStart.opacity(0.31), location: 0.25),
+                        .init(color: DesignTokens.Gradients.welcomeMid.opacity(0.54), location: 0.50),
+                        .init(color: DesignTokens.Gradients.welcomeEnd.opacity(0.77), location: 0.75),
                         .init(color: DesignTokens.Colors.surfaceWindow.opacity(0.0),  location: 1.0)
                     ],
                     center: .top,

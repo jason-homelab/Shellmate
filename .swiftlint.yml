@@ -43,3 +43,56 @@ identifier_name:
     - vm
     - ip
     - s
+
+# ── W0 新增 5 条架构护栏（ADR-005 / UI Self-Review §1.2） ────────────
+
+custom_rules:
+  # 1. 禁止业务代码出现 Image(systemName:) 字面量（必须经 AppIcon）
+  raw_sf_symbol:
+    name: "Raw SF Symbol"
+    regex: 'Image\(systemName:\s*"[^"]+"\)'
+    match_kinds:
+      - identifier
+      - string
+    message: "禁止 Image(systemName:) 字面量，请使用 AppIcon.<case>.image。详见 ADR-005"
+    severity: warning
+    excluded:
+      - ".*AppIcon\\.swift"
+      - ".*Accessibility/.*"
+
+  # 2. 禁止业务代码硬编码 Color(hex:)（必须经 DesignTokens）
+  raw_hex_color:
+    name: "Raw Hex Color"
+    regex: 'Color\(hex:\s*"#[0-9a-fA-F]{3,8}"\)'
+    message: "禁止 Color(hex:) 字面量，请使用 DesignTokens.Colors.* 或 Semantic/Gradient namespace"
+    severity: warning
+    excluded:
+      - ".*DesignTokens\\+.*"
+      - ".*Color\\+Hex\\.swift"
+
+  # 3. 禁止裸 .accessibilityLabel(literal)（必须经 AccessibilityCatalog）
+  raw_a11y_label:
+    name: "Raw Accessibility Label"
+    regex: '\.accessibilityLabel\(\s*"[^"]+"\s*\)'
+    message: "请使用 AccessibilityCatalog.<key> 或语义 modifier。详见 W1 Accessibility 模块"
+    severity: warning
+    excluded:
+      - ".*AccessibilityCatalog\\.swift"
+
+  # 4. 禁止 .easeInOut(duration:) 字面量（必须用 Animation Token）
+  raw_animation_duration:
+    name: "Raw Animation Duration"
+    regex: '\.easeInOut\(duration:\s*0?\.[0-9]+\)'
+    message: "请使用 DesignTokens.Animation.{fast|standard|medium|slow}"
+    severity: warning
+    excluded:
+      - ".*DesignTokens\\+Animation\\.swift"
+
+  # 5. TerminalView.swift 行数硬限（W5 拆分后维持）
+  terminal_view_size:
+    name: "TerminalView Size Limit"
+    regex: '^.*$'
+    included:
+      - ".*Features/Terminal/TerminalView\\.swift"
+    message: "TerminalView 必须 ≤ 300 行，超出请拆分到 Layout/Overlay/Rendering 子模块"
+    severity: warning
