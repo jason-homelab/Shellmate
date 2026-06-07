@@ -83,6 +83,8 @@ struct ContentView: View {
         .environmentObject(terminalStatus)
         .environmentObject(aiSettings)
         .environmentObject(syncStore)
+        // AppCommands 通过 @FocusedObject 读取实时 Tab 列表（动态菜单）
+        .focusedObject(tabBarStore)
         .navigationTitle("ShellMate")
         .toolbar {
             toolbarContent
