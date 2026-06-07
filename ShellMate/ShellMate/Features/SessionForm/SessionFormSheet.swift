@@ -203,7 +203,7 @@ struct SessionFormSheet: View {
             Spacer()
 
             Button(action: { vm.cancel() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
@@ -225,7 +225,7 @@ struct SessionFormSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(vm.validationErrors, id: \.self) { error in
                         HStack(spacing: DesignTokens.Spacing.xs) {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            AppIcon.feedbackWarn.image
                                 .font(DesignTokens.Typography.bodySmall)
                                 .foregroundColor(DesignTokens.Colors.statusError)
                             Text(error)
@@ -403,7 +403,7 @@ struct SessionFormSheet: View {
                     Button {
                         vm.refreshSerialPorts()
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        AppIcon.arrowClockwise.image
                             .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                     }

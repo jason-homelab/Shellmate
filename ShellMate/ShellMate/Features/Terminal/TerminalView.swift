@@ -768,7 +768,7 @@ struct TerminalView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
 
                     // SFTP 图标（Figma: folder.fill）
-                    Image(systemName: "folder.fill")
+                    AppIcon.folderFill.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(
                             controller.isSFTPPanelOpen
@@ -866,7 +866,7 @@ struct TerminalView: View {
 
             Button(action: connect) {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "bolt.fill")
+                    AppIcon.quickCommand.image
                     Text("连接")
                 }
                 .font(DesignTokens.Typography.labelLarge)
@@ -916,7 +916,7 @@ struct TerminalView: View {
 
     private func failedOverlay(reason: String) -> some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            AppIcon.feedbackWarn.image
                 .font(DesignTokens.Typography.heroLarge)
                 .foregroundColor(DesignTokens.Colors.statusError)
 
@@ -962,7 +962,7 @@ struct TerminalView: View {
                     showCredentialWizard = false
                     controller.needsCredentialInput = false
                 }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.bodySmallStrong)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
@@ -978,7 +978,7 @@ struct TerminalView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 // 认证方式提示
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "key.fill")
+                    AppIcon.key.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                     Text(session.authMethod == .keyboardInteractive ? "键盘交互认证" : "密码认证")

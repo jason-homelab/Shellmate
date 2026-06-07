@@ -237,7 +237,7 @@ struct TerminalStatusBarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
-                Image(systemName: "cpu")
+                AppIcon.cpu.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
@@ -284,7 +284,7 @@ struct TerminalStatusBarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentIndigo.opacity(0.10))
-                Image(systemName: "memorychip")
+                AppIcon.memory.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.accentIndigo)
             }
@@ -346,7 +346,7 @@ struct TerminalStatusBarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.statusConnecting.opacity(0.10))
-                Image(systemName: "internaldrive")
+                AppIcon.storage.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
             }
@@ -380,7 +380,7 @@ struct TerminalStatusBarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.statusConnected.opacity(0.10))
-                Image(systemName: "network")
+                AppIcon.networkIcon.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.statusConnected)
             }
@@ -414,7 +414,7 @@ struct TerminalStatusBarView: View {
 
     private var syncBadge: some View {
         HStack(spacing: DesignTokens.Spacing.nano) {
-            Image(systemName: "bolt.fill")
+            AppIcon.quickCommand.image
                 .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("同步(\(syncStore.syncCount))")
@@ -451,7 +451,7 @@ struct TerminalStatusBarView: View {
     /// W6 新增：活跃端口转发指示器（解 UE-P2#21）
     private func tunnelBadge(count: Int) -> some View {
         HStack(spacing: DesignTokens.Spacing.nano) {
-            Image(systemName: "arrow.left.arrow.right.circle.fill")
+            AppIcon.tunnel.image
                 .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Semantic.tunnelLocal)
             Text("\(count) 条隧道")
@@ -467,7 +467,7 @@ struct TerminalStatusBarView: View {
         VStack(spacing: 0) {
             // 标题行
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "macwindow")
+                AppIcon.macWindow.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                 Text("切换 tmux 窗口")
@@ -510,7 +510,7 @@ struct TerminalStatusBarView: View {
                                 Spacer()
 
                                 if window.isActive {
-                                    Image(systemName: "checkmark")
+                                    AppIcon.checkmark.image
                                         .font(DesignTokens.Typography.captionSmall)
                                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                                 }

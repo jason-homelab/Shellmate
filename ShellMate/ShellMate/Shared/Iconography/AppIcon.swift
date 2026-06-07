@@ -41,6 +41,59 @@ enum AppIcon: String, CaseIterable {
     case feedbackWarn       = "exclamationmark.triangle.fill"
     case feedbackError      = "xmark.octagon.fill"
 
+    // ── W8 扩展：通用导航 / 操作 / 状态 ─────────────────────
+    case chevronUp          = "chevron.up"
+    case chevronDown        = "chevron.down"
+    case chevronLeft        = "chevron.left"
+    case chevronRight       = "chevron.right"
+    case chevronExpand      = "chevron.up.chevron.down"
+    case arrowUp            = "arrow.up"
+    case arrowDown          = "arrow.down"
+    case arrowLeft          = "arrow.left"
+    case arrowRight         = "arrow.right"
+    case arrowClockwise     = "arrow.clockwise"
+    case plus               = "plus"
+    case minus              = "minus"
+    case checkmark          = "checkmark"
+    case pencil             = "pencil"
+    case copy               = "doc.on.doc"
+    case folder             = "folder"
+    case folderFill         = "folder.fill"
+    case folderBadgePlus    = "folder.badge.plus"
+    case lock               = "lock.fill"
+    case lockShield         = "lock.shield"
+    case key                = "key.fill"
+    case keySlash           = "key.slash"
+    case clock              = "clock"
+    case clockArrow         = "clock.arrow.circlepath"
+    case docText            = "doc.text"
+    case docTextFill        = "doc.text.fill"
+    case info               = "info.circle"
+    case warning            = "exclamationmark.triangle"
+    case shield             = "exclamationmark.shield.fill"
+    case lightbulb          = "lightbulb"
+    case link               = "link"
+    case calendar           = "calendar"
+    case desktop            = "desktopcomputer"
+    case macWindow          = "macwindow"
+    case cpu                = "cpu"
+    case memory             = "memorychip"
+    case storage            = "internaldrive"
+    case networkIcon        = "network"
+    case chartLine          = "chart.xyaxis.line"
+    case paperPlane         = "paperplane.fill"
+    case boltSlash          = "bolt.slash"
+    case playFill           = "play.fill"
+    case playRectangle      = "play.rectangle"
+    case highlighter        = "highlighter"
+    case personXmark        = "person.fill.xmark"
+    case iCloudArrow        = "arrow.clockwise.icloud"
+    case docUp              = "arrow.up.doc"
+    case zoomIn             = "plus.magnifyingglass"
+    case zoomOut            = "minus.magnifyingglass"
+    case trash              = "trash"
+    case serverRack         = "server.rack"
+
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
 
@@ -72,6 +125,19 @@ enum AppIcon: String, CaseIterable {
         case .feedbackSuccess:    return "a11y.feedback.success"
         case .feedbackWarn:       return "a11y.feedback.warn"
         case .feedbackError:      return "a11y.feedback.error"
+        // W8 扩展：装饰性图标使用通用 fallback 标签，业务侧可 override
+        case .chevronUp, .chevronDown, .chevronLeft, .chevronRight, .chevronExpand,
+             .arrowUp, .arrowDown, .arrowLeft, .arrowRight, .arrowClockwise,
+             .plus, .minus, .checkmark, .pencil, .copy,
+             .folder, .folderFill, .folderBadgePlus,
+             .lock, .lockShield, .key, .keySlash,
+             .clock, .clockArrow, .docText, .docTextFill,
+             .info, .warning, .shield, .lightbulb, .link, .calendar,
+             .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
+             .chartLine, .paperPlane, .boltSlash,
+             .playFill, .playRectangle, .highlighter, .personXmark,
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack:
+            return "icon.a11y.decorative"
         }
     }
 }

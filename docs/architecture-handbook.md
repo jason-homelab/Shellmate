@@ -229,9 +229,12 @@ DesignTokens
    - `ConnectionPreflightService` 目前仅 DNS + TCP，SSH 阶段 `.skipped`
    - 需复用 `SSHConnectionManager` 的 libssh2 桥接（独立 socket，5s 超时强制释放）
 
-5. **Image(systemName:) 全量替换为 AppIcon**
-   - SwiftLint 已埋警告
-   - 业务文件逐步迁移（约 30+ 处）
+5. **Image(systemName:) 全量替换为 AppIcon**（W8 部分完成）
+   - AppIcon enum 已扩展至 75 个 case（W8）
+   - 已迁移 ~31 处高可见度文件：StatusBar / TerminalView / SessionFormSheet /
+     AIAssistantPanel / SecuritySettingsView
+   - 剩余 ~239 处分散各业务文件，SwiftLint raw_sf_symbol 持续守护
+   - 后续 PR 按文件迁移即可，AppIcon 已覆盖 75 个常用 SF Symbol
 
 6. **Feedback Action handler 全量接入**
    - 5 类 handler（retry / editCredentials / acceptHostKey / testNetwork / openSettings）

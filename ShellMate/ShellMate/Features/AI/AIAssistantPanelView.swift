@@ -71,7 +71,7 @@ struct AIAssistantPanelView: View {
                     .fill(DesignTokens.Gradients.aiGradient)
                     .frame(width: 36, height: 36)
                     .shadow(color: DesignTokens.Colors.accentAI.opacity(0.35), radius: 8, x: 0, y: 3)
-                Image(systemName: "sparkles")
+                AppIcon.ai.image
                     .font(DesignTokens.Typography.labelLargeMid)
                     .foregroundColor(.white)
             }
@@ -95,7 +95,7 @@ struct AIAssistantPanelView: View {
             .buttonStyle(.plain)
             .help("新对话")
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
@@ -140,7 +140,7 @@ struct AIAssistantPanelView: View {
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .lineLimit(1)
-                Image(systemName: "chevron.up.chevron.down")
+                AppIcon.chevronExpand.image
                     .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -205,7 +205,7 @@ struct AIAssistantPanelView: View {
     private var quickSuggestionsView: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "lightbulb").font(DesignTokens.Typography.captionLarge)
+                AppIcon.lightbulb.image.font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
                 Text("快速建议").font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
@@ -234,13 +234,13 @@ struct AIAssistantPanelView: View {
     private func errorBanner(_ msg: String) -> some View {
         VStack(spacing: DesignTokens.Spacing.xs) {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "exclamationmark.triangle").font(DesignTokens.Typography.captionLarge)
+                AppIcon.warning.image.font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
                 Text(msg).font(DesignTokens.Typography.captionLarge).foregroundColor(DesignTokens.Colors.statusError)
                     .lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button { vm.errorMessage = nil; vm.canRetry = false } label: {
-                    Image(systemName: "xmark").font(DesignTokens.Typography.captionMedium).foregroundColor(DesignTokens.Colors.textTertiary)
+                    AppIcon.close.image.font(DesignTokens.Typography.captionMedium).foregroundColor(DesignTokens.Colors.textTertiary)
                 }.buttonStyle(.plain)
             }
             if vm.canRetry {
@@ -426,7 +426,7 @@ struct AIMessageBubbleView: View {
                         Circle().fill(DesignTokens.Gradients.aiGradient)
                             .frame(width: 32, height: 32)
                             .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 1)
-                        Image(systemName: "sparkles").font(DesignTokens.Typography.labelLarge).foregroundColor(.white)
+                        AppIcon.ai.image.font(DesignTokens.Typography.labelLarge).foregroundColor(.white)
                     }
                     VStack(alignment: .leading, spacing: 0) {
                         if isStreaming && message.content.isEmpty {
@@ -533,7 +533,7 @@ struct AIPrivacyConsentView: View {
                             startPoint: .topLeading, endPoint: .bottomTrailing
                         ))
                         .frame(width: 60, height: 60)
-                    Image(systemName: "sparkles").font(DesignTokens.Typography.displayMedium).foregroundColor(.white)
+                    AppIcon.ai.image.font(DesignTokens.Typography.displayMedium).foregroundColor(.white)
                 }
                 Text("AI 助手数据说明")
                     .font(DesignTokens.Typography.labelXLarge)
