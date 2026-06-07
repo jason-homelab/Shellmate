@@ -276,10 +276,10 @@ struct ContentView: View {
             if !hasLaunchedBefore {
                 WelcomeScreenView(
                     onDismiss: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                     },
                     onCreateSession: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                         // 等待欢迎屏淡出动画完成后再打开表单，避免 overlay + sheet 同时出现
                         Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 350_000_000)
@@ -287,7 +287,7 @@ struct ContentView: View {
                         }
                     },
                     onImportConfiguration: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                         Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 350_000_000)
                             panels.openSheet { panels.showImportExportDialog = true }

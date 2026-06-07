@@ -48,7 +48,7 @@ struct TerminalTabView: View {
             // 关闭按钮：仅 hover 时淡入（平滑过渡）
             closeButton
                 .opacity(isHovering ? 1 : 0)
-                .animation(.easeInOut(duration: 0.15), value: isHovering)
+                .animation(DesignTokens.Animation.fast, value: isHovering)
         }
         // Figma 9:5：px-leading 14px，tab h-[32px]，maxW 140px
         .padding(.leading, 14)
@@ -69,7 +69,7 @@ struct TerminalTabView: View {
         .contentShape(Rectangle())
         .onTapGesture { onSelect() }
         .onHover { isHovering = $0 }
-        .animation(.easeInOut(duration: 0.30), value: tab.connectionState)
+        .animation(DesignTokens.Animation.medium, value: tab.connectionState)
         .help(tab.title)
         .accessibilityLabel(tab.title)
         .accessibilityHint(isSelected ? "当前标签页" : "切换到此标签页")

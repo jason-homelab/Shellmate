@@ -439,7 +439,7 @@ private struct TunnelTableRow: View {
         .padding(.horizontal, 20)
         .frame(height: 52)
         .background(isHovering ? Color.black.opacity(0.025) : Color.clear)
-        .animation(.easeInOut(duration: 0.12), value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
         .onTapGesture { onEdit() }

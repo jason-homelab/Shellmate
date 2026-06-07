@@ -217,14 +217,14 @@ struct HighlightSettingsView: View {
             }
             .frame(width: 60, alignment: .trailing)
             .opacity(hoveredRuleId == rule.id ? 1 : 0.4)
-            .animation(.easeInOut(duration: 0.12), value: hoveredRuleId == rule.id)
+            .animation(DesignTokens.Animation.hover, value: hoveredRuleId == rule.id)
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
         .frame(height: 38)
         .background(hoveredRuleId == rule.id
             ? DesignTokens.Colors.surfacePanel
             : Color.clear)
-        .animation(.easeInOut(duration: 0.12), value: hoveredRuleId == rule.id)
+        .animation(DesignTokens.Animation.hover, value: hoveredRuleId == rule.id)
         .onHover { hovering in
             hoveredRuleId = hovering ? rule.id : nil
         }

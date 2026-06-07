@@ -423,7 +423,7 @@ struct TerminalView: View {
                             errorText: errText,
                             onAnalyze: { text in
                                 aiInitialError = text
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(DesignTokens.Animation.standard) {
                                     isAIPanelOpen = true
                                 }
                                 controller.clearDetectedError()

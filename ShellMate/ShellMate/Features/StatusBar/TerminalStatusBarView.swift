@@ -32,6 +32,11 @@ struct TerminalStatusBarView: View {
     /// 点击指标区域的回调（打开服务器监控面板）
     var onMetricsTap: (() -> Void)? = nil
 
+    /// W6：活跃端口转发数（解 UE-P2#21）
+    var activeTunnelCount: Int = 0
+    /// W6：点击"隧道运行中"指示器的回调（打开 TunnelManagerView）
+    var onTunnelTap: (() -> Void)? = nil
+
     /// W12.6：观察同步输入状态
     @EnvironmentObject private var syncStore: SyncInputStore
 
@@ -52,7 +57,7 @@ struct TerminalStatusBarView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.30), value: connectionState == .connected)
+        .animation(DesignTokens.Animation.medium, value: connectionState == .connected)
         .frame(height: DesignTokens.Sizes.statusBarHeight)
         // Figma 9:24: bg-[rgba(245,245,247,0.95)]
         .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
@@ -139,6 +144,14 @@ struct TerminalStatusBarView: View {
             }
 
             if syncStore.isActive { syncBadge }
+
+            // W6 新增：隧道运行指示器（仅在有活跃隧道时显示，解 UE-P2#21）
+            if activeTunnelCount > 0 {
+                tunnelBadge(count: activeTunnelCount)
+                    .contentShape(Rectangle().inset(by: -6))
+                    .onTapGesture { onTunnelTap?() }
+                    .help("\(activeTunnelCount) 条端口转发运行中，点击管理")
+            }
 
             Spacer(minLength: 0)
 
@@ -250,7 +263,7 @@ struct TerminalStatusBarView: View {
                     }
                 }
                 .frame(height: 12)
-                .animation(.easeInOut(duration: 0.3), value: cpuHistory.count)
+                .animation(DesignTokens.Animation.medium, value: cpuHistory.count)
             }
         }
     }
@@ -432,6 +445,18 @@ struct TerminalStatusBarView: View {
             Text("tmux[\(count)]")
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
+        }
+    }
+
+    /// W6 新增：活跃端口转发指示器（解 UE-P2#21）
+    private func tunnelBadge(count: Int) -> some View {
+        HStack(spacing: DesignTokens.Spacing.nano) {
+            Image(systemName: "arrow.left.arrow.right.circle.fill")
+                .font(DesignTokens.Typography.captionSmall)
+                .foregroundColor(DesignTokens.Semantic.tunnelLocal)
+            Text("\(count) 条隧道")
+                .font(DesignTokens.Typography.labelSmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
         }
     }
 
