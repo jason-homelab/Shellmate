@@ -85,6 +85,11 @@ struct ContentView: View {
             ToastHost()
                 .allowsHitTesting(false)
                 .ignoresSafeArea()
+
+            // W7 注入：FeedbackCenter.banner(.global) 渲染宿主
+            // 含 Action 按钮组，需要 hitTesting
+            BannerHost(slot: .global)
+                .ignoresSafeArea()
         }
         // 根节点注入：替代各子视图直接访问 .shared 单例，支持测试时注入 Mock
         .environmentObject(terminalStatus)

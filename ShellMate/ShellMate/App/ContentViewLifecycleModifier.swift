@@ -44,6 +44,17 @@ struct ContentViewLifecycleModifier: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .closeTabRequested)) { _ in
                 if let tab = tabBarStore.selectedTab { tabBarStore.requestCloseTab(tab) }
             }
+            // W7 横切层通电 #3：⌘⇧T 恢复最近关闭的 Tab
+            .onReceive(NotificationCenter.default.publisher(for: .reopenLastClosedTabRequested)) { _ in
+                if let restored = tabBarStore.reopenLastClosedTab() {
+                    FeedbackCenter.shared.present(.info(
+                        "已恢复标签页",
+                        message: LocalizedStringKey(restored.title)
+                    ))
+                } else {
+                    FeedbackCenter.shared.present(.info("无最近关闭的标签页"))
+                }
+            }
             .onReceive(NotificationCenter.default.publisher(for: .nextTabRequested)) { _ in
                 tabBarStore.selectNextTab()
             }

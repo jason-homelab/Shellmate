@@ -163,6 +163,31 @@ struct TerminalView: View {
     /// SFTP 双栏面板宽度（使用设计令牌 sftpPanelWidth）
     @State private var sftpPanelWidth: CGFloat = DesignTokens.Sizes.sftpPanelWidth
 
+    // MARK: - W7 横切层通电 #2：ConnectionStateOverlay 桥接
+
+    /// 是否曾连接过（用于区分"初始 disconnected"与"已连接后掉线"）
+    @State private var hasEverConnected: Bool = false
+
+    /// 派生自 controller.state 的 W2 状态机表示，仅供 Overlay 使用
+    /// 现有 .failed Sheet 不变，Overlay 仅承担 disconnected 重连 UX
+    private var derivedTerminalState: TerminalConnectionState {
+        switch controller.state {
+        case .disconnected:
+            return hasEverConnected
+                ? .disconnected(reason: .networkLost)
+                : .idle
+        case .connecting:
+            return .connecting(stage: .handshake)
+        case .connected:
+            return .connected(since: controller.connectedAt ?? Date())
+        case .reconnecting(let attempt):
+            return .reconnecting(attempt: attempt, maxAttempts: 5)
+        case .failed:
+            // .failed 沿用现有 Sheet 路径，Overlay 不参与
+            return .idle
+        }
+    }
+
     // MARK: - 初始化
 
     init(session: Session, isSelected: Bool = true) {
@@ -250,6 +275,26 @@ struct TerminalView: View {
                 connectionErrorMessage = reason
                 showConnectionError = true
             }
+            // W7：跟踪是否曾连接过，供 ConnectionStateOverlay 判定是否显示重连按钮
+            if case .connected = newState { hasEverConnected = true }
+        }
+        // W7 横切层通电 #2：在 disconnected 后挂出 ConnectionStateOverlay
+        // .failed 仍走原 Sheet 路径，二者互斥（derivedTerminalState 已在 .failed 返回 .idle）
+        .overlay {
+            ConnectionStateOverlay(
+                state: derivedTerminalState,
+                onReconnect: {
+                    Task { @MainActor in connect() }
+                },
+                onCancel: {
+                    // 用户主动取消重连引导，不主动断连，仅隐藏 overlay（标记 idle）
+                    hasEverConnected = false
+                },
+                onEditCredentials: {
+                    // 未来接 AI/Settings 入口；先用 Toast 占位提示
+                    FeedbackCenter.shared.present(.info("请前往会话编辑修改凭据"))
+                }
+            )
         }
         .sheet(isPresented: $showConnectionError) {
             ConnectionErrorView(
@@ -1049,8 +1094,24 @@ struct TerminalView: View {
                 do {
                     try await controller.openSFTPPanel()
                 } catch {
+                    // 保留原 Alert 路径（向后兼容），同时叠加 W7 Feedback Banner
+                    // 含 retry Action：演示横切层通电 #4 错误恢复路径
                     sftpErrorMessage = error.localizedDescription
                     showSFTPError = true
+                    FeedbackCenter.shared.present(.error(
+                        "SFTP 连接失败",
+                        message: LocalizedStringKey(error.localizedDescription),
+                        actions: [
+                            .retry { @MainActor in
+                                do {
+                                    try await controller.openSFTPPanel()
+                                } catch {
+                                    AppLogger.sftp.warning("SFTP retry failed: \(error.localizedDescription, privacy: .public)")
+                                }
+                            }
+                        ],
+                        bannerSlot: .global
+                    ))
                 }
             }
         }

@@ -328,7 +328,38 @@ struct SessionFormSheet: View {
             await MainActor.run {
                 preflightResult = result
                 preflightRunning = false
+                // 横切层通电 #1：触发 Feedback Toast
+                fireFeedbackForPreflight(result, host: host)
             }
+        }
+    }
+
+    /// W7：根据 Preflight 结果触发 FeedbackCenter Toast
+    /// - 成功 → success Toast（含耗时）
+    /// - 失败 → warn Toast（仅简要提示，详细建议保留在 PreflightProgressView 内）
+    private func fireFeedbackForPreflight(_ result: PreflightResult, host: String) {
+        switch result.summary {
+        case .success:
+            FeedbackCenter.shared.present(.success(
+                "连接测试成功",
+                message: "总耗时 \(result.totalElapsedMs)ms"
+            ))
+        case .failedAt(let stage, _):
+            FeedbackCenter.shared.present(.warn(
+                "测试失败：\(stageName(stage))",
+                message: "详细原因见下方诊断"
+            ))
+        case .cancelled:
+            break
+        }
+    }
+
+    private func stageName(_ stage: PreflightStage) -> String {
+        switch stage {
+        case .dns:       return "DNS 解析"
+        case .tcp:       return "TCP 建联"
+        case .handshake: return "SSH 握手"
+        case .auth:      return "身份认证"
         }
     }
 

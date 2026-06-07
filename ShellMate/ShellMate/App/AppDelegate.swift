@@ -196,6 +196,8 @@ extension Notification.Name {
     static let nextTabRequested = Notification.Name("nextTabRequested")
     static let previousTabRequested = Notification.Name("previousTabRequested")
     static let selectTabRequested = Notification.Name("selectTabRequested")
+    /// W7 横切层通电 #3：⌘⇧T 恢复最近关闭的 Tab
+    static let reopenLastClosedTabRequested = Notification.Name("reopenLastClosedTabRequested")
 
     // 终端操作
     static let clearTerminalRequested = Notification.Name("clearTerminalRequested")

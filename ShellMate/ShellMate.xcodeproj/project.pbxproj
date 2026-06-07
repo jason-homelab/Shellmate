@@ -231,6 +231,7 @@
 		B27EBDC060E301C3EBFBB261 /* ConnectionStateOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D575AEECEB49512B5BB185 /* ConnectionStateOverlay.swift */; };
 		B26CC0BA5336282A98A0EF6D /* PasteGuardOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E0724C67AB39A8B5A7BE01 /* PasteGuardOverlay.swift */; };
 		B2B6ED3EA6ECE2342C913796 /* PasteGuardAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1928BA08DFBB1210B20CF3B /* PasteGuardAnalyzer.swift */; };
+		B4FA3DAD943FCE3522021456 /* BannerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37B8C4485BDE35368642CA1 /* BannerHost.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -486,6 +487,7 @@
 		B1D575AEECEB49512B5BB185 /* ConnectionStateOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStateOverlay.swift; sourceTree = "<group>"; };
 		B1E0724C67AB39A8B5A7BE01 /* PasteGuardOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteGuardOverlay.swift; sourceTree = "<group>"; };
 		B1928BA08DFBB1210B20CF3B /* PasteGuardAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteGuardAnalyzer.swift; sourceTree = "<group>"; };
+		B37B8C4485BDE35368642CA1 /* BannerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BannerHost.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1148,6 +1150,7 @@
 		B02F4349FE7BE2692D8EEE7B /* Feedback */ = {
 			isa = PBXGroup;
 			children = (
+				B37B8C4485BDE35368642CA1 /* BannerHost.swift */,
 				B1511D0F5F523806C83A325F /* FeedbackAction.swift */,
 				B19117418BEE80DB61567E87 /* FeedbackEvent.swift */,
 				B1FE4B692807B97905431233 /* FeedbackCenter.swift */,
@@ -1306,6 +1309,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4FA3DAD943FCE3522021456 /* BannerHost.swift in Sources */,
 				B27EBDC060E301C3EBFBB261 /* ConnectionStateOverlay.swift in Sources */,
 				B26CC0BA5336282A98A0EF6D /* PasteGuardOverlay.swift in Sources */,
 				B2B6ED3EA6ECE2342C913796 /* PasteGuardAnalyzer.swift in Sources */,

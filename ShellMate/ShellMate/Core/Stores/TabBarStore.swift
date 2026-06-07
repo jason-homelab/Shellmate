@@ -20,6 +20,11 @@ final class TabBarStore: ObservableObject {
     /// 待关闭的标签页
     @Published var tabToClose: TerminalTab?
 
+    /// W7 横切层通电 #3：最近关闭 Tab 栈（解 UE-P0#3 ⌘⇧T 恢复）
+    /// 仅保留最近 10 项，按 LIFO 弹出
+    @Published private(set) var recentlyClosedTabs: [TerminalTab] = []
+    private static let recentlyClosedMaxSize = 10
+
     // MARK: - 计算属性
 
     /// 当前选中的标签页
@@ -85,7 +90,31 @@ final class TabBarStore: ObservableObject {
             }
         }
 
+        // W7：记入最近关闭栈，供 ⌘⇧T 恢复
+        pushRecentlyClosed(tab)
         tabs.remove(at: index)
+    }
+
+    /// W7 横切层通电 #3：恢复最近关闭的 Tab（⌘⇧T）
+    /// - Returns: 恢复的 Tab；栈空时返回 nil
+    @discardableResult
+    func reopenLastClosedTab() -> TerminalTab? {
+        guard let last = recentlyClosedTabs.popLast() else { return nil }
+        // 防御：若同一会话已重新打开，则不重复添加
+        if !hasTab(for: last.sessionId) {
+            tabs.append(last)
+            selectedTabId = last.id
+        } else {
+            selectedTabId = tab(for: last.sessionId)?.id
+        }
+        return last
+    }
+
+    private func pushRecentlyClosed(_ tab: TerminalTab) {
+        recentlyClosedTabs.append(tab)
+        if recentlyClosedTabs.count > Self.recentlyClosedMaxSize {
+            recentlyClosedTabs.removeFirst(recentlyClosedTabs.count - Self.recentlyClosedMaxSize)
+        }
     }
 
     /// 请求关闭标签页（带确认）

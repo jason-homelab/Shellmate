@@ -51,6 +51,13 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .closeTabRequested, object: nil)
             }
             .keyboardShortcut("w", modifiers: .command)
+
+            // W7 横切层通电 #3：恢复最近关闭的标签页（解 UE-P0#3）
+            Button("恢复最近关闭的标签页") {
+                NotificationCenter.default.post(name: .reopenLastClosedTabRequested, object: nil)
+            }
+            .keyboardShortcut("t", modifiers: [.command, .shift])
+            .disabled(tabBarStore?.recentlyClosedTabs.isEmpty ?? true)
         }
 
         // ── 会话 菜单 ───────────────────────────────────────────────────────
