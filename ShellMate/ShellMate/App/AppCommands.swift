@@ -140,6 +140,14 @@ struct AppCommands: Commands {
 
         // ── 工具 菜单 ───────────────────────────────────────────────────────
         CommandMenu("工具") {
+            // W8：命令面板 ⌘K — 在 ShellMate 内搜索所有功能（解 UE-P0#5）
+            Button("命令面板…") {
+                NotificationCenter.default.post(name: .toggleCommandPaletteRequested, object: nil)
+            }
+            .keyboardShortcut("k", modifiers: .command)
+
+            Divider()
+
             Button("SFTP 文件管理器") {
                 NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             }

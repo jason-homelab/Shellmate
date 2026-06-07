@@ -90,6 +90,10 @@ struct ContentView: View {
             // 含 Action 按钮组，需要 hitTesting
             BannerHost(slot: .global)
                 .ignoresSafeArea()
+
+            // W8 注入：⌘K Command Palette 全局宿主
+            CommandPaletteHost()
+                .ignoresSafeArea()
         }
         // 根节点注入：替代各子视图直接访问 .shared 单例，支持测试时注入 Mock
         .environmentObject(terminalStatus)
