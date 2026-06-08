@@ -293,6 +293,13 @@ struct SessionFormSheet: View {
         .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.vertical, DesignTokens.Spacing.lg)
         .overlay(alignment: .top) {
+            // 自评 P1#7：sessionForm slot Banner Host，覆盖表单顶部
+            // 用于表单内 inline 错误恢复（独立于 Preflight 浮层）
+            BannerHost(slot: .sessionForm)
+                .padding(.top, 4)
+                .allowsHitTesting(true)
+        }
+        .overlay(alignment: .top) {
             // W4 新增：Preflight 结果浮层（覆盖底部按钮上方）
             if showPreflightPanel {
                 PreflightProgressView(result: preflightResult, isRunning: preflightRunning)

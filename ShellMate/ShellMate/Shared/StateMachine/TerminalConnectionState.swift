@@ -79,8 +79,10 @@ enum TerminalConnectionState: UIState {
         case (.reconnecting, .authSucceeded):
             self = .connected(since: Date())
 
-        case (.reconnecting(let n, let max), .failed) where n >= max:
-            self = .failed(reason: .unknown)
+        // P1#5 单测暴露的 bug：原代码在 reconnecting 达 max 时丢弃实际 reason 改为 .unknown
+        // 修正：保留事件中携带的真实 reason，便于诊断与 UI 展示
+        case (.reconnecting(let n, let max), .failed(let reason)) where n >= max:
+            self = .failed(reason: reason)
 
         case (_, .failed(let reason)):
             self = .failed(reason: reason)

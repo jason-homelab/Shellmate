@@ -146,11 +146,33 @@ enum AppIcon: String, CaseIterable {
 
 extension AppIcon {
 
+    /// 装饰类图标（无独立语义，仅视觉点缀），VoiceOver 应跳过
+    /// 自评 P1#6：替代原"统一 fallback label"方案，更符合 a11y 标准
+    var isDecorative: Bool {
+        switch self {
+        case .chevronUp, .chevronDown, .chevronLeft, .chevronRight, .chevronExpand,
+             .arrowUp, .arrowDown, .arrowLeft, .arrowRight, .arrowClockwise,
+             .plus, .minus, .checkmark, .pencil, .copy,
+             .folder, .folderFill, .folderBadgePlus,
+             .lock, .lockShield, .key, .keySlash,
+             .clock, .clockArrow, .docText, .docTextFill,
+             .info, .warning, .shield, .lightbulb, .link, .calendar,
+             .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
+             .chartLine, .paperPlane, .boltSlash,
+             .playFill, .playRectangle, .highlighter, .personXmark,
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// 渲染普通图标
+    /// 装饰类自动 .accessibilityHidden(true)，语义类绑定 label
     func render(size: CGFloat = 17, weight: Font.Weight = .regular) -> some View {
         image
             .font(.system(size: size, weight: weight))
-            .accessibilityLabel(a11yLabel)
+            .modifier(SemanticOrHidden(label: a11yLabel, hidden: isDecorative))
     }
 
     /// 渲染 AI 渐变填充版本
@@ -158,7 +180,7 @@ extension AppIcon {
         image
             .font(.system(size: size, weight: .regular))
             .foregroundStyle(DesignTokens.Gradients.aiIcon)
-            .accessibilityLabel(a11yLabel)
+            .modifier(SemanticOrHidden(label: a11yLabel, hidden: isDecorative))
     }
 
     /// 渲染状态点（特殊小尺寸）
@@ -166,6 +188,20 @@ extension AppIcon {
         image
             .font(.system(size: size, weight: .semibold))
             .foregroundColor(color)
-            .accessibilityLabel(a11yLabel)
+            .modifier(SemanticOrHidden(label: a11yLabel, hidden: isDecorative))
+    }
+}
+
+/// 自评 P1#6：根据是否装饰类，决定 a11yLabel 或 hidden
+private struct SemanticOrHidden: ViewModifier {
+    let label: LocalizedStringKey
+    let hidden: Bool
+
+    func body(content: Content) -> some View {
+        if hidden {
+            content.accessibilityHidden(true)
+        } else {
+            content.accessibilityLabel(label)
+        }
     }
 }

@@ -170,12 +170,22 @@ struct TerminalView: View {
 
     /// 派生自 controller.state 的 W2 状态机表示，仅供 Overlay 使用
     /// 现有 .failed Sheet 不变，Overlay 仅承担 disconnected 重连 UX
+    /// 自评 P1#9 修正：用 controller.lastDisconnectReason 区分用户主动 vs 网络丢失
     private var derivedTerminalState: TerminalConnectionState {
         switch controller.state {
         case .disconnected:
-            return hasEverConnected
-                ? .disconnected(reason: .networkLost)
-                : .idle
+            guard hasEverConnected else { return .idle }
+            // 用户主动断开 → 不弹 overlay 引导重连（语义上是用户预期的断开）
+            // 网络/服务器异常断开 → 弹 overlay 引导重连
+            let reason: TerminalConnectionState.DisconnectReason
+            switch controller.lastDisconnectReason {
+            case .userInitiated: reason = .userInitiated
+            case .networkLost:   reason = .networkLost
+            case .serverClosed:  reason = .serverClosed
+            case .idleTimeout:   reason = .idleTimeout
+            case .unknown:       reason = .networkLost  // 默认按网络丢失处理（引导重连）
+            }
+            return .disconnected(reason: reason)
         case .connecting:
             return .connecting(stage: .handshake)
         case .connected:

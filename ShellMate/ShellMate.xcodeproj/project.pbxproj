@@ -127,6 +127,7 @@
 		FF060004 /* GroupRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050004 /* GroupRepositoryTests.swift */; };
 		FF060005 /* SessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050005 /* SessionStoreTests.swift */; };
 		FF060006 /* GroupStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050006 /* GroupStoreTests.swift */; };
+		AB10010001000000000000A2 /* TerminalConnectionStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB10010001000000000000A1 /* TerminalConnectionStateTests.swift */; };
 		FF060099 /* FeatureIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050099 /* FeatureIntegrationTests.swift */; };
 		FF060101 /* TabBarStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050101 /* TabBarStoreTests.swift */; };
 		FF060102 /* SessionLogStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF050102 /* SessionLogStoreTests.swift */; };
@@ -384,6 +385,7 @@
 		FF050004 /* GroupRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupRepositoryTests.swift; sourceTree = "<group>"; };
 		FF050005 /* SessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoreTests.swift; sourceTree = "<group>"; };
 		FF050006 /* GroupStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoreTests.swift; sourceTree = "<group>"; };
+		AB10010001000000000000A1 /* TerminalConnectionStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalConnectionStateTests.swift; sourceTree = "<group>"; };
 		FF050099 /* FeatureIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureIntegrationTests.swift; sourceTree = "<group>"; };
 		FF050101 /* TabBarStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarStoreTests.swift; sourceTree = "<group>"; };
 		FF050102 /* SessionLogStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStoreTests.swift; sourceTree = "<group>"; };
@@ -1020,6 +1022,7 @@
 			children = (
 				FF050005 /* SessionStoreTests.swift */,
 				FF050006 /* GroupStoreTests.swift */,
+				AB10010001000000000000A1 /* TerminalConnectionStateTests.swift */,
 				FF050101 /* TabBarStoreTests.swift */,
 				FF050102 /* SessionLogStoreTests.swift */,
 				FF050103 /* HighlightEngineTests.swift */,
@@ -1538,6 +1541,7 @@
 				FF060004 /* GroupRepositoryTests.swift in Sources */,
 				FF060005 /* SessionStoreTests.swift in Sources */,
 				FF060006 /* GroupStoreTests.swift in Sources */,
+				AB10010001000000000000A2 /* TerminalConnectionStateTests.swift in Sources */,
 				FF060101 /* TabBarStoreTests.swift in Sources */,
 				FF060103 /* HighlightEngineTests.swift in Sources */,
 				FF060104 /* SessionFormatParserTests.swift in Sources */,
