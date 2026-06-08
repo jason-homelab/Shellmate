@@ -781,3 +781,140 @@
 "⌘⌥1 / 2 / 3 快速切换" = "⌘⌥1 / 2 / 3 Quick Switch";
 "%d 已连接" = "%d Connected";
 "共 %d 个" = "%d Total";
+
+// ── W0-W8 horizontal layer architecture additions（P0#1） ─────
+
+// a11y status dot
+"a11y.status.connected" = "Connected";
+"a11y.status.connecting" = "Connecting";
+"a11y.status.disconnected" = "Disconnected";
+"a11y.status.error" = "Error";
+"a11y.status.connected.hint" = "Session is currently connected";
+"a11y.status.connecting.hint" = "Establishing connection, please wait";
+"a11y.status.disconnected.hint" = "Session is not connected";
+"a11y.status.error.hint" = "A connection error occurred";
+
+// a11y tabs
+"a11y.tab.selected" = "Currently selected tab";
+"a11y.tab.unselected" = "Switch to this tab";
+"a11y.tab.close" = "Close tab";
+"a11y.tab.activity" = "Tab has activity";
+
+// a11y AI chat
+"a11y.chat.user" = "User message";
+"a11y.chat.assistant" = "Assistant reply";
+"a11y.chat.system" = "System message";
+"a11y.chat.codeblock" = "Code block";
+
+// a11y Feedback
+"a11y.feedback.toast" = "Notification";
+"a11y.feedback.banner" = "Banner notification";
+"a11y.feedback.close" = "Close";
+
+// a11y toolbar
+"a11y.toolbar.connect" = "Connect current session";
+"a11y.toolbar.disconnect" = "Disconnect current session";
+"a11y.toolbar.ai" = "AI Assistant";
+"a11y.toolbar.tools" = "Tools menu";
+"a11y.toolbar.command_palette" = "Open Command Palette";
+
+// AppIcon a11y labels
+"icon.a11y.connect" = "Connect";
+"icon.a11y.disconnect" = "Disconnect";
+"icon.a11y.new_session" = "New Session";
+"icon.a11y.ai" = "AI Assistant";
+"icon.a11y.script" = "Script";
+"icon.a11y.sftp" = "File Transfer";
+"icon.a11y.split" = "Split";
+"icon.a11y.tmux" = "Tmux Manager";
+"icon.a11y.tunnel" = "Port Forwarding";
+"icon.a11y.log" = "Log";
+"icon.a11y.recording" = "Recording";
+"icon.a11y.quick_command" = "Quick Command";
+"icon.a11y.command_palette" = "Command Palette";
+"icon.a11y.search" = "Search";
+"icon.a11y.settings" = "Settings";
+"icon.a11y.close" = "Close";
+"icon.a11y.dismiss" = "Dismiss";
+"icon.a11y.decorative" = ""; // decorative, skipped by VoiceOver
+
+// Feedback Action labels
+"feedback.action.retry" = "Retry";
+"feedback.action.edit_credentials" = "Edit Credentials";
+"feedback.action.accept_host_key" = "Accept & Continue";
+"feedback.action.test_network" = "Test Network";
+"feedback.action.open_settings" = "Open Settings";
+"feedback.action.dismiss" = "Got It";
+
+// Preflight stages
+"preflight.stage.dns" = "Resolve Hostname";
+"preflight.stage.tcp" = "TCP Connection";
+"preflight.stage.handshake" = "SSH Handshake";
+"preflight.stage.auth" = "Authentication";
+
+// Preflight errors
+"preflight.error.dns" = "DNS resolution failed";
+"preflight.error.tcp_timeout" = "TCP connection timed out";
+"preflight.error.tcp_refused" = "Connection refused";
+"preflight.error.handshake" = "SSH handshake failed";
+"preflight.error.auth" = "Authentication failed";
+"preflight.error.unknown" = "Unknown error";
+
+// Preflight suggestions
+"preflight.suggest.check_host" = "Verify the hostname spelling";
+"preflight.suggest.check_dns" = "Check your DNS settings or network";
+"preflight.suggest.check_firewall" = "Check that the firewall allows this port";
+"preflight.suggest.check_port" = "Verify the port number is correct";
+"preflight.suggest.check_service_running" = "Verify the remote service is running";
+"preflight.suggest.check_ssh_service" = "Verify the remote SSH service is started";
+"preflight.suggest.check_protocol_version" = "Verify SSH protocol version compatibility";
+"preflight.suggest.check_username" = "Verify the username is correct";
+"preflight.suggest.check_password" = "Verify the password is correct";
+"preflight.suggest.check_key_permissions" = "Verify the private key file has 600 permissions";
+"preflight.suggest.retry" = "Please retry shortly";
+
+// Terminal connection stages
+"terminal.stage.dns" = "Resolving DNS...";
+"terminal.stage.tcp" = "TCP handshake...";
+"terminal.stage.handshake" = "SSH handshake...";
+"terminal.stage.auth" = "Authenticating...";
+
+// Capability categories
+"capability.category.connection" = "Connection";
+"capability.category.ai" = "AI";
+"capability.category.files" = "Files";
+"capability.category.productivity" = "Productivity";
+"capability.category.monitoring" = "Monitoring";
+"capability.category.system" = "System";
+
+// Capability titles
+"capability.ai.title" = "Open AI Assistant";
+"capability.command_palette.title" = "Command Palette";
+"capability.sftp.title" = "SFTP File Manager";
+"capability.tunnel.title" = "Port Forwarding Manager";
+
+// SettingsIndex
+"settings.tab.general" = "General";
+"settings.tab.appearance" = "Appearance";
+"settings.tab.terminal" = "Terminal";
+"settings.tab.ai" = "AI Assistant";
+"settings.tab.automation" = "Automation";
+"settings.tab.highlight" = "Highlighting";
+"settings.tab.security" = "Security";
+"settings.tab.icloud" = "iCloud Sync";
+"settings.general.default_protocol" = "Default Connection Protocol";
+"settings.general.notifications" = "Notifications";
+"settings.appearance.theme" = "Color Theme";
+"settings.appearance.font" = "Font & Size";
+"settings.appearance.cursor_blink" = "Cursor Blink";
+"settings.appearance.ligatures" = "Ligatures";
+"settings.appearance.transparency" = "Background Transparency";
+"settings.terminal.default_font_size" = "Default Font Size";
+"settings.terminal.scrollback" = "Scrollback Lines";
+"settings.terminal.meta_key" = "Option as Meta Key";
+"settings.terminal.keepalive" = "Keepalive Interval";
+"settings.ai.model" = "AI Model";
+"settings.ai.api_key" = "API Key";
+"settings.security.host_keys" = "Known Host Keys";
+"settings.security.passwords" = "Password Manager";
+"settings.icloud.sync_status" = "Sync Status";

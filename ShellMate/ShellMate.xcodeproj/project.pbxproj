@@ -218,8 +218,6 @@
 		B43DCF4EB1B379E5B3F6C7C0 /* DesignTokens+TypographyMono.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4BBC6A43B1A2712A15036 /* DesignTokens+TypographyMono.swift */; };
 		B22F2EE4357A16064BA1C368 /* UIState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C7B690D370C8EC18957969 /* UIState.swift */; };
 		B29B9BE2E6132B05FCD1ABDC /* TerminalConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1CAEDCFDF7FE837545130BC /* TerminalConnectionState.swift */; };
-		B26B1B3C0FD879986E9B26E8 /* TabLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D2C0E307A080C2D685DB3E /* TabLifecycleState.swift */; };
-		B2B9CF202623E7ADD62D3529 /* MinorStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = B113B67295C654D4372DB472 /* MinorStates.swift */; };
 		B2E0692B6EAD3C5EBF8D3BF1 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F9CC16DC50BA3676A567D8 /* AppIcon.swift */; };
 		B2439BEE73EFAD68F9D573CE /* CapabilityRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14DE9E1C15E7C51F5E30868 /* CapabilityRegistry.swift */; };
 		B49A5754EB181FAC03BB8B3A /* CapabilityBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3876D8AB4818B520D1D9926 /* CapabilityBootstrap.swift */; };
@@ -478,8 +476,6 @@
 		B3C4BBC6A43B1A2712A15036 /* DesignTokens+TypographyMono.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+TypographyMono.swift"; sourceTree = "<group>"; };
 		B1C7B690D370C8EC18957969 /* UIState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIState.swift; sourceTree = "<group>"; };
 		B1CAEDCFDF7FE837545130BC /* TerminalConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalConnectionState.swift; sourceTree = "<group>"; };
-		B1D2C0E307A080C2D685DB3E /* TabLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabLifecycleState.swift; sourceTree = "<group>"; };
-		B113B67295C654D4372DB472 /* MinorStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinorStates.swift; sourceTree = "<group>"; };
 		B1F9CC16DC50BA3676A567D8 /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B14DE9E1C15E7C51F5E30868 /* CapabilityRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapabilityRegistry.swift; sourceTree = "<group>"; };
 		B3876D8AB4818B520D1D9926 /* CapabilityBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CapabilityBootstrap.swift"; sourceTree = "<group>"; };
@@ -1174,8 +1170,6 @@
 			children = (
 				B1C7B690D370C8EC18957969 /* UIState.swift */,
 				B1CAEDCFDF7FE837545130BC /* TerminalConnectionState.swift */,
-				B1D2C0E307A080C2D685DB3E /* TabLifecycleState.swift */,
-				B113B67295C654D4372DB472 /* MinorStates.swift */,
 			);
 			path = StateMachine;
 			sourceTree = "<group>";
@@ -1347,8 +1341,6 @@
 				B2439BEE73EFAD68F9D573CE /* CapabilityRegistry.swift in Sources */,
 				B22F2EE4357A16064BA1C368 /* UIState.swift in Sources */,
 				B29B9BE2E6132B05FCD1ABDC /* TerminalConnectionState.swift in Sources */,
-				B26B1B3C0FD879986E9B26E8 /* TabLifecycleState.swift in Sources */,
-				B2B9CF202623E7ADD62D3529 /* MinorStates.swift in Sources */,
 				B2C82DF20FC73CC6B60CDE30 /* AccessibilityCatalog.swift in Sources */,
 				B246D7C67F7A603E34EDE3F2 /* AccessibilityModifiers.swift in Sources */,
 				B2373AB8C826A0990BF2DBDB /* FeedbackAction.swift in Sources */,

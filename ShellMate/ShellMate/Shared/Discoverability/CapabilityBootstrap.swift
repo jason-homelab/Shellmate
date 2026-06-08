@@ -11,6 +11,7 @@ enum CapabilityBootstrap {
         let r = CapabilityRegistry.shared
 
         // AI 助手（卖点高亮）
+        // 自评 P0#3：复用已存在的 .aiPanelRequested（TerminalView 已订阅）
         r.register(Capability(
             id: "ai.assistant",
             title: "capability.ai.title",
@@ -20,25 +21,11 @@ enum CapabilityBootstrap {
             searchTokens: ["ai", "assistant", "AI助手", "智能", "claude"],
             isAvailable: { true },
             action: {
-                NotificationCenter.default.post(name: .toggleAIAssistant, object: nil)
+                NotificationCenter.default.post(name: .aiPanelRequested, object: nil)
             }
         ))
 
-        // 命令面板自指（meta）
-        r.register(Capability(
-            id: "system.command_palette",
-            title: "capability.command_palette.title",
-            category: .system,
-            icon: .commandPalette,
-            shortcut: .init(key: "K", modifiers: "⌘"),
-            searchTokens: ["command", "palette", "命令", "搜索"],
-            isAvailable: { true },
-            action: {
-                NotificationCenter.default.post(name: .toggleCommandPalette, object: nil)
-            }
-        ))
-
-        // SFTP 文件浏览
+        // SFTP 文件浏览（复用已存在的 .sftpPanelRequested，已有 ContentViewLifecycleModifier 订阅）
         r.register(Capability(
             id: "files.sftp",
             title: "capability.sftp.title",
@@ -48,11 +35,11 @@ enum CapabilityBootstrap {
             searchTokens: ["sftp", "files", "文件传输", "上传", "下载"],
             isAvailable: { true },
             action: {
-                NotificationCenter.default.post(name: .toggleSFTP, object: nil)
+                NotificationCenter.default.post(name: .sftpPanelRequested, object: nil)
             }
         ))
 
-        // 端口转发
+        // 端口转发（复用已存在的 .tunnelManagerRequested）
         r.register(Capability(
             id: "network.tunnel",
             title: "capability.tunnel.title",
@@ -62,17 +49,14 @@ enum CapabilityBootstrap {
             searchTokens: ["tunnel", "forward", "端口转发", "socks"],
             isAvailable: { true },
             action: {
-                NotificationCenter.default.post(name: .toggleTunnelManager, object: nil)
+                NotificationCenter.default.post(name: .tunnelManagerRequested, object: nil)
             }
         ))
+
+        // 自评 P0#3：移除 system.command_palette 自指 capability
+        // 用户在 palette 内选择"命令面板"会触发 toggle 关闭，UX 死循环
     }
 }
 
-// MARK: - Notification names
-
-extension Notification.Name {
-    static let toggleAIAssistant     = Notification.Name("shellmate.toggleAIAssistant")
-    static let toggleCommandPalette  = Notification.Name("shellmate.toggleCommandPalette")
-    static let toggleSFTP            = Notification.Name("shellmate.toggleSFTP")
-    static let toggleTunnelManager   = Notification.Name("shellmate.toggleTunnelManager")
-}
+// 自评 P0#3：原 toggleAIAssistant / toggleSFTP / toggleTunnelManager 三个
+// 无订阅者的通知已删除。Capability action 全部改用已存在的真实通知。

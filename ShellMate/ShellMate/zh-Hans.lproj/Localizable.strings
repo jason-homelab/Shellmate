@@ -780,3 +780,140 @@
 "⌘⌥1 / 2 / 3 快速切换" = "⌘⌥1 / 2 / 3 快速切换";
 "%d 已连接" = "%d 已连接";
 "共 %d 个" = "共 %d 个";
+
+// ── W0-W8 横切层架构新增 key（自评 P0#1 补全） ─────────────
+
+// a11y 状态点（StatusDotView / SessionRowView）
+"a11y.status.connected" = "已连接";
+"a11y.status.connecting" = "连接中";
+"a11y.status.disconnected" = "已断开";
+"a11y.status.error" = "错误";
+"a11y.status.connected.hint" = "会话当前已建立连接";
+"a11y.status.connecting.hint" = "正在建立连接，请稍候";
+"a11y.status.disconnected.hint" = "会话当前未连接";
+"a11y.status.error.hint" = "连接发生错误";
+
+// a11y 标签页
+"a11y.tab.selected" = "当前选中的标签页";
+"a11y.tab.unselected" = "切换到此标签页";
+"a11y.tab.close" = "关闭标签页";
+"a11y.tab.activity" = "标签页有活动";
+
+// a11y AI 对话气泡
+"a11y.chat.user" = "用户消息";
+"a11y.chat.assistant" = "助手回复";
+"a11y.chat.system" = "系统消息";
+"a11y.chat.codeblock" = "代码块";
+
+// a11y Feedback
+"a11y.feedback.toast" = "提示消息";
+"a11y.feedback.banner" = "横幅通知";
+"a11y.feedback.close" = "关闭";
+
+// a11y 工具栏
+"a11y.toolbar.connect" = "连接当前会话";
+"a11y.toolbar.disconnect" = "断开当前会话";
+"a11y.toolbar.ai" = "AI 助手";
+"a11y.toolbar.tools" = "工具菜单";
+"a11y.toolbar.command_palette" = "打开命令面板";
+
+// AppIcon a11y label（含装饰性图标统一占位）
+"icon.a11y.connect" = "连接";
+"icon.a11y.disconnect" = "断开";
+"icon.a11y.new_session" = "新建会话";
+"icon.a11y.ai" = "AI 助手";
+"icon.a11y.script" = "脚本";
+"icon.a11y.sftp" = "文件传输";
+"icon.a11y.split" = "分屏";
+"icon.a11y.tmux" = "Tmux 管理";
+"icon.a11y.tunnel" = "端口转发";
+"icon.a11y.log" = "日志";
+"icon.a11y.recording" = "录制";
+"icon.a11y.quick_command" = "快捷命令";
+"icon.a11y.command_palette" = "命令面板";
+"icon.a11y.search" = "搜索";
+"icon.a11y.settings" = "设置";
+"icon.a11y.close" = "关闭";
+"icon.a11y.dismiss" = "忽略";
+"icon.a11y.decorative" = ""; // 装饰图标，VoiceOver 跳过
+
+// Feedback Action 按钮文案
+"feedback.action.retry" = "重试";
+"feedback.action.edit_credentials" = "重新输入密码";
+"feedback.action.accept_host_key" = "接受并继续";
+"feedback.action.test_network" = "检查网络";
+"feedback.action.open_settings" = "打开设置";
+"feedback.action.dismiss" = "知道了";
+
+// Preflight 阶段名
+"preflight.stage.dns" = "解析主机名";
+"preflight.stage.tcp" = "建立 TCP 连接";
+"preflight.stage.handshake" = "SSH 协议握手";
+"preflight.stage.auth" = "用户身份认证";
+
+// Preflight 错误
+"preflight.error.dns" = "DNS 解析失败";
+"preflight.error.tcp_timeout" = "TCP 连接超时";
+"preflight.error.tcp_refused" = "目标端口拒绝连接";
+"preflight.error.handshake" = "SSH 握手失败";
+"preflight.error.auth" = "身份认证失败";
+"preflight.error.unknown" = "未知错误";
+
+// Preflight 建议
+"preflight.suggest.check_host" = "请确认主机名拼写正确";
+"preflight.suggest.check_dns" = "请检查本机 DNS 设置或切换网络";
+"preflight.suggest.check_firewall" = "请检查防火墙是否放行该端口";
+"preflight.suggest.check_port" = "请确认端口号是否正确";
+"preflight.suggest.check_service_running" = "请确认远端服务正在运行";
+"preflight.suggest.check_ssh_service" = "请确认远端 SSH 服务已启动";
+"preflight.suggest.check_protocol_version" = "请确认 SSH 协议版本兼容";
+"preflight.suggest.check_username" = "请确认用户名是否正确";
+"preflight.suggest.check_password" = "请确认密码是否正确";
+"preflight.suggest.check_key_permissions" = "请确认私钥文件权限为 600";
+"preflight.suggest.retry" = "请稍后重试";
+
+// Terminal 连接阶段（W2 状态机）
+"terminal.stage.dns" = "DNS 解析中...";
+"terminal.stage.tcp" = "TCP 握手中...";
+"terminal.stage.handshake" = "SSH 握手中...";
+"terminal.stage.auth" = "认证中...";
+
+// Capability 类目
+"capability.category.connection" = "连接";
+"capability.category.ai" = "AI";
+"capability.category.files" = "文件";
+"capability.category.productivity" = "生产力";
+"capability.category.monitoring" = "监控";
+"capability.category.system" = "系统";
+
+// Capability 标题（CapabilityBootstrap 注册）
+"capability.ai.title" = "打开 AI 助手";
+"capability.command_palette.title" = "命令面板";
+"capability.sftp.title" = "SFTP 文件管理器";
+"capability.tunnel.title" = "端口转发管理器";
+
+// SettingsIndex 索引项（17 项）
+"settings.tab.general" = "通用";
+"settings.tab.appearance" = "外观";
+"settings.tab.terminal" = "终端";
+"settings.tab.ai" = "AI 助手";
+"settings.tab.automation" = "自动化";
+"settings.tab.highlight" = "关键词高亮";
+"settings.tab.security" = "安全";
+"settings.tab.icloud" = "iCloud 同步";
+"settings.general.default_protocol" = "默认连接协议";
+"settings.general.notifications" = "通知设置";
+"settings.appearance.theme" = "颜色主题";
+"settings.appearance.font" = "字体与字号";
+"settings.appearance.cursor_blink" = "光标闪烁";
+"settings.appearance.ligatures" = "连字（Ligatures）";
+"settings.appearance.transparency" = "背景透明度";
+"settings.terminal.default_font_size" = "默认字号";
+"settings.terminal.scrollback" = "滚回历史行数";
+"settings.terminal.meta_key" = "Option 作为 Meta 键";
+"settings.terminal.keepalive" = "心跳保活间隔";
+"settings.ai.model" = "AI 模型";
+"settings.ai.api_key" = "API 密钥";
+"settings.security.host_keys" = "已知主机密钥";
+"settings.security.passwords" = "密码管理";
+"settings.icloud.sync_status" = "同步状态";

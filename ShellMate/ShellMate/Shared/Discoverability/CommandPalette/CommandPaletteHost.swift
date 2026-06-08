@@ -12,10 +12,7 @@ struct CommandPaletteHost: View {
             .onReceive(NotificationCenter.default.publisher(for: .toggleCommandPaletteRequested)) { _ in
                 store.toggle()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .toggleCommandPalette)) { _ in
-                // W3 CapabilityBootstrap 注册的 system.command_palette Capability
-                // 会发送此 Notification（CapabilityBootstrap 内的 action）
-                store.toggle()
-            }
+            // 自评 P0#3：自指 system.command_palette capability 已移除，
+            // 因此不再需要订阅 .toggleCommandPalette
     }
 }
