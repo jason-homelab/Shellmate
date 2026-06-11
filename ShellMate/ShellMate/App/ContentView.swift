@@ -206,6 +206,13 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
             panels.openSheet { panels.showLogPanel = true }
         }
+        // W9：Capability action 路由（CapabilityBootstrap 扩展同步）
+        .onReceive(NotificationCenter.default.publisher(for: .scriptLibraryRequested)) { _ in
+            panels.openSheet { panels.showScriptPanel = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .recordingDialogRequested)) { _ in
+            panels.openSheet { panels.showRecordingDialog = true }
+        }
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）

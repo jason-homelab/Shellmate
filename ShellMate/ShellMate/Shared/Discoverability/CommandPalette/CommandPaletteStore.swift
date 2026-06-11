@@ -10,9 +10,29 @@ final class CommandPaletteStore: ObservableObject {
     @Published var isVisible: Bool = false
     @Published var query: String = ""
     @Published var selectedIndex: Int = 0
-    @Published var recentlyUsedIds: [String] = []
+    @Published var recentlyUsedIds: [String] = [] {
+        didSet { persistRecentlyUsed() }
+    }
 
     private static let maxRecent = 5
+    private static let recentKey = "shellmate.commandPalette.recentlyUsed"
+
+    init() {
+        loadRecentlyUsed()
+    }
+
+    // MARK: - 持久化（W9 增强：@UserDefaults，跨会话保留）
+
+    private func loadRecentlyUsed() {
+        guard let arr = UserDefaults.standard.array(forKey: Self.recentKey) as? [String] else { return }
+        // didSet 不可在 init 中触发对 @Published 的回写，绕过 didSet 直接 set _backing
+        // SwiftUI 在 init 期间可以安全直接赋值
+        self.recentlyUsedIds = arr
+    }
+
+    private func persistRecentlyUsed() {
+        UserDefaults.standard.set(recentlyUsedIds, forKey: Self.recentKey)
+    }
 
     var filteredCapabilities: [Capability] {
         let registry = CapabilityRegistry.shared

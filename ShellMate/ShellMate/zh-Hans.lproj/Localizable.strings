@@ -917,3 +917,10 @@
 "settings.security.host_keys" = "已知主机密钥";
 "settings.security.passwords" = "密码管理";
 "settings.icloud.sync_status" = "同步状态";
+
+// ── W9 Capability 标题扩展 ─────────────────────────
+"capability.tmux.title" = "Tmux 管理器";
+"capability.quick_command.title" = "快捷命令";
+"capability.script.title" = "脚本库";
+"capability.recording.title" = "会话录制";
+"capability.logs.title" = "日志面板";

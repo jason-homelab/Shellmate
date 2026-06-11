@@ -918,3 +918,10 @@
 "settings.security.host_keys" = "Known Host Keys";
 "settings.security.passwords" = "Password Manager";
 "settings.icloud.sync_status" = "Sync Status";
+
+// ── W9 Capability title extensions ─────────────────
+"capability.tmux.title" = "Tmux Manager";
+"capability.quick_command.title" = "Quick Commands";
+"capability.script.title" = "Script Library";
+"capability.recording.title" = "Session Recording";
+"capability.logs.title" = "Log Panel";

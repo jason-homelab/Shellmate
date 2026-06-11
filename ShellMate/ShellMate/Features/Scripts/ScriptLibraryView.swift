@@ -119,7 +119,7 @@ struct ScriptLibraryView: View {
                     showEditorSheet = true
                 } label: {
                     HStack {
-                        Image(systemName: "plus")
+                        AppIcon.plus.image
                             .font(DesignTokens.Typography.bodySmallStrong)
                         Text("New Script")
                             .font(DesignTokens.Typography.labelLarge)
@@ -199,7 +199,7 @@ struct ScriptLibraryView: View {
                     .fill(Color.orange)
                     .frame(width: 28, height: 28)
                 // FileCode 图标（对齐 Figma-Spec-v2 §14 更新：Code2 → FileCode）
-                Image(systemName: "doc.text.fill")
+                AppIcon.docTextFill.image
                     .font(DesignTokens.Typography.titleSmall)
                     .foregroundColor(.white)
             }
@@ -208,7 +208,7 @@ struct ScriptLibraryView: View {
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 20, height: 20)
@@ -268,7 +268,7 @@ struct ScriptLibraryView: View {
 
                 if script.isScheduled {
                     HStack(spacing: DesignTokens.Spacing.nano) {
-                        Image(systemName: "clock")
+                        AppIcon.clock.image
                             .font(DesignTokens.Typography.captionSmall)
                         Text("Scheduled")
                             .font(DesignTokens.Typography.captionMedium)
@@ -357,7 +357,7 @@ struct ScriptLibraryView: View {
                             .controlSize(.small)
                             .tint(.white)
                     } else {
-                        Image(systemName: "play.fill")
+                        AppIcon.playFill.image
                             .font(DesignTokens.Typography.bodySmall)
                     }
                     Text(isRunning ? "Running..." : "Run Script")
@@ -378,7 +378,7 @@ struct ScriptLibraryView: View {
                 showEditorSheet = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.micro) {
-                    Image(systemName: "pencil")
+                    AppIcon.pencil.image
                         .font(DesignTokens.Typography.bodySmall)
                     Text("Edit")
                         .font(DesignTokens.Typography.bodyMedium)
@@ -401,7 +401,7 @@ struct ScriptLibraryView: View {
                 showScheduleAlert = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.micro) {
-                    Image(systemName: "calendar")
+                    AppIcon.calendar.image
                         .font(DesignTokens.Typography.bodySmall)
                     Text("Schedule")
                         .font(DesignTokens.Typography.bodyMedium)
@@ -422,7 +422,7 @@ struct ScriptLibraryView: View {
             Button {
                 store.duplicateScript(script)
             } label: {
-                Image(systemName: "doc.on.doc")
+                AppIcon.copy.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .frame(width: 32, height: 32)
                     .background(Color(NSColor.controlBackgroundColor))
@@ -441,7 +441,7 @@ struct ScriptLibraryView: View {
                 pendingDeleteId = script.id
                 showDeleteConfirm = true
             } label: {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .frame(width: 32, height: 32)
                     .background(Color(NSColor.controlBackgroundColor))
@@ -559,7 +559,7 @@ struct ScriptLibraryView: View {
 
     private var emptyDetailState: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "chevron.left.forwardslash.chevron.right")
+            AppIcon.script.image
                 .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("从左侧选择一个脚本")

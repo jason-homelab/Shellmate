@@ -93,6 +93,7 @@ enum AppIcon: String, CaseIterable {
     case zoomOut            = "minus.magnifyingglass"
     case trash              = "trash"
     case serverRack         = "server.rack"
+    case xmarkCircle        = "xmark.circle"
 
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
@@ -136,7 +137,7 @@ enum AppIcon: String, CaseIterable {
              .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
              .chartLine, .paperPlane, .boltSlash,
              .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack:
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle:
             return "icon.a11y.decorative"
         }
     }
@@ -160,7 +161,7 @@ extension AppIcon {
              .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
              .chartLine, .paperPlane, .boltSlash,
              .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack:
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle:
             return true
         default:
             return false

@@ -224,6 +224,10 @@ extension Notification.Name {
 
     // 全局 UI 操作
     static let settingsRequested = Notification.Name("settingsRequested")
+
+    /// 后续 Capability 注册新增（W9 扩展）
+    static let scriptLibraryRequested    = Notification.Name("scriptLibraryRequested")
+    static let recordingDialogRequested  = Notification.Name("recordingDialogRequested")
     static let scriptPanelRequested = Notification.Name("scriptPanelRequested")
 
     // Hotkey Window（任务 13.8）

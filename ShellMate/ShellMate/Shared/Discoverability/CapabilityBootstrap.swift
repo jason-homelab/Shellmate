@@ -53,6 +53,78 @@ enum CapabilityBootstrap {
             }
         ))
 
+        // ── W9 扩展：5 项新能力 ─────────────────────────────
+
+        // Tmux 管理（复用 .tmuxManagerRequested）
+        r.register(Capability(
+            id: "productivity.tmux",
+            title: "capability.tmux.title",
+            category: .productivity,
+            icon: .tmux,
+            shortcut: .init(key: "M", modifiers: "⌘⇧"),
+            searchTokens: ["tmux", "session", "window", "复用", "终端会话"],
+            isAvailable: { true },
+            action: {
+                NotificationCenter.default.post(name: .tmuxManagerRequested, object: nil)
+            }
+        ))
+
+        // 快捷命令
+        r.register(Capability(
+            id: "productivity.quick_command",
+            title: "capability.quick_command.title",
+            category: .productivity,
+            icon: .quickCommand,
+            shortcut: .init(key: "K", modifiers: "⌘⇧"),
+            searchTokens: ["quick", "command", "snippet", "快捷", "片段", "模板"],
+            isAvailable: { true },
+            action: {
+                NotificationCenter.default.post(name: .quickCommandsRequested, object: nil)
+            }
+        ))
+
+        // 脚本自动化
+        r.register(Capability(
+            id: "productivity.script_library",
+            title: "capability.script.title",
+            category: .productivity,
+            icon: .script,
+            shortcut: nil,
+            searchTokens: ["script", "automation", "脚本", "自动化"],
+            isAvailable: { true },
+            action: {
+                NotificationCenter.default.post(name: .scriptLibraryRequested, object: nil)
+            }
+        ))
+
+        // 录制对话
+        r.register(Capability(
+            id: "productivity.recording",
+            title: "capability.recording.title",
+            category: .productivity,
+            icon: .recording,
+            shortcut: nil,
+            searchTokens: ["recording", "录制", "回放", "session record"],
+            isAvailable: { true },
+            action: {
+                NotificationCenter.default.post(name: .recordingDialogRequested, object: nil)
+            }
+        ))
+
+        // 日志面板
+        r.register(Capability(
+            id: "monitoring.logs",
+            title: "capability.logs.title",
+            category: .monitoring,
+            icon: .log,
+            shortcut: .init(key: "L", modifiers: "⌘⌥"),
+            searchTokens: ["log", "logs", "日志", "panel", "面板"],
+            isAvailable: { true },
+            action: {
+                NotificationCenter.default.post(name: .logPanelRequested, object: nil)
+            }
+        ))
+
         // 自评 P0#3：移除 system.command_palette 自指 capability
         // 用户在 palette 内选择"命令面板"会触发 toggle 关闭，UX 死循环
     }
