@@ -213,6 +213,8 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .recordingDialogRequested)) { _ in
             panels.openSheet { panels.showRecordingDialog = true }
         }
+        // Phase 4：连接 Banner / Overlay → 编辑会话路径（独立 modifier 避免类型推导超时）
+        .modifier(EditSessionRequestedHandler(sessionStore: sessionStore))
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
@@ -551,6 +553,22 @@ struct ContentView: View {
         .transition(.opacity.animation(.easeInOut(duration: 0.2)))
     }
 
+}
+
+// MARK: - Phase 4：编辑会话 Notification ViewModifier
+// 抽离自 ContentView body 以避免 SwiftUI 类型推导超时
+
+private struct EditSessionRequestedHandler: ViewModifier {
+    @ObservedObject var sessionStore: SessionStore
+
+    func body(content: Content) -> some View {
+        content.onReceive(NotificationCenter.default.publisher(for: .editSessionRequested)) { notification in
+            guard let sessionId = notification.userInfo?["sessionId"] as? UUID,
+                  let session = sessionStore.sessions.first(where: { $0.id == sessionId })
+            else { return }
+            sessionStore.showEditSessionForm(for: session)
+        }
+    }
 }
 
 // MARK: - 预览

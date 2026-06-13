@@ -228,6 +228,9 @@ extension Notification.Name {
     /// 后续 Capability 注册新增（W9 扩展）
     static let scriptLibraryRequested    = Notification.Name("scriptLibraryRequested")
     static let recordingDialogRequested  = Notification.Name("recordingDialogRequested")
+
+    /// Phase 4：连接 Banner → 编辑当前会话（含凭据）
+    static let editSessionRequested      = Notification.Name("editSessionRequested")
     static let scriptPanelRequested = Notification.Name("scriptPanelRequested")
 
     // Hotkey Window（任务 13.8）

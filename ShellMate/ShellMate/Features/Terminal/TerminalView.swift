@@ -307,8 +307,12 @@ struct TerminalView: View {
                     hasEverConnected = false
                 },
                 onEditCredentials: {
-                    // 未来接 AI/Settings 入口；先用 Toast 占位提示
-                    FeedbackCenter.shared.present(.info("请前往会话编辑修改凭据"))
+                    // Phase 4：真接入 — 触发 SessionStore 编辑当前会话
+                    NotificationCenter.default.post(
+                        name: .editSessionRequested,
+                        object: nil,
+                        userInfo: ["sessionId": session.id]
+                    )
                 }
             )
         }
@@ -1123,6 +1127,24 @@ struct TerminalView: View {
                                     try await controller.openSFTPPanel()
                                 } catch {
                                     AppLogger.sftp.warning("SFTP retry failed: \(error.localizedDescription, privacy: .public)")
+                                }
+                            },
+                            // Phase 4：testNetwork 真接入 — 触发 Preflight DNS+TCP 检查
+                            .testNetwork { @MainActor in
+                                let result = await ConnectionPreflightService.shared.preflight(
+                                    host: session.host, port: Int(session.port),
+                                    username: session.username, authMethod: .skipAuth
+                                )
+                                if case .success = result.summary {
+                                    FeedbackCenter.shared.present(.success(
+                                        "网络可达",
+                                        message: "DNS + TCP 检查通过，问题可能在远端 SFTP 子系统"
+                                    ))
+                                } else {
+                                    FeedbackCenter.shared.present(.warn(
+                                        "网络层异常",
+                                        message: "测试连接面板可看详细原因"
+                                    ))
                                 }
                             }
                         ],
