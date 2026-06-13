@@ -335,7 +335,7 @@ struct TerminalSearchBar: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 搜索图标
-            Image(systemName: "magnifyingglass")
+            AppIcon.search.image
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
@@ -389,7 +389,7 @@ struct TerminalSearchBar: View {
 
             // 上一个
             Button(action: { onPrevious?() }) {
-                Image(systemName: "chevron.up")
+                AppIcon.chevronUp.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
@@ -399,7 +399,7 @@ struct TerminalSearchBar: View {
 
             // 下一个
             Button(action: { onNext?() }) {
-                Image(systemName: "chevron.down")
+                AppIcon.chevronDown.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
@@ -412,7 +412,7 @@ struct TerminalSearchBar: View {
 
             // 关闭按钮
             Button(action: { onClose?() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }

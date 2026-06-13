@@ -85,7 +85,7 @@ struct QuickCommandManagerView: View {
             Spacer()
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .frame(width: 22, height: 22)
@@ -124,7 +124,7 @@ struct QuickCommandManagerView: View {
             Button {
                 showNewSetAlert = true
             } label: {
-                Image(systemName: "folder.badge.plus")
+                AppIcon.folderBadgePlus.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 26, height: 26)
@@ -143,7 +143,7 @@ struct QuickCommandManagerView: View {
                 withAnimation(.easeOut(duration: 0.15)) { showForm = true }
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "plus")
+                    AppIcon.plus.image
                         .font(DesignTokens.Typography.captionMedium)
                     Text("新建命令")
                         .font(DesignTokens.Typography.labelSmall)
@@ -292,7 +292,7 @@ struct QuickCommandManagerView: View {
                 Button {
                     pendingDelete = (command: cmd, setID: setID)
                 } label: {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 28, height: 28)
@@ -325,7 +325,7 @@ struct QuickCommandManagerView: View {
                 Button {
                     withAnimation(.easeOut(duration: 0.15)) { showForm = false }
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    AppIcon.dismiss.image
                         .font(DesignTokens.Typography.titleSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
@@ -481,7 +481,7 @@ struct QuickCommandManagerView: View {
 
     private var emptySetState: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "terminal")
+            AppIcon.terminal.image
                 .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无命令集")
@@ -496,7 +496,7 @@ struct QuickCommandManagerView: View {
                 showNewSetAlert = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "folder.badge.plus")
+                    AppIcon.folderBadgePlus.image
                         .font(DesignTokens.Typography.labelSmall)
                     Text("新建命令集")
                         .font(DesignTokens.Typography.labelMedium)
@@ -514,7 +514,7 @@ struct QuickCommandManagerView: View {
 
     private var emptyCommandsState: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "text.cursor")
+            AppIcon.textCursor.image
                 .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无快捷命令")

@@ -55,7 +55,7 @@ struct SSHConfigImportView: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 40, height: 40)
-                Image(systemName: "terminal")
+                AppIcon.terminal.image
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
@@ -72,7 +72,7 @@ struct SSHConfigImportView: View {
             Spacer()
 
             Button(action: onCancel) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
@@ -107,7 +107,7 @@ struct SSHConfigImportView: View {
 
     private func errorView(message: String) -> some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "exclamationmark.triangle")
+            AppIcon.warning.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("无法读取配置文件")
@@ -126,7 +126,7 @@ struct SSHConfigImportView: View {
 
     private var emptyView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "doc.text")
+            AppIcon.docText.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("未找到可导入的主机")
@@ -146,7 +146,7 @@ struct SSHConfigImportView: View {
         VStack(spacing: 0) {
             // 搜索栏 + 全选
             HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "magnifyingglass")
+                AppIcon.search.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 TextField("搜索主机名…", text: $searchText)
@@ -154,7 +154,7 @@ struct SSHConfigImportView: View {
                     .font(DesignTokens.Typography.bodyMedium)
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
+                        AppIcon.dismiss.image
                             .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
@@ -328,7 +328,7 @@ private struct EntryRowView: View {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.08))
                     .frame(width: 28, height: 28)
-                Image(systemName: "server.rack")
+                AppIcon.serverRack.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }

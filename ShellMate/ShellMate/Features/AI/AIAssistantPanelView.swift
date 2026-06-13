@@ -88,7 +88,7 @@ struct AIAssistantPanelView: View {
             Spacer()
             modelPickerView
             Button { withAnimation(.easeInOut(duration: 0.15)) { vm.clear() } } label: {
-                Image(systemName: "square.and.pencil")
+                AppIcon.squareAndPencil.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
@@ -265,7 +265,7 @@ struct AIAssistantPanelView: View {
     private var offlineBannerView: some View {
         if !networkMonitor.isConnected {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "wifi.slash").font(DesignTokens.Typography.captionLarge)
+                AppIcon.wifiSlash.image.font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusConnecting)
                 Text("网络不可用，AI 请求将在网络恢复后才能发送")
                     .font(DesignTokens.Typography.captionLarge).foregroundColor(DesignTokens.Colors.statusConnecting).lineLimit(2)
@@ -337,7 +337,7 @@ struct AIAssistantPanelView: View {
     private var sendOrStopButton: some View {
         if vm.isStreaming {
             Button { vm.cancel() } label: {
-                Image(systemName: "stop.fill").font(DesignTokens.Typography.bodySmallStrong)
+                AppIcon.stopFill.image.font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .frame(width: 32, height: 32)
                     .background(DesignTokens.Colors.statusError.opacity(0.12))

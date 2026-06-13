@@ -122,7 +122,7 @@ struct LogPanelView: View {
                     logStore.clear()
                 }
             } label: {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -130,7 +130,7 @@ struct LogPanelView: View {
             .help("清空日志")
 
             Button { exportLogs() } label: {
-                Image(systemName: "arrow.up.doc")
+                AppIcon.docUp.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -149,7 +149,7 @@ struct LogPanelView: View {
             Divider().frame(height: 16)
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
@@ -215,7 +215,7 @@ struct LogPanelView: View {
             Spacer()
 
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "magnifyingglass")
+                AppIcon.search.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 TextField("搜索日志内容…", text: $searchText)
@@ -224,7 +224,7 @@ struct LogPanelView: View {
                     .frame(width: 160)
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
+                        AppIcon.dismiss.image
                             .font(DesignTokens.Typography.captionLarge)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
@@ -290,7 +290,7 @@ struct LogPanelView: View {
 
     private var emptyLogView: some View {
         VStack(spacing: 10) {
-            Image(systemName: "doc.text")
+            AppIcon.docText.image
                 .font(DesignTokens.Typography.displayLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("暂无日志")

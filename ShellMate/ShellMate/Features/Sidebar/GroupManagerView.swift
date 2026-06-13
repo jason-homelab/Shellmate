@@ -71,7 +71,7 @@ struct GroupManagerView: View {
             Spacer()
 
             Button(action: { onClose?() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -143,7 +143,7 @@ struct GroupManagerView: View {
                 Button {
                     commitRename(group)
                 } label: {
-                    Image(systemName: "checkmark")
+                    AppIcon.checkmark.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.statusConnected)
                         .frame(width: 28, height: 28)
@@ -156,7 +156,7 @@ struct GroupManagerView: View {
                     editingGroupId = nil
                     editingName = ""
                 } label: {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 28, height: 28)
@@ -170,7 +170,7 @@ struct GroupManagerView: View {
                     editingGroupId = group.id
                     editingName = group.name
                 } label: {
-                    Image(systemName: "pencil")
+                    AppIcon.pencil.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 28, height: 28)
@@ -184,7 +184,7 @@ struct GroupManagerView: View {
                 Button {
                     pendingDeleteGroup = group
                 } label: {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.statusError)
                         .frame(width: 28, height: 28)
@@ -210,7 +210,7 @@ struct GroupManagerView: View {
 
     private var newGroupInputArea: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "plus.circle.fill")
+            AppIcon.newSession.image
                 .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 

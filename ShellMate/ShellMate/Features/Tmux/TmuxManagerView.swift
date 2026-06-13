@@ -96,7 +96,7 @@ struct TmuxManagerView: View {
                 .padding(.trailing, DesignTokens.Spacing.sm)
 
             Button { onClose() } label: {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .frame(width: 22, height: 22)
@@ -120,7 +120,7 @@ struct TmuxManagerView: View {
 
     private var versionWarningBanner: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            AppIcon.feedbackWarn.image
                 .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
             Text("当前服务器的 tmux 版本低于 2.0，部分功能可能不兼容，建议升级至 tmux 2.0 或更高版本")
@@ -197,7 +197,7 @@ struct TmuxManagerView: View {
                     Task { try? await Task.sleep(nanoseconds: 1_000_000_000); isRefreshing = false }
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.nano) {
-                        Image(systemName: "arrow.clockwise")
+                        AppIcon.arrowClockwise.image
                             .font(DesignTokens.Typography.captionMedium)
                             .rotationEffect(.degrees(isRefreshing ? 360 : 0))
                             .animation(isRefreshing ? .linear(duration: 0.6).repeatForever(autoreverses: false) : .default, value: isRefreshing)
@@ -219,7 +219,7 @@ struct TmuxManagerView: View {
                     withAnimation(DesignTokens.Animation.spring) { showNewSessionSheet = true }
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: "plus").font(DesignTokens.Typography.captionMedium)
+                        AppIcon.plus.image.font(DesignTokens.Typography.captionMedium)
                         Text("新建会话").font(DesignTokens.Typography.labelSmall)
                     }
                     .foregroundColor(.white)
@@ -329,7 +329,7 @@ struct TmuxManagerView: View {
                     Button {
                         store.attach(to: session)
                     } label: {
-                        Image(systemName: "play.fill")
+                        AppIcon.playFill.image
                             .font(DesignTokens.Typography.captionLarge)
                             .foregroundColor(DesignTokens.Colors.accentSecondary)
                             .frame(width: 28, height: 28)
@@ -340,7 +340,7 @@ struct TmuxManagerView: View {
                     .help("附加此会话")
                 } else {
                     Button { store.detach() } label: {
-                        Image(systemName: "stop.fill")
+                        AppIcon.stopFill.image
                             .font(DesignTokens.Typography.captionLarge)
                             .foregroundColor(Color.orange)
                             .frame(width: 28, height: 28)
@@ -359,7 +359,7 @@ struct TmuxManagerView: View {
                         confirmKillSession = session
                     }
                 } label: {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 28, height: 28)
@@ -629,7 +629,7 @@ struct TmuxManagerView: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(entry.command, forType: .string)
             }) {
-                Image(systemName: "doc.on.doc")
+                AppIcon.copy.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 28, height: 28)
@@ -663,7 +663,7 @@ struct TmuxManagerView: View {
 
     private var unavailableView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "exclamationmark.triangle")
+            AppIcon.warning.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("远程服务器未安装 tmux")
@@ -680,7 +680,7 @@ struct TmuxManagerView: View {
 
     private var emptySessionsView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "rectangle.3.group")
+            AppIcon.tmux.image
                 .font(DesignTokens.Typography.heroSmall)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
                 .scaleEffect(emptySessionsAppeared ? 1.0 : 0.70)
@@ -707,7 +707,7 @@ struct TmuxManagerView: View {
 
     private var emptyWindowsView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "macwindow")
+            AppIcon.macWindow.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("请先选择一个会话")
@@ -727,7 +727,7 @@ struct TmuxManagerView: View {
             .onTapGesture { confirmKillSession = nil }
 
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            AppIcon.feedbackWarn.image
                 .font(DesignTokens.Typography.displayLarge)
                 .foregroundColor(DesignTokens.Colors.statusError)
 

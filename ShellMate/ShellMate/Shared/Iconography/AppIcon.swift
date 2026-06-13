@@ -94,6 +94,20 @@ enum AppIcon: String, CaseIterable {
     case trash              = "trash"
     case serverRack         = "server.rack"
     case xmarkCircle        = "xmark.circle"
+    case stopFill           = "stop.fill"
+    case wifiSlash          = "wifi.slash"
+    case eye                = "eye"
+    case eyeSlash           = "eye.slash"
+    case ellipsis           = "ellipsis"
+    case squareAndPencil    = "square.and.pencil"
+    case terminal           = "terminal"
+    case checkSquare        = "checkmark.square.fill"
+    case square             = "square"
+    case pauseFill          = "pause.fill"
+    case textCursor         = "text.cursor"
+    case shieldSlash        = "shield.slash.fill"
+    case bubbleLeft         = "bubble.left"
+    case arrowLeftRight     = "arrow.left.arrow.right.square"
 
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
@@ -137,7 +151,10 @@ enum AppIcon: String, CaseIterable {
              .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
              .chartLine, .paperPlane, .boltSlash,
              .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle:
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
+             .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
+             .terminal, .checkSquare, .square, .pauseFill, .textCursor,
+             .shieldSlash, .bubbleLeft, .arrowLeftRight:
             return "icon.a11y.decorative"
         }
     }
@@ -161,7 +178,10 @@ extension AppIcon {
              .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
              .chartLine, .paperPlane, .boltSlash,
              .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle:
+             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
+             .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
+             .terminal, .checkSquare, .square, .pauseFill, .textCursor,
+             .shieldSlash, .bubbleLeft, .arrowLeftRight:
             return true
         default:
             return false
