@@ -206,6 +206,11 @@ struct ScriptLibraryView: View {
             Text("Script Library")
                 .font(DesignTokens.Typography.bodyLargeStrong)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
+            // Phase 3：与快捷命令对比说明
+            AppIcon.info.image
+                .font(.system(size: 12))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .help("脚本库 = 多步流程，含条件/循环/错误处理；\n快捷命令 = 单行命令片段，运行时填变量。\n简单命令请用快捷命令")
             Spacer()
             Button(action: onClose) {
                 AppIcon.close.image

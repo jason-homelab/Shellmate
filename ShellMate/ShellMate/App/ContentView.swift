@@ -231,6 +231,8 @@ struct ContentView: View {
             await MainActor.run {
                 HotkeyWindowManager.shared.setSessionStore(sessionStore)
             }
+            // Phase 3：首次启动 + 无会话时注入演示 localhost 会话
+            await DemoSessionSeeder.injectIfNeeded(sessionStore: sessionStore)
         }
         // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）；
         // 同时关闭工具面板，避免跨会话数据错乱

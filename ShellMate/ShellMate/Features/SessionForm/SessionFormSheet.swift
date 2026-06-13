@@ -126,10 +126,15 @@ struct SessionFormSheet: View {
                         fieldGroup(label: "密码") {
                             VStack(spacing: DesignTokens.Spacing.sm) {
                                 CustomTextField(placeholder: "输入密码（可选）", text: $vm.password, isSecure: true)
-                                HStack {
+                                HStack(spacing: 4) {
                                     Text("保存密码到 Keychain")
                                         .font(DesignTokens.Typography.bodySmall)
                                         .foregroundColor(DesignTokens.Colors.textSecondary)
+                                    // Phase 3：术语 Tooltip — Keychain 解释
+                                    AppIcon.info.image
+                                        .font(.system(size: 11))
+                                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                                        .help("Keychain 是 macOS 系统提供的密码加密存储，仅本机可用，重启不丢失")
                                     Spacer()
                                     Toggle("", isOn: $vm.saveCredential)
                                         .toggleStyle(.switch)
@@ -526,6 +531,10 @@ struct SessionFormSheet: View {
                                 Text("私钥").tag(AuthMethod.privateKey)
                                 Text("SSH Agent").tag(AuthMethod.sshAgent)
                             }
+                            // Phase 3：术语 Tooltip — SSH Agent 解释
+                            .help(vm.authMethod == .sshAgent
+                                ? "SSH Agent 通过 $SSH_AUTH_SOCK 套接字使用系统已加载的私钥（需 ssh-add 添加）。App Store 版受 sandbox 限制无法访问"
+                                : "选择身份认证方式：密码 / 私钥文件 / 已加载的 SSH Agent 密钥")
                             .pickerStyle(.menu)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10).padding(.vertical, 7)

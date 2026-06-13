@@ -235,6 +235,7 @@
 		B2268B8161C53DB53A376849 /* CommandPaletteRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B168F53B42FA58172FE43E00 /* CommandPaletteRow.swift */; };
 		B2E4535079709318B83F7143 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A886236D0B74CB17ADBF2F /* CommandPaletteView.swift */; };
 		B2D45D99BD405E6D2A98C08E /* CommandPaletteHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16048D526F40CF4C7139FB5 /* CommandPaletteHost.swift */; };
+		B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -494,6 +495,7 @@
 		B168F53B42FA58172FE43E00 /* CommandPaletteRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteRow.swift; sourceTree = "<group>"; };
 		B1A886236D0B74CB17ADBF2F /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		B16048D526F40CF4C7139FB5 /* CommandPaletteHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteHost.swift; sourceTree = "<group>"; };
+		B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DemoSessionSeeder.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1188,6 +1190,7 @@
 		B0CAB08E4A7C90BD5721A76C /* Discoverability */ = {
 			isa = PBXGroup;
 			children = (
+				B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */,
 				B0EB706E36BBC3390A082AFB /* CommandPalette */,
 				B3876D8AB4818B520D1D9926 /* CapabilityBootstrap.swift */,
 				B14DE9E1C15E7C51F5E30868 /* CapabilityRegistry.swift */,
@@ -1326,6 +1329,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */,
 				B2269EFE55CF4858834A710F /* CommandPaletteStore.swift in Sources */,
 				B2268B8161C53DB53A376849 /* CommandPaletteRow.swift in Sources */,
 				B2E4535079709318B83F7143 /* CommandPaletteView.swift in Sources */,

@@ -81,6 +81,11 @@ struct QuickCommandManagerView: View {
             (Text(verbatim: "⚡  ") + Text("快捷命令管理器"))
                 .font(DesignTokens.Typography.titleMedium)
                 .foregroundColor(DesignTokens.Colors.textPrimary)
+            // Phase 3：与脚本库对比说明
+            AppIcon.info.image
+                .font(.system(size: 12))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+                .help("快捷命令 = 单行命令片段（含变量占位符 ${var}），运行时填值；\n脚本库 = 多步流程，含条件/循环/错误处理。\n如需复杂逻辑请用脚本库")
 
             Spacer()
 
