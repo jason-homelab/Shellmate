@@ -288,6 +288,12 @@ struct TerminalView: View {
             // W7：跟踪是否曾连接过，供 ConnectionStateOverlay 判定是否显示重连按钮
             if case .connected = newState { hasEverConnected = true }
         }
+        // Phase 2：BannerHost(.terminal) slot 接入，让 Feedback Banner 可在终端内显示
+        .overlay(alignment: .top) {
+            BannerHost(slot: .terminal)
+                .padding(.top, DesignTokens.Spacing.sm)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+        }
         // W7 横切层通电 #2：在 disconnected 后挂出 ConnectionStateOverlay
         // .failed 仍走原 Sheet 路径，二者互斥（derivedTerminalState 已在 .failed 返回 .idle）
         .overlay {
