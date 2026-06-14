@@ -26,6 +26,11 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
     @Namespace private var settingsTabNamespace
 
+    // Phase 6：设置搜索（解 UE-P1#13）
+    @State private var searchText: String = ""
+    @State private var showSearchResults: Bool = false
+    @FocusState private var searchFocused: Bool
+
     // MARK: - 视图
 
     var body: some View {
@@ -118,9 +123,132 @@ struct SettingsView: View {
             }
         }
         .padding(.leading, 16)
+        .padding(.trailing, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 44)
         .background(Color.black.opacity(0.02))
+        .overlay(alignment: .trailing) {
+            // Phase 6：搜索框置于 Tab 栏右侧
+            settingsSearchField
+                .padding(.trailing, 12)
+        }
+    }
+
+    // MARK: - Phase 6：设置搜索 UI
+
+    @ViewBuilder
+    private var settingsSearchField: some View {
+        HStack(spacing: 4) {
+            AppIcon.search.image
+                .font(.system(size: 11))
+                .foregroundColor(DesignTokens.Colors.textTertiary)
+            TextField("搜索设置…", text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 11))
+                .focused($searchFocused)
+                .frame(width: 120)
+                .onChange(of: searchText) { newValue in
+                    showSearchResults = !newValue.trimmingCharacters(in: .whitespaces).isEmpty
+                }
+            if !searchText.isEmpty {
+                Button(action: { searchText = ""; showSearchResults = false }) {
+                    AppIcon.dismiss.image
+                        .font(.system(size: 10))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 26)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.black.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(searchFocused ? DesignTokens.Colors.accentPrimary.opacity(0.4) : Color.clear, lineWidth: 1)
+                )
+        )
+        .overlay(alignment: .topTrailing) {
+            if showSearchResults {
+                settingsSearchResultsPopover
+                    .frame(width: 280)
+                    .offset(x: 0, y: 30)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var settingsSearchResultsPopover: some View {
+        let results = SettingsIndex.shared.search(searchText)
+        VStack(alignment: .leading, spacing: 0) {
+            if results.isEmpty {
+                Text("无匹配设置项")
+                    .font(.system(size: 11))
+                    .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+            } else {
+                ForEach(results.prefix(8)) { item in
+                    Button(action: { jumpToSearchResult(item) }) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.title)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(DesignTokens.Colors.textPrimary)
+                            Text("\(tabDisplayName(item.tab)) · \(item.section)")
+                                .font(.system(size: 10))
+                                .foregroundColor(DesignTokens.Colors.textTertiary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color.clear)
+                }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.black.opacity(0.10), lineWidth: 0.5)
+                )
+        )
+        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+    }
+
+    private func tabDisplayName(_ indexTab: ShellMate.SettingsTab) -> String {
+        // SettingsIndex.SettingsTab 名称翻译（与 SettingsView.SettingsTab 部分重叠）
+        switch indexTab.rawValue {
+        case "general":    return "通用"
+        case "appearance": return "外观"
+        case "terminal":   return "终端"
+        case "ai":         return "AI 助手"
+        case "automation": return "自动化"
+        case "highlight":  return "关键词高亮"
+        case "security":   return "安全"
+        case "icloud":     return "iCloud 同步"
+        default:           return indexTab.rawValue
+        }
+    }
+
+    private func jumpToSearchResult(_ item: SettingItem) {
+        // 尝试映射到本 View 仅有的 3 个 Tab（general/appearance/terminal）
+        switch item.tab.rawValue {
+        case "general":    selectedTab = .general
+        case "appearance": selectedTab = .appearance
+        case "terminal":   selectedTab = .terminal
+        default:
+            // 当前 View 不支持的 tab（ai/security/icloud 等）— 给出 Toast 提示
+            FeedbackCenter.shared.present(.info(
+                "该设置项在独立面板",
+                message: "请前往该模块的独立设置入口"
+            ))
+        }
+        searchText = ""
+        showSearchResults = false
     }
 
     // MARK: - 内容区（3 Tab 合并策略）
