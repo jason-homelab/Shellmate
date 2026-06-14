@@ -148,7 +148,7 @@ struct ComposePaneView: View {
             // 发送按钮
             Button(action: sendContent) {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "paperplane.fill")
+                    AppIcon.paperPlane.image
                         .font(DesignTokens.Typography.captionMedium)
                     Text("发送")
                         .font(DesignTokens.Typography.captionLarge)
@@ -205,7 +205,7 @@ struct ComposePaneView: View {
 
             // 清空并关闭
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
             }
@@ -241,7 +241,7 @@ struct ComposePaneView: View {
             .overlay(Rectangle().frame(height: 1).foregroundColor(DesignTokens.Colors.borderFaint), alignment: .top)
         } else if let suggestion = aiSuggestion {
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "sparkles")
+                AppIcon.ai.image
                     .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
 
@@ -269,7 +269,7 @@ struct ComposePaneView: View {
                 Button {
                     aiSuggestion = nil
                 } label: {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
                 }

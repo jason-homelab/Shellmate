@@ -157,7 +157,7 @@ struct SessionAuthTab: View {
             // App Store 沙盒限制提示
             if !agentAvailable || AppVariant.isAppStoreBuild {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "exclamationmark.triangle.fill")
+                    AppIcon.feedbackWarn.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.statusConnecting)
 
@@ -182,7 +182,7 @@ struct SessionAuthTab: View {
 
     private var keyboardInteractiveSection: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "info.circle.fill")
+            AppIcon.feedbackInfo.image
                 .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 

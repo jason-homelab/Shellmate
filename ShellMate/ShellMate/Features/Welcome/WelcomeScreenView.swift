@@ -45,7 +45,7 @@ struct WelcomeScreenView: View {
                 HStack {
                     Spacer()
                     Button(action: { vm.skip() }) {
-                        Image(systemName: "xmark")
+                        AppIcon.close.image
                             .font(DesignTokens.Typography.labelSmall)
                             .foregroundColor(DesignTokens.Colors.textPrimary)
                             .frame(width: 32, height: 32)
@@ -319,7 +319,7 @@ private struct WelcomeActionCard: View {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
                     Text(buttonLabel)
                         .font(DesignTokens.Typography.labelLarge)
-                    Image(systemName: "arrow.right")
+                    AppIcon.arrowRight.image
                         .font(DesignTokens.Typography.captionLarge)
                         .offset(x: isHovering ? 2 : 0)
                         .animation(.easeInOut(duration: 0.2), value: isHovering)

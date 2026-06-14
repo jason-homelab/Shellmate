@@ -232,12 +232,12 @@ struct CustomTextField: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
 
                     if isError {
-                        Image(systemName: "exclamationmark.circle.fill")
+                        AppIcon.statusError.image
                             .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.statusError)
                             .transition(.scale.combined(with: .opacity))
                     } else if isValid && !text.isEmpty {
-                        Image(systemName: "checkmark.circle.fill")
+                        AppIcon.feedbackSuccess.image
                             .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.statusConnected)
                             .transition(.scale.combined(with: .opacity))
@@ -262,7 +262,7 @@ struct CustomTextField: View {
 
             if let error = errorMessage, isError {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "exclamationmark.triangle.fill")
+                    AppIcon.feedbackWarn.image
                         .font(DesignTokens.Typography.captionMedium)
                     Text(error)
                         .font(DesignTokens.Typography.labelSmall)

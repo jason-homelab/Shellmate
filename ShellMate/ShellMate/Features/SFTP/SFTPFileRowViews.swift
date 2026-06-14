@@ -43,7 +43,7 @@ struct LocalFileRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if item.isDirectory {
-                Image(systemName: "chevron.right")
+                AppIcon.chevronRight.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .opacity(isHovering ? 1 : 0)
@@ -110,7 +110,7 @@ struct RemoteFileRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if item.fileType.isDirectory {
-                Image(systemName: "chevron.right")
+                AppIcon.chevronRight.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .opacity(isHovering ? 1 : 0)

@@ -82,7 +82,7 @@ struct TerminalStatusBarView: View {
             if connectionState == .connecting {
                 GlowingStatusDot(color: connectionState.dotColor, size: 3)
             } else {
-                Image(systemName: "wifi.slash")
+                AppIcon.wifiSlash.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
             }
@@ -169,7 +169,7 @@ struct TerminalStatusBarView: View {
             } else {
                 // 无指标：Figma right = Activity icon + "SSH Port {port}"
                 HStack(spacing: 6) {
-                    Image(systemName: "waveform.path.ecg")
+                    AppIcon.waveformPathECG.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                     Text("SSH Port \(session?.port ?? 22)")
@@ -217,7 +217,7 @@ struct TerminalStatusBarView: View {
             networkView(m)
             // Figma: Activity icon h-3 w-3 + "SSH Port {port}" text-xs text-[#86868b]
             HStack(spacing: 6) {
-                Image(systemName: "waveform.path.ecg")
+                AppIcon.waveformPathECG.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                 Text("SSH:\(session?.port ?? 22)")
@@ -426,7 +426,7 @@ struct TerminalStatusBarView: View {
     /// 已附加 tmux 会话时的绿色徽章
     private func tmuxBadge(sessionName: String) -> some View {
         HStack(spacing: DesignTokens.Spacing.nano) {
-            Image(systemName: "rectangle.3.group.fill")
+            AppIcon.tmuxFilled.image
                 .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.statusConnected)
             Text("tmux:\(sessionName)")
@@ -439,7 +439,7 @@ struct TerminalStatusBarView: View {
     /// 有 tmux 会话但未附加时的灰色徽章
     private func tmuxIdleBadge(count: Int) -> some View {
         HStack(spacing: DesignTokens.Spacing.nano) {
-            Image(systemName: "rectangle.3.group")
+            AppIcon.tmux.image
                 .font(DesignTokens.Typography.captionSmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text("tmux[\(count)]")

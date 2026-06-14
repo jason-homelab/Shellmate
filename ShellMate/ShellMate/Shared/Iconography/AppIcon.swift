@@ -108,6 +108,11 @@ enum AppIcon: String, CaseIterable {
     case shieldSlash        = "shield.slash.fill"
     case bubbleLeft         = "bubble.left"
     case arrowLeftRight     = "arrow.left.arrow.right.square"
+    case terminalFill       = "terminal.fill"
+    case waveformPathECG    = "waveform.path.ecg"
+    case tmuxFilled         = "rectangle.3.group.fill"
+    case pin                = "pin.fill"
+    case pinSlash           = "pin.slash"
 
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
@@ -154,7 +159,8 @@ enum AppIcon: String, CaseIterable {
              .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
              .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
-             .shieldSlash, .bubbleLeft, .arrowLeftRight:
+             .shieldSlash, .bubbleLeft, .arrowLeftRight,
+             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash:
             return "icon.a11y.decorative"
         }
     }
@@ -181,7 +187,8 @@ extension AppIcon {
              .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
              .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
-             .shieldSlash, .bubbleLeft, .arrowLeftRight:
+             .shieldSlash, .bubbleLeft, .arrowLeftRight,
+             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash:
             return true
         default:
             return false
