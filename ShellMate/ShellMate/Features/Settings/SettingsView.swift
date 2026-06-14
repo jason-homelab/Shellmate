@@ -82,20 +82,32 @@ struct SettingsView: View {
     }
 
     // Figma 14:52: bg-[#077aff] h-[36px] w-[80px] rounded-[8px] shadow-[0px_4px_12px_0px_rgba(7,122,255,0.3)]
+    // Phase 12：@AppStorage 自动持久化，本按钮提供"已保存"视觉确认
     private var saveButtonRow: some View {
         HStack {
             Spacer()
-            Button("保存") {}
-                .font(DesignTokens.Typography.bodyLargeMedium)
-                .foregroundColor(.white)
-                .frame(width: 80, height: 36)
-                .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
-                .buttonStyle(.plain)
+            Button(action: confirmSettingsSaved) {
+                Text("保存")
+                    .font(DesignTokens.Typography.bodyLargeMedium)
+                    .foregroundColor(.white)
+                    .frame(width: 80, height: 36)
+                    .background(DesignTokens.Colors.accentPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .shadow(color: DesignTokens.Colors.accentPrimary.opacity(0.30), radius: 6, x: 0, y: 4)
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 28)
         .frame(height: 47)
+    }
+
+    /// Phase 12：@AppStorage 实时持久化，仅显示视觉确认
+    private func confirmSettingsSaved() {
+        FeedbackCenter.shared.present(.success(
+            "设置已保存",
+            message: "所有设置实时持久化到本机"
+        ))
+        onClose?()
     }
 
     // MARK: - 顶部选择器（Figma Desktop 规格）
