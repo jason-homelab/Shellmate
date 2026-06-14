@@ -397,12 +397,13 @@ struct SFTPPanelView: View {
         .padding(.vertical, DesignTokens.Spacing.xxxl)
     }
 
+    /// Phase 7：用 fileRow 骨架屏替代旋转圈（解 UE-P1#15）
+    /// 远程目录加载体感升级，错峰 shimmer 让长加载有节奏
     private var loadingOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.regular)
-            Text("正在加载...")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+        VStack(spacing: 0) {
+            SkeletonList(rowCount: 10, style: .fileRow)
+                .padding(.top, DesignTokens.Spacing.xs)
+            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
