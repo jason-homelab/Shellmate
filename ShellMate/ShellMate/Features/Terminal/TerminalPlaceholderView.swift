@@ -44,7 +44,7 @@ struct TerminalPlaceholderView: View {
                         RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusPanel, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.15), lineWidth: 0.75)
                     )
-                Image(systemName: "desktopcomputer")
+                AppIcon.desktop.image
                     .font(DesignTokens.Typography.heroMedium)
                     .foregroundStyle(
                         LinearGradient(
@@ -75,7 +75,7 @@ struct TerminalPlaceholderView: View {
             // 新建按钮：hover 时轻微上浮 + 阴影加深
             Button(action: { onNewSession?() }) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "plus")
+                    AppIcon.plus.image
                         .font(DesignTokens.Typography.labelSmall)
                     Text("新建会话")
                         .font(DesignTokens.Typography.labelLarge)

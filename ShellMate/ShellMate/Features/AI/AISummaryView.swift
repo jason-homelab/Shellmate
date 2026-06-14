@@ -65,7 +65,7 @@ struct AISummaryView: View {
                 Circle()
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 44, height: 44)
-                Image(systemName: "sparkles")
+                AppIcon.ai.image
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
@@ -89,7 +89,7 @@ struct AISummaryView: View {
             }
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
@@ -110,7 +110,7 @@ struct AISummaryView: View {
                 if let err = errorMessage {
                     // 错误状态
                     VStack(spacing: DesignTokens.Spacing.sm) {
-                        Image(systemName: "exclamationmark.triangle")
+                        AppIcon.warning.image
                             .font(DesignTokens.Typography.displayLarge)
                             .foregroundColor(DesignTokens.Colors.statusConnecting)
                         Text(err)

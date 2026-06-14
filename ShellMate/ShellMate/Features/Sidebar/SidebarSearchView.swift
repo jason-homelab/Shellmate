@@ -23,7 +23,7 @@ struct SidebarSearchView: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // 搜索图标
-            Image(systemName: "magnifyingglass")
+            AppIcon.search.image
                 .font(DesignTokens.Typography.labelMedium)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
@@ -42,7 +42,7 @@ struct SidebarSearchView: View {
                 Button(action: {
                     searchText = ""
                 }) {
-                    Image(systemName: "xmark.circle.fill")
+                    AppIcon.dismiss.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }

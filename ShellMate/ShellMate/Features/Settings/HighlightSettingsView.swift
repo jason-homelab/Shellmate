@@ -150,7 +150,7 @@ struct HighlightSettingsView: View {
 
     private var emptyRulesView: some View {
         VStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "highlighter")
+            AppIcon.highlighter.image
                 .font(DesignTokens.Typography.displaySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
                 .opacity(0.4)
@@ -206,7 +206,7 @@ struct HighlightSettingsView: View {
             // 操作按钮（悬停时显示）
             HStack(spacing: DesignTokens.Spacing.xxs) {
                 Button(action: { withAnimation(.easeOut(duration: 0.25)) { engine.removeRule(id: rule.id) } }) {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(hoveredRuleId == rule.id
                             ? DesignTokens.Colors.statusError

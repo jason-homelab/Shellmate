@@ -168,7 +168,7 @@ struct RecordingDialogView: View {
                 startRecording()
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "record.circle.fill")
+                    AppIcon.recordingFilled.image
                         .font(DesignTokens.Typography.titleSmall)
                     Text("开始录制")
                         .font(DesignTokens.Typography.titleSmall)
@@ -227,7 +227,7 @@ struct RecordingDialogView: View {
                 stopRecording()
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "stop.fill")
+                    AppIcon.stopFill.image
                         .font(DesignTokens.Typography.bodySmallStrong)
                     Text("停止录制")
                         .font(DesignTokens.Typography.titleSmall)

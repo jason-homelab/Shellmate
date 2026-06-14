@@ -68,7 +68,7 @@ struct SessionImportExportView: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.12))
                     .frame(width: 36, height: 36)
-                Image(systemName: "square.and.arrow.up.on.square")
+                AppIcon.shareUp.image
                     .font(DesignTokens.Typography.labelLargeMid)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
@@ -85,7 +85,7 @@ struct SessionImportExportView: View {
             Spacer()
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)

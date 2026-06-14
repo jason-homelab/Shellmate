@@ -59,7 +59,7 @@ extension ContentView {
                 panels.showImportExportDialog = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "arrow.up.arrow.down.square")
+                    AppIcon.importExport.image
                         .frame(width: 16)
                     Text("导入 / 导出会话…")
                 }
@@ -87,7 +87,7 @@ extension ContentView {
                 panels.showSSHConfigImport = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "terminal")
+                    AppIcon.terminal.image
                         .frame(width: 16)
                     Text("从 ~/.ssh/config 导入…")
                 }
@@ -153,7 +153,7 @@ extension ContentView {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 if appLanguage == tag {
-                    Image(systemName: "checkmark")
+                    AppIcon.checkmark.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                 }

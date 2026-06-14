@@ -113,6 +113,10 @@ enum AppIcon: String, CaseIterable {
     case tmuxFilled         = "rectangle.3.group.fill"
     case pin                = "pin.fill"
     case pinSlash           = "pin.slash"
+    case syncGrid           = "square.grid.2x2.fill"
+    case importExport       = "arrow.up.arrow.down.square"
+    case shareUp            = "square.and.arrow.up.on.square"
+    case recordingFilled    = "record.circle.fill"
 
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
@@ -160,7 +164,8 @@ enum AppIcon: String, CaseIterable {
              .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
              .shieldSlash, .bubbleLeft, .arrowLeftRight,
-             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash:
+             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
+             .syncGrid, .importExport, .shareUp, .recordingFilled:
             return "icon.a11y.decorative"
         }
     }
@@ -188,7 +193,8 @@ extension AppIcon {
              .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
              .shieldSlash, .bubbleLeft, .arrowLeftRight,
-             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash:
+             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
+             .syncGrid, .importExport, .shareUp, .recordingFilled:
             return true
         default:
             return false
