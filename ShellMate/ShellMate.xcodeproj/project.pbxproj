@@ -237,6 +237,7 @@
 		B2D45D99BD405E6D2A98C08E /* CommandPaletteHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16048D526F40CF4C7139FB5 /* CommandPaletteHost.swift */; };
 		B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */; };
 		B4EB76859FF92A713EB3289A /* TerminalViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32A9427E9CE1EA558267A03 /* TerminalViewModifiers.swift */; };
+		B41669705F1F59C37B2FF49A /* OnboardingDirector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B215DBD1C39F9ABE7AFBDF /* OnboardingDirector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -498,6 +499,7 @@
 		B16048D526F40CF4C7139FB5 /* CommandPaletteHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteHost.swift; sourceTree = "<group>"; };
 		B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DemoSessionSeeder.swift"; sourceTree = "<group>"; };
 		B32A9427E9CE1EA558267A03 /* TerminalViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalViewModifiers.swift"; sourceTree = "<group>"; };
+		B3B215DBD1C39F9ABE7AFBDF /* OnboardingDirector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OnboardingDirector.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1193,6 +1195,7 @@
 		B0CAB08E4A7C90BD5721A76C /* Discoverability */ = {
 			isa = PBXGroup;
 			children = (
+				B3B215DBD1C39F9ABE7AFBDF /* OnboardingDirector.swift */,
 				B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */,
 				B0EB706E36BBC3390A082AFB /* CommandPalette */,
 				B3876D8AB4818B520D1D9926 /* CapabilityBootstrap.swift */,
@@ -1332,6 +1335,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B41669705F1F59C37B2FF49A /* OnboardingDirector.swift in Sources */,
 				B4EB76859FF92A713EB3289A /* TerminalViewModifiers.swift in Sources */,
 				B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */,
 				B2269EFE55CF4858834A710F /* CommandPaletteStore.swift in Sources */,

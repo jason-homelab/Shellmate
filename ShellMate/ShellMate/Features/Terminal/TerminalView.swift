@@ -286,7 +286,13 @@ struct TerminalView: View {
                 showConnectionError = true
             }
             // W7：跟踪是否曾连接过，供 ConnectionStateOverlay 判定是否显示重连按钮
-            if case .connected = newState { hasEverConnected = true }
+            if case .connected = newState {
+                if !hasEverConnected {
+                    // Phase 13：首次连接成功引导
+                    OnboardingDirector.onFirstSuccessfulConnection()
+                }
+                hasEverConnected = true
+            }
         }
         // Phase 2：BannerHost(.terminal) slot 接入，让 Feedback Banner 可在终端内显示
         .overlay(alignment: .top) {
