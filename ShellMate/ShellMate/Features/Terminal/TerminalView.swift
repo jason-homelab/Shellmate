@@ -866,107 +866,20 @@ struct TerminalView: View {
     }
 
     @ViewBuilder
+    /// Phase 14：已抽出到 TerminalStateOverlays.swift
+    /// 原 4 个 overlay 子视图（~100 行）成为独立 TerminalStateOverlay struct
     private var stateOverlay: some View {
-        switch controller.state {
-        case .disconnected:     disconnectedOverlay
-        case .connecting:       connectingOverlay
-        case .reconnecting(let attempt): reconnectingOverlay(attempt: attempt)
-        case .failed(let reason): failedOverlay(reason: reason)
-        case .connected:        EmptyView()
-        }
-    }
-
-    private var disconnectedOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "terminal")
-                .font(DesignTokens.Typography.heroLarge)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-
-            Text("未连接")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            Text("\(session.username)@\(session.host):\(session.port)")
-                .font(DesignTokens.Typography.codeMedium)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-
-            Button(action: connect) {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    AppIcon.quickCommand.image
-                    Text("连接")
-                }
-                .font(DesignTokens.Typography.labelLarge)
-                .foregroundColor(.white)
-                .padding(.horizontal, DesignTokens.Spacing.xxl)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        TerminalStateOverlay(
+            state: controller.state,
+            session: session,
+            maxReconnectAttempts: controller.reconnectConfig.maxAttempts,
+            onConnect: { connect() },
+            onCancelReconnect: { controller.cancelReconnect() },
+            onDismissFailure: {
+                showConnectionError = false
+                Task { await controller.disconnect() }
             }
-            .buttonStyle(.plain)
-            .padding(.top, DesignTokens.Spacing.md)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
-    }
-
-    private var connectingOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.large)
-            Text("正在连接...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("\(session.username)@\(session.host)")
-                .font(DesignTokens.Typography.codeSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.9))
-    }
-
-    private func reconnectingOverlay(attempt: Int) -> some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.large)
-            Text("正在重连...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("第 \(attempt) 次尝试，共 \(controller.reconnectConfig.maxAttempts) 次")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            Button("取消") { controller.cancelReconnect() }
-                .buttonStyle(.bordered)
-                .padding(.top, DesignTokens.Spacing.sm)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.9))
-    }
-
-    private func failedOverlay(reason: String) -> some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            AppIcon.feedbackWarn.image
-                .font(DesignTokens.Typography.heroLarge)
-                .foregroundColor(DesignTokens.Colors.statusError)
-
-            Text("连接失败")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
-
-            Text(reason)
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignTokens.Spacing.xxxl)
-
-            HStack(spacing: DesignTokens.Spacing.md) {
-                Button("重试") { connect() }.buttonStyle(.borderedProminent)
-                Button("关闭") {
-                    showConnectionError = false
-                    Task { await controller.disconnect() }
-                }.buttonStyle(.bordered)
-            }
-            .padding(.top, DesignTokens.Spacing.sm)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
+        )
     }
 
     // MARK: - 密码输入向导

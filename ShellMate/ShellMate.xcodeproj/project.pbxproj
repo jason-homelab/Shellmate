@@ -238,6 +238,7 @@
 		B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */; };
 		B4EB76859FF92A713EB3289A /* TerminalViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32A9427E9CE1EA558267A03 /* TerminalViewModifiers.swift */; };
 		B41669705F1F59C37B2FF49A /* OnboardingDirector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B215DBD1C39F9ABE7AFBDF /* OnboardingDirector.swift */; };
+		B495E10814A48A936F9FD378 /* TerminalStateOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3963AAD2A5D28217918C906 /* TerminalStateOverlays.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -500,6 +501,7 @@
 		B345A999626F99BECE60D100 /* DemoSessionSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DemoSessionSeeder.swift"; sourceTree = "<group>"; };
 		B32A9427E9CE1EA558267A03 /* TerminalViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalViewModifiers.swift"; sourceTree = "<group>"; };
 		B3B215DBD1C39F9ABE7AFBDF /* OnboardingDirector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OnboardingDirector.swift"; sourceTree = "<group>"; };
+		B3963AAD2A5D28217918C906 /* TerminalStateOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalStateOverlays.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -718,6 +720,7 @@
 		000400040004000E /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
+				B3963AAD2A5D28217918C906 /* TerminalStateOverlays.swift */,
 				B32A9427E9CE1EA558267A03 /* TerminalViewModifiers.swift */,
 				B012242DB733542468AF3334 /* Overlay */,
 				BB020001 /* TerminalController.swift */,
@@ -1335,6 +1338,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B495E10814A48A936F9FD378 /* TerminalStateOverlays.swift in Sources */,
 				B41669705F1F59C37B2FF49A /* OnboardingDirector.swift in Sources */,
 				B4EB76859FF92A713EB3289A /* TerminalViewModifiers.swift in Sources */,
 				B482D41A63C8E9B5583F2488 /* DemoSessionSeeder.swift in Sources */,
