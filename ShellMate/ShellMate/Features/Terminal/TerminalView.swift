@@ -789,7 +789,7 @@ struct TerminalView: View {
             } label: {
                 VStack(spacing: DesignTokens.Spacing.micro) {
                     // 箭头方向指示（展开 ← / 收起 →）
-                    Image(systemName: controller.isSFTPPanelOpen ? "chevron.right" : "chevron.left")
+                    (controller.isSFTPPanelOpen ? AppIcon.chevronRight : .chevronLeft).image
                         .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
 

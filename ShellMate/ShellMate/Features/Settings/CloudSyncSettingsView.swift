@@ -8,12 +8,12 @@ enum CloudSyncStatus {
     case failed(reason: String)
     case disabled
 
-    var iconName: String {
+    var appIcon: AppIcon {
         switch self {
-        case .synced:   return "checkmark.icloud.fill"
-        case .syncing:  return "arrow.clockwise.icloud"
-        case .failed:   return "exclamationmark.icloud.fill"
-        case .disabled: return "icloud.slash.fill"
+        case .synced:   return .iCloudCheckmark
+        case .syncing:  return .iCloudArrow
+        case .failed:   return .iCloudWarn
+        case .disabled: return .iCloudSlash
         }
     }
 
@@ -231,7 +231,7 @@ struct CloudSyncSettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             // 状态卡片
             HStack(spacing: DesignTokens.Spacing.md) {
-                Image(systemName: syncStatus.iconName)
+                syncStatus.appIcon.image
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(syncStatus.color)
                     .rotationEffect(isSyncing ? .degrees(360) : .degrees(0))

@@ -426,7 +426,7 @@ private struct HotkeySessionRowView: View {
                         .fill(isConnected
                               ? DesignTokens.Colors.statusConnected.opacity(0.12)
                               : DesignTokens.Colors.surfaceCard)
-                    Image(systemName: session.connectionType.iconName)
+                    session.connectionType.appIcon.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(isConnected
                                          ? DesignTokens.Colors.statusConnected
@@ -494,7 +494,7 @@ private struct AutoHideToggleButton: View {
     var body: some View {
         Button { autoHide.toggle() } label: {
             HStack(spacing: 4) {
-                Image(systemName: autoHide ? "pin.slash" : "pin.fill")
+                (autoHide ? AppIcon.pinSlash : .pin).image
                     .font(DesignTokens.Typography.captionSmallStrong)
                 Text(autoHide ? "失焦隐藏" : "保持显示")
                     .font(DesignTokens.Typography.captionMedium)

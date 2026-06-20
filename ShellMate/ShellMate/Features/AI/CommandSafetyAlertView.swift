@@ -57,7 +57,7 @@ struct CommandSafetyAlertView: View {
                 Circle()
                     .fill(riskColor.opacity(0.12))
                     .frame(width: 44, height: 44)
-                Image(systemName: risk.level.icon)
+                risk.level.appIcon.image
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(riskColor)
             }

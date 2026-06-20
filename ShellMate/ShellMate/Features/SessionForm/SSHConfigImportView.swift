@@ -315,7 +315,7 @@ private struct EntryRowView: View {
         HStack(spacing: 10) {
             // 勾选框
             Button(action: onToggle) {
-                Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                (isSelected ? AppIcon.checkSquare : .square).image
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(isSelected
                         ? DesignTokens.Colors.accentPrimary

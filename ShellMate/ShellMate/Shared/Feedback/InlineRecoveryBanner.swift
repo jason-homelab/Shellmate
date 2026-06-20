@@ -21,7 +21,7 @@ struct InlineRecoveryBanner: View {
                 .frame(width: 4)
 
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: event.level.sfSymbol)
+                event.level.appIcon.image
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(event.level.fg)
                     .padding(.top, 2)

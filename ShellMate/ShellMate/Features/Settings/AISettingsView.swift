@@ -173,7 +173,7 @@ struct AISettingsView: View {
                     Button {
                         showAPIKey.toggle()
                     } label: {
-                        Image(systemName: showAPIKey ? "eye.slash" : "eye")
+                        (showAPIKey ? AppIcon.eyeSlash : .eye).image
                             .font(DesignTokens.Typography.bodyMedium)
                             .foregroundColor(DesignTokens.Colors.textTertiary)
                     }
@@ -202,7 +202,7 @@ struct AISettingsView: View {
                 // 保存结果提示
                 if let result = saveKeyResult {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: result == .success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        (result == .success ? AppIcon.feedbackSuccess : .dismiss).image
                         Text(result == .success ? "API Key 已安全存入 Keychain" : "API Key 为空，已清除")
                     }
                     .font(DesignTokens.Typography.labelSmall)

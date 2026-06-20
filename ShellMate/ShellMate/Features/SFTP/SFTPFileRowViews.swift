@@ -17,7 +17,7 @@ struct LocalFileRowView: View {
                         ? DesignTokens.Colors.accentPrimary.opacity(0.10)
                         : DesignTokens.Colors.textTertiary.opacity(0.10))
                     .frame(width: 24, height: 24)
-                Image(systemName: item.sfSymbolName)
+                item.appIcon.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(item.isDirectory
                         ? DesignTokens.Colors.accentPrimary
@@ -86,7 +86,7 @@ struct RemoteFileRowView: View {
                         ? DesignTokens.Colors.statusConnected.opacity(0.10)
                         : DesignTokens.Colors.textTertiary.opacity(0.10))
                     .frame(width: 24, height: 24)
-                Image(systemName: item.fileType.sfSymbolName)
+                item.fileType.appIcon.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(iconColor)
             }

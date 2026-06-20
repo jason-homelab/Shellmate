@@ -28,17 +28,17 @@ enum AuthMethod: Int16, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// 图标名称（SF Symbols）
-    var iconName: String {
+    /// 图标（AppIcon，ADR-005）
+    var appIcon: AppIcon {
         switch self {
         case .password:
-            return "key.fill"
+            return .key
         case .privateKey:
-            return "doc.text.fill"
+            return .docTextFill
         case .sshAgent:
-            return "person.badge.key.fill"
+            return .personBadgeKey
         case .keyboardInteractive:
-            return "keyboard.fill"
+            return .keyboardFill
         }
     }
 

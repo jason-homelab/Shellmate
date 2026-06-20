@@ -15,13 +15,13 @@ struct ConnectionErrorAnalysis {
         case portBlocked       // 端口不可达（防火墙/端口错误）
         case unknown           // 其他
 
-        var icon: String {
+        var appIcon: AppIcon {
             switch self {
-            case .authFailed:         return "lock.slash"
-            case .networkUnreachable: return "wifi.exclamationmark"
-            case .hostKeyChanged:     return "exclamationmark.shield"
-            case .portBlocked:        return "network.slash"
-            case .unknown:            return "xmark.octagon"
+            case .authFailed:         return .lockSlash
+            case .networkUnreachable: return .wifiExclamation
+            case .hostKeyChanged:     return .shieldExclamation
+            case .portBlocked:        return .networkSlash
+            case .unknown:            return .xmarkOctagon
             }
         }
 
@@ -153,7 +153,7 @@ struct ConnectionErrorView: View {
                 Circle()
                     .fill(analysis.category.iconColor.opacity(0.12))
                     .frame(width: 44, height: 44)
-                Image(systemName: analysis.category.icon)
+                analysis.category.appIcon.image
                     .font(DesignTokens.Typography.displayXSmall)
                     .foregroundColor(analysis.category.iconColor)
             }
