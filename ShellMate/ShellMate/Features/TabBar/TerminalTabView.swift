@@ -38,7 +38,7 @@ struct TerminalTabView: View {
 
             // 同步输入激活时显示 ⚡
             if syncStore.isSynced(tab.sessionId) {
-                Image(systemName: "bolt.fill")
+                AppIcon.quickCommand.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(.orange)
             }

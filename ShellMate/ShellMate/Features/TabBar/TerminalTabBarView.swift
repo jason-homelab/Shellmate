@@ -149,7 +149,7 @@ struct TabCloseConfirmationView: View {
     var body: some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
             // 图标
-            Image(systemName: "exclamationmark.triangle.fill")
+            AppIcon.feedbackWarn.image
                 .font(DesignTokens.Typography.heroMedium)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 

@@ -157,7 +157,7 @@ struct CommandPaletteView: View {
     @ViewBuilder
     private var emptyResultsView: some View {
         VStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "sparkles")
+            AppIcon.ai.image
                 .font(.system(size: 28, weight: .regular))
                 .foregroundStyle(DesignTokens.Gradients.aiIcon)
                 .padding(.top, DesignTokens.Spacing.lg)

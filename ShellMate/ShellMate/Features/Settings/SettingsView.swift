@@ -67,7 +67,7 @@ struct SettingsView: View {
             Spacer()
             if let onClose {
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textSubtle)
                         .frame(width: 24, height: 24)

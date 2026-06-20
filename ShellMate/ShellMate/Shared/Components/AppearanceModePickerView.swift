@@ -85,7 +85,7 @@ struct AppearanceModePickerView: View {
                 // 标签 + 选中圈
                 HStack(spacing: DesignTokens.Spacing.xxs) {
                     if isSelected {
-                        Image(systemName: "checkmark.circle.fill")
+                        AppIcon.feedbackSuccess.image
                             .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                     }

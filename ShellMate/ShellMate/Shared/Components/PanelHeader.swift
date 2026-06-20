@@ -36,7 +36,7 @@ struct PanelHeader: View {
 
             // ── 关闭按钮（hover 反馈）──
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(
                         isCloseHovering

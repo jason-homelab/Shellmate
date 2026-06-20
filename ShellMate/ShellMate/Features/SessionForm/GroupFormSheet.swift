@@ -37,7 +37,7 @@ struct GroupFormSheet: View {
                 Spacer()
 
                 Button(action: { onCancel?() }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)

@@ -21,7 +21,7 @@ struct GroupHeaderView: View {
         HStack(spacing: 4) {
 
             // ── 展开/折叠箭头 ── Figma: › 10pt medium secondary
-            Image(systemName: "chevron.right")
+            AppIcon.chevronRight.image
                 .font(DesignTokens.Typography.captionMediumStrong)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
                 .frame(width: 12)

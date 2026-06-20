@@ -34,7 +34,7 @@ struct TagBadgeView: View {
                 Button(action: {
                     onDelete?()
                 }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(textColor.opacity(0.7))
                 }
