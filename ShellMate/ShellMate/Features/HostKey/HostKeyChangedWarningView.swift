@@ -149,28 +149,28 @@ struct HostKeyChangedWarningView: View {
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 causeRow(
-                    icon: "exclamationmark.triangle",
+                    icon: .warning,
                     title: "中间人攻击",
                     description: "攻击者可能正在拦截并篡改您的网络通信",
                     severity: .critical
                 )
 
                 causeRow(
-                    icon: "server.rack",
+                    icon: .serverRack,
                     title: "服务器重新安装",
                     description: "服务器可能已重新安装或迁移到新机器",
                     severity: .warning
                 )
 
                 causeRow(
-                    icon: "key.horizontal",
+                    icon: .keyHorizontal,
                     title: "密钥已更换",
                     description: "服务器管理员可能出于安全原因更换了主机密钥",
                     severity: .info
                 )
 
                 causeRow(
-                    icon: "network",
+                    icon: .networkIcon,
                     title: "DNS 劫持",
                     description: "您的 DNS 可能被劫持，连接到了错误的服务器",
                     severity: .critical
@@ -202,7 +202,7 @@ struct HostKeyChangedWarningView: View {
                 fingerprintRow(
                     label: "已记录的指纹",
                     value: oldFingerprint,
-                    icon: "checkmark.circle.fill",
+                    icon: .feedbackSuccess,
                     color: DesignTokens.Colors.statusConnected
                 )
 
@@ -215,7 +215,7 @@ struct HostKeyChangedWarningView: View {
                 fingerprintRow(
                     label: "当前收到的指纹",
                     value: newFingerprint.sha256Display,
-                    icon: "xmark.circle.fill",
+                    icon: .dismiss,
                     color: DesignTokens.Colors.statusError
                 )
             }
@@ -334,9 +334,9 @@ struct HostKeyChangedWarningView: View {
     // MARK: - 辅助视图
 
     /// 原因行
-    private func causeRow(icon: String, title: String, description: String, severity: Severity) -> some View {
+    private func causeRow(icon: AppIcon, title: String, description: String, severity: Severity) -> some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: icon)
+            icon.image
                 .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(severity.color)
                 .frame(width: 20)
@@ -355,10 +355,10 @@ struct HostKeyChangedWarningView: View {
     }
 
     /// 指纹行
-    private func fingerprintRow(label: String, value: String, icon: String, color: Color) -> some View {
+    private func fingerprintRow(label: String, value: String, icon: AppIcon, color: Color) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: icon)
+                icon.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(color)
 

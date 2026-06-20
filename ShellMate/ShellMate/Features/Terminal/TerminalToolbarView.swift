@@ -90,7 +90,7 @@ struct TerminalToolbarView: View {
         HStack(spacing: DesignTokens.Spacing.xs) {
             // 字号减小
             ToolbarButton(
-                icon: "minus.magnifyingglass",
+                icon: .zoomOut,
                 tooltip: "减小字号 (⌘-)",
                 isEnabled: fontSize > minFontSize
             ) {
@@ -111,7 +111,7 @@ struct TerminalToolbarView: View {
 
             // 字号增大
             ToolbarButton(
-                icon: "plus.magnifyingglass",
+                icon: .zoomIn,
                 tooltip: "增大字号 (⌘+)",
                 isEnabled: fontSize < maxFontSize
             ) {
@@ -124,7 +124,7 @@ struct TerminalToolbarView: View {
 
             // 清屏
             ToolbarButton(
-                icon: "clear",
+                icon: .clear,
                 tooltip: "清屏 (⌘K)"
             ) {
                 clearScreen()
@@ -132,7 +132,7 @@ struct TerminalToolbarView: View {
 
             // 搜索
             ToolbarButton(
-                icon: "magnifyingglass",
+                icon: .search,
                 tooltip: "搜索 (⌘F)",
                 isActive: showSearch
             ) {
@@ -146,7 +146,7 @@ struct TerminalToolbarView: View {
             // 连接/断开
             if controller.state == .connected {
                 ToolbarButton(
-                    icon: "xmark.circle",
+                    icon: .xmarkCircle,
                     tooltip: "断开连接",
                     tintColor: DesignTokens.Colors.statusError
                 ) {
@@ -154,7 +154,7 @@ struct TerminalToolbarView: View {
                 }
             } else if controller.state == .disconnected || controller.state.isFailed {
                 ToolbarButton(
-                    icon: "bolt.fill",
+                    icon: .quickCommand,
                     tooltip: "连接",
                     tintColor: DesignTokens.Colors.statusConnected
                 ) {
@@ -162,7 +162,7 @@ struct TerminalToolbarView: View {
                 }
             } else if controller.state.isReconnecting {
                 ToolbarButton(
-                    icon: "xmark.circle",
+                    icon: .xmarkCircle,
                     tooltip: "取消重连"
                 ) {
                     cancelReconnect()
@@ -223,7 +223,7 @@ struct ToolbarButton: View {
     // MARK: - 属性
 
     /// 图标名称
-    let icon: String
+    let icon: AppIcon
 
     /// 提示文本
     let tooltip: String
@@ -248,7 +248,7 @@ struct ToolbarButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: icon)
+            icon.image
                 .font(DesignTokens.Typography.bodyMedium)
                 .imageScale(.medium)
                 .foregroundColor(buttonColor)

@@ -214,9 +214,9 @@ struct HostKeyConfirmationView: View {
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
-                tipRow(icon: "checkmark.circle", text: "通过安全渠道向服务器管理员确认指纹")
-                tipRow(icon: "checkmark.circle", text: "不要在公共网络上首次连接重要服务器")
-                tipRow(icon: "xmark.circle", text: "如果指纹不匹配，请勿继续连接", isWarning: true)
+                tipRow(icon: .checkmarkCircle, text: "通过安全渠道向服务器管理员确认指纹")
+                tipRow(icon: .checkmarkCircle, text: "不要在公共网络上首次连接重要服务器")
+                tipRow(icon: .xmarkCircle, text: "如果指纹不匹配，请勿继续连接", isWarning: true)
             }
         }
     }
@@ -290,9 +290,9 @@ struct HostKeyConfirmationView: View {
     }
 
     /// 提示行
-    private func tipRow(icon: String, text: String, isWarning: Bool = false) -> some View {
+    private func tipRow(icon: AppIcon, text: String, isWarning: Bool = false) -> some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
-            Image(systemName: icon)
+            icon.image
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(isWarning ? DesignTokens.Colors.statusError : DesignTokens.Colors.statusConnected)
 

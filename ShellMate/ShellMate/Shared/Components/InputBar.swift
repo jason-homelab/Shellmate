@@ -19,10 +19,10 @@ struct InputBar: View {
     @Binding var text: String
 
     /// 左侧前缀 SF Symbol（可选）
-    var prefixIcon: String? = nil
+    var prefixIcon: AppIcon? = nil
 
     /// 右侧动作按钮 SF Symbol
-    var actionIcon: String = "arrow.up.circle.fill"
+    var actionIcon: AppIcon = .arrowUpCircleFill
 
     /// 是否禁用动作按钮
     var isActionDisabled: Bool = false
@@ -47,7 +47,7 @@ struct InputBar: View {
             // ── 输入框区 ──────────────────────────────────────────
             HStack(spacing: DesignTokens.Spacing.sm) {
                 if let prefixIcon {
-                    Image(systemName: prefixIcon)
+                    prefixIcon.image
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.iconSecondary)
                         .padding(.leading, DesignTokens.Spacing.sm)
@@ -85,7 +85,7 @@ struct InputBar: View {
 
             // ── 动作按钮 ──────────────────────────────────────────
             Button(action: onAction) {
-                Image(systemName: isStopMode ? "stop.fill" : actionIcon)
+                (isStopMode ? AppIcon.stopFill : actionIcon).image
                     .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(buttonForeground)
                     .frame(width: 44, height: 44)
@@ -120,22 +120,22 @@ struct InputBar: View {
         InputBar(
             placeholder: "Ask me anything about terminal commands...",
             text: .constant(""),
-            actionIcon: "arrow.up",
+            actionIcon: .arrowUp,
             onAction: {}
         )
 
         InputBar(
             placeholder: "远程路径",
             text: .constant("/home/ubuntu"),
-            prefixIcon: "folder",
-            actionIcon: "magnifyingglass",
+            prefixIcon: .folder,
+            actionIcon: .search,
             onAction: {}
         )
 
         InputBar(
             placeholder: "用自然语言描述...",
             text: .constant(""),
-            actionIcon: "arrow.up",
+            actionIcon: .arrowUp,
             accentBorder: DesignTokens.Colors.accentIndigo,
             onAction: {}
         )

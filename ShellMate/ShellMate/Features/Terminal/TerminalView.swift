@@ -610,12 +610,12 @@ struct TerminalView: View {
 
             toolbarDivider
 
-            ToolbarButton(icon: "clear", tooltip: "清屏 (⌘K)") {
+            ToolbarButton(icon: .clear, tooltip: "清屏 (⌘K)") {
                 controller.clearTerminal()
             }
 
             ToolbarButton(
-                icon: "magnifyingglass",
+                icon: .search,
                 tooltip: "搜索 (⌘F)",
                 isActive: showSearch
             ) {
@@ -626,7 +626,7 @@ struct TerminalView: View {
 
             // SFTP 文件管理器按钮
             ToolbarButton(
-                icon: "arrow.up.arrow.down",
+                icon: .arrowUpArrowDown,
                 tooltip: "SFTP 文件管理器",
                 isEnabled: controller.state == .connected,
                 isActive: controller.isSFTPPanelOpen
@@ -636,7 +636,7 @@ struct TerminalView: View {
 
             // 隧道管理器按钮（⌘⇧U）
             ToolbarButton(
-                icon: "arrow.left.arrow.right",
+                icon: .arrowLeftArrowRight,
                 tooltip: "隧道管理器 (⌘⇧U)",
                 isActive: panels.showTunnelPanel
             ) {
@@ -646,7 +646,7 @@ struct TerminalView: View {
             // tmux 会话管理器按钮（⌘⇧T）
             if case .available = controller.tmuxStore.availability {
                 ToolbarButton(
-                    icon: "rectangle.3.group",
+                    icon: .tmux,
                     tooltip: "tmux 会话管理器 (⌘⇧T)",
                     isActive: panels.showTmuxPanel,
                     tintColor: panels.showTmuxPanel ? DesignTokens.Colors.accentPrimary : nil
@@ -657,7 +657,7 @@ struct TerminalView: View {
 
             // Compose Pane 按钮
             ToolbarButton(
-                icon: "text.alignleft",
+                icon: .log,
                 tooltip: "命令编辑区",
                 isActive: controller.isComposePaneOpen
             ) {
@@ -668,7 +668,7 @@ struct TerminalView: View {
 
             // W11：快捷命令管理器按钮（⌘⇧K）
             ToolbarButton(
-                icon: "list.bullet.rectangle",
+                icon: .listBulletRectangle,
                 tooltip: "快捷命令 (⌘⇧K)",
                 isActive: panels.showQuickCommandPanel
             ) {
@@ -677,7 +677,7 @@ struct TerminalView: View {
 
             // W12.6：同步输入按钮（O03）
             ToolbarButton(
-                icon: syncStore.isSynced(session.id) ? "square.grid.2x2.fill" : "square.grid.2x2",
+                icon: syncStore.isSynced(session.id) ? .syncGrid : .squareGrid,
                 tooltip: syncStore.isSynced(session.id) ? "关闭同步输入" : "同步输入",
                 isEnabled: controller.state == .connected,
                 isActive: syncStore.isSynced(session.id),
@@ -696,7 +696,7 @@ struct TerminalView: View {
             // AI 助手按钮（仅在 AI 功能启用时显示）
             if aiSettings.isEnabled {
                 ToolbarButton(
-                    icon: "sparkles",
+                    icon: .ai,
                     tooltip: "AI 助手 (⌘⇧A)",
                     isActive: isAIPanelOpen,
                     tintColor: isAIPanelOpen ? nil : (controller.detectedErrorText != nil ? DesignTokens.Colors.statusConnecting : nil)
@@ -709,7 +709,7 @@ struct TerminalView: View {
 
                 // AI-05：会话摘要按钮（⌘⇧S）
                 ToolbarButton(
-                    icon: "text.viewfinder",
+                    icon: .textViewfinder,
                     tooltip: "会话摘要 (⌘⇧S)",
                     isEnabled: controller.state == .connected
                 ) {
@@ -729,7 +729,7 @@ struct TerminalView: View {
     private var fontSizeControls: some View {
         HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
             ToolbarButton(
-                icon: "minus.magnifyingglass",
+                icon: .zoomOut,
                 tooltip: "减小字号 (⌘-)",
                 isEnabled: sessionFontSize > minFontSize
             ) {
@@ -743,7 +743,7 @@ struct TerminalView: View {
                 .multilineTextAlignment(.center)
 
             ToolbarButton(
-                icon: "plus.magnifyingglass",
+                icon: .zoomIn,
                 tooltip: "增大字号 (⌘+)",
                 isEnabled: sessionFontSize < maxFontSize
             ) {

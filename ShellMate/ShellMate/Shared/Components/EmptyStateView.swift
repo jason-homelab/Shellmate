@@ -7,7 +7,7 @@ struct EmptyStateView: View {
 
     // MARK: - 属性
 
-    var iconName: String? = nil
+    var iconName: AppIcon? = nil
     var iconColor: Color? = nil      // 图标主色，nil 时用 teal/indigo 渐变
     let title: LocalizedStringKey
     var description: LocalizedStringKey?
@@ -69,7 +69,7 @@ struct EmptyStateView: View {
 
     // MARK: - 图标容器
 
-    private func iconContainer(_ iconName: String) -> some View {
+    private func iconContainer(_ iconName: AppIcon) -> some View {
         ZStack {
             // 外层漫射光晕
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -99,7 +99,7 @@ struct EmptyStateView: View {
                         )
                 )
 
-            Image(systemName: iconName)
+            iconName.image
                 .font(DesignTokens.Typography.displayLarge)
                 .foregroundStyle(
                     LinearGradient(
@@ -155,7 +155,7 @@ extension EmptyStateView {
     /// 无会话空状态
     static func noSessions(onAdd: @escaping () -> Void) -> EmptyStateView {
         EmptyStateView(
-            iconName: "desktopcomputer",
+            iconName: .desktop,
             title: "暂无会话",
             description: "添加第一个 SSH 连接，开始管理你的服务器",
             buttonTitle: "+ 新建会话",
@@ -166,7 +166,7 @@ extension EmptyStateView {
     /// 搜索无结果
     static func noSearchResults(query: String) -> EmptyStateView {
         EmptyStateView(
-            iconName: "magnifyingglass",
+            iconName: .search,
             title: "未找到结果",
             description: "没有与「\(query)」匹配的会话"
         )
@@ -175,7 +175,7 @@ extension EmptyStateView {
     /// 无分组
     static func noGroups(onAdd: @escaping () -> Void) -> EmptyStateView {
         EmptyStateView(
-            iconName: "folder",
+            iconName: .folder,
             title: "暂无分组",
             description: "创建分组来整理你的会话",
             buttonTitle: "新建分组",
@@ -186,7 +186,7 @@ extension EmptyStateView {
     /// 加载中
     static var loading: EmptyStateView {
         EmptyStateView(
-            iconName: "arrow.triangle.2.circlepath",
+            iconName: .arrowTriangle2Circlepath,
             title: "加载中...",
             description: nil
         )
@@ -195,7 +195,7 @@ extension EmptyStateView {
     /// 错误状态
     static func error(message: LocalizedStringKey, onRetry: @escaping () -> Void) -> EmptyStateView {
         EmptyStateView(
-            iconName: "exclamationmark.triangle",
+            iconName: .warning,
             iconColor: DesignTokens.Colors.statusError,
             title: "出错了",
             description: message,
