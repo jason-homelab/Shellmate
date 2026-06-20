@@ -24,6 +24,16 @@ final class TerminalController: ObservableObject {
         case failed(String)
     }
 
+    /// 自评 P1#9：断开原因（与 State 解耦，避免侵入式改造 .disconnected case）
+    /// 用于 TerminalView 派生 TerminalConnectionState.disconnected(reason:) 时区分场景
+    enum DisconnectReason: Equatable, Sendable {
+        case userInitiated     // 用户主动断开（点击「断开」/ 关闭 Tab）
+        case networkLost       // 网络中断 / socket 异常
+        case serverClosed      // 服务端正常关闭连接
+        case idleTimeout       // 空闲超时
+        case unknown           // 默认 / 兜底
+    }
+
     /// 待确认的主机密钥状态
     enum PendingHostKeyState {
         /// 首次连接新主机（对应 D02 弹窗）
@@ -64,6 +74,10 @@ final class TerminalController: ObservableObject {
     weak var terminalView: SwiftTerm.TerminalView?
 
     @Published var state: State = .disconnected
+
+    /// 自评 P1#9：最近一次断开原因，每次进入 .connected 时清零，每次进入 .disconnected
+    /// 时由调用方设置（disconnect 入参 / 网络监控回调 / SSH 错误分类）
+    @Published var lastDisconnectReason: DisconnectReason = .unknown
     /// 连接成功时间（用于状态栏显示已连接时长）
     @Published var connectedAt: Date? = nil
     /// TCP 握手延迟（毫秒），用于状态栏显示网络 RTT；nil 表示未测量或已断开
@@ -430,6 +444,8 @@ final class TerminalController: ObservableObject {
             state = .connected
             connectedAt = Date()
             latencyMs = sshConnection?.connectionLatencyMs
+            // 自评 P1#9：重置 disconnect reason，避免老值污染下次断开判定
+            lastDisconnectReason = .unknown
             delegate?.terminalController(self, didChangeState: state)
             logSystemEvent("已连接至 \(session.host):\(session.port)（用户：\(session.username)）")
             // 连接成功后通知 TunnelManager，触发 autoStart 规则
@@ -505,6 +521,8 @@ final class TerminalController: ObservableObject {
 
     func disconnect() async {
         userDisconnected = true
+        // 自评 P1#9：标注本次断开为用户主动，TerminalView 据此抑制重连 overlay
+        lastDisconnectReason = .userInitiated
         reconnectTask?.cancel()
         reconnectTask = nil
         sshConnection?.disconnect()

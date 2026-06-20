@@ -163,6 +163,41 @@ struct TerminalView: View {
     /// SFTP 双栏面板宽度（使用设计令牌 sftpPanelWidth）
     @State private var sftpPanelWidth: CGFloat = DesignTokens.Sizes.sftpPanelWidth
 
+    // MARK: - W7 横切层通电 #2：ConnectionStateOverlay 桥接
+
+    /// 是否曾连接过（用于区分"初始 disconnected"与"已连接后掉线"）
+    @State private var hasEverConnected: Bool = false
+
+    /// 派生自 controller.state 的 W2 状态机表示，仅供 Overlay 使用
+    /// 现有 .failed Sheet 不变，Overlay 仅承担 disconnected 重连 UX
+    /// 自评 P1#9 修正：用 controller.lastDisconnectReason 区分用户主动 vs 网络丢失
+    private var derivedTerminalState: TerminalConnectionState {
+        switch controller.state {
+        case .disconnected:
+            guard hasEverConnected else { return .idle }
+            // 用户主动断开 → 不弹 overlay 引导重连（语义上是用户预期的断开）
+            // 网络/服务器异常断开 → 弹 overlay 引导重连
+            let reason: TerminalConnectionState.DisconnectReason
+            switch controller.lastDisconnectReason {
+            case .userInitiated: reason = .userInitiated
+            case .networkLost:   reason = .networkLost
+            case .serverClosed:  reason = .serverClosed
+            case .idleTimeout:   reason = .idleTimeout
+            case .unknown:       reason = .networkLost  // 默认按网络丢失处理（引导重连）
+            }
+            return .disconnected(reason: reason)
+        case .connecting:
+            return .connecting(stage: .handshake)
+        case .connected:
+            return .connected(since: controller.connectedAt ?? Date())
+        case .reconnecting(let attempt):
+            return .reconnecting(attempt: attempt, maxAttempts: 5)
+        case .failed:
+            // .failed 沿用现有 Sheet 路径，Overlay 不参与
+            return .idle
+        }
+    }
+
     // MARK: - 初始化
 
     init(session: Session, isSelected: Bool = true) {
@@ -250,6 +285,42 @@ struct TerminalView: View {
                 connectionErrorMessage = reason
                 showConnectionError = true
             }
+            // W7：跟踪是否曾连接过，供 ConnectionStateOverlay 判定是否显示重连按钮
+            if case .connected = newState {
+                if !hasEverConnected {
+                    // Phase 13：首次连接成功引导
+                    OnboardingDirector.onFirstSuccessfulConnection()
+                }
+                hasEverConnected = true
+            }
+        }
+        // Phase 2：BannerHost(.terminal) slot 接入，让 Feedback Banner 可在终端内显示
+        .overlay(alignment: .top) {
+            BannerHost(slot: .terminal)
+                .padding(.top, DesignTokens.Spacing.sm)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+        }
+        // W7 横切层通电 #2：在 disconnected 后挂出 ConnectionStateOverlay
+        // .failed 仍走原 Sheet 路径，二者互斥（derivedTerminalState 已在 .failed 返回 .idle）
+        .overlay {
+            ConnectionStateOverlay(
+                state: derivedTerminalState,
+                onReconnect: {
+                    Task { @MainActor in connect() }
+                },
+                onCancel: {
+                    // 用户主动取消重连引导，不主动断连，仅隐藏 overlay（标记 idle）
+                    hasEverConnected = false
+                },
+                onEditCredentials: {
+                    // Phase 4：真接入 — 触发 SessionStore 编辑当前会话
+                    NotificationCenter.default.post(
+                        name: .editSessionRequested,
+                        object: nil,
+                        userInfo: ["sessionId": session.id]
+                    )
+                }
+            )
         }
         .sheet(isPresented: $showConnectionError) {
             ConnectionErrorView(
@@ -423,7 +494,7 @@ struct TerminalView: View {
                             errorText: errText,
                             onAnalyze: { text in
                                 aiInitialError = text
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(DesignTokens.Animation.standard) {
                                     isAIPanelOpen = true
                                 }
                                 controller.clearDetectedError()
@@ -723,7 +794,7 @@ struct TerminalView: View {
                         .foregroundColor(DesignTokens.Colors.textTertiary)
 
                     // SFTP 图标（Figma: folder.fill）
-                    Image(systemName: "folder.fill")
+                    AppIcon.folderFill.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(
                             controller.isSFTPPanelOpen
@@ -795,107 +866,20 @@ struct TerminalView: View {
     }
 
     @ViewBuilder
+    /// Phase 14：已抽出到 TerminalStateOverlays.swift
+    /// 原 4 个 overlay 子视图（~100 行）成为独立 TerminalStateOverlay struct
     private var stateOverlay: some View {
-        switch controller.state {
-        case .disconnected:     disconnectedOverlay
-        case .connecting:       connectingOverlay
-        case .reconnecting(let attempt): reconnectingOverlay(attempt: attempt)
-        case .failed(let reason): failedOverlay(reason: reason)
-        case .connected:        EmptyView()
-        }
-    }
-
-    private var disconnectedOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "terminal")
-                .font(DesignTokens.Typography.heroLarge)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-
-            Text("未连接")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            Text("\(session.username)@\(session.host):\(session.port)")
-                .font(DesignTokens.Typography.codeMedium)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-
-            Button(action: connect) {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "bolt.fill")
-                    Text("连接")
-                }
-                .font(DesignTokens.Typography.labelLarge)
-                .foregroundColor(.white)
-                .padding(.horizontal, DesignTokens.Spacing.xxl)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .background(DesignTokens.Colors.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusMedium, style: .continuous))
+        TerminalStateOverlay(
+            state: controller.state,
+            session: session,
+            maxReconnectAttempts: controller.reconnectConfig.maxAttempts,
+            onConnect: { connect() },
+            onCancelReconnect: { controller.cancelReconnect() },
+            onDismissFailure: {
+                showConnectionError = false
+                Task { await controller.disconnect() }
             }
-            .buttonStyle(.plain)
-            .padding(.top, DesignTokens.Spacing.md)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
-    }
-
-    private var connectingOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.large)
-            Text("正在连接...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("\(session.username)@\(session.host)")
-                .font(DesignTokens.Typography.codeSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.9))
-    }
-
-    private func reconnectingOverlay(attempt: Int) -> some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.large)
-            Text("正在重连...")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-            Text("第 \(attempt) 次尝试，共 \(controller.reconnectConfig.maxAttempts) 次")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-            Button("取消") { controller.cancelReconnect() }
-                .buttonStyle(.bordered)
-                .padding(.top, DesignTokens.Spacing.sm)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.9))
-    }
-
-    private func failedOverlay(reason: String) -> some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(DesignTokens.Typography.heroLarge)
-                .foregroundColor(DesignTokens.Colors.statusError)
-
-            Text("连接失败")
-                .font(DesignTokens.Typography.titleMedium)
-                .foregroundColor(DesignTokens.Colors.textPrimary)
-
-            Text(reason)
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignTokens.Spacing.xxxl)
-
-            HStack(spacing: DesignTokens.Spacing.md) {
-                Button("重试") { connect() }.buttonStyle(.borderedProminent)
-                Button("关闭") {
-                    showConnectionError = false
-                    Task { await controller.disconnect() }
-                }.buttonStyle(.bordered)
-            }
-            .padding(.top, DesignTokens.Spacing.sm)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.Colors.surfaceWindow.opacity(0.95))
+        )
     }
 
     // MARK: - 密码输入向导
@@ -917,7 +901,7 @@ struct TerminalView: View {
                     showCredentialWizard = false
                     controller.needsCredentialInput = false
                 }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.bodySmallStrong)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)
@@ -933,7 +917,7 @@ struct TerminalView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 // 认证方式提示
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "key.fill")
+                    AppIcon.key.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                     Text(session.authMethod == .keyboardInteractive ? "键盘交互认证" : "密码认证")
@@ -1049,8 +1033,42 @@ struct TerminalView: View {
                 do {
                     try await controller.openSFTPPanel()
                 } catch {
+                    // 保留原 Alert 路径（向后兼容），同时叠加 W7 Feedback Banner
+                    // 含 retry Action：演示横切层通电 #4 错误恢复路径
                     sftpErrorMessage = error.localizedDescription
                     showSFTPError = true
+                    FeedbackCenter.shared.present(.error(
+                        "SFTP 连接失败",
+                        message: LocalizedStringKey(error.localizedDescription),
+                        actions: [
+                            .retry { @MainActor in
+                                do {
+                                    try await controller.openSFTPPanel()
+                                } catch {
+                                    AppLogger.sftp.warning("SFTP retry failed: \(error.localizedDescription, privacy: .public)")
+                                }
+                            },
+                            // Phase 4：testNetwork 真接入 — 触发 Preflight DNS+TCP 检查
+                            .testNetwork { @MainActor in
+                                let result = await ConnectionPreflightService.shared.preflight(
+                                    host: session.host, port: Int(session.port),
+                                    username: session.username, authMethod: .skipAuth
+                                )
+                                if case .success = result.summary {
+                                    FeedbackCenter.shared.present(.success(
+                                        "网络可达",
+                                        message: "DNS + TCP 检查通过，问题可能在远端 SFTP 子系统"
+                                    ))
+                                } else {
+                                    FeedbackCenter.shared.present(.warn(
+                                        "网络层异常",
+                                        message: "测试连接面板可看详细原因"
+                                    ))
+                                }
+                            }
+                        ],
+                        bannerSlot: .global
+                    ))
                 }
             }
         }
@@ -1072,129 +1090,5 @@ struct TerminalView: View {
         let found = terminalViewRef?.findPrevious(searchText, options: opts) ?? false
         totalMatches = found ? 1 : 0
         currentMatch = found ? 1 : 0
-    }
-}
-
-// MARK: - 通知处理 ViewModifier
-
-/// 将 TerminalView 的菜单栏通知处理提取为独立 ViewModifier，
-/// 避免 TerminalView.body 链式修饰符过多导致 Swift 类型检查超时
-private struct TerminalViewNotificationModifier: ViewModifier {
-
-    let sessionId: UUID
-    let isSelected: Bool
-    let controller: TerminalController
-    @Binding var showSearch: Bool
-    @Binding var fontSize: Double
-    @Binding var isAIPanelOpen: Bool
-    @Binding var aiInitialError: String?
-    let minFontSize: Double
-    let maxFontSize: Double
-    let onToggleSFTP: () -> Void
-    @EnvironmentObject private var panels: ContentViewModel
-
-    func body(content: Content) -> some View {
-        content
-            // 断开连接（通过 sessionId 精确路由）
-            .onReceive(NotificationCenter.default.publisher(for: .disconnectActiveTerminalRequested)) { notification in
-                guard let targetId = AppEvent.extractDisconnectTerminal(from: notification),
-                      targetId == sessionId else { return }
-                Task { await controller.disconnect() }
-            }
-            // 面板控制
-            .onReceive(NotificationCenter.default.publisher(for: .sftpPanelRequested)) { _ in
-                guard isSelected else { return }
-                onToggleSFTP()
-                panels.showSFTPPanel = controller.isSFTPPanelOpen
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .aiPanelRequested)) { _ in
-                guard isSelected else { return }
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isAIPanelOpen.toggle()
-                    if !isAIPanelOpen { aiInitialError = nil }
-                }
-                panels.showAIPanel = isAIPanelOpen
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .composePaneRequested)) { _ in
-                guard isSelected else { return }
-                withAnimation(.easeInOut(duration: 0.2)) { controller.isComposePaneOpen.toggle() }
-            }
-            // 终端控制（仅作用于当前活跃 Tab，其余 Tab 的 TerminalView 虽然存活在 ZStack 中也不响应）
-            .onReceive(NotificationCenter.default.publisher(for: .clearTerminalRequested)) { _ in
-                guard isSelected else { return }
-                controller.clearTerminal()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .searchTerminalRequested)) { _ in
-                guard isSelected else { return }
-                withAnimation { showSearch.toggle() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .increaseFontRequested)) { _ in
-                fontSize = min(maxFontSize, fontSize + 1)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .decreaseFontRequested)) { _ in
-                fontSize = max(minFontSize, fontSize - 1)
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .resetFontRequested)) { _ in
-                fontSize = 13
-            }
-            // 脚本库：将脚本内容逐行发送到活跃终端
-            .onReceive(NotificationCenter.default.publisher(for: .runScriptRequested)) { notification in
-                guard isSelected,
-                      let (content, _) = AppEvent.extractRunScript(from: notification) else { return }
-                Task {
-                    let lines = content.components(separatedBy: "\n")
-                    for line in lines {
-                        guard !line.hasPrefix("#") else { continue } // 跳过注释行
-                        let trimmed = line.trimmingCharacters(in: .whitespaces)
-                        if trimmed.isEmpty { continue }
-                        try? await controller.send(trimmed + "\r")
-                        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms 行间延迟
-                    }
-                }
-            }
-    }
-}
-
-// MARK: - 多终端标签视图
-
-struct MultiTerminalView: View {
-
-    @ObservedObject var sessionManager: TerminalSessionManager
-    let sessions: [Session]
-
-    var body: some View {
-        if let selectedId = sessionManager.selectedControllerId,
-           let session = sessions.first(where: { $0.id == selectedId }) {
-            TerminalView(session: session)
-        } else {
-            Text("请从侧边栏选择会话")
-                .font(DesignTokens.Typography.bodyMedium)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-    }
-}
-
-
-// MARK: - 连接相关 Alert 修饰符（拆分以避免类型检查超时）
-
-private struct TerminalViewAlertModifier: ViewModifier {
-    @Binding var showSFTPError: Bool
-    let sftpErrorMessage: String
-    @Binding var showTunnelError: Bool
-    let tunnelErrorMessage: String
-
-    func body(content: Content) -> some View {
-        content
-            .alert("SFTP 连接失败", isPresented: $showSFTPError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(sftpErrorMessage)
-            }
-            .alert("隧道启动失败", isPresented: $showTunnelError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text(tunnelErrorMessage)
-            }
     }
 }

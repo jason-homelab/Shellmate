@@ -28,9 +28,9 @@ struct WelcomeScreenView: View {
                 RadialGradient(
                     stops: [
                         .init(color: DesignTokens.Colors.accentPrimary.opacity(0.08), location: 0.0),
-                        .init(color: Color(hex: "#4299fd").opacity(0.31), location: 0.25),
-                        .init(color: Color(hex: "#7eb7fb").opacity(0.54), location: 0.50),
-                        .init(color: Color(hex: "#bad6f9").opacity(0.77), location: 0.75),
+                        .init(color: DesignTokens.Gradients.welcomeStart.opacity(0.31), location: 0.25),
+                        .init(color: DesignTokens.Gradients.welcomeMid.opacity(0.54), location: 0.50),
+                        .init(color: DesignTokens.Gradients.welcomeEnd.opacity(0.77), location: 0.75),
                         .init(color: DesignTokens.Colors.surfaceWindow.opacity(0.0),  location: 1.0)
                     ],
                     center: .top,
@@ -45,7 +45,7 @@ struct WelcomeScreenView: View {
                 HStack {
                     Spacer()
                     Button(action: { vm.skip() }) {
-                        Image(systemName: "xmark")
+                        AppIcon.close.image
                             .font(DesignTokens.Typography.labelSmall)
                             .foregroundColor(DesignTokens.Colors.textPrimary)
                             .frame(width: 32, height: 32)
@@ -319,7 +319,7 @@ private struct WelcomeActionCard: View {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
                     Text(buttonLabel)
                         .font(DesignTokens.Typography.labelLarge)
-                    Image(systemName: "arrow.right")
+                    AppIcon.arrowRight.image
                         .font(DesignTokens.Typography.captionLarge)
                         .offset(x: isHovering ? 2 : 0)
                         .animation(.easeInOut(duration: 0.2), value: isHovering)

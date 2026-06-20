@@ -201,7 +201,7 @@ struct SessionAdvancedTab: View {
                                     envVarEntries.removeAll { $0.id == entry.id }
                                 }
                             }) {
-                                Image(systemName: "xmark")
+                                AppIcon.close.image
                                     .font(DesignTokens.Typography.captionMedium)
                                     .foregroundColor(DesignTokens.Colors.textDisabled)
                             }
@@ -219,7 +219,7 @@ struct SessionAdvancedTab: View {
     private var tmuxSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "rectangle.3.group")
+                AppIcon.tmux.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 sectionLabel("tmux 集成")

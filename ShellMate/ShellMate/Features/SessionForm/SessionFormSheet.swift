@@ -23,6 +23,12 @@ struct SessionFormSheet: View {
 
     @State private var cancelHovered: Bool = false
 
+    // MARK: - W4 新增：测试连接状态（解 UE-P0#2）
+
+    @State private var preflightResult: PreflightResult?
+    @State private var preflightRunning: Bool = false
+    @State private var showPreflightPanel: Bool = false
+
     // MARK: - 颜色常量
 
     private let labelColor = DesignTokens.Colors.textPrimary
@@ -120,10 +126,15 @@ struct SessionFormSheet: View {
                         fieldGroup(label: "密码") {
                             VStack(spacing: DesignTokens.Spacing.sm) {
                                 CustomTextField(placeholder: "输入密码（可选）", text: $vm.password, isSecure: true)
-                                HStack {
+                                HStack(spacing: 4) {
                                     Text("保存密码到 Keychain")
                                         .font(DesignTokens.Typography.bodySmall)
                                         .foregroundColor(DesignTokens.Colors.textSecondary)
+                                    // Phase 3：术语 Tooltip — Keychain 解释
+                                    AppIcon.info.image
+                                        .font(.system(size: 11))
+                                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                                        .help("Keychain 是 macOS 系统提供的密码加密存储，仅本机可用，重启不丢失")
                                     Spacer()
                                     Toggle("", isOn: $vm.saveCredential)
                                         .toggleStyle(.switch)
@@ -197,7 +208,7 @@ struct SessionFormSheet: View {
             Spacer()
 
             Button(action: { vm.cancel() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 24, height: 24)
@@ -219,7 +230,7 @@ struct SessionFormSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(vm.validationErrors, id: \.self) { error in
                         HStack(spacing: DesignTokens.Spacing.xs) {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            AppIcon.feedbackWarn.image
                                 .font(DesignTokens.Typography.bodySmall)
                                 .foregroundColor(DesignTokens.Colors.statusError)
                             Text(error)
@@ -229,6 +240,32 @@ struct SessionFormSheet: View {
                     }
                 }
             }
+
+            // W4 新增：测试连接按钮（解 UE-P0#2）
+            Button(action: runPreflight) {
+                HStack(spacing: 6) {
+                    if preflightRunning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        AppIcon.connect.image.font(.system(size: 12))
+                    }
+                    Text(preflightRunning ? "测试中…" : "测试连接")
+                }
+                .font(DesignTokens.Typography.bodySmall)
+                .foregroundColor(DesignTokens.Colors.textPrimary)
+                .frame(height: 36)
+                .padding(.horizontal, 14)
+                .background(DesignTokens.Colors.glassLight)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
+                        .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(preflightRunning || vm.host.isEmpty)
+            .opacity((preflightRunning || vm.host.isEmpty) ? 0.5 : 1.0)
+            .help("不打开会话，先验证主机连通性 (DNS / TCP / SSH)")
 
             Spacer()
 
@@ -260,6 +297,82 @@ struct SessionFormSheet: View {
         }
         .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.vertical, DesignTokens.Spacing.lg)
+        .overlay(alignment: .top) {
+            // 自评 P1#7：sessionForm slot Banner Host，覆盖表单顶部
+            // 用于表单内 inline 错误恢复（独立于 Preflight 浮层）
+            BannerHost(slot: .sessionForm)
+                .padding(.top, 4)
+                .allowsHitTesting(true)
+        }
+        .overlay(alignment: .top) {
+            // W4 新增：Preflight 结果浮层（覆盖底部按钮上方）
+            if showPreflightPanel {
+                PreflightProgressView(result: preflightResult, isRunning: preflightRunning)
+                    .frame(maxWidth: 420)
+                    .padding(.bottom, 4)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                    .offset(y: -76)
+            }
+        }
+    }
+
+    // MARK: - W4 新增：触发 Preflight
+
+    private func runPreflight() {
+        let host = vm.host.trimmingCharacters(in: .whitespaces)
+        guard !host.isEmpty else { return }
+        let portValue = Int(vm.port) ?? 22
+
+        preflightRunning = true
+        showPreflightPanel = true
+        preflightResult = nil
+
+        Task {
+            let result = await ConnectionPreflightService.shared.preflight(
+                host: host,
+                port: portValue,
+                username: vm.username,
+                authMethod: .skipAuth
+            )
+            await MainActor.run {
+                preflightResult = result
+                preflightRunning = false
+                // 横切层通电 #1：触发 Feedback Toast
+                fireFeedbackForPreflight(result, host: host)
+            }
+        }
+    }
+
+    /// W7：根据 Preflight 结果触发 FeedbackCenter Toast
+    /// - 成功 → success Toast（含耗时）
+    /// - 失败 → warn Toast（仅简要提示，详细建议保留在 PreflightProgressView 内）
+    private func fireFeedbackForPreflight(_ result: PreflightResult, host: String) {
+        switch result.summary {
+        case .success:
+            FeedbackCenter.shared.present(.success(
+                "连接测试成功",
+                message: "总耗时 \(result.totalElapsedMs)ms"
+            ))
+        case .failedAt(let stage, _):
+            FeedbackCenter.shared.present(.warn(
+                "测试失败：\(stageName(stage))",
+                message: "详细原因见下方诊断"
+            ))
+        case .cancelled:
+            break
+        }
+    }
+
+    private func stageName(_ stage: PreflightStage) -> String {
+        switch stage {
+        case .dns:       return "DNS 解析"
+        case .tcp:       return "TCP 建联"
+        case .handshake: return "SSH 握手"
+        case .auth:      return "身份认证"
+        }
     }
 
     // MARK: - 通用字段组
@@ -302,7 +415,7 @@ struct SessionFormSheet: View {
                     Button {
                         vm.refreshSerialPorts()
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        AppIcon.arrowClockwise.image
                             .font(DesignTokens.Typography.bodySmall)
                             .foregroundColor(DesignTokens.Colors.textSecondary)
                     }
@@ -418,6 +531,10 @@ struct SessionFormSheet: View {
                                 Text("私钥").tag(AuthMethod.privateKey)
                                 Text("SSH Agent").tag(AuthMethod.sshAgent)
                             }
+                            // Phase 3：术语 Tooltip — SSH Agent 解释
+                            .help(vm.authMethod == .sshAgent
+                                ? "SSH Agent 通过 $SSH_AUTH_SOCK 套接字使用系统已加载的私钥（需 ssh-add 添加）。App Store 版受 sandbox 限制无法访问"
+                                : "选择身份认证方式：密码 / 私钥文件 / 已加载的 SSH Agent 密钥")
                             .pickerStyle(.menu)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10).padding(.vertical, 7)

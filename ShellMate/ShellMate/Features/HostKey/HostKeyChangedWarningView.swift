@@ -88,7 +88,7 @@ struct HostKeyChangedWarningView: View {
     /// 警告标题栏
     private var warningHeader: some View {
         HStack {
-            Image(systemName: "exclamationmark.triangle.fill")
+            AppIcon.feedbackWarn.image
                 .font(DesignTokens.Typography.displaySmall)
                 .foregroundColor(DesignTokens.Colors.statusError)
 
@@ -106,7 +106,7 @@ struct HostKeyChangedWarningView: View {
     private var criticalWarningSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                Image(systemName: "shield.slash.fill")
+                AppIcon.shieldSlash.image
                     .font(DesignTokens.Typography.heroMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
@@ -124,7 +124,7 @@ struct HostKeyChangedWarningView: View {
 
             // 中间人攻击警告
             HStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "person.fill.xmark")
+                AppIcon.personXmark.image
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 
@@ -207,7 +207,7 @@ struct HostKeyChangedWarningView: View {
                 )
 
                 // 箭头
-                Image(systemName: "arrow.down")
+                AppIcon.arrowDown.image
                     .font(DesignTokens.Typography.titleMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
 

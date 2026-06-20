@@ -90,7 +90,7 @@ struct PasswordManagerView: View {
             Spacer()
 
             Button(action: { onClose?() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -142,7 +142,7 @@ struct PasswordManagerView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "key.slash")
+            AppIcon.keySlash.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无已保存的密码")
@@ -220,7 +220,7 @@ struct PasswordManagerView: View {
             Button {
                 pendingDeleteSession = session
             } label: {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .frame(width: 28, height: 28)

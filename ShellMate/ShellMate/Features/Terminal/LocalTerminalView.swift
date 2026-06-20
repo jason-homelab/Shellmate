@@ -96,7 +96,7 @@ struct LocalTerminalView: View {
 
     private func terminatedOverlay(exitCode: Int32) -> some View {
         VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "terminal")
+            AppIcon.terminal.image
                 .font(DesignTokens.Typography.heroLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
 
@@ -203,7 +203,7 @@ private struct LocalTerminalToolbarView: View {
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             // Shell 图标
-            Image(systemName: "terminal.fill")
+            AppIcon.terminalFill.image
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
 
@@ -219,7 +219,7 @@ private struct LocalTerminalToolbarView: View {
             Button {
                 fontSize = max(minFontSize, fontSize - 1)
             } label: {
-                Image(systemName: "minus.magnifyingglass")
+                AppIcon.zoomOut.image
                     .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)
@@ -235,7 +235,7 @@ private struct LocalTerminalToolbarView: View {
             Button {
                 fontSize = min(maxFontSize, fontSize + 1)
             } label: {
-                Image(systemName: "plus.magnifyingglass")
+                AppIcon.zoomIn.image
                     .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)
@@ -245,7 +245,7 @@ private struct LocalTerminalToolbarView: View {
 
             // 清屏按钮
             Button(action: onClear) {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.bodySmall)
             }
             .buttonStyle(.plain)

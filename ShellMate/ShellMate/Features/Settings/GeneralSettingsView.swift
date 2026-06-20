@@ -17,6 +17,8 @@ struct GeneralSettingsView: View {
     @AppStorage("general.commandNotification")   private var commandNotification: Bool   = false
     // 安全
     @AppStorage("general.verifyKnownHosts")      private var verifyKnownHosts: Bool      = true
+    // W6：欢迎引导（解 UE-P2#27 再次显示入口）
+    @AppStorage("hasLaunchedBefore")             private var hasLaunchedBefore: Bool     = false
 
     // MARK: - 视图
 
@@ -48,6 +50,17 @@ struct GeneralSettingsView: View {
             // Figma 14:44 — 安全
             sectionHeader("安全")
             toggleRow(title: "已知主机验证",   subtitle: "验证 SSH 服务器指纹",   binding: $verifyKnownHosts)
+
+            // W6 — 引导
+            sectionHeader("引导")
+            actionRow(
+                title: "再次显示欢迎引导",
+                subtitle: "下次启动时重新展示三步引导",
+                buttonTitle: hasLaunchedBefore ? "重置" : "已重置",
+                isEnabled: hasLaunchedBefore
+            ) {
+                hasLaunchedBefore = false
+            }
         }
     }
 
@@ -68,6 +81,52 @@ struct GeneralSettingsView: View {
             .padding(.top, 16)
             .padding(.bottom, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// W6 新增：右侧文字按钮行（用于"再次显示欢迎引导"等触发型设置）
+    private func actionRow(
+        title: String,
+        subtitle: String,
+        buttonTitle: String,
+        isEnabled: Bool = true,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(DesignTokens.Colors.textPrimary)
+                Text(subtitle)
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(DesignTokens.Colors.textSubtle)
+            }
+            Spacer()
+            Button(action: action) {
+                Text(buttonTitle)
+                    .font(DesignTokens.Typography.bodySmall)
+                    .foregroundColor(isEnabled ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
+                    .padding(.horizontal, 14)
+                    .frame(height: 28)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(DesignTokens.Colors.glassLight)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .strokeBorder(DesignTokens.Colors.glassBorderSide, lineWidth: 1)
+                            )
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(!isEnabled)
+        }
+        .padding(.horizontal, 28)
+        .frame(height: 52)
+        .overlay(
+            Rectangle()
+                .fill(Color.black.opacity(0.06))
+                .frame(height: 0.5),
+            alignment: .bottom
+        )
     }
 
     // Figma: h-[52px] px-[28px]，title text-[13px] medium #1d1d1f，subtitle text-[12px] #8e8e93，bottom border rgba(0,0,0,0.06)

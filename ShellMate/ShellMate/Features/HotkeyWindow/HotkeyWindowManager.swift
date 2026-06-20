@@ -205,7 +205,7 @@ struct HotkeyTerminalContentView: View {
 
     private var titleBar: some View {
         HStack(spacing: 8) {
-            Image(systemName: "terminal.fill")
+            AppIcon.terminalFill.image
                 .font(DesignTokens.Typography.labelSmall)
                 .foregroundColor(DesignTokens.Colors.textSecondary)
 
@@ -230,7 +230,7 @@ struct HotkeyTerminalContentView: View {
             AutoHideToggleButton()
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.captionMediumStrong)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
@@ -275,7 +275,7 @@ struct HotkeyTerminalContentView: View {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.18), lineWidth: 0.75)
                     )
-                Image(systemName: "desktopcomputer")
+                AppIcon.desktop.image
                     .font(DesignTokens.Typography.displayMedium)
                     .foregroundStyle(LinearGradient(
                         colors: [DesignTokens.Colors.accentPrimary, DesignTokens.Colors.accentIndigo],

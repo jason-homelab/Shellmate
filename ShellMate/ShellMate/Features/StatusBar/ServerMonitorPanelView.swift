@@ -61,7 +61,7 @@ struct ServerMonitorPanelView: View {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(DesignTokens.Gradients.aiGradient)
                     .frame(width: 32, height: 32)
-                Image(systemName: "chart.xyaxis.line")
+                AppIcon.chartLine.image
                     .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(.white)
             }
@@ -86,7 +86,7 @@ struct ServerMonitorPanelView: View {
             }
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 20, height: 20)
@@ -192,7 +192,7 @@ struct ServerMonitorPanelView: View {
 
         return VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack(spacing: DesignTokens.Spacing.micro) {
-                Image(systemName: "internaldrive")
+                AppIcon.storage.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(diskColor)
                 Text("磁盘 (/)")
@@ -238,7 +238,7 @@ struct ServerMonitorPanelView: View {
     private var uptimeCard: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack(spacing: DesignTokens.Spacing.micro) {
-                Image(systemName: "clock.arrow.circlepath")
+                AppIcon.clockArrow.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.accentSecondary)
                 Text("采样统计")
@@ -272,7 +272,7 @@ struct ServerMonitorPanelView: View {
     private var networkCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: DesignTokens.Spacing.micro) {
-                Image(systemName: "network")
+                AppIcon.networkIcon.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.accentIndigo)
                 Text("网络 I/O")
@@ -284,7 +284,7 @@ struct ServerMonitorPanelView: View {
             HStack(spacing: DesignTokens.Spacing.xl) {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: "arrow.down")
+                        AppIcon.arrowDown.image
                             .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.accentSecondary)
                         Text("下载")
@@ -298,7 +298,7 @@ struct ServerMonitorPanelView: View {
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: "arrow.up")
+                        AppIcon.arrowUp.image
                             .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(DesignTokens.Colors.accentPrimary)
                         Text("上传")

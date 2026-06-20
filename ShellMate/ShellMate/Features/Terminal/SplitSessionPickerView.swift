@@ -75,7 +75,7 @@ struct SplitSessionPickerView: View {
             }
             Spacer()
             Button(action: { onCancel?() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -91,7 +91,7 @@ struct SplitSessionPickerView: View {
 
     private var searchBar: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "magnifyingglass")
+            AppIcon.search.image
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             TextField("搜索会话…", text: $searchText)
@@ -132,7 +132,7 @@ struct SplitSessionPickerView: View {
     private func singleSelectRow(_ session: Session) -> some View {
         Button(action: { onSelect?(session) }) {
             HStack(spacing: DesignTokens.Spacing.md) {
-                Image(systemName: "terminal")
+                AppIcon.terminal.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                     .frame(width: 20)
@@ -148,7 +148,7 @@ struct SplitSessionPickerView: View {
 
                 Spacer()
 
-                Image(systemName: "chevron.right")
+                AppIcon.chevronRight.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -182,14 +182,14 @@ struct SplitSessionPickerView: View {
                         )
                         .frame(width: 18, height: 18)
                     if isSelected {
-                        Image(systemName: "checkmark")
+                        AppIcon.checkmark.image
                             .font(DesignTokens.Typography.captionMedium)
                             .foregroundColor(.white)
                     }
                 }
 
                 // 会话图标
-                Image(systemName: "terminal")
+                AppIcon.terminal.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(isDisabled
                         ? DesignTokens.Colors.textDisabled
@@ -235,7 +235,7 @@ struct SplitSessionPickerView: View {
             if isMultiSelect {
                 // 已选数量提示
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "checkmark.circle.fill")
+                    AppIcon.feedbackSuccess.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(selectedIds.isEmpty
                             ? DesignTokens.Colors.textDisabled

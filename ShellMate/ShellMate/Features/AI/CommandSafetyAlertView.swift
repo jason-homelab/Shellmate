@@ -98,7 +98,7 @@ struct CommandSafetyAlertView: View {
 
             // 风险说明
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "info.circle.fill")
+                AppIcon.feedbackInfo.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(riskColor)
                 Text(risk.reason)
@@ -115,7 +115,7 @@ struct CommandSafetyAlertView: View {
     private var aiAnalysisView: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "sparkles")
+                AppIcon.ai.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                 Text("AI 风险说明")

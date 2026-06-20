@@ -88,7 +88,7 @@ struct ScriptEditorSheet: View {
                     // 验证错误
                     if !validationError.isEmpty {
                         HStack(spacing: DesignTokens.Spacing.xs) {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            AppIcon.feedbackWarn.image
                             Text(validationError)
                         }
                         .font(DesignTokens.Typography.bodySmall)
@@ -117,7 +117,7 @@ struct ScriptEditorSheet: View {
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             Button(action: onCancel) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)

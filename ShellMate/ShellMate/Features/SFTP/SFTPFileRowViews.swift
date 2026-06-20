@@ -43,7 +43,7 @@ struct LocalFileRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if item.isDirectory {
-                Image(systemName: "chevron.right")
+                AppIcon.chevronRight.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .opacity(isHovering ? 1 : 0)
@@ -63,7 +63,7 @@ struct LocalFileRowView: View {
                     .strokeBorder(DesignTokens.Colors.accentPrimary.opacity(0.30), lineWidth: 1)
                 : nil
         )
-        .animation(.easeInOut(duration: 0.12), value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
         .onHover { isHovering = $0 }
         .help(item.name)
     }
@@ -110,7 +110,7 @@ struct RemoteFileRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if item.fileType.isDirectory {
-                Image(systemName: "chevron.right")
+                AppIcon.chevronRight.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .opacity(isHovering ? 1 : 0)
@@ -130,7 +130,7 @@ struct RemoteFileRowView: View {
                     .strokeBorder(DesignTokens.Colors.statusConnected.opacity(0.30), lineWidth: 1)
                 : nil
         )
-        .animation(.easeInOut(duration: 0.12), value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
         .onHover { isHovering = $0 }
         .help(item.name + "  " + item.permissionsString)
     }

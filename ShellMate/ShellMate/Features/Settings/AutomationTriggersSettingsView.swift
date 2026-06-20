@@ -73,7 +73,7 @@ struct AutomationTriggersSettingsView: View {
                 showAddSheet = true
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "plus")
+                    AppIcon.plus.image
                         .font(DesignTokens.Typography.captionLarge)
                     Text("添加触发器")
                         .font(DesignTokens.Typography.labelSmall)
@@ -94,7 +94,7 @@ struct AutomationTriggersSettingsView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "bolt.slash")
+            AppIcon.boltSlash.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("暂无触发器")
@@ -163,7 +163,7 @@ struct AutomationTriggersSettingsView: View {
                             .lineLimit(1)
                     }
 
-                    Image(systemName: "arrow.right")
+                    AppIcon.arrowRight.image
                         .font(DesignTokens.Typography.captionSmall)
                         .foregroundColor(DesignTokens.Colors.textDisabled)
 
@@ -189,7 +189,7 @@ struct AutomationTriggersSettingsView: View {
             Button {
                 editingTrigger = trigger
             } label: {
-                Image(systemName: "pencil")
+                AppIcon.pencil.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .frame(width: 26, height: 26)
@@ -201,7 +201,7 @@ struct AutomationTriggersSettingsView: View {
             Button {
                 confirmDelete = trigger
             } label: {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
                     .frame(width: 26, height: 26)
@@ -261,7 +261,7 @@ private struct TriggerFormSheet: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button { dismiss() } label: {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)

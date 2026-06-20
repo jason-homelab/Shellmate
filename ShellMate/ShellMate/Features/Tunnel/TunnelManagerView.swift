@@ -81,7 +81,7 @@ struct TunnelManagerView: View {
             // Figma: 蓝色"+ 新建隧道"按钮，bg-[#077aff]，h-32，rounded-8，text-13 semibold
             Button(action: { addNewRule() }) {
                 HStack(spacing: 4) {
-                    Image(systemName: "plus")
+                    AppIcon.plus.image
                         .font(DesignTokens.Typography.labelSmall)
                     Text("新建隧道")
                         .font(DesignTokens.Typography.bodyMediumStrong)
@@ -97,7 +97,7 @@ struct TunnelManagerView: View {
 
             // 关闭按钮
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(DesignTokens.Colors.textSubtle)
                     .frame(width: 28, height: 28)
@@ -182,7 +182,7 @@ struct TunnelManagerView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: 12) {
-            Image(systemName: "arrow.left.arrow.right.square")
+            AppIcon.arrowLeftRight.image
                 .font(DesignTokens.Typography.heroMedium)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
                 .scaleEffect(emptyStateAppeared ? 1.0 : 0.70)
@@ -418,7 +418,7 @@ private struct TunnelTableRow: View {
 
             // 编辑按钮（hover 可见）
             Button(action: onEdit) {
-                Image(systemName: "pencil")
+                AppIcon.pencil.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSubtle)
             }
@@ -428,7 +428,7 @@ private struct TunnelTableRow: View {
 
             // 删除按钮（hover 时加深）
             Button(action: onDelete) {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -439,7 +439,7 @@ private struct TunnelTableRow: View {
         .padding(.horizontal, 20)
         .frame(height: 52)
         .background(isHovering ? Color.black.opacity(0.025) : Color.clear)
-        .animation(.easeInOut(duration: 0.12), value: isHovering)
+        .animation(DesignTokens.Animation.hover, value: isHovering)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
         .onTapGesture { onEdit() }

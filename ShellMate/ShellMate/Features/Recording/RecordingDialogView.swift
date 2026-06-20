@@ -122,7 +122,7 @@ struct RecordingDialogView: View {
             Spacer()
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)
@@ -143,7 +143,7 @@ struct RecordingDialogView: View {
                 Circle()
                     .fill(DesignTokens.Colors.statusError.opacity(0.08))
                     .frame(width: 64, height: 64)
-                Image(systemName: "record.circle")
+                AppIcon.recording.image
                     .font(DesignTokens.Typography.displayLarge)
                     .foregroundColor(DesignTokens.Colors.statusError)
             }
@@ -168,7 +168,7 @@ struct RecordingDialogView: View {
                 startRecording()
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "record.circle.fill")
+                    AppIcon.recordingFilled.image
                         .font(DesignTokens.Typography.titleSmall)
                     Text("开始录制")
                         .font(DesignTokens.Typography.titleSmall)
@@ -227,7 +227,7 @@ struct RecordingDialogView: View {
                 stopRecording()
             } label: {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "stop.fill")
+                    AppIcon.stopFill.image
                         .font(DesignTokens.Typography.bodySmallStrong)
                     Text("停止录制")
                         .font(DesignTokens.Typography.titleSmall)
@@ -253,7 +253,7 @@ struct RecordingDialogView: View {
             // 深色预览块（#1e1e1e 背景）
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 HStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "checkmark.circle.fill")
+                    AppIcon.feedbackSuccess.image
                         .font(DesignTokens.Typography.bodyLargeMedium)
                         .foregroundColor(DesignTokens.Colors.statusConnected)
                     Text("录制完成")
@@ -381,7 +381,7 @@ struct RecordingDialogView: View {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(DesignTokens.Colors.statusError.opacity(0.08))
                     .frame(width: 28, height: 28)
-                Image(systemName: "play.rectangle")
+                AppIcon.playRectangle.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.statusError)
             }
@@ -414,7 +414,7 @@ struct RecordingDialogView: View {
                 Button {
                     RecordingStorage.revealInFinder(filename: recording.filename)
                 } label: {
-                    Image(systemName: "folder")
+                    AppIcon.folder.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
@@ -428,7 +428,7 @@ struct RecordingDialogView: View {
                     pendingDeleteFilename = recording.filename
                     showDeleteConfirm = true
                 } label: {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .frame(width: 26, height: 26)
@@ -453,7 +453,7 @@ struct RecordingDialogView: View {
     private var footerView: some View {
         HStack {
             HStack(spacing: DesignTokens.Spacing.xxs) {
-                Image(systemName: "folder")
+                AppIcon.folder.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text("~/Documents/ShellMate/Recordings/")

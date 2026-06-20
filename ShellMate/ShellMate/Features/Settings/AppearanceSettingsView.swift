@@ -237,7 +237,7 @@ struct AppearanceSettingsView: View {
             VStack(spacing: 0) {
                 ZStack {
                     DesignTokens.Colors.surfaceCard
-                    Image(systemName: "plus")
+                    AppIcon.plus.image
                         .font(DesignTokens.Typography.displayXSmall)  // 无对应令牌，保持不变
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
@@ -417,12 +417,12 @@ struct AppearanceSettingsView: View {
                 .frame(width: 42, alignment: .trailing)
             HStack(spacing: 0) {
                 Button(action: { fontSize = max(8, fontSize - 1) }) {
-                    Image(systemName: "minus").font(DesignTokens.Typography.captionMedium)
+                    AppIcon.minus.image.font(DesignTokens.Typography.captionMedium)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 24, height: 24)
                 Button(action: { fontSize = min(32, fontSize + 1) }) {
-                    Image(systemName: "plus").font(DesignTokens.Typography.captionMedium)
+                    AppIcon.plus.image.font(DesignTokens.Typography.captionMedium)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 24, height: 24)
@@ -681,7 +681,7 @@ private struct CustomThemeEditorSheet: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button(action: onCancel) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.bodySmallStrong)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 24, height: 24)

@@ -60,24 +60,40 @@ struct ContentView: View {
     // MARK: - 视图
 
     var body: some View {
-        NavigationSplitView {
-            // 侧边栏（含底部统计条，放在 NavigationSplitView 内部避免悬浮面板问题）
-            SessionSidebarView(
-                sessionStore: sessionStore,
-                groupStore: groupStore,
-                onConnect: { session in
-                    connectToSession(session)
-                }
-            )
-            .navigationSplitViewColumnWidth(
-                min: DesignTokens.Sizes.sidebarMinWidth,
-                ideal: DesignTokens.Sizes.sidebarWidth,
-                max: DesignTokens.Sizes.sidebarMaxWidth
-            )
-            // 二次兜底：在 NavigationSplitView 列级别压制 sidebar vibrancy 穿透
-            .background(DesignTokens.Colors.surfaceWindow)
-        } detail: {
-            detailArea
+        ZStack {
+            NavigationSplitView {
+                // 侧边栏（含底部统计条，放在 NavigationSplitView 内部避免悬浮面板问题）
+                SessionSidebarView(
+                    sessionStore: sessionStore,
+                    groupStore: groupStore,
+                    onConnect: { session in
+                        connectToSession(session)
+                    }
+                )
+                .navigationSplitViewColumnWidth(
+                    min: DesignTokens.Sizes.sidebarMinWidth,
+                    ideal: DesignTokens.Sizes.sidebarWidth,
+                    max: DesignTokens.Sizes.sidebarMaxWidth
+                )
+                // 二次兜底：在 NavigationSplitView 列级别压制 sidebar vibrancy 穿透
+                .background(DesignTokens.Colors.surfaceWindow)
+            } detail: {
+                detailArea
+            }
+
+            // W1 注入：Feedback Toast 全局宿主，置顶 ZStack 不阻挡底层交互
+            ToastHost()
+                .allowsHitTesting(false)
+                .ignoresSafeArea()
+
+            // W7 注入：FeedbackCenter.banner(.global) 渲染宿主
+            // 含 Action 按钮组，需要 hitTesting
+            BannerHost(slot: .global)
+                .ignoresSafeArea()
+
+            // W8 注入：⌘K Command Palette 全局宿主
+            CommandPaletteHost()
+                .ignoresSafeArea()
         }
         // 根节点注入：替代各子视图直接访问 .shared 单例，支持测试时注入 Mock
         .environmentObject(terminalStatus)
@@ -190,6 +206,15 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .logPanelRequested)) { _ in
             panels.openSheet { panels.showLogPanel = true }
         }
+        // W9：Capability action 路由（CapabilityBootstrap 扩展同步）
+        .onReceive(NotificationCenter.default.publisher(for: .scriptLibraryRequested)) { _ in
+            panels.openSheet { panels.showScriptPanel = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .recordingDialogRequested)) { _ in
+            panels.openSheet { panels.showRecordingDialog = true }
+        }
+        // Phase 4：连接 Banner / Overlay → 编辑会话路径（独立 modifier 避免类型推导超时）
+        .modifier(EditSessionRequestedHandler(sessionStore: sessionStore))
         // 挂载时立即对 NSWindow 实例禁用原生 Window Tab Bar
         .background(WindowTabbingDisabler())
         // 背景透明度（仅作用于当前 ContentView 所在的主窗口）
@@ -208,6 +233,8 @@ struct ContentView: View {
             await MainActor.run {
                 HotkeyWindowManager.shared.setSessionStore(sessionStore)
             }
+            // Phase 3：首次启动 + 无会话时注入演示 localhost 会话
+            await DemoSessionSeeder.injectIfNeeded(sessionStore: sessionStore)
         }
         // 活跃 Tab 变化时同步侧边栏选中高亮（快捷键切换 Tab 场景）；
         // 同时关闭工具面板，避免跨会话数据错乱
@@ -269,10 +296,10 @@ struct ContentView: View {
             if !hasLaunchedBefore {
                 WelcomeScreenView(
                     onDismiss: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                     },
                     onCreateSession: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                         // 等待欢迎屏淡出动画完成后再打开表单，避免 overlay + sheet 同时出现
                         Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 350_000_000)
@@ -280,7 +307,7 @@ struct ContentView: View {
                         }
                     },
                     onImportConfiguration: {
-                        withAnimation(.easeInOut(duration: 0.3)) { hasLaunchedBefore = true }
+                        withAnimation(DesignTokens.Animation.medium) { hasLaunchedBefore = true }
                         Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 350_000_000)
                             panels.openSheet { panels.showImportExportDialog = true }
@@ -526,6 +553,22 @@ struct ContentView: View {
         .transition(.opacity.animation(.easeInOut(duration: 0.2)))
     }
 
+}
+
+// MARK: - Phase 4：编辑会话 Notification ViewModifier
+// 抽离自 ContentView body 以避免 SwiftUI 类型推导超时
+
+private struct EditSessionRequestedHandler: ViewModifier {
+    @ObservedObject var sessionStore: SessionStore
+
+    func body(content: Content) -> some View {
+        content.onReceive(NotificationCenter.default.publisher(for: .editSessionRequested)) { notification in
+            guard let sessionId = notification.userInfo?["sessionId"] as? UUID,
+                  let session = sessionStore.sessions.first(where: { $0.id == sessionId })
+            else { return }
+            sessionStore.showEditSessionForm(for: session)
+        }
+    }
 }
 
 // MARK: - 预览

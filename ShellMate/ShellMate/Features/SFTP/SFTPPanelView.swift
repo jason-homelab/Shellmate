@@ -83,7 +83,7 @@ struct SFTPPanelView: View {
 
             Button(action: vm.performUpload) {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "arrow.up")
+                    AppIcon.arrowUp.image
                         .font(DesignTokens.Typography.captionLarge)
                     Text("上传")
                         .font(DesignTokens.Typography.bodySmall)
@@ -101,7 +101,7 @@ struct SFTPPanelView: View {
 
             Button(action: vm.performDownload) {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: "arrow.down")
+                    AppIcon.arrowDown.image
                         .font(DesignTokens.Typography.captionLarge)
                     Text("下载")
                         .font(DesignTokens.Typography.bodySmall)
@@ -189,7 +189,7 @@ struct SFTPPanelView: View {
                 .foregroundColor(DesignTokens.Colors.textPrimary)
             Spacer()
             Button(action: onNewFolder) {
-                Image(systemName: "folder.badge.plus")
+                AppIcon.folderBadgePlus.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -197,7 +197,7 @@ struct SFTPPanelView: View {
             .buttonStyle(ScaleButtonStyle())
             .help("新建文件夹")
             Button(action: onDelete) {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -215,7 +215,7 @@ struct SFTPPanelView: View {
 
     private var localPathBar: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "folder")
+            AppIcon.folder.image
                 .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text(vm.localPath)
@@ -228,7 +228,7 @@ struct SFTPPanelView: View {
                 let parent = (vm.localPath as NSString).deletingLastPathComponent
                 vm.loadLocalDirectory(path: parent)
             }) {
-                Image(systemName: "chevron.left")
+                AppIcon.chevronLeft.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -236,7 +236,7 @@ struct SFTPPanelView: View {
             .disabled(vm.localPath == "/")
             .help("返回上一级")
             Button(action: { vm.loadLocalDirectory(path: vm.localPath) }) {
-                Image(systemName: "arrow.clockwise")
+                AppIcon.arrowClockwise.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -251,7 +251,7 @@ struct SFTPPanelView: View {
 
     private var remotePathBar: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "folder")
+            AppIcon.folder.image
                 .font(DesignTokens.Typography.captionLarge)
                 .foregroundColor(DesignTokens.Colors.textTertiary)
             Text(vm.remotePath)
@@ -261,7 +261,7 @@ struct SFTPPanelView: View {
                 .truncationMode(.middle)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let synced = syncDirectory, synced == vm.remotePath {
-                Image(systemName: "link")
+                AppIcon.link.image
                     .font(DesignTokens.Typography.captionMedium)
                     .foregroundColor(DesignTokens.Colors.statusConnected)
                     .help("已与终端工作目录同步")
@@ -270,7 +270,7 @@ struct SFTPPanelView: View {
                 let parent = (vm.remotePath as NSString).deletingLastPathComponent
                 vm.navigateRemoteTo(path: parent)
             }) {
-                Image(systemName: "chevron.left")
+                AppIcon.chevronLeft.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -278,7 +278,7 @@ struct SFTPPanelView: View {
             .disabled(vm.remotePath == "/" || vm.isRemoteLoading)
             .help("返回上一级")
             Button(action: { vm.loadRemoteDirectory(path: vm.remotePath) }) {
-                Image(systemName: "arrow.clockwise")
+                AppIcon.arrowClockwise.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }
@@ -386,7 +386,7 @@ struct SFTPPanelView: View {
 
     private var emptyFolderView: some View {
         VStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: "folder.badge.plus")
+            AppIcon.folderBadgePlus.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.textDisabled)
             Text("此目录为空")
@@ -397,12 +397,13 @@ struct SFTPPanelView: View {
         .padding(.vertical, DesignTokens.Spacing.xxxl)
     }
 
+    /// Phase 7：用 fileRow 骨架屏替代旋转圈（解 UE-P1#15）
+    /// 远程目录加载体感升级，错峰 shimmer 让长加载有节奏
     private var loadingOverlay: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            ProgressView().controlSize(.regular)
-            Text("正在加载...")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
+        VStack(spacing: 0) {
+            SkeletonList(rowCount: 10, style: .fileRow)
+                .padding(.top, DesignTokens.Spacing.xs)
+            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.Colors.surfaceInput.opacity(0.80))
@@ -410,7 +411,7 @@ struct SFTPPanelView: View {
 
     private func errorOverlay(message: String) -> some View {
         VStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "exclamationmark.triangle")
+            AppIcon.warning.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.statusError)
             Text(message)
@@ -436,7 +437,7 @@ struct SFTPPanelView: View {
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
             VStack(spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "arrow.up.doc")
+                AppIcon.docUp.image
                     .font(DesignTokens.Typography.displayXLarge)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
                 Text("拖放文件上传到此目录")
@@ -715,7 +716,7 @@ private struct TransferItemRow: View {
             .frame(width: 60, alignment: .trailing)
             if !item.state.isTerminal {
                 Button(action: onCancel) {
-                    Image(systemName: "xmark.circle")
+                    AppIcon.xmarkCircle.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }

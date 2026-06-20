@@ -63,6 +63,16 @@ enum ConnectionState: Int, CaseIterable, Identifiable {
     var needsGlow: Bool {
         self == .connected
     }
+
+    /// W2 新增：映射到 a11y 语义层（用于 .a11yConnectionStatus modifier）
+    var uiState: ConnectionUIState {
+        switch self {
+        case .connected:                          return .connected
+        case .connecting, .disconnecting:         return .connecting
+        case .offline:                            return .disconnected
+        case .error:                              return .error
+        }
+    }
 }
 
 /// 隧道类型枚举（Core Data 存储用，与 TunnelModels.TunnelType 区分）

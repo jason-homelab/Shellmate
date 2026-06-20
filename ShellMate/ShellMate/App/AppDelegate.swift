@@ -196,6 +196,8 @@ extension Notification.Name {
     static let nextTabRequested = Notification.Name("nextTabRequested")
     static let previousTabRequested = Notification.Name("previousTabRequested")
     static let selectTabRequested = Notification.Name("selectTabRequested")
+    /// W7 横切层通电 #3：⌘⇧T 恢复最近关闭的 Tab
+    static let reopenLastClosedTabRequested = Notification.Name("reopenLastClosedTabRequested")
 
     // 终端操作
     static let clearTerminalRequested = Notification.Name("clearTerminalRequested")
@@ -222,6 +224,13 @@ extension Notification.Name {
 
     // 全局 UI 操作
     static let settingsRequested = Notification.Name("settingsRequested")
+
+    /// 后续 Capability 注册新增（W9 扩展）
+    static let scriptLibraryRequested    = Notification.Name("scriptLibraryRequested")
+    static let recordingDialogRequested  = Notification.Name("recordingDialogRequested")
+
+    /// Phase 4：连接 Banner → 编辑当前会话（含凭据）
+    static let editSessionRequested      = Notification.Name("editSessionRequested")
     static let scriptPanelRequested = Notification.Name("scriptPanelRequested")
 
     // Hotkey Window（任务 13.8）

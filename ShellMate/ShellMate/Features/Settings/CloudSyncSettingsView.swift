@@ -158,7 +158,7 @@ struct CloudSyncSettingsView: View {
 
             // 安全说明卡片
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "lock.fill")
+                AppIcon.lock.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textDisabled)
                     .padding(.top, DesignTokens.Spacing.px)
@@ -267,7 +267,7 @@ struct CloudSyncSettingsView: View {
             // 立即同步按钮
             Button(action: triggerSync) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
-                    Image(systemName: "arrow.clockwise.icloud")
+                    AppIcon.iCloudArrow.image
                         .font(DesignTokens.Typography.captionLarge)
                     Text("立即同步")
                         .font(DesignTokens.Typography.captionLarge)

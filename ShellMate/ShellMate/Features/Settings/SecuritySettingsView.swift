@@ -168,7 +168,7 @@ struct SecuritySettingsView: View {
             if store.knownHosts.isEmpty {
                 // 空状态
                 VStack(spacing: DesignTokens.Spacing.md) {
-                    Image(systemName: "server.rack")
+                    AppIcon.serverRack.image
                         .font(DesignTokens.Typography.displayLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .opacity(0.4)
@@ -224,7 +224,7 @@ struct SecuritySettingsView: View {
 
             // 删除按钮
             Button(action: { store.deleteKnownHost(entry) }) {
-                Image(systemName: "trash")
+                AppIcon.trash.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(hoveredKHId == entry.id
                         ? DesignTokens.Colors.statusError
@@ -303,7 +303,7 @@ struct SecuritySettingsView: View {
 
             if store.sshKeys.isEmpty {
                 VStack(spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "key.fill")
+                    AppIcon.key.image
                         .font(DesignTokens.Typography.displaySmall)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .opacity(0.4)
@@ -333,7 +333,7 @@ struct SecuritySettingsView: View {
     private func sshKeyRow(_ key: SSHKeyRecord) -> some View {
         HStack(spacing: 0) {
             // 图标
-            Image(systemName: "key.fill")
+            AppIcon.key.image
                 .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(Color(red: 0.72, green: 0.53, blue: 0.04))
                 .frame(width: 26)
@@ -366,7 +366,7 @@ struct SecuritySettingsView: View {
                     .font(DesignTokens.Typography.captionSmall)
 
                 Button(action: {}) {
-                    Image(systemName: "trash")
+                    AppIcon.trash.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                 }
@@ -454,7 +454,7 @@ struct KeyGenSheet: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button(action: { isPresented = false }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
@@ -570,7 +570,7 @@ struct MasterPasswordSheet: View {
                     .foregroundColor(DesignTokens.Colors.textPrimary)
                 Spacer()
                 Button(action: { isPresented = false }) {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(DesignTokens.Typography.labelSmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 22, height: 22)
@@ -586,7 +586,7 @@ struct MasterPasswordSheet: View {
             VStack(alignment: .leading, spacing: 14) {
                 // 说明
                 HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-                    Image(systemName: "lock.shield")
+                    AppIcon.lockShield.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.accentPrimary)
                     Text("主密码存储于本设备 Keychain，用于应用启动时身份验证。SSH 凭据使用 AES-256-GCM 加密存储于本地数据库，不参与 iCloud 同步。忘记主密码后需重置应用数据。")
@@ -641,7 +641,7 @@ struct MasterPasswordSheet: View {
                 // 错误信息
                 if !errorMessage.isEmpty {
                     HStack(spacing: DesignTokens.Spacing.xs) {
-                        Image(systemName: "exclamationmark.triangle.fill")
+                        AppIcon.feedbackWarn.image
                             .font(DesignTokens.Typography.captionLarge)
                         Text(errorMessage)
                             .font(DesignTokens.Typography.captionLarge)

@@ -86,7 +86,7 @@ struct HostKeyConfirmationView: View {
     /// 标题栏
     private var headerView: some View {
         HStack {
-            Image(systemName: "key.fill")
+            AppIcon.key.image
                 .font(DesignTokens.Typography.titleLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
@@ -97,7 +97,7 @@ struct HostKeyConfirmationView: View {
             Spacer()
 
             Button(action: { onCancel?() }) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.bodySmallStrong)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 24, height: 24)
@@ -112,7 +112,7 @@ struct HostKeyConfirmationView: View {
     /// 警告说明
     private var warningSection: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-            Image(systemName: "exclamationmark.shield.fill")
+            AppIcon.shield.image
                 .font(DesignTokens.Typography.displayXLarge)
                 .foregroundColor(DesignTokens.Colors.statusConnecting)
 
@@ -189,7 +189,7 @@ struct HostKeyConfirmationView: View {
                 Spacer()
 
                 Button(action: copyFingerprint) {
-                    Image(systemName: "doc.on.doc")
+                    AppIcon.copy.image
                         .font(DesignTokens.Typography.bodySmall)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                 }
@@ -243,7 +243,7 @@ struct HostKeyConfirmationView: View {
         HStack {
             // 显示连接风险提示
             HStack(spacing: DesignTokens.Spacing.xs) {
-                Image(systemName: "info.circle")
+                AppIcon.info.image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
 

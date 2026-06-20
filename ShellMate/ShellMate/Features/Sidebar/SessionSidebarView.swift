@@ -159,16 +159,10 @@ struct SessionSidebarView: View {
 
     // MARK: - 加载中视图
 
+    /// Phase 7：用骨架屏替代旋转圈（解 UE-P1#15），错峰 shimmer 让加载有节奏感
     private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .scaleEffect(0.8)
-                .progressViewStyle(.circular)
-            Text("加载中...")
-                .font(DesignTokens.Typography.bodySmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .padding(.top, DesignTokens.Spacing.sm)
+        VStack(spacing: 0) {
+            SkeletonList(rowCount: 8, style: .sidebarRow)
             Spacer()
         }
     }

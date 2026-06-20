@@ -63,7 +63,7 @@ struct SyncInputConfirmView: View {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusSmall, style: .continuous)
                     .fill(Color.orange.opacity(0.15))
                     .frame(width: 32, height: 32)
-                Image(systemName: "square.grid.2x2.fill")
+                AppIcon.syncGrid.image
                     .font(DesignTokens.Typography.bodyLargeStrong)
                     .foregroundColor(.orange)
             }
@@ -79,7 +79,7 @@ struct SyncInputConfirmView: View {
         VStack(spacing: 0) {
             Divider()
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill")
+                AppIcon.feedbackWarn.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(.orange)
                     .padding(.top, DesignTokens.Spacing.px)
@@ -133,7 +133,7 @@ struct SyncInputConfirmView: View {
                         : DesignTokens.Colors.surfaceHover)
                     .frame(width: 18, height: 18)
                 if isSelected {
-                    Image(systemName: "checkmark")
+                    AppIcon.checkmark.image
                         .font(DesignTokens.Typography.captionMedium)
                         .foregroundColor(.white)
                 }
