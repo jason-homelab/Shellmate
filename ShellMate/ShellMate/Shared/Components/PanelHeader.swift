@@ -8,7 +8,7 @@ import SwiftUI
 
 struct PanelHeader: View {
 
-    let icon: String
+    let icon: AppIcon
     let title: String
     let onClose: () -> Void
 
@@ -22,7 +22,7 @@ struct PanelHeader: View {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(DesignTokens.Colors.accentPrimary.opacity(0.10))
                     .frame(width: 28, height: 28)
-                Image(systemName: icon)
+                icon.image
                     .font(DesignTokens.Typography.labelLarge)
                     .foregroundColor(DesignTokens.Colors.accentPrimary)
             }
@@ -75,9 +75,9 @@ struct PanelHeader: View {
 
 #Preview {
     VStack(spacing: 0) {
-        PanelHeader(icon: "sparkles", title: "AI 助手") {}
-        PanelHeader(icon: "arrow.up.arrow.down", title: "文件传输") {}
-        PanelHeader(icon: "network", title: "隧道管理器") {}
+        PanelHeader(icon: .ai, title: "AI 助手") {}
+        PanelHeader(icon: .arrowUpArrowDown, title: "文件传输") {}
+        PanelHeader(icon: .networkIcon, title: "隧道管理器") {}
     }
     .frame(width: 400)
     .background(DesignTokens.Colors.surfacePanel)

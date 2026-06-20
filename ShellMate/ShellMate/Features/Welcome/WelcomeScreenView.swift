@@ -216,7 +216,7 @@ struct WelcomeScreenView: View {
     private var actionCards: some View {
         HStack(spacing: DesignTokens.Spacing.xxl) {
             WelcomeActionCard(
-                iconName: "plus",
+                iconName: .plus,
                 iconColor: DesignTokens.Colors.accentPrimary,
                 gradientColors: [
                     DesignTokens.Colors.accentPrimary.opacity(0.10),
@@ -230,7 +230,7 @@ struct WelcomeScreenView: View {
                 action: { vm.createSession() }
             )
             WelcomeActionCard(
-                iconName: "arrow.down.doc",
+                iconName: .arrowDownDoc,
                 iconColor: DesignTokens.Colors.statusConnected,
                 gradientColors: [
                     DesignTokens.Colors.statusConnected.opacity(0.10),
@@ -244,7 +244,7 @@ struct WelcomeScreenView: View {
                 action: { vm.importConfiguration() }
             )
             WelcomeActionCard(
-                iconName: "sparkles",
+                iconName: .ai,
                 iconColor: DesignTokens.Colors.textSecondary,
                 gradientColors: [
                     DesignTokens.Colors.textSecondary.opacity(0.10),
@@ -265,7 +265,7 @@ struct WelcomeScreenView: View {
 
 private struct WelcomeActionCard: View {
 
-    let iconName: String
+    let iconName: AppIcon
     let iconColor: Color
     let gradientColors: [Color]
     let hoverBorderColor: Color
@@ -292,7 +292,7 @@ private struct WelcomeActionCard: View {
                     ))
                     .frame(width: 56, height: 56)
 
-                Image(systemName: iconName)
+                iconName.image
                     .font(.system(size: 24, weight: .medium))
                     .foregroundColor(iconColor)
             }

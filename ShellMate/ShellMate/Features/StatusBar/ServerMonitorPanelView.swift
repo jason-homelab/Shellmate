@@ -105,7 +105,7 @@ struct ServerMonitorPanelView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             metricCard(
                 title: "CPU 使用率",
-                icon: "cpu",
+                icon: .cpu,
                 iconColor: cpuColor,
                 value: metrics.map { String(format: "%.1f%%", $0.cpuUsage) } ?? "—",
                 ratio: metrics.map { $0.cpuUsage / 100.0 } ?? 0,
@@ -115,7 +115,7 @@ struct ServerMonitorPanelView: View {
 
             metricCard(
                 title: "内存使用率",
-                icon: "memorychip",
+                icon: .memory,
                 iconColor: DesignTokens.Colors.accentAI,
                 value: metrics.map { "\(ServerMetrics.formatBytes($0.memoryUsed)) / \(ServerMetrics.formatBytes($0.memoryTotal))" } ?? "—",
                 ratio: metrics?.memoryRatio ?? 0,
@@ -130,7 +130,7 @@ struct ServerMonitorPanelView: View {
 
     private func metricCard(
         title: String,
-        icon: String,
+        icon: AppIcon,
         iconColor: Color,
         value: String,
         ratio: Double,
@@ -140,7 +140,7 @@ struct ServerMonitorPanelView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             // 标题行
             HStack(spacing: DesignTokens.Spacing.micro) {
-                Image(systemName: icon)
+                icon.image
                     .font(DesignTokens.Typography.captionLarge)
                     .foregroundColor(iconColor)
                 Text(title)

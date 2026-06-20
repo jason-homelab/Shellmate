@@ -545,11 +545,11 @@ struct AIPrivacyConsentView: View {
             .padding(.top, 28).padding(.horizontal, DesignTokens.Spacing.xxl).padding(.bottom, DesignTokens.Spacing.xl)
             Divider()
             VStack(alignment: .leading, spacing: 14) {
-                privacyItem(icon: "text.alignleft", color: DesignTokens.Colors.accentPrimary, title: "会发送的数据",
+                privacyItem(icon: .log, color: DesignTokens.Colors.accentPrimary, title: "会发送的数据",
                             body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击\"发送给 AI\"时的终端输出片段（最近 50 行）")
-                privacyItem(icon: "lock.slash", color: DesignTokens.Colors.statusConnected, title: "不会发送的数据",
+                privacyItem(icon: .lockSlash, color: DesignTokens.Colors.statusConnected, title: "不会发送的数据",
                             body: "• SSH 密码、私钥、Passphrase\n• 完整终端历史（仅发送您选择的片段）\n• 会话配置、iCloud 同步数据")
-                privacyItem(icon: "building.2", color: DesignTokens.Colors.statusConnecting, title: "数据去向",
+                privacyItem(icon: .building2, color: DesignTokens.Colors.statusConnecting, title: "数据去向",
                             body: "数据发送至您配置的 AI 服务商（Claude / OpenAI / 本地 Ollama），ShellMate 本身不存储或上传任何数据。")
             }
             .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, 18)
@@ -565,11 +565,11 @@ struct AIPrivacyConsentView: View {
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
     }
 
-    private func privacyItem(icon: String, color: Color, title: String, body: String) -> some View {
+    private func privacyItem(icon: AppIcon, color: Color, title: String, body: String) -> some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             ZStack {
                 Circle().fill(color.opacity(0.12)).frame(width: 32, height: 32)
-                Image(systemName: icon).font(DesignTokens.Typography.labelLarge).foregroundColor(color)
+                icon.image.font(DesignTokens.Typography.labelLarge).foregroundColor(color)
             }
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.nano) {
                 Text(title).font(DesignTokens.Typography.bodySmallStrong).foregroundColor(DesignTokens.Colors.textPrimary)

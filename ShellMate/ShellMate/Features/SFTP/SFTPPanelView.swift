@@ -128,7 +128,7 @@ struct SFTPPanelView: View {
     private var localPanelView: some View {
         VStack(spacing: 0) {
             panelHeader(
-                icon: "internaldrive",
+                icon: .storage,
                 iconColor: DesignTokens.Colors.accentPrimary,
                 iconBgColor: DesignTokens.Colors.accentPrimary.opacity(0.10),
                 title: "本地",
@@ -147,7 +147,7 @@ struct SFTPPanelView: View {
     private var remotePanelView: some View {
         VStack(spacing: 0) {
             panelHeader(
-                icon: "externaldrive",
+                icon: .externalDrive,
                 iconColor: DesignTokens.Colors.statusConnected,
                 iconBgColor: DesignTokens.Colors.statusConnected.opacity(0.10),
                 title: "远程",
@@ -168,7 +168,7 @@ struct SFTPPanelView: View {
     // MARK: - 通用面板头
 
     private func panelHeader(
-        icon: String,
+        icon: AppIcon,
         iconColor: Color,
         iconBgColor: Color,
         title: String,
@@ -180,7 +180,7 @@ struct SFTPPanelView: View {
                 RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
                     .fill(iconBgColor)
                     .frame(width: 24, height: 24)
-                Image(systemName: icon)
+                icon.image
                     .font(DesignTokens.Typography.labelMedium)
                     .foregroundColor(iconColor)
             }

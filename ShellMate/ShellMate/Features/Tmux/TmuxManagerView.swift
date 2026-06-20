@@ -558,11 +558,11 @@ struct TmuxManagerView: View {
         }
     }
 
-    private let quickActionItems: [(title: String, subtitle: String, icon: String, command: String, color: Color)] = [
-        ("水平分割", "Ctrl+B then \"",  "rectangle.split.1x2",                    "tmux split-window -h",      DesignTokens.Colors.accentPrimary),
-        ("垂直分割", "Ctrl+B then %",   "rectangle.split.2x1",                    "tmux split-window -v",      DesignTokens.Colors.accentSecondary),
-        ("新建窗口", "Ctrl+B then C",   "plus.rectangle",                          "tmux new-window",           DesignTokens.Colors.statusConnecting),
-        ("缩放窗格", "Ctrl+B then Z",   "arrow.up.left.and.arrow.down.right",      "tmux resize-pane -Z",       DesignTokens.Colors.accentAI)
+    private let quickActionItems: [(title: String, subtitle: String, icon: AppIcon, command: String, color: Color)] = [
+        ("水平分割", "Ctrl+B then \"",  .rectangleSplit1x2,                    "tmux split-window -h",      DesignTokens.Colors.accentPrimary),
+        ("垂直分割", "Ctrl+B then %",   .rectangleSplit2x1,                    "tmux split-window -v",      DesignTokens.Colors.accentSecondary),
+        ("新建窗口", "Ctrl+B then C",   .plusRectangle,                        "tmux new-window",           DesignTokens.Colors.statusConnecting),
+        ("缩放窗格", "Ctrl+B then Z",   .arrowUpLeftAndArrowDownRight,         "tmux resize-pane -Z",       DesignTokens.Colors.accentAI)
     ]
 
     private let commonCommands: [(command: String, description: String)] = [
@@ -573,7 +573,7 @@ struct TmuxManagerView: View {
     ]
 
     @ViewBuilder
-    private func quickActionCard(_ item: (title: String, subtitle: String, icon: String, command: String, color: Color)) -> some View {
+    private func quickActionCard(_ item: (title: String, subtitle: String, icon: AppIcon, command: String, color: Color)) -> some View {
         Button(action: { store.sendQuickCommand(item.command) }) {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 ZStack {
@@ -586,7 +586,7 @@ struct TmuxManagerView: View {
                             )
                         )
                         .frame(width: 40, height: 40)
-                    Image(systemName: item.icon)
+                    item.icon.image
                         .font(DesignTokens.Typography.labelXLarge)
                         .foregroundColor(item.color)
                 }

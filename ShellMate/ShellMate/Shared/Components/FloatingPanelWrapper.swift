@@ -14,7 +14,7 @@ import SwiftUI
 
 struct FloatingPanelWrapper<Content: View>: View {
 
-    let icon: String
+    let icon: AppIcon
     let title: String
     let onClose: () -> Void
     @ViewBuilder let content: () -> Content
@@ -38,7 +38,7 @@ struct FloatingPanelWrapper<Content: View>: View {
 // MARK: - 预览
 
 #Preview("日志面板包裹示例") {
-    FloatingPanelWrapper(icon: "doc.text.magnifyingglass", title: "日志面板", onClose: {}) {
+    FloatingPanelWrapper(icon: .docTextMagnifyingglass, title: "日志面板", onClose: {}) {
         Text("面板内容区")
             .font(DesignTokens.Typography.bodyMedium)
             .foregroundColor(DesignTokens.Colors.textSecondary)

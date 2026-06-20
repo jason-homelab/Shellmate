@@ -273,15 +273,15 @@ struct AISettingsView: View {
             featureToggle(
                 title: "错误侦探",
                 subtitle: "自动检测终端错误并显示 AI 分析入口",
-                icon: "exclamationmark.triangle",
+                icon: .warning,
                 binding: $store.errorDetectiveEnabled
             )
         }
     }
 
-    private func featureToggle(title: String, subtitle: String, icon: String, binding: Binding<Bool>) -> some View {
+    private func featureToggle(title: String, subtitle: String, icon: AppIcon, binding: Binding<Bool>) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            Image(systemName: icon)
+            icon.image
                 .font(DesignTokens.Typography.bodyLarge)
                 .foregroundColor(DesignTokens.Colors.accentPrimary)
                 .frame(width: 20)

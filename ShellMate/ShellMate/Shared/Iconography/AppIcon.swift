@@ -142,6 +142,24 @@ enum AppIcon: String, CaseIterable {
     case arrowUpDownCircleFill   = "arrow.up.arrow.down.circle.fill"
     case arrowUpDownCircle       = "arrow.up.arrow.down.circle"
 
+    // ── Phase 16d 扩展：可复用视图 String 图标参数迁移所需 ──────
+    case clear                   = "clear"
+    case arrowDownDoc            = "arrow.down.doc"
+    case building2               = "building.2"
+    case keyHorizontal           = "key.horizontal"
+    case checkmarkCircle         = "checkmark.circle"
+    case externalDrive           = "externaldrive"
+    case rectangleSplit1x2       = "rectangle.split.1x2"
+    case rectangleSplit2x1       = "rectangle.split.2x1"
+    case plusRectangle           = "plus.rectangle"
+    case arrowUpLeftAndArrowDownRight = "arrow.up.left.and.arrow.down.right"
+    case arrowUpArrowDown        = "arrow.up.arrow.down"
+    case docTextMagnifyingglass  = "doc.text.magnifyingglass"
+    case arrowLeftArrowRight     = "arrow.left.arrow.right"
+    case listBulletRectangle     = "list.bullet.rectangle"
+    case textViewfinder          = "text.viewfinder"
+    case squareGrid              = "square.grid.2x2"
+
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
 
