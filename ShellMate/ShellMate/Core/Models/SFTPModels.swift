@@ -9,13 +9,13 @@ enum SFTPFileType: Equatable {
     case symlink
     case other
 
-    /// SF Symbols 图标名
-    var sfSymbolName: String {
+    /// 图标（AppIcon，ADR-005）
+    var appIcon: AppIcon {
         switch self {
-        case .directory:    return "folder.fill"
-        case .regularFile:  return "doc.fill"
-        case .symlink:      return "arrow.triangle.branch"
-        case .other:        return "questionmark.square"
+        case .directory:    return .folderFill
+        case .regularFile:  return .docFill
+        case .symlink:      return .arrowTriangleBranch
+        case .other:        return .questionmarkSquare
         }
     }
 
@@ -145,9 +145,9 @@ struct LocalFileItem: Identifiable {
         return formatter.string(from: date)
     }
 
-    /// SF Symbols 图标名
-    var sfSymbolName: String {
-        isDirectory ? "folder.fill" : "doc.fill"
+    /// 图标（AppIcon，ADR-005）
+    var appIcon: AppIcon {
+        isDirectory ? .folderFill : .docFill
     }
 }
 
@@ -165,10 +165,10 @@ enum SFTPTransferDirection {
         }
     }
 
-    var sfSymbolName: String {
+    var appIcon: AppIcon {
         switch self {
-        case .upload:   return "arrow.up.circle.fill"
-        case .download: return "arrow.down.circle.fill"
+        case .upload:   return .arrowUpCircleFill
+        case .download: return .arrowDownCircleFill
         }
     }
 }

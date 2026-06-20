@@ -119,6 +119,29 @@ enum AppIcon: String, CaseIterable {
     case recordingFilled    = "record.circle.fill"
     case video              = "video"
 
+    // ── Phase 16c 扩展：model/enum symbol 属性迁移所需 ──────
+    case docFill                 = "doc.fill"
+    case arrowTriangleBranch     = "arrow.triangle.branch"
+    case questionmarkSquare      = "questionmark.square"
+    case arrowUpCircleFill       = "arrow.up.circle.fill"
+    case arrowDownCircleFill     = "arrow.down.circle.fill"
+    case cableConnector          = "cable.connector"
+    case personBadgeKey          = "person.badge.key.fill"
+    case keyboardFill            = "keyboard.fill"
+    case iCloudCheckmark         = "checkmark.icloud.fill"
+    case iCloudWarn              = "exclamationmark.icloud.fill"
+    case iCloudSlash             = "icloud.slash.fill"
+    case lockSlash               = "lock.slash"
+    case wifiExclamation         = "wifi.exclamationmark"
+    case shieldExclamation       = "exclamationmark.shield"
+    case networkSlash            = "network.slash"
+    case xmarkOctagon            = "xmark.octagon"
+    case arrowTriangle2Circlepath = "arrow.triangle.2.circlepath"
+    case powercord               = "powercord"
+    case powerCircle             = "power.circle"
+    case arrowUpDownCircleFill   = "arrow.up.arrow.down.circle.fill"
+    case arrowUpDownCircle       = "arrow.up.arrow.down.circle"
+
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
 
@@ -150,24 +173,9 @@ enum AppIcon: String, CaseIterable {
         case .feedbackSuccess:    return "a11y.feedback.success"
         case .feedbackWarn:       return "a11y.feedback.warn"
         case .feedbackError:      return "a11y.feedback.error"
-        // W8 扩展：装饰性图标使用通用 fallback 标签，业务侧可 override
-        case .chevronUp, .chevronDown, .chevronLeft, .chevronRight, .chevronExpand,
-             .arrowUp, .arrowDown, .arrowLeft, .arrowRight, .arrowClockwise,
-             .plus, .minus, .checkmark, .pencil, .copy,
-             .folder, .folderFill, .folderBadgePlus,
-             .lock, .lockShield, .key, .keySlash,
-             .clock, .clockArrow, .docText, .docTextFill,
-             .info, .warning, .shield, .lightbulb, .link, .calendar,
-             .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
-             .chartLine, .paperPlane, .boltSlash,
-             .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
-             .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
-             .terminal, .checkSquare, .square, .pauseFill, .textCursor,
-             .shieldSlash, .bubbleLeft, .arrowLeftRight,
-             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
-             .syncGrid, .importExport, .shareUp, .recordingFilled, .video:
-            return "icon.a11y.decorative"
+        // W8+ 扩展：装饰性图标统一通用 fallback 标签，业务侧可 override
+        // （新增装饰 case 无需登记，落入 default 即可）
+        default:                  return "icon.a11y.decorative"
         }
     }
 }
@@ -180,25 +188,16 @@ extension AppIcon {
     /// 自评 P1#6：替代原"统一 fallback label"方案，更符合 a11y 标准
     var isDecorative: Bool {
         switch self {
-        case .chevronUp, .chevronDown, .chevronLeft, .chevronRight, .chevronExpand,
-             .arrowUp, .arrowDown, .arrowLeft, .arrowRight, .arrowClockwise,
-             .plus, .minus, .checkmark, .pencil, .copy,
-             .folder, .folderFill, .folderBadgePlus,
-             .lock, .lockShield, .key, .keySlash,
-             .clock, .clockArrow, .docText, .docTextFill,
-             .info, .warning, .shield, .lightbulb, .link, .calendar,
-             .desktop, .macWindow, .cpu, .memory, .storage, .networkIcon,
-             .chartLine, .paperPlane, .boltSlash,
-             .playFill, .playRectangle, .highlighter, .personXmark,
-             .iCloudArrow, .docUp, .zoomIn, .zoomOut, .trash, .serverRack, .xmarkCircle,
-             .stopFill, .wifiSlash, .eye, .eyeSlash, .ellipsis, .squareAndPencil,
-             .terminal, .checkSquare, .square, .pauseFill, .textCursor,
-             .shieldSlash, .bubbleLeft, .arrowLeftRight,
-             .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
-             .syncGrid, .importExport, .shareUp, .recordingFilled, .video:
-            return true
-        default:
+        // 语义类：拥有专属 a11yLabel，VoiceOver 需朗读
+        case .connect, .disconnect, .newSession, .ai, .script, .sftp, .split, .tmux,
+             .tunnel, .log, .recording, .quickCommand, .commandPalette, .search,
+             .settings, .close, .dismiss,
+             .statusConnected, .statusConnecting, .statusDisconnected, .statusError,
+             .feedbackInfo, .feedbackSuccess, .feedbackWarn, .feedbackError:
             return false
+        // 其余（W8+ 扩展）默认装饰，VoiceOver 跳过
+        default:
+            return true
         }
     }
 

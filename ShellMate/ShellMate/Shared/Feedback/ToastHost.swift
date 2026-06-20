@@ -35,7 +35,7 @@ private struct ToastCard: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxs) {
             HStack(spacing: DesignTokens.Spacing.xs) {
                 // P1#8 修正：按 level 渲染 icon（不能固定 feedbackInfo）
-                Image(systemName: event.level.sfSymbol)
+                event.level.appIcon.image
                     .font(.system(size: 16, weight: .regular))
                     .foregroundColor(event.level.fg)
                     .accessibilityHidden(true)

@@ -138,9 +138,7 @@ struct SessionAuthTab: View {
                     ProgressView()
                         .controlSize(.small)
                 } else {
-                    Image(systemName: agentAvailable
-                          ? "checkmark.circle.fill"
-                          : "xmark.circle.fill")
+                    (agentAvailable ? AppIcon.feedbackSuccess : .dismiss).image
                         .font(DesignTokens.Typography.bodyLarge)
                         .foregroundColor(agentAvailable
                             ? DesignTokens.Colors.statusConnected
@@ -254,7 +252,7 @@ struct AuthMethodCard: View {
                               : DesignTokens.Colors.surfaceOverlay)
                         .frame(width: 32, height: 32)
 
-                    Image(systemName: method.iconName)
+                    method.appIcon.image
                         .font(DesignTokens.Typography.titleMedium)
                         .foregroundColor(isSelected
                             ? DesignTokens.Colors.accentPrimary

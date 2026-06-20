@@ -426,7 +426,7 @@ private struct HotkeySessionRowView: View {
                         .fill(isConnected
                               ? DesignTokens.Colors.statusConnected.opacity(0.12)
                               : DesignTokens.Colors.surfaceCard)
-                    Image(systemName: session.connectionType.iconName)
+                    session.connectionType.appIcon.image
                         .font(DesignTokens.Typography.captionLarge)
                         .foregroundColor(isConnected
                                          ? DesignTokens.Colors.statusConnected

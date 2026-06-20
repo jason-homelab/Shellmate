@@ -356,9 +356,7 @@ struct SFTPPanelView: View {
             Spacer()
             Button(action: { withAnimation { vm.showTransferPanel.toggle() } }) {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: vm.transferQueue.hasActiveTransfers
-                          ? "arrow.up.arrow.down.circle.fill"
-                          : "arrow.up.arrow.down.circle")
+                    (vm.transferQueue.hasActiveTransfers ? AppIcon.arrowUpDownCircleFill : .arrowUpDownCircle).image
                         .font(DesignTokens.Typography.captionLarge)
                     if vm.transferQueue.hasActiveTransfers {
                         Text("\(vm.transferQueue.activeCount)")
@@ -681,7 +679,7 @@ private struct TransferItemRow: View {
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
-            Image(systemName: item.direction.sfSymbolName)
+            item.direction.appIcon.image
                 .font(DesignTokens.Typography.bodySmall)
                 .foregroundColor(directionColor)
                 .frame(width: 16)

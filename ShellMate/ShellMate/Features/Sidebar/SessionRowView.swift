@@ -29,7 +29,7 @@ struct SessionRowView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(iconBackground)
-                Image(systemName: session.connectionType.iconName)
+                session.connectionType.appIcon.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(iconForeground)
             }

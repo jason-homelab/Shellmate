@@ -75,12 +75,12 @@ extension DesignTokens.Semantic {
             }
         }
 
-        var sfSymbol: String {
+        var appIcon: AppIcon {
             switch self {
-            case .info:    return "info.circle.fill"
-            case .success: return "checkmark.circle.fill"
-            case .warn:    return "exclamationmark.triangle.fill"
-            case .error:   return "xmark.octagon.fill"
+            case .info:    return .feedbackInfo
+            case .success: return .feedbackSuccess
+            case .warn:    return .feedbackWarn
+            case .error:   return .feedbackError
             }
         }
     }

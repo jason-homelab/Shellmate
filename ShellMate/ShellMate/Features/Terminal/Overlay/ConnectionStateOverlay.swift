@@ -97,7 +97,7 @@ struct ConnectionStateOverlay: View {
                 .frame(width: 56, height: 56)
 
             // 图标
-            Image(systemName: iconName)
+            appIcon.image
                 .font(.system(size: 26, weight: .regular))
                 .foregroundColor(accentColor)
         }
@@ -175,13 +175,13 @@ struct ConnectionStateOverlay: View {
         }
     }
 
-    private var iconName: String {
+    private var appIcon: AppIcon {
         switch state {
-        case .reconnecting:          return "arrow.triangle.2.circlepath"
-        case .failed:                return "xmark.octagon.fill"
-        case .disconnected(reason: .networkLost): return "wifi.slash"
-        case .disconnected:          return "powercord"
-        default:                     return "power.circle"
+        case .reconnecting:          return .arrowTriangle2Circlepath
+        case .failed:                return .feedbackError
+        case .disconnected(reason: .networkLost): return .wifiSlash
+        case .disconnected:          return .powercord
+        default:                     return .powerCircle
         }
     }
 

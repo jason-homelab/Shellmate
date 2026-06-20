@@ -16,12 +16,12 @@ enum ConnectionType: Int16, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// 侧边栏/表单图标
-    var iconName: String {
+    /// 侧边栏/表单图标（AppIcon，ADR-005）
+    var appIcon: AppIcon {
         switch self {
-        case .ssh:    return "server.rack"
-        case .telnet: return "network"
-        case .serial: return "cable.connector"
+        case .ssh:    return .serverRack
+        case .telnet: return .networkIcon
+        case .serial: return .cableConnector
         }
     }
 

@@ -24,10 +24,10 @@ struct CommandRisk: Identifiable {
             }
         }
 
-        var icon: String {
+        var appIcon: AppIcon {
             switch self {
-            case .danger:  return "exclamationmark.octagon.fill"
-            case .warning: return "exclamationmark.triangle.fill"
+            case .danger:  return .feedbackError
+            case .warning: return .feedbackWarn
             }
         }
 
