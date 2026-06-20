@@ -92,7 +92,7 @@ struct HighlightSettingsView: View {
             // 添加规则
             Button(action: { withAnimation { showAddForm.toggle() } }) {
                 HStack(spacing: DesignTokens.Spacing.xxs) {
-                    Image(systemName: showAddForm ? "minus" : "plus")
+                    (showAddForm ? AppIcon.minus : .plus).image
                         .font(DesignTokens.Typography.captionMedium)
                     Text("添加规则")
                         .font(DesignTokens.Typography.captionLarge)

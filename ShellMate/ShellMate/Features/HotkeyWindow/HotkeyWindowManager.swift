@@ -494,7 +494,7 @@ private struct AutoHideToggleButton: View {
     var body: some View {
         Button { autoHide.toggle() } label: {
             HStack(spacing: 4) {
-                Image(systemName: autoHide ? "pin.slash" : "pin.fill")
+                (autoHide ? AppIcon.pinSlash : .pin).image
                     .font(DesignTokens.Typography.captionSmallStrong)
                 Text(autoHide ? "失焦隐藏" : "保持显示")
                     .font(DesignTokens.Typography.captionMedium)

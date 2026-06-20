@@ -139,7 +139,7 @@ struct LogPanelView: View {
             .disabled(filteredEntries.isEmpty)
 
             Button { isPaused.toggle() } label: {
-                Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                (isPaused ? AppIcon.playFill : .pauseFill).image
                     .font(DesignTokens.Typography.bodySmall)
                     .foregroundColor(isPaused ? DesignTokens.Colors.accentPrimary : DesignTokens.Colors.textTertiary)
             }

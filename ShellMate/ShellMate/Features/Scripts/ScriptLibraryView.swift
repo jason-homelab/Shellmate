@@ -234,7 +234,7 @@ struct ScriptLibraryView: View {
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                     .tracking(0.8)
                 Spacer()
-                Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                (isCollapsed ? AppIcon.chevronRight : .chevronDown).image
                     .font(DesignTokens.Typography.captionSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
             }

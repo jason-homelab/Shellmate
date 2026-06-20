@@ -348,7 +348,7 @@ struct AIAssistantPanelView: View {
             let sendColor: Color = vm.inputMode == .nlCommand ? DesignTokens.Colors.accentSecondary : DesignTokens.Colors.accentPrimary
             // Figma 12:28: bg-[#077aff] size-[32px] rounded-[16px]
             Button { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { vm.send(text: vm.inputText) } } label: {
-                Image(systemName: vm.inputMode == .nlCommand ? "terminal" : "arrow.up")
+                (vm.inputMode == .nlCommand ? AppIcon.terminal : .arrowUp).image
                     .font(DesignTokens.Typography.bodyLargeStrong).foregroundColor(.white)
                     .frame(width: 32, height: 32)
                     .background(sendColor)
@@ -368,7 +368,7 @@ struct AIAssistantPanelView: View {
                     withAnimation(.easeInOut(duration: 0.15)) { vm.inputMode = mode; vm.inputText = "" }
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.xxs) {
-                        Image(systemName: mode == .chat ? "bubble.left" : "terminal")
+                        (mode == .chat ? AppIcon.bubbleLeft : .terminal).image
                             .font(DesignTokens.Typography.captionMedium)
                         Text(mode.rawValue)
                             .font(DesignTokens.Typography.captionLarge)

@@ -206,7 +206,7 @@ struct PasswordManagerView: View {
                 Button {
                     togglePasswordVisibility(session)
                 } label: {
-                    Image(systemName: isVisible ? "eye.slash" : "eye")
+                    (isVisible ? AppIcon.eyeSlash : .eye).image
                         .font(DesignTokens.Typography.labelMedium)
                         .foregroundColor(DesignTokens.Colors.textSecondary)
                         .frame(width: 28, height: 28)

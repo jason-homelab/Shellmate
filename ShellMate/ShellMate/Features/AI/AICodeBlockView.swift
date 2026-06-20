@@ -75,7 +75,7 @@ struct AICodeBlockView: View {
             Task { try? await Task.sleep(nanoseconds: 2_000_000_000); withAnimation { isCopied = false } }
         } label: {
             HStack(spacing: DesignTokens.Spacing.nano) {
-                Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                (isCopied ? AppIcon.checkmark : .copy).image
                     .font(DesignTokens.Typography.captionMedium)
                 Text(isCopied ? "已复制" : "复制")
                     .font(DesignTokens.Typography.captionMedium)
@@ -96,7 +96,7 @@ struct AICodeBlockView: View {
             Task { try? await Task.sleep(nanoseconds: 1_500_000_000); withAnimation { isInserted = false } }
         } label: {
             HStack(spacing: DesignTokens.Spacing.nano) {
-                Image(systemName: isInserted ? "checkmark.circle.fill" : "terminal")
+                (isInserted ? AppIcon.feedbackSuccess : .terminal).image
                     .font(DesignTokens.Typography.captionMedium)
                 Text(isInserted ? "已插入" : "插入终端")
                     .font(DesignTokens.Typography.captionMedium)
