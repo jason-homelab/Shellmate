@@ -96,12 +96,13 @@ jobs:
       - name: 安装 SwiftLint
         run: brew install swiftlint
 
-      - name: 运行 SwiftLint
+      - name: 运行 SwiftLint（基线 + strict，新增违规阻断 PR）
+        # 存量 1001 条违规已固化进 .swiftlint-baseline.json（既有技术债，不阻断）；
+        # --strict 将任何「新增」违规升级为错误，使本 job 失败 → 阻断 PR 合并。
+        # 详见 .swiftlint.yml 自定义护栏（raw_sf_symbol / raw_hex_color 等）。
         run: |
           swiftlint lint \
-            --path ShellMate/ShellMate \
-            --reporter github-actions-logging \
-            --config .swiftlint.yml 2>/dev/null || \
-          swiftlint lint \
-            --path ShellMate/ShellMate \
+            --config .swiftlint.yml \
+            --baseline .swiftlint-baseline.json \
+            --strict \
             --reporter github-actions-logging
