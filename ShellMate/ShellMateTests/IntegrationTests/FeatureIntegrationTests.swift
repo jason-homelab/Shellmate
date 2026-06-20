@@ -7,7 +7,7 @@ final class FeatureIntegrationTests: XCTestCase {
 
     // MARK: - 测试环境配置
 
-    private let testHost     = "192.168.100.167"
+    private let testHost     = "192.168.100.90"  // 见 CLAUDE.md §4.1，原 .167 已下线
     private let testPort: Int32 = 22
     private let testUsername = "ubuntu"
     private let testPassword = "Int3l@123"
@@ -39,14 +39,11 @@ final class FeatureIntegrationTests: XCTestCase {
         if connectResult == 0 { return true }
         guard errno == EINPROGRESS else { return false }
 
-        // 用 select() 等待最多 3 秒
-        var fdset = fd_set()
-        withUnsafeMutablePointer(to: &fdset) { ptr in
-            __darwin_fd_set(sock, ptr)
-        }
-        var tv = timeval(tv_sec: 3, tv_usec: 0)
-        let sel = select(sock + 1, nil, &fdset, nil, &tv)
-        guard sel > 0 else { return false }
+        // 用 poll() 等待可写，最多 3 秒
+        // （原 select + fd_set 实现在 Swift 下对可达主机亦误判不可达，改用更可靠的 poll）
+        var pfd = pollfd(fd: sock, events: Int16(POLLOUT), revents: 0)
+        let pollResult = poll(&pfd, 1, 3000)
+        guard pollResult > 0 else { return false }
 
         // 验证连接成功
         var errCode: Int32 = 0
