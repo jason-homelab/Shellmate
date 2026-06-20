@@ -3,13 +3,13 @@ import XCTest
 
 /// SSH 连接集成测试
 /// 测试用例 TC-001 ~ TC-005
-/// 使用 SSH2Connection（LibSSH2BridgeReal）直连真机 192.168.100.167
+/// 使用 SSH2Connection（LibSSH2BridgeReal）直连真机 192.168.100.90
 final class SSHConnectionIntegrationTests: XCTestCase {
 
     // MARK: - 测试环境配置
 
-    /// 真机测试服务器地址
-    private let testHost = "192.168.100.167"
+    /// 真机测试服务器地址（见 CLAUDE.md §4.1，原 .167 已下线）
+    private let testHost = "192.168.100.90"
 
     /// SSH 端口
     private let testPort: Int32 = 22
