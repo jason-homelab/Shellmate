@@ -117,6 +117,7 @@ enum AppIcon: String, CaseIterable {
     case importExport       = "arrow.up.arrow.down.square"
     case shareUp            = "square.and.arrow.up.on.square"
     case recordingFilled    = "record.circle.fill"
+    case video              = "video"
 
     // MARK: - 视图便捷
     var image: Image { Image(systemName: rawValue) }
@@ -165,7 +166,7 @@ enum AppIcon: String, CaseIterable {
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
              .shieldSlash, .bubbleLeft, .arrowLeftRight,
              .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
-             .syncGrid, .importExport, .shareUp, .recordingFilled:
+             .syncGrid, .importExport, .shareUp, .recordingFilled, .video:
             return "icon.a11y.decorative"
         }
     }
@@ -194,7 +195,7 @@ extension AppIcon {
              .terminal, .checkSquare, .square, .pauseFill, .textCursor,
              .shieldSlash, .bubbleLeft, .arrowLeftRight,
              .terminalFill, .waveformPathECG, .tmuxFilled, .pin, .pinSlash,
-             .syncGrid, .importExport, .shareUp, .recordingFilled:
+             .syncGrid, .importExport, .shareUp, .recordingFilled, .video:
             return true
         default:
             return false

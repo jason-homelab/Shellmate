@@ -171,7 +171,7 @@ struct ConnectionErrorView: View {
             Spacer()
 
             Button(action: onDismiss) {
-                Image(systemName: "xmark")
+                AppIcon.close.image
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textSecondary)
                     .frame(width: 22, height: 22)

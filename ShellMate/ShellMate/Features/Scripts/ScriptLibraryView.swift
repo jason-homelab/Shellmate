@@ -137,7 +137,7 @@ struct ScriptLibraryView: View {
                     // TODO: 录制会话功能（后续迭代实现）
                 } label: {
                     HStack(spacing: DesignTokens.Spacing.xs) {
-                        Image(systemName: "video")
+                        AppIcon.video.image
                             .font(DesignTokens.Typography.bodySmallStrong)
                         Text("Record Session")
                             .font(DesignTokens.Typography.labelLarge)

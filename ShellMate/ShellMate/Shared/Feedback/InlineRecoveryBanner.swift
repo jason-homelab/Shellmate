@@ -54,7 +54,7 @@ struct InlineRecoveryBanner: View {
                     onDismiss()
                     FeedbackCenter.shared.dismiss(id: event.id)
                 } label: {
-                    Image(systemName: "xmark")
+                    AppIcon.close.image
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(DesignTokens.Colors.textTertiary)
                         .padding(6)

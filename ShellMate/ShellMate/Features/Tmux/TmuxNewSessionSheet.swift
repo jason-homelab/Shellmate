@@ -23,7 +23,7 @@ struct TmuxNewSessionSheet: View {
         VStack(spacing: 0) {
             // 标题
             HStack {
-                Image(systemName: "rectangle.3.group")
+                AppIcon.tmux.image
                     .font(DesignTokens.Typography.bodyMedium)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
                 Text("新建 tmux 会话")
