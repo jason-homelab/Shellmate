@@ -126,3 +126,154 @@ struct TerminalViewAlertModifier: ViewModifier {
             }
     }
 }
+
+// MARK: - Sheet 集群修饰符（Phase 17：从 TerminalView.body 抽出 7 个 .sheet）
+
+/// 连接错误 / 服务器监控 / 会话摘要 / 高风险命令 / 密码向导 / 主机密钥确认·变更
+/// 统一收敛到一个 ViewModifier，精简 TerminalView.body 并缓解类型检查压力。
+struct TerminalViewSheetsModifier: ViewModifier {
+
+    let session: Session
+    let controller: TerminalController
+    /// 连接错误弹窗「重试」回调（TerminalView.connect）
+    let onConnect: () -> Void
+
+    @Binding var showConnectionError: Bool
+    @Binding var connectionErrorMessage: String
+    @Binding var showMonitorPanel: Bool
+    @Binding var showSummaryPanel: Bool
+    @Binding var pendingRiskyCommand: CommandRisk?
+    @Binding var isAIPanelOpen: Bool
+    @Binding var aiInitialError: String?
+
+    @EnvironmentObject private var aiSettings: AISettingsStore
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showConnectionError) {
+                ConnectionErrorView(
+                    session: session,
+                    errorMessage: connectionErrorMessage,
+                    onRetry: {
+                        showConnectionError = false
+                        onConnect()
+                    },
+                    onDismiss: { showConnectionError = false },
+                    onAIDiagnose: aiSettings.isEnabled ? {
+                        // AI-04：以连接错误上下文预填充 AI 助手面板
+                        showConnectionError = false
+                        aiInitialError = connectionErrorMessage
+                        withAnimation(DesignTokens.Animation.standard) {
+                            isAIPanelOpen = true
+                        }
+                    } : nil
+                )
+            }
+            .sheet(isPresented: $showMonitorPanel) {
+                ServerMonitorPanelView(
+                    session: session,
+                    metrics: Binding(
+                        get: { controller.serverMetrics },
+                        set: { _ in }
+                    ),
+                    onClose: { showMonitorPanel = false }
+                )
+            }
+            // AI-05：会话摘要面板
+            .sheet(isPresented: $showSummaryPanel) {
+                AISummaryView(
+                    sessionName: "\(session.name) · \(session.username)@\(session.host)",
+                    terminalOutput: controller.recentTerminalOutput(),
+                    onClose: { showSummaryPanel = false }
+                )
+            }
+            // AI-06：高风险命令安全审计弹窗
+            .sheet(item: $pendingRiskyCommand) { risk in
+                CommandSafetyAlertView(
+                    risk: risk,
+                    onConfirm: {
+                        pendingRiskyCommand = nil
+                        controller.sendComposeContent(risk.command + "\r")
+                    },
+                    onCancel: {
+                        pendingRiskyCommand = nil
+                    }
+                )
+            }
+    }
+}
+
+// MARK: - 对话框集群修饰符（Phase 17：密码向导 + 主机密钥确认/变更）
+
+/// 密码输入向导 / 首次主机密钥确认（D02）/ 主机密钥变更警告（D03）。
+/// 与 TerminalViewSheetsModifier 拆分，避免单个 body 过长触发 function_body_length。
+struct TerminalViewDialogsModifier: ViewModifier {
+
+    let session: Session
+    let controller: TerminalController
+
+    @Binding var showCredentialWizard: Bool
+    @Binding var wizardPassword: String
+    @Binding var wizardSaveCredential: Bool
+    @Binding var connectionErrorMessage: String
+    @Binding var showConnectionError: Bool
+
+    func body(content: Content) -> some View {
+        content
+            // 密码输入向导
+            .sheet(isPresented: $showCredentialWizard) {
+                CredentialWizardView(
+                    session: session,
+                    controller: controller,
+                    isPresented: $showCredentialWizard,
+                    password: $wizardPassword,
+                    saveCredential: $wizardSaveCredential,
+                    connectionErrorMessage: $connectionErrorMessage,
+                    showConnectionError: $showConnectionError
+                )
+            }
+            // D02：首次连接新主机，显示主机密钥确认弹窗
+            .sheet(
+                isPresented: Binding(
+                    get: {
+                        if case .newHost = controller.pendingHostKeyState { return true }
+                        return false
+                    },
+                    set: { if !$0 { controller.rejectHostKey() } }
+                )
+            ) {
+                if case .newHost(let fingerprint) = controller.pendingHostKeyState {
+                    HostKeyConfirmationView(
+                        host: session.host,
+                        port: session.port,
+                        fingerprint: fingerprint,
+                        onConfirm: { controller.acceptNewHostKey() },
+                        onCancel: { controller.rejectHostKey() }
+                    )
+                    .frame(width: 560)
+                }
+            }
+            // D03：主机密钥变更，显示安全警告弹窗
+            .sheet(
+                isPresented: Binding(
+                    get: {
+                        if case .changedHost = controller.pendingHostKeyState { return true }
+                        return false
+                    },
+                    set: { if !$0 { controller.rejectHostKey() } }
+                )
+            ) {
+                if case .changedHost(let oldFP, let newFP) = controller.pendingHostKeyState {
+                    HostKeyChangedWarningView(
+                        host: session.host,
+                        port: session.port,
+                        oldFingerprint: oldFP,
+                        newFingerprint: newFP,
+                        onProceed: { controller.acceptChangedHostKey() },
+                        onCancel: { controller.rejectHostKey() }
+                    )
+                    .frame(width: 600)
+                }
+            }
+    }
+}

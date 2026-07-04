@@ -260,56 +260,27 @@ struct TerminalView: View {
                 }
             )
         }
-        .sheet(isPresented: $showConnectionError) {
-            ConnectionErrorView(
-                session: session,
-                errorMessage: connectionErrorMessage,
-                onRetry: {
-                    showConnectionError = false
-                    connect()
-                },
-                onDismiss: { showConnectionError = false },
-                onAIDiagnose: aiSettings.isEnabled ? {
-                    // AI-04：以连接错误上下文预填充 AI 助手面板
-                    showConnectionError = false
-                    aiInitialError = connectionErrorMessage
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isAIPanelOpen = true
-                    }
-                } : nil
-            )
-        }
-        .sheet(isPresented: $showMonitorPanel) {
-            ServerMonitorPanelView(
-                session: session,
-                metrics: Binding(
-                    get: { controller.serverMetrics },
-                    set: { _ in }
-                ),
-                onClose: { showMonitorPanel = false }
-            )
-        }
-        // AI-05：会话摘要面板
-        .sheet(isPresented: $showSummaryPanel) {
-            AISummaryView(
-                sessionName: "\(session.name) · \(session.username)@\(session.host)",
-                terminalOutput: controller.recentTerminalOutput(),
-                onClose: { showSummaryPanel = false }
-            )
-        }
-        // AI-06：高风险命令安全审计弹窗
-        .sheet(item: $pendingRiskyCommand) { risk in
-            CommandSafetyAlertView(
-                risk: risk,
-                onConfirm: {
-                    pendingRiskyCommand = nil
-                    controller.sendComposeContent(risk.command + "\r")
-                },
-                onCancel: {
-                    pendingRiskyCommand = nil
-                }
-            )
-        }
+        .modifier(TerminalViewSheetsModifier(
+            session: session,
+            controller: controller,
+            onConnect: { connect() },
+            showConnectionError: $showConnectionError,
+            connectionErrorMessage: $connectionErrorMessage,
+            showMonitorPanel: $showMonitorPanel,
+            showSummaryPanel: $showSummaryPanel,
+            pendingRiskyCommand: $pendingRiskyCommand,
+            isAIPanelOpen: $isAIPanelOpen,
+            aiInitialError: $aiInitialError
+        ))
+        .modifier(TerminalViewDialogsModifier(
+            session: session,
+            controller: controller,
+            showCredentialWizard: $showCredentialWizard,
+            wizardPassword: $wizardPassword,
+            wizardSaveCredential: $wizardSaveCredential,
+            connectionErrorMessage: $connectionErrorMessage,
+            showConnectionError: $showConnectionError
+        ))
         .modifier(TerminalViewAlertModifier(
             showSFTPError: $showSFTPError, sftpErrorMessage: sftpErrorMessage,
             showTunnelError: $showTunnelError, tunnelErrorMessage: tunnelErrorMessage
@@ -363,61 +334,6 @@ struct TerminalView: View {
             }
         } message: {
             Text("此会话使用私钥认证，但未设置私钥文件路径。请在「编辑会话 → 认证」中选择私钥文件后再连接。")
-        }
-        // 密码输入向导
-        .sheet(isPresented: $showCredentialWizard) {
-            CredentialWizardView(
-                session: session,
-                controller: controller,
-                isPresented: $showCredentialWizard,
-                password: $wizardPassword,
-                saveCredential: $wizardSaveCredential,
-                connectionErrorMessage: $connectionErrorMessage,
-                showConnectionError: $showConnectionError
-            )
-        }
-        // D02：首次连接新主机，显示主机密钥确认弹窗
-        .sheet(
-            isPresented: Binding(
-                get: {
-                    if case .newHost = controller.pendingHostKeyState { return true }
-                    return false
-                },
-                set: { if !$0 { controller.rejectHostKey() } }
-            )
-        ) {
-            if case .newHost(let fingerprint) = controller.pendingHostKeyState {
-                HostKeyConfirmationView(
-                    host: session.host,
-                    port: session.port,
-                    fingerprint: fingerprint,
-                    onConfirm: { controller.acceptNewHostKey() },
-                    onCancel: { controller.rejectHostKey() }
-                )
-                .frame(width: 560)
-            }
-        }
-        // D03：主机密钥变更，显示安全警告弹窗
-        .sheet(
-            isPresented: Binding(
-                get: {
-                    if case .changedHost = controller.pendingHostKeyState { return true }
-                    return false
-                },
-                set: { if !$0 { controller.rejectHostKey() } }
-            )
-        ) {
-            if case .changedHost(let oldFP, let newFP) = controller.pendingHostKeyState {
-                HostKeyChangedWarningView(
-                    host: session.host,
-                    port: session.port,
-                    oldFingerprint: oldFP,
-                    newFingerprint: newFP,
-                    onProceed: { controller.acceptChangedHostKey() },
-                    onCancel: { controller.rejectHostKey() }
-                )
-                .frame(width: 600)
-            }
         }
     }
 
