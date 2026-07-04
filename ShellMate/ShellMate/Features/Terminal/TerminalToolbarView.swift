@@ -2,56 +2,50 @@ import SwiftUI
 
 /// 终端工具栏
 /// 提供字号调整、清屏、搜索等快捷操作
+/// 终端工具栏（从 TerminalView 抽出，Phase 17）
+/// 终端标题 + 字号控制 + 清屏/搜索/SFTP/隧道/tmux/命令编辑/快捷命令/同步输入/AI 等工具按钮。
+/// 依赖经注入：controller(@ObservedObject) / session / 三个 @EnvironmentObject / 若干 @Binding /
+/// SFTP 切换闭包；EnvironmentObject 由 TerminalView 所在环境自动向下传递。
 struct TerminalToolbarView: View {
 
-    // MARK: - 属性
+    // MARK: - 依赖
 
-    /// 终端控制器
     @ObservedObject var controller: TerminalController
+    let session: Session
 
-    /// 当前字体大小
-    @State private var fontSize: CGFloat = 13
+    @EnvironmentObject var panels: ContentViewModel
+    @EnvironmentObject var syncStore: SyncInputStore
+    @EnvironmentObject var aiSettings: AISettingsStore
 
-    /// 是否显示搜索栏
     @Binding var showSearch: Bool
+    @Binding var isAIPanelOpen: Bool
+    @Binding var aiInitialError: String?
+    @Binding var showSummaryPanel: Bool
+    @Binding var sessionFontSize: Double
 
-    /// 连接状态描述
-    @Binding var statusText: String
-
-    // MARK: - 常量
-
-    /// 最小字号
-    private let minFontSize: CGFloat = 9
-
-    /// 最大字号
-    private let maxFontSize: CGFloat = 24
-
-    /// 字号调整步长
-    private let fontSizeStep: CGFloat = 1
+    let minFontSize: Double
+    let maxFontSize: Double
+    let onToggleSFTP: () -> Void
 
     // MARK: - 视图
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            // 左侧：连接状态
-            connectionStatusView
-
-            Spacer()
-
-            // 中间：状态文本
-            if !statusText.isEmpty {
-                Text(statusText)
+            // 终端标题（已连接时显示，如 "ubuntu@host: ~"）
+            if !controller.terminalTitle.isEmpty {
+                Text(controller.terminalTitle)
                     .font(DesignTokens.Typography.labelSmall)
                     .foregroundColor(DesignTokens.Colors.textTertiary)
+                    .lineLimit(1)
             }
 
             Spacer()
 
-            // 右侧：工具按钮
+            // 右侧工具按钮
             toolButtonsView
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, DesignTokens.Spacing.sm)
+        .frame(height: 36)
         .background {
             Rectangle()
                 .fill(DesignTokens.Colors.surfacePanel)
@@ -63,155 +57,152 @@ struct TerminalToolbarView: View {
         }
     }
 
-    // MARK: - 子视图
-
-    /// 连接状态视图
-    private var connectionStatusView: some View {
-        HStack(spacing: DesignTokens.Spacing.sm) {
-            // 状态点
-            StatusDotView(state: controller.state.toConnectionState)
-
-            // 状态文本
-            Text(controller.state.displayName)
-                .font(DesignTokens.Typography.labelMedium)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            // 重连中显示进度
-            if case .reconnecting(let attempt) = controller.state {
-                Text("(\(attempt)/\(controller.reconnectConfig.maxAttempts))")
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-            }
-        }
-    }
-
-    /// 工具按钮视图
     private var toolButtonsView: some View {
-        HStack(spacing: DesignTokens.Spacing.xs) {
-            // 字号减小
-            ToolbarButton(
-                icon: .zoomOut,
-                tooltip: "减小字号 (⌘-)",
-                isEnabled: fontSize > minFontSize
-            ) {
-                decreaseFontSize()
+        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
+            fontSizeControls
+
+            toolbarDivider
+
+            ToolbarButton(icon: .clear, tooltip: "清屏 (⌘K)") {
+                controller.clearTerminal()
             }
 
-            // 字号显示（精致芯片样式）
-            Text("\(Int(fontSize))pt")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textTertiary)
-                .frame(width: 36)
-                .padding(.horizontal, DesignTokens.Spacing.xs)
-                .padding(.vertical, DesignTokens.Spacing.xxxs)
-                .background(
-                    RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusXSmall, style: .continuous)
-                        .fill(Color.black.opacity(0.05))
-                )
-
-            // 字号增大
-            ToolbarButton(
-                icon: .zoomIn,
-                tooltip: "增大字号 (⌘+)",
-                isEnabled: fontSize < maxFontSize
-            ) {
-                increaseFontSize()
-            }
-
-            Divider()
-                .frame(height: 16)
-                .padding(.horizontal, DesignTokens.Spacing.xs)
-
-            // 清屏
-            ToolbarButton(
-                icon: .clear,
-                tooltip: "清屏 (⌘K)"
-            ) {
-                clearScreen()
-            }
-
-            // 搜索
             ToolbarButton(
                 icon: .search,
                 tooltip: "搜索 (⌘F)",
                 isActive: showSearch
             ) {
-                toggleSearch()
+                withAnimation { showSearch.toggle() }
             }
 
-            Divider()
-                .frame(height: 16)
-                .padding(.horizontal, DesignTokens.Spacing.xs)
+            toolbarDivider
 
-            // 连接/断开
-            if controller.state == .connected {
+            // SFTP 文件管理器按钮
+            ToolbarButton(
+                icon: .arrowUpArrowDown,
+                tooltip: "SFTP 文件管理器",
+                isEnabled: controller.state == .connected,
+                isActive: controller.isSFTPPanelOpen
+            ) {
+                onToggleSFTP()
+            }
+
+            // 隧道管理器按钮（⌘⇧U）
+            ToolbarButton(
+                icon: .arrowLeftArrowRight,
+                tooltip: "隧道管理器 (⌘⇧U)",
+                isActive: panels.showTunnelPanel
+            ) {
+                withAnimation(DesignTokens.Animation.standard) { panels.showTunnelPanel.toggle() }
+            }
+
+            // tmux 会话管理器按钮（⌘⇧T）
+            if case .available = controller.tmuxStore.availability {
                 ToolbarButton(
-                    icon: .xmarkCircle,
-                    tooltip: "断开连接",
-                    tintColor: DesignTokens.Colors.statusError
+                    icon: .tmux,
+                    tooltip: "tmux 会话管理器 (⌘⇧T)",
+                    isActive: panels.showTmuxPanel,
+                    tintColor: panels.showTmuxPanel ? DesignTokens.Colors.accentPrimary : nil
                 ) {
-                    disconnect()
+                    withAnimation(DesignTokens.Animation.standard) { panels.showTmuxPanel.toggle() }
                 }
-            } else if controller.state == .disconnected || controller.state.isFailed {
-                ToolbarButton(
-                    icon: .quickCommand,
-                    tooltip: "连接",
-                    tintColor: DesignTokens.Colors.statusConnected
-                ) {
-                    connect()
+            }
+
+            // Compose Pane 按钮
+            ToolbarButton(
+                icon: .log,
+                tooltip: "命令编辑区",
+                isActive: controller.isComposePaneOpen
+            ) {
+                withAnimation(DesignTokens.Animation.standard) {
+                    controller.isComposePaneOpen.toggle()
                 }
-            } else if controller.state.isReconnecting {
+            }
+
+            // W11：快捷命令管理器按钮（⌘⇧K）
+            ToolbarButton(
+                icon: .listBulletRectangle,
+                tooltip: "快捷命令 (⌘⇧K)",
+                isActive: panels.showQuickCommandPanel
+            ) {
+                withAnimation(DesignTokens.Animation.standard) { panels.showQuickCommandPanel.toggle() }
+            }
+
+            // W12.6：同步输入按钮（O03）
+            ToolbarButton(
+                icon: syncStore.isSynced(session.id) ? .syncGrid : .squareGrid,
+                tooltip: syncStore.isSynced(session.id) ? "关闭同步输入" : "同步输入",
+                isEnabled: controller.state == .connected,
+                isActive: syncStore.isSynced(session.id),
+                tintColor: syncStore.isSynced(session.id) ? DesignTokens.Colors.statusConnecting : nil
+            ) {
+                if syncStore.isSynced(session.id) {
+                    syncStore.deactivate()
+                } else {
+                    panels.syncInputSessionId = session.id
+                    withAnimation(DesignTokens.Animation.standard) { panels.showSyncInputPanel = true }
+                }
+            }
+
+            toolbarDivider
+
+            // AI 助手按钮（仅在 AI 功能启用时显示）
+            if aiSettings.isEnabled {
                 ToolbarButton(
-                    icon: .xmarkCircle,
-                    tooltip: "取消重连"
+                    icon: .ai,
+                    tooltip: "AI 助手 (⌘⇧A)",
+                    isActive: isAIPanelOpen,
+                    tintColor: isAIPanelOpen ? nil : (controller.detectedErrorText != nil ? DesignTokens.Colors.statusConnecting : nil)
                 ) {
-                    cancelReconnect()
+                    withAnimation(DesignTokens.Animation.standard) {
+                        isAIPanelOpen.toggle()
+                        if !isAIPanelOpen { aiInitialError = nil }
+                    }
+                }
+
+                // AI-05：会话摘要按钮（⌘⇧S）
+                ToolbarButton(
+                    icon: .textViewfinder,
+                    tooltip: "会话摘要 (⌘⇧S)",
+                    isEnabled: controller.state == .connected
+                ) {
+                    showSummaryPanel = true
                 }
             }
         }
     }
 
-    // MARK: - 操作
-
-    /// 增大字号
-    private func increaseFontSize() {
-        fontSize = min(maxFontSize, fontSize + fontSizeStep)
+    private var toolbarDivider: some View {
+        Rectangle()
+            .fill(DesignTokens.Colors.borderSecondary)
+            .frame(width: 1, height: 16)
+            .padding(.horizontal, DesignTokens.Spacing.xxs)
     }
 
-    /// 减小字号
-    private func decreaseFontSize() {
-        fontSize = max(minFontSize, fontSize - fontSizeStep)
-    }
+    private var fontSizeControls: some View {
+        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
+            ToolbarButton(
+                icon: .zoomOut,
+                tooltip: "减小字号 (⌘-)",
+                isEnabled: sessionFontSize > minFontSize
+            ) {
+                sessionFontSize = max(minFontSize, sessionFontSize - 1)
+            }
 
-    /// 清屏
-    private func clearScreen() {
-        controller.clearTerminal()
-    }
+            Text("\(Int(sessionFontSize))pt")
+                .font(DesignTokens.Typography.labelSmall)
+                .foregroundColor(DesignTokens.Colors.textSecondary)
+                .frame(width: 34)
+                .multilineTextAlignment(.center)
 
-    /// 切换搜索
-    private func toggleSearch() {
-        withAnimation {
-            showSearch.toggle()
+            ToolbarButton(
+                icon: .zoomIn,
+                tooltip: "增大字号 (⌘+)",
+                isEnabled: sessionFontSize < maxFontSize
+            ) {
+                sessionFontSize = min(maxFontSize, sessionFontSize + 1)
+            }
         }
-    }
-
-    /// 连接
-    private func connect() {
-        Task {
-            try? await controller.connect()
-        }
-    }
-
-    /// 断开连接
-    private func disconnect() {
-        Task {
-            await controller.disconnect()
-        }
-    }
-
-    /// 取消重连
-    private func cancelReconnect() {
-        controller.cancelReconnect()
     }
 }
 
@@ -434,24 +425,6 @@ struct TerminalSearchBar: View {
 }
 
 // MARK: - 预览
-
-#Preview("终端工具栏") {
-    let controller = TerminalController(
-        session: Session.preview
-    )
-
-    return VStack {
-        TerminalToolbarView(
-            controller: controller,
-            showSearch: .constant(false),
-            statusText: .constant("ubuntu@server:~$")
-        )
-
-        Spacer()
-    }
-    .frame(width: 800, height: 100)
-    .background(DesignTokens.Colors.surfaceWindow)
-}
 
 #Preview("终端搜索栏") {
     TerminalSearchBar(

@@ -137,7 +137,18 @@ struct TerminalView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbarView
+            TerminalToolbarView(
+                controller: controller,
+                session: session,
+                showSearch: $showSearch,
+                isAIPanelOpen: $isAIPanelOpen,
+                aiInitialError: $aiInitialError,
+                showSummaryPanel: $showSummaryPanel,
+                sessionFontSize: $sessionFontSize,
+                minFontSize: minFontSize,
+                maxFontSize: maxFontSize,
+                onToggleSFTP: { toggleSFTPPanel() }
+            )
 
             if showSearch {
                 searchBarView
@@ -508,183 +519,6 @@ struct TerminalView: View {
         // 移除 TerminalStatusBarView 后，SwiftTerm NSView 会按 intrinsicContentSize 定高。
         // 必须显式声明 maxHeight: .infinity，确保终端区域填满 VStack 中的剩余空间。
         .frame(maxHeight: .infinity)
-    }
-
-    @ViewBuilder
-    private var toolbarView: some View {
-        HStack(spacing: DesignTokens.Spacing.md) {
-            // 终端标题（已连接时显示，如 "ubuntu@host: ~"）
-            if !controller.terminalTitle.isEmpty {
-                Text(controller.terminalTitle)
-                    .font(DesignTokens.Typography.labelSmall)
-                    .foregroundColor(DesignTokens.Colors.textTertiary)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            // 右侧工具按钮
-            toolButtonsView
-        }
-        .padding(.horizontal, DesignTokens.Spacing.md)
-        .frame(height: 36)
-        .background {
-            Rectangle()
-                .fill(DesignTokens.Colors.surfacePanel)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(DesignTokens.Colors.glassBorderSide)
-                        .frame(height: 0.5)
-                }
-        }
-    }
-
-    private var toolButtonsView: some View {
-        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
-            fontSizeControls
-
-            toolbarDivider
-
-            ToolbarButton(icon: .clear, tooltip: "清屏 (⌘K)") {
-                controller.clearTerminal()
-            }
-
-            ToolbarButton(
-                icon: .search,
-                tooltip: "搜索 (⌘F)",
-                isActive: showSearch
-            ) {
-                withAnimation { showSearch.toggle() }
-            }
-
-            toolbarDivider
-
-            // SFTP 文件管理器按钮
-            ToolbarButton(
-                icon: .arrowUpArrowDown,
-                tooltip: "SFTP 文件管理器",
-                isEnabled: controller.state == .connected,
-                isActive: controller.isSFTPPanelOpen
-            ) {
-                toggleSFTPPanel()
-            }
-
-            // 隧道管理器按钮（⌘⇧U）
-            ToolbarButton(
-                icon: .arrowLeftArrowRight,
-                tooltip: "隧道管理器 (⌘⇧U)",
-                isActive: panels.showTunnelPanel
-            ) {
-                withAnimation(.easeInOut(duration: 0.2)) { panels.showTunnelPanel.toggle() }
-            }
-
-            // tmux 会话管理器按钮（⌘⇧T）
-            if case .available = controller.tmuxStore.availability {
-                ToolbarButton(
-                    icon: .tmux,
-                    tooltip: "tmux 会话管理器 (⌘⇧T)",
-                    isActive: panels.showTmuxPanel,
-                    tintColor: panels.showTmuxPanel ? DesignTokens.Colors.accentPrimary : nil
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) { panels.showTmuxPanel.toggle() }
-                }
-            }
-
-            // Compose Pane 按钮
-            ToolbarButton(
-                icon: .log,
-                tooltip: "命令编辑区",
-                isActive: controller.isComposePaneOpen
-            ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    controller.isComposePaneOpen.toggle()
-                }
-            }
-
-            // W11：快捷命令管理器按钮（⌘⇧K）
-            ToolbarButton(
-                icon: .listBulletRectangle,
-                tooltip: "快捷命令 (⌘⇧K)",
-                isActive: panels.showQuickCommandPanel
-            ) {
-                withAnimation(.easeInOut(duration: 0.2)) { panels.showQuickCommandPanel.toggle() }
-            }
-
-            // W12.6：同步输入按钮（O03）
-            ToolbarButton(
-                icon: syncStore.isSynced(session.id) ? .syncGrid : .squareGrid,
-                tooltip: syncStore.isSynced(session.id) ? "关闭同步输入" : "同步输入",
-                isEnabled: controller.state == .connected,
-                isActive: syncStore.isSynced(session.id),
-                tintColor: syncStore.isSynced(session.id) ? DesignTokens.Colors.statusConnecting : nil
-            ) {
-                if syncStore.isSynced(session.id) {
-                    syncStore.deactivate()
-                } else {
-                    panels.syncInputSessionId = session.id
-                    withAnimation(.easeInOut(duration: 0.2)) { panels.showSyncInputPanel = true }
-                }
-            }
-
-            toolbarDivider
-
-            // AI 助手按钮（仅在 AI 功能启用时显示）
-            if aiSettings.isEnabled {
-                ToolbarButton(
-                    icon: .ai,
-                    tooltip: "AI 助手 (⌘⇧A)",
-                    isActive: isAIPanelOpen,
-                    tintColor: isAIPanelOpen ? nil : (controller.detectedErrorText != nil ? DesignTokens.Colors.statusConnecting : nil)
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isAIPanelOpen.toggle()
-                        if !isAIPanelOpen { aiInitialError = nil }
-                    }
-                }
-
-                // AI-05：会话摘要按钮（⌘⇧S）
-                ToolbarButton(
-                    icon: .textViewfinder,
-                    tooltip: "会话摘要 (⌘⇧S)",
-                    isEnabled: controller.state == .connected
-                ) {
-                    showSummaryPanel = true
-                }
-            }
-        }
-    }
-
-    private var toolbarDivider: some View {
-        Rectangle()
-            .fill(DesignTokens.Colors.borderSecondary)
-            .frame(width: 1, height: 16)
-            .padding(.horizontal, DesignTokens.Spacing.xxs)
-    }
-
-    private var fontSizeControls: some View {
-        HStack(alignment: .center, spacing: DesignTokens.Spacing.xxs) {
-            ToolbarButton(
-                icon: .zoomOut,
-                tooltip: "减小字号 (⌘-)",
-                isEnabled: sessionFontSize > minFontSize
-            ) {
-                sessionFontSize = max(minFontSize, sessionFontSize - 1)
-            }
-
-            Text("\(Int(sessionFontSize))pt")
-                .font(DesignTokens.Typography.labelSmall)
-                .foregroundColor(DesignTokens.Colors.textSecondary)
-                .frame(width: 34)
-                .multilineTextAlignment(.center)
-
-            ToolbarButton(
-                icon: .zoomIn,
-                tooltip: "增大字号 (⌘+)",
-                isEnabled: sessionFontSize < maxFontSize
-            ) {
-                sessionFontSize = min(maxFontSize, sessionFontSize + 1)
-            }
-        }
     }
 
     private var searchBarView: some View {
