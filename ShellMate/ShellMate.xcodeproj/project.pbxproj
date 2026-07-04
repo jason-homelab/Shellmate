@@ -82,6 +82,7 @@
 		BB020006 /* TerminalToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB020005 /* TerminalToolbarView.swift */; };
 		BB02FE01 /* SwiftTermViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02FE02 /* SwiftTermViewRepresentable.swift */; };
 		BB02FE03 /* CredentialWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02FE04 /* CredentialWizardView.swift */; };
+		BB02FE05 /* SFTPSidebarTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02FE06 /* SFTPSidebarTab.swift */; };
 		CB58174E97934750946FFCAB /* ShellMateTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */; };
 		CC010001 /* FormComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020001 /* FormComponents.swift */; };
 		CC010002 /* HostKeyConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC020002 /* HostKeyConfirmationView.swift */; };
@@ -346,6 +347,7 @@
 		BB020005 /* TerminalToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalToolbarView.swift; sourceTree = "<group>"; };
 		BB02FE02 /* SwiftTermViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTermViewRepresentable.swift; sourceTree = "<group>"; };
 		BB02FE04 /* CredentialWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialWizardView.swift; sourceTree = "<group>"; };
+		BB02FE06 /* SFTPSidebarTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPSidebarTab.swift; sourceTree = "<group>"; };
 		CC020001 /* FormComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormComponents.swift; sourceTree = "<group>"; };
 		CC020002 /* HostKeyConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyConfirmationView.swift; sourceTree = "<group>"; };
 		CC020003 /* HostKeyChangedWarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyChangedWarningView.swift; sourceTree = "<group>"; };
@@ -735,6 +737,7 @@
 				BB020005 /* TerminalToolbarView.swift */,
 				BB02FE02 /* SwiftTermViewRepresentable.swift */,
 				BB02FE04 /* CredentialWizardView.swift */,
+				BB02FE06 /* SFTPSidebarTab.swift */,
 				EE020010 /* ComposePaneView.swift */,
 				29FD8E64E3BA412C87BEDBF1 /* SyncInputConfirmView.swift */,
 				8B7EE8CDEE4040C38FA27561 /* ShellMateTerminalView.swift */,
@@ -1436,6 +1439,7 @@
 				BB020006 /* TerminalToolbarView.swift in Sources */,
 				BB02FE01 /* SwiftTermViewRepresentable.swift in Sources */,
 				BB02FE03 /* CredentialWizardView.swift in Sources */,
+				BB02FE05 /* SFTPSidebarTab.swift in Sources */,
 				SP010001 /* SplitSessionPickerView.swift in Sources */,
 				TP010001 /* TerminalPlaceholderView.swift in Sources */,
 				TV010001 /* TerminalTextView.swift in Sources */,
