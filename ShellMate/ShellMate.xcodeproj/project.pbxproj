@@ -178,6 +178,7 @@
 		W28_BLD_08 /* InputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = W28_REF_08 /* InputBar.swift */; };
 		W28_BLD_09 /* WelcomeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W28_REF_09 /* WelcomeViewModelTests.swift */; };
 		W28_BLD_10 /* SidebarViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W28_REF_10 /* SidebarViewModelTests.swift */; };
+		SFVMT_01 /* SessionFormViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = SFVMT_02 /* SessionFormViewModelTests.swift */; };
 		W29_BLD_01 /* SFTPPanelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_01 /* SFTPPanelViewModel.swift */; };
 		W29_BLD_02 /* SFTPFileRowViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_02 /* SFTPFileRowViews.swift */; };
 		W29_BLD_03 /* AIPanelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = W29_REF_03 /* AIPanelViewModel.swift */; };
@@ -445,6 +446,7 @@
 		W28_REF_08 /* InputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputBar.swift; sourceTree = "<group>"; };
 		W28_REF_09 /* WelcomeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewModelTests.swift; sourceTree = "<group>"; };
 		W28_REF_10 /* SidebarViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewModelTests.swift; sourceTree = "<group>"; };
+		SFVMT_02 /* SessionFormViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFormViewModelTests.swift; sourceTree = "<group>"; };
 		W29_REF_01 /* SFTPPanelViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPPanelViewModel.swift; sourceTree = "<group>"; };
 		W29_REF_02 /* SFTPFileRowViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPFileRowViews.swift; sourceTree = "<group>"; };
 		W29_REF_03 /* AIPanelViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPanelViewModel.swift; sourceTree = "<group>"; };
@@ -1140,6 +1142,7 @@
 			children = (
 				W28_REF_09 /* WelcomeViewModelTests.swift */,
 				W28_REF_10 /* SidebarViewModelTests.swift */,
+				SFVMT_02 /* SessionFormViewModelTests.swift */,
 				W29_REF_07 /* SFTPPanelViewModelTests.swift */,
 				W29_REF_08 /* AIPanelViewModelTests.swift */,
 				W29_REF_09 /* TerminalViewModelTests.swift */,
@@ -1578,6 +1581,7 @@
 				FF060104 /* SessionFormatParserTests.swift in Sources */,
 				W28_BLD_09 /* WelcomeViewModelTests.swift in Sources */,
 				W28_BLD_10 /* SidebarViewModelTests.swift in Sources */,
+				SFVMT_01 /* SessionFormViewModelTests.swift in Sources */,
 				W29_BLD_07 /* SFTPPanelViewModelTests.swift in Sources */,
 				W29_BLD_08 /* AIPanelViewModelTests.swift in Sources */,
 				W29_BLD_09 /* TerminalViewModelTests.swift in Sources */,

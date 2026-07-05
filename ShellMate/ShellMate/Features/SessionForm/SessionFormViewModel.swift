@@ -69,7 +69,7 @@ final class SessionFormViewModel: ObservableObject {
     var title: String { isEditing ? "编辑会话" : "新建会话" }
 
     var canSave: Bool {
-        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        // 名称留空时自动使用主机名/串口路径，故不再强制要求 name 非空
         switch connectionProtocol {
         case "Serial":
             return !serialPortPath.isEmpty
@@ -112,7 +112,9 @@ final class SessionFormViewModel: ObservableObject {
     func configure(defaultProtocol: String) {
         loadSessionData()
         if editingSession == nil {
-            connectionProtocol = defaultProtocol
+            // 新建连接默认 SSH；仅当存储的默认协议是合法值时才采用，防止陈旧/非法值
+            let validProtocols = ["SSH", "Telnet", "Serial"]
+            connectionProtocol = validProtocols.contains(defaultProtocol) ? defaultProtocol : "SSH"
             if let gid = defaultGroupId { selectedGroupId = gid }
         }
     }
@@ -145,9 +147,12 @@ final class SessionFormViewModel: ObservableObject {
         validationErrors = []
         let connType = resolvedConnectionType
 
-        if name.trimmingCharacters(in: .whitespaces).isEmpty {
-            validationErrors.append("请输入会话名称")
-        }
+        // 会话名称留空时自动使用主机名（Serial 用串口路径），与表单占位提示一致
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let derivedName = connType == .serial
+            ? serialPortPath
+            : host.trimmingCharacters(in: .whitespaces)
+        let resolvedName = trimmedName.isEmpty ? derivedName : trimmedName
 
         var portNumber: Int32 = 0
         if connType == .serial {
@@ -181,7 +186,7 @@ final class SessionFormViewModel: ObservableObject {
         if let existing = editingSession {
             session = Session(
                 id: existing.id,
-                name: name.trimmingCharacters(in: .whitespaces),
+                name: resolvedName,
                 host: host.trimmingCharacters(in: .whitespaces),
                 port: portNumber,
                 username: username.trimmingCharacters(in: .whitespaces),
@@ -217,7 +222,7 @@ final class SessionFormViewModel: ObservableObject {
             )
         } else {
             session = Session(
-                name: name.trimmingCharacters(in: .whitespaces),
+                name: resolvedName,
                 host: host.trimmingCharacters(in: .whitespaces),
                 port: portNumber,
                 username: username.trimmingCharacters(in: .whitespaces),

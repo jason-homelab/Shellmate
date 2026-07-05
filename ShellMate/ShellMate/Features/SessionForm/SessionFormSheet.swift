@@ -177,6 +177,12 @@ struct SessionFormSheet: View {
 
             Divider().overlay(borderColor)
 
+            // W4：测试连接结果面板（内联于布局流，可关闭，避免遮挡底部按钮）
+            if showPreflightPanel {
+                preflightPanel
+                Divider().overlay(borderColor)
+            }
+
             footerView
         }
         .frame(width: 500)
@@ -304,19 +310,33 @@ struct SessionFormSheet: View {
                 .padding(.top, 4)
                 .allowsHitTesting(true)
         }
-        .overlay(alignment: .top) {
-            // W4 新增：Preflight 结果浮层（覆盖底部按钮上方）
-            if showPreflightPanel {
-                PreflightProgressView(result: preflightResult, isRunning: preflightRunning)
-                    .frame(maxWidth: 420)
-                    .padding(.bottom, 4)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .opacity
-                    ))
-                    .offset(y: -76)
+    }
+
+    // MARK: - W4：测试连接结果面板（内联，带关闭按钮）
+
+    private var preflightPanel: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            HStack {
+                Text("连接测试")
+                    .font(DesignTokens.Typography.labelLarge)
+                    .foregroundColor(labelColor)
+                Spacer()
+                Button {
+                    withAnimation(DesignTokens.Animation.fast) { showPreflightPanel = false }
+                } label: {
+                    AppIcon.close.image
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.textTertiary)
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("关闭测试结果")
             }
+            PreflightProgressView(result: preflightResult, isRunning: preflightRunning)
         }
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.vertical, DesignTokens.Spacing.md)
     }
 
     // MARK: - W4 新增：触发 Preflight
@@ -327,7 +347,7 @@ struct SessionFormSheet: View {
         let portValue = Int(vm.port) ?? 22
 
         preflightRunning = true
-        showPreflightPanel = true
+        withAnimation(DesignTokens.Animation.fast) { showPreflightPanel = true }
         preflightResult = nil
 
         Task {
