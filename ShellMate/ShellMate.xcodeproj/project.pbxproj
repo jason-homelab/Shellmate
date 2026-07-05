@@ -202,6 +202,7 @@
 		DT_BLD_04 /* DesignTokens+Sizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_04 /* DesignTokens+Sizes.swift */; };
 		DT_BLD_05 /* DesignTokens+Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT_REF_05 /* DesignTokens+Animation.swift */; };
 		W30_BLD_01 /* SessionLogStressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_01 /* SessionLogStressTests.swift */; };
+		PERF_BLD_01 /* LargeDataPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PERF_REF_01 /* LargeDataPerformanceTests.swift */; };
 		W30_BLD_02 /* SFTPRenderPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = W30_REF_02 /* SFTPRenderPerformanceTests.swift */; };
 		WC010001 /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WC020001 /* WelcomeScreenView.swift */; };
 		CONN_BLD_01 /* ConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONN_REF_01 /* ConnectionType.swift */; };
@@ -468,6 +469,7 @@
 		DT_REF_04 /* DesignTokens+Sizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Sizes.swift"; sourceTree = "<group>"; };
 		DT_REF_05 /* DesignTokens+Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DesignTokens+Animation.swift"; sourceTree = "<group>"; };
 		W30_REF_01 /* SessionLogStressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogStressTests.swift; sourceTree = "<group>"; };
+		PERF_REF_01 /* LargeDataPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataPerformanceTests.swift; sourceTree = "<group>"; };
 		W30_REF_02 /* SFTPRenderPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRenderPerformanceTests.swift; sourceTree = "<group>"; };
 		WC020001 /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
 		CONN_REF_01 /* ConnectionType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionType.swift; sourceTree = "<group>"; };
@@ -1150,6 +1152,7 @@
 			isa = PBXGroup;
 			children = (
 				W30_REF_01 /* SessionLogStressTests.swift */,
+				PERF_REF_01 /* LargeDataPerformanceTests.swift */,
 				W30_REF_02 /* SFTPRenderPerformanceTests.swift */,
 			);
 			path = PerformanceTests;
@@ -1581,6 +1584,7 @@
 				W29_BLD_14 /* CredentialVaultTests.swift in Sources */,
 				MOCK_BLD_01 /* MockSFTPSession.swift in Sources */,
 				W30_BLD_01 /* SessionLogStressTests.swift in Sources */,
+				PERF_BLD_01 /* LargeDataPerformanceTests.swift in Sources */,
 				W30_BLD_02 /* SFTPRenderPerformanceTests.swift in Sources */,
 				FF060102 /* SessionLogStoreTests.swift in Sources */,
 			);
