@@ -13,7 +13,10 @@ struct AIAssistantPanelView: View {
     /// 一键插入终端回调（AI-03）
     var onInsertCommand: ((String) -> Void)?
 
-    @State private var showPrivacyConsent: Bool = false
+    /// 首次隐私说明是否已展示（与 AISettingsStore 同一 UserDefaults key）。
+    /// 用 view 级 @AppStorage 而非经 aiSettings 读取，确保翻转时面板可靠重渲
+    /// （ObservableObject 内的 @AppStorage 不触发 objectWillChange）。
+    @AppStorage("ai.hasShownPrivacyConsent") private var hasShownPrivacyConsent: Bool = false
 
     init(
         session: Session,
@@ -28,10 +31,24 @@ struct AIAssistantPanelView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            headerView
-            messageListView
-            inputView
+        Group {
+            if hasShownPrivacyConsent {
+                VStack(spacing: 0) {
+                    headerView
+                    messageListView
+                    inputView
+                }
+            } else {
+                // 首次使用：内联展示隐私数据说明（替代原 sheet），
+                // 用户「继续使用」后翻转 @AppStorage，面板自动切回对话界面。
+                AIPrivacyConsentView(
+                    onAccept: {
+                        hasShownPrivacyConsent = true
+                        if let err = initialError { vm.prefillError(err) }
+                    },
+                    onDecline: { onClose() }
+                )
+            }
         }
         // Figma: bg-white/90 backdrop-blur-xl
         .background {
@@ -45,19 +62,8 @@ struct AIAssistantPanelView: View {
                 .frame(width: 0.5)
         }
         .onAppear {
-            if !aiSettings.hasShownPrivacyConsent {
-                showPrivacyConsent = true
-            } else if let err = initialError {
+            if hasShownPrivacyConsent, let err = initialError {
                 vm.prefillError(err)
-            }
-        }
-        .sheet(isPresented: $showPrivacyConsent) {
-            AIPrivacyConsentView {
-                aiSettings.hasShownPrivacyConsent = true
-                showPrivacyConsent = false
-                if let err = initialError { vm.prefillError(err) }
-            } onDecline: {
-                onClose()
             }
         }
     }
@@ -544,15 +550,17 @@ struct AIPrivacyConsentView: View {
             }
             .padding(.top, 28).padding(.horizontal, DesignTokens.Spacing.xxl).padding(.bottom, DesignTokens.Spacing.xl)
             Divider()
-            VStack(alignment: .leading, spacing: 14) {
-                privacyItem(icon: .log, color: DesignTokens.Colors.accentPrimary, title: "会发送的数据",
-                            body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击\"发送给 AI\"时的终端输出片段（最近 50 行）")
-                privacyItem(icon: .lockSlash, color: DesignTokens.Colors.statusConnected, title: "不会发送的数据",
-                            body: "• SSH 密码、私钥、Passphrase\n• 完整终端历史（仅发送您选择的片段）\n• 会话配置、iCloud 同步数据")
-                privacyItem(icon: .building2, color: DesignTokens.Colors.statusConnecting, title: "数据去向",
-                            body: "数据发送至您配置的 AI 服务商（Claude / OpenAI / 本地 Ollama），ShellMate 本身不存储或上传任何数据。")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    privacyItem(icon: .log, color: DesignTokens.Colors.accentPrimary, title: "会发送的数据",
+                                body: "• 您在 AI 输入框中填写的消息内容\n• 您主动点击\"发送给 AI\"时的终端输出片段（最近 50 行）")
+                    privacyItem(icon: .lockSlash, color: DesignTokens.Colors.statusConnected, title: "不会发送的数据",
+                                body: "• SSH 密码、私钥、Passphrase\n• 完整终端历史（仅发送您选择的片段）\n• 会话配置、iCloud 同步数据")
+                    privacyItem(icon: .building2, color: DesignTokens.Colors.statusConnecting, title: "数据去向",
+                                body: "数据发送至您配置的 AI 服务商（Claude / OpenAI / 本地 Ollama），ShellMate 本身不存储或上传任何数据。")
+                }
+                .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, 18)
             }
-            .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, 18)
             Divider()
             HStack(spacing: DesignTokens.Spacing.md) {
                 Button("不使用 AI 功能", action: onDecline).buttonStyle(.bordered).controlSize(.regular)
@@ -560,9 +568,9 @@ struct AIPrivacyConsentView: View {
             }
             .padding(.horizontal, DesignTokens.Spacing.xxl).padding(.vertical, DesignTokens.Spacing.lg)
         }
-        .frame(width: 420)
+        // 内联展示于 AI 面板内：填充可用空间，不再是固定宽度卡片
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(DesignTokens.Colors.surfacePanel)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Sizes.cornerRadiusLarge, style: .continuous))
     }
 
     private func privacyItem(icon: AppIcon, color: Color, title: String, body: String) -> some View {
