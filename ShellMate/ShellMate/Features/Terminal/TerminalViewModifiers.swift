@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftTerm
 
 // Phase 9：从 TerminalView.swift 抽出的 ViewModifier 与 helper view
 // 原文件 1299 → ~1180 行（降幅 119 行）
@@ -274,6 +275,55 @@ struct TerminalViewDialogsModifier: ViewModifier {
                     )
                     .frame(width: 600)
                 }
+            }
+    }
+}
+
+// MARK: - 状态同步修饰符（Phase 17：向共享底栏 ActiveTerminalStatusStore 推送）
+
+/// 将活跃终端的连接状态 / 服务器指标 / 终端尺寸 / 连接时刻推送到共享底栏，
+/// 并响应底栏「打开服务器监控」信号、把 SwiftTerm 视图引用回写给 controller。
+struct TerminalViewStatusSyncModifier: ViewModifier {
+
+    let isSelected: Bool
+    let controller: TerminalController
+    @Binding var showMonitorPanel: Bool
+    @Binding var terminalViewRef: SwiftTerm.TerminalView?
+    /// 推送当前终端状态到共享底栏（TerminalView.pushToStatusStore）
+    let onPushStatus: () -> Void
+
+    @EnvironmentObject private var terminalStatus: ActiveTerminalStatusStore
+
+    func body(content: Content) -> some View {
+        content
+            // 当此 Tab 被选中时，将本终端状态推送到共享底栏
+            .onChange(of: isSelected) { selected in
+                if selected { onPushStatus() }
+            }
+            // controller 关键状态变化时同步推送
+            .onChange(of: controller.state) { _ in onPushStatus() }
+            .onChange(of: controller.serverMetrics) { _ in
+                guard isSelected else { return }
+                terminalStatus.serverMetrics = controller.serverMetrics
+            }
+            .onChange(of: controller.terminalSize) { _ in
+                guard isSelected else { return }
+                terminalStatus.terminalColumns = controller.terminalSize.columns
+                terminalStatus.terminalRows = controller.terminalSize.rows
+            }
+            .onChange(of: controller.connectedAt) { _ in
+                guard isSelected else { return }
+                terminalStatus.connectedAt = controller.connectedAt
+            }
+            // 底栏触发"打开服务器监控"信号：由活跃 TerminalView 响应并显示 sheet
+            .onChange(of: terminalStatus.shouldShowMonitorPanel) { should in
+                if should && isSelected {
+                    showMonitorPanel = true
+                    terminalStatus.shouldShowMonitorPanel = false
+                }
+            }
+            .onChange(of: terminalViewRef) { newView in
+                controller.terminalView = newView
             }
     }
 }

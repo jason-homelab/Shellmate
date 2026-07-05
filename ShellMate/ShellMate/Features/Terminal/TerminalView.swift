@@ -187,35 +187,13 @@ struct TerminalView: View {
                 sessionFontSize = newVal
             }
         }
-        // 当此 Tab 被选中时，将本终端状态推送到共享底栏
-        .onChange(of: isSelected) { selected in
-            if selected { pushToStatusStore() }
-        }
-        // controller 关键状态变化时同步推送
-        .onChange(of: controller.state) { _ in pushToStatusStore() }
-        .onChange(of: controller.serverMetrics) { _ in
-            guard isSelected else { return }
-            terminalStatus.serverMetrics = controller.serverMetrics
-        }
-        .onChange(of: controller.terminalSize) { _ in
-            guard isSelected else { return }
-            terminalStatus.terminalColumns = controller.terminalSize.columns
-            terminalStatus.terminalRows = controller.terminalSize.rows
-        }
-        .onChange(of: controller.connectedAt) { _ in
-            guard isSelected else { return }
-            terminalStatus.connectedAt = controller.connectedAt
-        }
-        // 底栏触发"打开服务器监控"信号：由活跃 TerminalView 响应并显示 sheet
-        .onChange(of: terminalStatus.shouldShowMonitorPanel) { should in
-            if should && isSelected {
-                showMonitorPanel = true
-                terminalStatus.shouldShowMonitorPanel = false
-            }
-        }
-        .onChange(of: terminalViewRef) { newView in
-            controller.terminalView = newView
-        }
+        .modifier(TerminalViewStatusSyncModifier(
+            isSelected: isSelected,
+            controller: controller,
+            showMonitorPanel: $showMonitorPanel,
+            terminalViewRef: $terminalViewRef,
+            onPushStatus: { pushToStatusStore() }
+        ))
         .onChange(of: controller.state) { newState in
             // 将 TerminalController 的实际连接状态同步回 SessionStore
             AppEvent.postConnectionState(sessionId: session.id, state: newState.toConnectionState)
