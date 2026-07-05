@@ -341,6 +341,24 @@ struct SessionFormSheet: View {
 
     // MARK: - W4 新增：触发 Preflight
 
+    /// 由当前表单的认证配置构建预检认证方式。
+    /// 仅 SSH 协议做握手+认证探测；无凭据时退化为 .skipAuth（仅测到握手）。
+    private var preflightAuthMethod: PreflightAuthMethod {
+        guard vm.connectionProtocol == "SSH" else { return .skipAuth }
+        switch vm.authMethod {
+        case .password:
+            return vm.password.isEmpty ? .skipAuth : .password(vm.password)
+        case .privateKey:
+            guard !vm.privateKeyPath.isEmpty else { return .skipAuth }
+            let expanded = (vm.privateKeyPath as NSString).expandingTildeInPath
+            return .privateKey(path: expanded, passphrase: vm.passphrase.isEmpty ? nil : vm.passphrase)
+        case .sshAgent:
+            return .agent
+        case .keyboardInteractive:
+            return .skipAuth
+        }
+    }
+
     private func runPreflight() {
         let host = vm.host.trimmingCharacters(in: .whitespaces)
         guard !host.isEmpty else { return }
@@ -350,12 +368,13 @@ struct SessionFormSheet: View {
         withAnimation(DesignTokens.Animation.fast) { showPreflightPanel = true }
         preflightResult = nil
 
+        let auth = preflightAuthMethod
         Task {
             let result = await ConnectionPreflightService.shared.preflight(
                 host: host,
                 port: portValue,
                 username: vm.username,
-                authMethod: .skipAuth
+                authMethod: auth
             )
             await MainActor.run {
                 preflightResult = result

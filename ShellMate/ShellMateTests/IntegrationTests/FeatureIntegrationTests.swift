@@ -154,6 +154,71 @@ final class FeatureIntegrationTests: XCTestCase {
         )
     }
 
+    // MARK: - TC-Preflight：SSH 握手 + 认证探测（libssh2）
+
+    /// 私钥认证预检：DNS / TCP / 握手 / 认证 四阶段全部成功
+    func testTCPreflight_KeyAuth_AllStagesSucceed() async throws {
+        guard isServerReachable() else {
+            throw XCTSkip("Preflight 跳过：测试服务器 \(testHost):\(testPort) 不可达")
+        }
+        let result = await ConnectionPreflightService.shared.preflight(
+            host: testHost,
+            port: Int(testPort),
+            username: testUsername,
+            authMethod: .privateKey(path: testPrivateKeyPath, passphrase: nil)
+        )
+
+        XCTAssertEqual(result.summary, .success, "Preflight（私钥）应整体成功")
+        for stage in PreflightStage.allCases {
+            if case .success = result.stages[stage] {
+                continue
+            }
+            XCTFail("阶段 \(stage) 应为 success，实际：\(String(describing: result.stages[stage]))")
+        }
+    }
+
+    /// 无效私钥预检：握手成功但认证失败，summary 停在 .auth
+    func testTCPreflight_InvalidKey_FailsAtAuth() async throws {
+        guard isServerReachable() else {
+            throw XCTSkip("Preflight 跳过：测试服务器 \(testHost):\(testPort) 不可达")
+        }
+        let result = await ConnectionPreflightService.shared.preflight(
+            host: testHost,
+            port: Int(testPort),
+            username: testUsername,
+            authMethod: .privateKey(path: "/tmp/nonexistent_preflight_key_INVALID", passphrase: nil)
+        )
+
+        // 握手阶段应成功（服务端 SSH 正常）
+        if case .success = result.stages[.handshake] {} else {
+            XCTFail("握手阶段应成功，实际：\(String(describing: result.stages[.handshake]))")
+        }
+        // 认证阶段应失败，整体 summary 停在 .auth
+        guard case .failedAt(let stage, _) = result.summary else {
+            return XCTFail("无效私钥应导致 summary .failedAt，实际：\(result.summary)")
+        }
+        XCTAssertEqual(stage, .auth, "应在认证阶段失败")
+    }
+
+    /// 仅握手探测（skipAuth）：DNS / TCP / 握手成功，认证阶段跳过
+    func testTCPreflight_SkipAuth_HandshakeOnly() async throws {
+        guard isServerReachable() else {
+            throw XCTSkip("Preflight 跳过：测试服务器 \(testHost):\(testPort) 不可达")
+        }
+        let result = await ConnectionPreflightService.shared.preflight(
+            host: testHost,
+            port: Int(testPort),
+            username: testUsername,
+            authMethod: .skipAuth
+        )
+
+        XCTAssertEqual(result.summary, .success)
+        if case .success = result.stages[.handshake] {} else {
+            XCTFail("握手阶段应成功")
+        }
+        XCTAssertEqual(result.stages[.auth], .skipped, "skipAuth 时认证阶段应为 skipped")
+    }
+
     // MARK: - TC-008：ERROR 关键字高亮注入
 
     /// TC-008：HighlightEngine 处理含 ERROR 的数据时，应注入 ANSI 红色高亮序列
