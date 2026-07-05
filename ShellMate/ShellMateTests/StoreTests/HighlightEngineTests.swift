@@ -175,6 +175,41 @@ final class HighlightEngineTests: XCTestCase {
         XCTAssertFalse(output.contains("\u{1B}[31m"), "已有 ANSI 序列的片段不应被二次高亮")
     }
 
+    // MARK: - 特征化测试（锁定精确输出，护航优化重构）
+
+    /// 单条规则、单次命中：精确输出 = 前缀 + ESC[31m + 关键字 + ESC[0m + 后缀
+    func testExactOutput_SingleMatch() {
+        engine.rules = [makeRule(pattern: "ERROR", color: .red)]
+        let output = string(engine.process(utf8("a ERROR b")))
+        XCTAssertEqual(output, "a \u{1B}[31mERROR\u{1B}[0m b")
+    }
+
+    /// 同一行多次命中：每次命中各自包裹，精确输出
+    func testExactOutput_MultipleMatchesSameLine() {
+        engine.rules = [makeRule(pattern: "err", color: .red)]
+        let output = string(engine.process(utf8("err x err y err")))
+        let e = "\u{1B}[31merr\u{1B}[0m"
+        XCTAssertEqual(output, "\(e) x \(e) y \(e)")
+    }
+
+    /// 混合：处于活动 ANSI 内的关键字跳过、活动区外的照常高亮
+    func testExactOutput_SkipInsideActiveANSIButHighlightOutside() {
+        engine.rules = [makeRule(pattern: "err", color: .red)]
+        // 第一个 err 处于 green(32m) 活动区内 → 跳过；reset 后的第二个 err → 高亮
+        let input = "\u{1B}[32m err \u{1B}[0m err"
+        let output = string(engine.process(utf8(input)))
+        XCTAssertEqual(output, "\u{1B}[32m err \u{1B}[0m \u{1B}[31merr\u{1B}[0m")
+    }
+
+    /// 多行输入：跨行分别命中，换行符（含 \r\n）原样保留
+    func testExactOutput_MultilinePreservesNewlines() {
+        engine.rules = [makeRule(pattern: "ok", color: .green)]
+        let input = "ok line1\r\nplain\nok line3"
+        let output = string(engine.process(utf8(input)))
+        let g = "\u{1B}[32mok\u{1B}[0m"
+        XCTAssertEqual(output, "\(g) line1\r\nplain\n\(g) line3")
+    }
+
     // MARK: - 规则管理测试
 
     /// addRule：新规则追加到列表末尾

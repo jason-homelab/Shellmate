@@ -130,42 +130,70 @@ final class HighlightEngine: ObservableObject {
 
     // MARK: - 私有
 
-    /// 对文本应用单条规则：从后向前替换以避免偏移漂移
+    /// 对文本应用单条规则：单次前向扫描逐段拼接。
+    /// 相比原「从后向前 replaceSubrange + 每次匹配重扫前缀」实现（O(匹配数×文本长度)），
+    /// 本实现对间隙/片段各扫描一次并增量维护 ANSI 活动态，整体约 O(文本长度)，
+    /// 行为与原实现逐字等价（见 HighlightEngineTests 特征化用例）。
     private func applyRule(
         regex: NSRegularExpression,
         color: HighlightColor,
         to text: String
     ) -> String {
-        let range = NSRange(text.startIndex..., in: text)
-        let matches = regex.matches(in: text, range: range).reversed()
-        var result = text
+        let ns = text as NSString
+        let fullLength = ns.length
+        let matches = regex.matches(in: text, range: NSRange(location: 0, length: fullLength))
+        guard !matches.isEmpty else { return text }
+
+        let open = "\u{1B}[\(color.ansiFGCode)m"
+        let reset = "\u{1B}[0m"
+
+        var result = ""
+        result.reserveCapacity(text.utf8.count + matches.count * (open.utf8.count + reset.utf8.count))
+
+        var cursor = 0            // 已处理到的 UTF-16 位置
+        var activeANSI = false    // 截至 cursor，原文是否处于尚未 reset 的 SGR 序列内
+
         for match in matches {
-            guard let swiftRange = Range(match.range, in: result) else { continue }
-            let fragment = String(result[swiftRange])
-            // 跳过已含 ESC 的片段，避免双重高亮损坏 ANSI 序列
-            guard !fragment.contains("\u{1B}") else { continue }
-            // 跳过已处于活动 ANSI 颜色序列内部的匹配
-            guard !isInsideActiveANSI(result, before: swiftRange.lowerBound) else { continue }
-            result.replaceSubrange(
-                swiftRange,
-                with: "\u{1B}[\(color.ansiFGCode)m\(fragment)\u{1B}[0m"
-            )
+            let loc = match.range.location
+            let len = match.range.length
+
+            // 追加 [cursor, loc) 间隙，并据其中的 SGR 序列更新活动态
+            if loc > cursor {
+                let gap = ns.substring(with: NSRange(location: cursor, length: loc - cursor))
+                result += gap
+                activeANSI = Self.ansiStateAfter(scanning: gap, current: activeANSI)
+            }
+
+            let fragment = ns.substring(with: NSRange(location: loc, length: len))
+            // 已含 ESC、或处于活动 ANSI 序列内 → 原样输出，避免破坏/双重高亮
+            if activeANSI || fragment.contains("\u{1B}") {
+                result += fragment
+            } else {
+                result += open
+                result += fragment
+                result += reset
+            }
+            // 片段自身可能含 SGR（正则命中 ESC 时），同步更新活动态
+            activeANSI = Self.ansiStateAfter(scanning: fragment, current: activeANSI)
+            cursor = loc + len
+        }
+
+        if cursor < fullLength {
+            result += ns.substring(with: NSRange(location: cursor, length: fullLength - cursor))
         }
         return result
     }
 
-    /// 判断 text 中 index 之前是否处于一个尚未 reset 的 ANSI 颜色序列内
-    /// 取 prefix 中最后一条 ANSI SGR 序列：若参数为空或 "0" 表示 reset（不在序列内），否则在序列内。
-    private func isInsideActiveANSI(_ text: String, before index: String.Index) -> Bool {
-        let prefix = String(text[text.startIndex..<index])
-        let nsPrefix = prefix as NSString
-        let range = NSRange(location: 0, length: nsPrefix.length)
-        let hits = Self.ansiDetectRegex.matches(in: prefix, range: range)
-        guard let last = hits.last else { return false }
-        // 提取 SGR 参数（ESC [ <params> m 中的 <params>）
+    /// 扫描一段文本后的 ANSI 活动态：取其中最后一条 SGR 序列，
+    /// 参数为空或 "0" 视为 reset（返回 false），否则处于活动色序列内（返回 true）；
+    /// 段内无 SGR 时沿用传入的 current。语义与逐字符检查前缀等价。
+    private static func ansiStateAfter(scanning segment: String, current: Bool) -> Bool {
+        let ns = segment as NSString
+        let hits = ansiDetectRegex.matches(in: segment, range: NSRange(location: 0, length: ns.length))
+        guard let last = hits.last else { return current }
         let inner = NSRange(location: last.range.location + 2,
                             length: max(0, last.range.length - 3))
-        let param = nsPrefix.substring(with: inner)
+        let param = ns.substring(with: inner)
         return param != "0" && !param.isEmpty
     }
 
