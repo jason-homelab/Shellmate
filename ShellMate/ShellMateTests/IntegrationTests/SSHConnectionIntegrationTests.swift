@@ -3,25 +3,25 @@ import XCTest
 
 /// SSH 连接集成测试
 /// 测试用例 TC-001 ~ TC-005
-/// 使用 SSH2Connection（LibSSH2BridgeReal）直连真机 192.168.100.90
+/// 使用 SSH2Connection（LibSSH2BridgeReal）key 认证直连真机 139.196.123.220（root）
 final class SSHConnectionIntegrationTests: XCTestCase {
 
     // MARK: - 测试环境配置
 
-    /// 真机测试服务器地址（见 CLAUDE.md §4.1，原 .167 已下线）
-    private let testHost = "192.168.100.90"
+    /// 真机测试服务器地址（见 CLAUDE.md §4.1；Aliyun ECS，仅 key 认证）
+    private let testHost = "139.196.123.220"
 
     /// SSH 端口
     private let testPort: Int32 = 22
 
-    /// 测试用户名
-    private let testUsername = "ubuntu"
+    /// 测试用户名（新真机为 root）
+    private let testUsername = "root"
 
-    /// 测试密码
-    private let testPassword = "Int3l@123"
+    /// 纯 Keychain 往返测试用的占位密码（新真机禁用密码认证，不用于真实连接）
+    private let testPassword = "keychain-roundtrip-placeholder"
 
-    /// 测试私钥路径（TC-002 需要预先在服务器配置公钥）
-    private let testPrivateKeyPath = "/tmp/shellmate_test_ed25519"
+    /// 测试私钥路径（新真机 key 认证，RSA，无 passphrase）
+    private let testPrivateKeyPath = "/Users/jason/AZ-DevOPS/DevOps/KeyPair/id_rsa"
 
     /// 连接超时
     private let connectionTimeout: TimeInterval = 15
@@ -63,10 +63,21 @@ final class SSHConnectionIntegrationTests: XCTestCase {
         return exp
     }
 
-    // MARK: - TC-001: 密码认证 SSH 连接
+    /// 轮询等待 controller 到达 .connected（用于等待 acceptNewHostKey 触发的异步重连）
+    private func waitForConnected(_ controller: TerminalController, timeout: TimeInterval) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if await MainActor.run(body: { controller.state == .connected }) { return true }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        return false
+    }
 
-    /// TC-001: 密码认证 SSH 连接成功，终端显示 shell 提示符
-    func testTC001_PasswordAuthentication() async throws {
+    // MARK: - TC-001: 私钥认证 SSH 连接
+
+    /// TC-001: 私钥认证 SSH 连接成功，终端显示 shell 提示符
+    /// （新真机仅 key 认证；私钥见 CLAUDE.md §4.1）
+    func testTC001_KeyAuthentication() async throws {
         let conn = SSH2Connection()
 
         // 1. 先注册数据回调，避免错过首批数据
@@ -74,16 +85,17 @@ final class SSHConnectionIntegrationTests: XCTestCase {
 
         // 2. 在后台线程执行阻塞连接
         try await runBlocking {
-            try conn.connect(
+            try conn.connectWithKey(
                 host: self.testHost,
                 port: self.testPort,
                 username: self.testUsername,
-                password: self.testPassword
+                privateKeyPath: self.testPrivateKeyPath,
+                passphrase: nil
             )
         }
 
         // 3. 验证连接状态
-        XCTAssertTrue(conn.isConnected, "TC-001: 密码认证后 isConnected 应为 true")
+        XCTAssertTrue(conn.isConnected, "TC-001: 私钥认证后 isConnected 应为 true")
 
         // 4. 等待收到 Shell 提示符（Ubuntu 默认 ~$ 提示符）
         await fulfillment(of: [promptExp], timeout: 8)
@@ -94,25 +106,26 @@ final class SSHConnectionIntegrationTests: XCTestCase {
         XCTAssertFalse(conn.isConnected, "TC-001: disconnect 后 isConnected 应为 false")
     }
 
-    /// TC-001 变体：错误密码应认证失败
-    func testTC001_WrongPassword_ShouldFail() async throws {
+    /// TC-001 变体：无效私钥（不存在的路径）应认证/连接失败
+    func testTC001_InvalidKey_ShouldFail() async throws {
         let conn = SSH2Connection()
 
         do {
             try await runBlocking {
-                try conn.connect(
+                try conn.connectWithKey(
                     host: self.testHost,
                     port: self.testPort,
                     username: self.testUsername,
-                    password: "wrongpassword_INVALID"
+                    privateKeyPath: "/tmp/nonexistent_shellmate_key_INVALID",
+                    passphrase: nil
                 )
             }
-            XCTFail("TC-001 变体：错误密码不应连接成功")
+            XCTFail("TC-001 变体：不存在的私钥不应连接成功")
         } catch {
-            // 预期：认证失败或连接错误
+            // 预期：私钥缺失/认证失败
         }
 
-        XCTAssertFalse(conn.isConnected, "TC-001 变体：错误密码后应处于未连接状态")
+        XCTAssertFalse(conn.isConnected, "TC-001 变体：无效私钥后应处于未连接状态")
     }
 
     // MARK: - TC-002: SSH Key 认证
@@ -211,11 +224,12 @@ final class SSHConnectionIntegrationTests: XCTestCase {
             for conn in connections {
                 group.addTask {
                     try await Task.detached(priority: .userInitiated) {
-                        try conn.connect(
+                        try conn.connectWithKey(
                             host: self.testHost,
                             port: self.testPort,
                             username: self.testUsername,
-                            password: self.testPassword
+                            privateKeyPath: self.testPrivateKeyPath,
+                            passphrase: nil
                         )
                     }.value
                 }
@@ -282,13 +296,12 @@ final class SSHConnectionIntegrationTests: XCTestCase {
             host: testHost,
             port: testPort,
             username: testUsername,
-            authMethod: .password,
+            authMethod: .privateKey,
+            privateKeyPath: testPrivateKeyPath,
             autoReconnect: true
         )
 
-        // 预存密码到 Keychain（TerminalController 从 Keychain 读取）
-        try KeychainService.shared.savePassword(testPassword, for: session.id, type: .password)
-        defer { try? KeychainService.shared.deletePassword(for: session.id, type: .password) }
+        // key 认证：私钥从 privateKeyPath 读取，无需 Keychain 密码
 
         let controller = await MainActor.run { TerminalController(session: session) }
         await MainActor.run {
@@ -299,6 +312,14 @@ final class SSHConnectionIntegrationTests: XCTestCase {
 
         // 首次连接真机
         try await controller.connect()
+
+        // 新主机首连 → D02 主机密钥待确认：模拟用户「接受」（会写入 KnownHosts 并异步重连）。
+        // 首次运行后 139.196.123.220 永久 known，后续运行直接连通、跳过此分支。
+        if case .newHost = await MainActor.run(body: { controller.pendingHostKeyState }) {
+            await MainActor.run { controller.acceptNewHostKey() }
+            let reconnected = await waitForConnected(controller, timeout: 15)
+            XCTAssertTrue(reconnected, "TC-005b: 接受主机密钥后应在超时内重连成功")
+        }
 
         let connectedState = await MainActor.run { controller.state }
         XCTAssertEqual(connectedState, .connected, "TC-005b: 首次连接后应为 .connected")
@@ -385,11 +406,12 @@ extension SSHConnectionIntegrationTests {
                 let conn = SSH2Connection()
                 do {
                     try await self.runBlocking {
-                        try conn.connect(
+                        try conn.connectWithKey(
                             host: self.testHost,
                             port: self.testPort,
                             username: self.testUsername,
-                            password: self.testPassword
+                            privateKeyPath: self.testPrivateKeyPath,
+                            passphrase: nil
                         )
                     }
                     conn.disconnect()

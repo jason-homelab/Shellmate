@@ -807,7 +807,7 @@ struct TmuxManagerView: View {
         Color.black.opacity(0.85)
         TmuxManagerView(
             store: store,
-            serverLabel: "ubuntu@192.168.100.90",
+            serverLabel: "root@139.196.123.220",
             onClose: {}
         )
         .padding()

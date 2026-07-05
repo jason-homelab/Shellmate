@@ -7,10 +7,11 @@ final class FeatureIntegrationTests: XCTestCase {
 
     // MARK: - 测试环境配置
 
-    private let testHost     = "192.168.100.90"  // 见 CLAUDE.md §4.1，原 .167 已下线
+    private let testHost     = "139.196.123.220"  // 见 CLAUDE.md §4.1；Aliyun ECS，仅 key 认证
     private let testPort: Int32 = 22
-    private let testUsername = "ubuntu"
-    private let testPassword = "Int3l@123"
+    private let testUsername = "root"
+    /// key 认证私钥（RSA，无 passphrase）
+    private let testPrivateKeyPath = "/Users/jason/AZ-DevOPS/DevOps/KeyPair/id_rsa"
 
     // MARK: - 服务器可达性检查
 
@@ -74,8 +75,8 @@ final class FeatureIntegrationTests: XCTestCase {
             host: testHost,
             port: testPort,
             username: testUsername,
-            authMethod: .password,
-            password: testPassword
+            authMethod: .privateKey,
+            privateKeyPath: testPrivateKeyPath
         )
         defer { Task { await sftp.disconnect() } }
 
@@ -123,8 +124,8 @@ final class FeatureIntegrationTests: XCTestCase {
             host: testHost,
             port: testPort,
             username: testUsername,
-            authMethod: .password,
-            password: testPassword
+            authMethod: .privateKey,
+            privateKeyPath: testPrivateKeyPath
         )
 
         // 将远程 SSH 端口（22）转发到本地随机端口

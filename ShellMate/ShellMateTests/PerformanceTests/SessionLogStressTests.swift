@@ -25,7 +25,7 @@ final class SessionLogStressTests: XCTestCase {
 
     // MARK: - 辅助
 
-    private func makeEntry(index: Int, session: String = "ubuntu@192.168.100.90") -> SessionLogEntry {
+    private func makeEntry(index: Int, session: String = "root@139.196.123.220") -> SessionLogEntry {
         SessionLogEntry(
             timestamp: Date(),
             sessionName: session,
