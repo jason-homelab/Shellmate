@@ -155,17 +155,100 @@ final class ConnectionPreflightService: ConnectionPreflightServicing {
             )
         }
 
-        // Stage 3 + 4: SSH 握手与认证
-        // 注：完整 libssh2 集成在 W5 阶段接入；当前阶段先返回"已跳过"占位
-        // 这允许 PreflightProgressView UI 与表单接入提前完成，业务层后续填入
-        stages[.handshake] = .skipped
-        stages[.auth] = .skipped
+        // Stage 3 + 4: SSH 握手与认证（libssh2 实测）
+        let probe = await handshakeAndAuthProbe(
+            host: host, port: port, username: username, authMethod: authMethod
+        )
+        stages[.handshake] = probe.handshake
+        stages[.auth] = probe.auth
+
+        if let failure = probe.summaryFailure {
+            return PreflightResult(
+                stages: stages,
+                summary: .failedAt(stage: failure.stage, error: failure.error),
+                totalElapsedMs: msSince(startTime)
+            )
+        }
 
         return PreflightResult(
             stages: stages,
             summary: .success,
             totalElapsedMs: msSince(startTime)
         )
+    }
+
+    // MARK: - SSH 握手 + 认证探测（libssh2）
+
+    /// 探测结果（Sendable：可从 detached task 返回）
+    private struct ProbeOutcome: Sendable {
+        let handshake: PreflightStageStatus
+        let auth: PreflightStageStatus
+        /// 失败时的阶段与错误（用于 summary）；成功则为 nil
+        let summaryFailure: (stage: PreflightStage, error: PreflightError)?
+    }
+
+    /// 使用 LibSSH2BridgeReal 做一次轻量探测：仅到握手 + 认证即断开，不开 Shell 通道。
+    /// 序列与 SSH2Connection 一致（已对真机验证），但不做 known-hosts 校验（预检只确认服务端可握手）。
+    private func handshakeAndAuthProbe(
+        host: String,
+        port: Int,
+        username: String,
+        authMethod: PreflightAuthMethod
+    ) async -> ProbeOutcome {
+        let timeoutMs = Int(Self.stageTimeout * 1000) * 2   // 握手+认证合计上限（约 10s）
+        return await Task.detached(priority: .userInitiated) {
+            let bridge = LibSSH2BridgeReal()
+            defer { bridge.disconnect(reason: "preflight 探测完成") }
+
+            // --- Stage 3: SSH 握手 ---
+            let hsStart = Date()
+            do {
+                try bridge.sessionInit()
+                bridge.setTimeout(timeoutMs)
+                try bridge.tcpConnect(host: host, port: Int32(port))
+                try bridge.handshake()
+                _ = try bridge.getHostKeyFingerprint()   // 确认能取到主机密钥 = 服务端 SSH 正常
+            } catch {
+                let err = PreflightError.sshHandshake(Self.message(from: error))
+                return ProbeOutcome(handshake: .failed(error: err), auth: .skipped,
+                                    summaryFailure: (.handshake, err))
+            }
+            let hsStatus = PreflightStageStatus.success(elapsedMs: Int(Date().timeIntervalSince(hsStart) * 1000))
+
+            // --- Stage 4: 身份认证 ---
+            if case .skipAuth = authMethod {
+                return ProbeOutcome(handshake: hsStatus, auth: .skipped, summaryFailure: nil)
+            }
+
+            let authStart = Date()
+            do {
+                switch authMethod {
+                case .password(let pw):
+                    try bridge.authenticateWithPassword(username: username, password: pw)
+                case .privateKey(let path, let passphrase):
+                    try bridge.authenticateWithPublicKey(
+                        username: username, publicKeyPath: nil,
+                        privateKeyPath: path, passphrase: passphrase
+                    )
+                case .agent:
+                    try bridge.authenticateWithAgent(username: username)
+                case .skipAuth:
+                    break   // 已在上方提前返回
+                }
+            } catch {
+                let err = PreflightError.authentication(Self.message(from: error))
+                return ProbeOutcome(handshake: hsStatus, auth: .failed(error: err),
+                                    summaryFailure: (.auth, err))
+            }
+            let authStatus = PreflightStageStatus.success(elapsedMs: Int(Date().timeIntervalSince(authStart) * 1000))
+            return ProbeOutcome(handshake: hsStatus, auth: authStatus, summaryFailure: nil)
+        }.value
+    }
+
+    /// 将底层错误转为简短描述
+    private static func message(from error: Error) -> String {
+        if let sshError = error as? SSHError { return sshError.localizedDescription }
+        return "\(error)"
     }
 
     // MARK: - DNS
